@@ -1,0 +1,50 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { url } from '../../lib/url';
+
+const notes = await getCollection('notes');
+const sorted = notes.sort((a, b) => {
+  if (a.data.pinned !== b.data.pinned) return a.data.pinned ? -1 : 1;
+  return b.data.date.valueOf() - a.data.date.valueOf();
+});
+
+const allTags = [...new Set(sorted.flatMap((note) => note.data.tags))].sort();
+
+const formatDate = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+---
+
+<Base title="航海日志 · Verlintas 的小窝">
+  <p class="eyebrow">笔记与收藏 · {sorted.length} 篇</p>
+  <h1 class="page-title">航海日志</h1>
+  <p class="page-sub">随手记的东西，不追求完整。在 <code>src/content/notes/</code> 下新建 Markdown 文件就会出现在这里。</p>
+
+  {allTags.length > 0 && (
+    <div class="tag-row">
+      {allTags.map((tag) => (
+        <span class="tag">{tag}</span>
+      ))}
+    </div>
+  )}
+
+  <section class="section">
+    <div class="grid">
+      {sorted.map((note) => (
+        <a class="panel panel-pad note-card" href={url(`notes/${note.id}/`)}>
+          <span class="card-head">
+            <span class="readout-label">{formatDate(note.data.date)}</span>
+            {note.data.pinned && <span class="badge">置顶</span>}
+          </span>
+          <strong class="note-title">{note.data.title}</strong>
+          {note.data.summary && <span class="readout-note">{note.data.summary}</span>}
+          <span class="tag-row">
+            {note.data.tags.map((tag) => (
+              <span class="tag tag-sm">{tag}</span>
+            ))}
+          </span>
+        </a>
+      ))}
+    </div>
+  </section>
+</Base>

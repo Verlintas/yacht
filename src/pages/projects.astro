@@ -1,0 +1,82 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+
+const projects = await getCollection('projects');
+
+const statusMeta: Record<string, { label: string; tone: string }> = {
+  active: { label: '进行中', tone: 'badge-good' },
+  paused: { label: '暂停', tone: 'badge-warn' },
+  idea: { label: '想法', tone: 'badge' },
+  done: { label: '已完成', tone: 'badge' },
+  archived: { label: '归档', tone: 'badge' },
+};
+
+const order = ['active', 'paused', 'idea', 'done', 'archived'];
+const sorted = projects.sort((a, b) => {
+  const byStatus = order.indexOf(a.data.status) - order.indexOf(b.data.status);
+  if (byStatus !== 0) return byStatus;
+  return b.data.updated.valueOf() - a.data.updated.valueOf();
+});
+
+const items = await Promise.all(
+  sorted.map(async (entry) => ({ entry, Content: (await render(entry)).Content })),
+);
+
+const formatDate = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+---
+
+<Base title="船坞 · Verlintas 的小窝">
+  <p class="eyebrow">项目清单 · {items.length} 项</p>
+  <h1 class="page-title">船坞</h1>
+  <p class="page-sub">手上在做、想做、做完的东西。在 <code>src/content/projects/</code> 下新建 Markdown 文件即可添加。</p>
+
+  <section class="section">
+    <div class="grid grid-wide">
+      {
+        items.map(({ entry, Content }) => (
+          <article class="panel panel-pad project-card">
+            <div class="card-head">
+              <span class="readout-label">{formatDate(entry.data.updated)} 更新</span>
+              <span class={`badge ${statusMeta[entry.data.status].tone}`}>
+                {statusMeta[entry.data.status].label}
+              </span>
+            </div>
+            <strong class="note-title">{entry.data.title}</strong>
+            {entry.data.summary && <span class="readout-note">{entry.data.summary}</span>}
+
+            {entry.data.progress !== undefined && (
+              <div class="progress" role="img" aria-label={`进度 ${entry.data.progress}%`}>
+                <span style={`width: ${entry.data.progress}%`} />
+              </div>
+            )}
+
+            <div class="project-foot">
+              <span class="tag-row">
+                {entry.data.stack.map((item) => (
+                  <span class="tag tag-sm">{item}</span>
+                ))}
+              </span>
+              {entry.data.repo && (
+                <a class="repo-link" href={entry.data.repo} target="_blank" rel="noreferrer noopener">
+                  仓库
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                    <path d="M8 16 16 8M10 8h6v6" />
+                  </svg>
+                </a>
+              )}
+            </div>
+
+            <details class="project-more">
+              <summary>详细</summary>
+              <div class="prose prose-sm">
+                <Content />
+              </div>
+            </details>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+</Base>

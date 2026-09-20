@@ -1,0 +1,37 @@
+---
+import Base from '../layouts/Base.astro';
+import { linkGroups } from '../data/links';
+
+const groups = linkGroups.filter((group) => group.links.length > 0);
+const total = groups.reduce((sum, group) => sum + group.links.length, 0);
+---
+
+<Base title="港口 · Verlintas 的小窝">
+  <p class="eyebrow">常用入口 · {total} 个</p>
+  <h1 class="page-title">港口</h1>
+  <p class="page-sub">按用途分组的常用入口。要加要删，改 <code>src/data/links.ts</code> 就行。</p>
+
+  {
+    groups.map((group) => (
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">{group.group}</h2>
+          {group.hint && <span class="section-note">{group.hint}</span>}
+        </div>
+        <div class="grid">
+          {group.links.map((link) => (
+            <a class="panel panel-pad link-item" href={link.url} target="_blank" rel="noreferrer noopener">
+              <span class="link-title">
+                {link.title}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                  <path d="M8 16 16 8M10 8h6v6" />
+                </svg>
+              </span>
+              {link.note && <span class="readout-note">{link.note}</span>}
+            </a>
+          ))}
+        </div>
+      </section>
+    ))
+  }
+</Base>
