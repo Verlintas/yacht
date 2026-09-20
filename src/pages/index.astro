@@ -1,18 +1,30 @@
 ---
-const base = import.meta.env.BASE_URL;
+import Base from '../layouts/Base.astro';
+import BerthSwitcher from '../components/BerthSwitcher.astro';
+import Dashboard from '../components/Dashboard.astro';
+import { berths, defaultBerthId, getBerth } from '../data/berths';
+
+const defaultBerth = getBerth(defaultBerthId);
 ---
 
-<!doctype html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="noindex, nofollow" />
-    <title>Verlintas 的小窝</title>
-  </head>
-  <body>
-    <h1>Verlintas 的小窝</h1>
-    <p>P0 部署链路验证中 · base = {base}</p>
-    <p><a href={`${base}robots.txt`}>robots.txt</a></p>
-  </body>
-</html>
+<Base title="小窝 · Verlintas">
+  <p class="eyebrow">Verlintas · 私人港口</p>
+  <h1 class="page-title" data-slot="greeting">欢迎回来</h1>
+  <p class="page-sub">
+    四处常驻泊位的实时天况、空气质量与海况，加上一些日常用得上的入口。数据每次打开时现取。
+  </p>
+
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title">泊位</h2>
+      <span class="section-note">选择一处查看实况</span>
+    </div>
+    <BerthSwitcher berths={berths} defaultId={defaultBerthId} />
+    <Dashboard coastal={defaultBerth.coastal} />
+  </section>
+
+  <script>
+    import { initDashboard } from '../lib/instruments';
+    initDashboard();
+  </script>
+</Base>

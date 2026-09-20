@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import BerthCard from '../components/BerthCard.astro';
+import { berths } from '../data/berths';
+---
+
+<Base title="泊位 · Verlintas 的小窝">
+  <p class="eyebrow">四处常驻点</p>
+  <h1 class="page-title">泊位</h1>
+  <p class="page-sub">同时读取全部泊位的天况。沿海泊位额外显示近岸浪高与海表温度。</p>
+
+  <section class="section">
+    <div class="grid grid-wide">
+      {berths.map((berth) => <BerthCard berth={berth} />)}
+    </div>
+  </section>
+
+  <script>
+    import { initBerthGrid } from '../lib/instruments';
+    initBerthGrid();
+  </script>
+</Base>

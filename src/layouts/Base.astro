@@ -1,0 +1,104 @@
+---
+import '../styles/global.css';
+import { navItems } from '../data/nav';
+import { basePath, url } from '../lib/url';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Verlintas 的小窝 · 私人港口' } = Astro.props;
+
+const currentPath = Astro.url.pathname.replace(basePath, '') || '/';
+
+function isActive(href: string): boolean {
+  if (href === '/') return currentPath === '/' || currentPath === '';
+  return currentPath.startsWith(href);
+}
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#06111a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f2ea" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
+    <link rel="canonical" href={new URL(currentPath, Astro.site).href} />
+    <title>{title}</title>
+    <script is:inline>
+      (() => {
+        try {
+          const stored = localStorage.getItem('yacht:theme');
+          const theme =
+            stored ||
+            (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+          document.documentElement.dataset.theme = theme;
+        } catch {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="nav">
+      <div class="nav-inner">
+        <a class="brand" href={url('/')}>
+          <span class="brand-mark">V</span>
+          <span>Verlintas 的小窝</span>
+          <span class="brand-latin">yacht</span>
+        </a>
+        <nav class="nav-links" aria-label="站点导航">
+          {
+            navItems.map((item) => (
+              <a href={url(item.href)} title={item.hint} aria-current={isActive(item.href) ? 'page' : undefined}>
+                {item.label}
+              </a>
+            ))
+          }
+        </nav>
+        <button class="icon-btn" id="themeToggle" type="button" aria-label="切换明暗主题">
+          <svg class="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+            <path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2Z" />
+          </svg>
+          <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="shell">
+      <main>
+        <slot />
+      </main>
+
+      <footer class="foot">
+        <span>Verlintas 的小窝</span>
+        <span>天气与空气数据 · Open-Meteo</span>
+        <span>不接入追踪</span>
+      </footer>
+    </div>
+
+    <script>
+      const toggle = document.getElementById('themeToggle');
+      toggle?.addEventListener('click', () => {
+        const root = document.documentElement;
+        const next = root.dataset.theme === 'light' ? 'dark' : 'light';
+        root.dataset.theme = next;
+        try {
+          localStorage.setItem('yacht:theme', next);
+        } catch {
+          /* 忽略 */
+        }
+      });
+    </script>
+  </body>
+</html>

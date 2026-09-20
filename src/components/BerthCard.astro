@@ -1,0 +1,72 @@
+---
+import type { Berth } from '../data/berths';
+
+interface Props {
+  berth: Berth;
+}
+const { berth } = Astro.props;
+---
+
+<article class="panel panel-pad" data-berth-card={berth.id}>
+  <div class="card-head">
+    <span class="readout-label">
+      <span class="berth-tag">{berth.kindLabel}</span>
+      <span class="berth-name-inline" data-slot="berth-name">{berth.name}</span>
+    </span>
+    <span class="readout-note" data-slot="updated"></span>
+  </div>
+
+  <div class="weather-head">
+    <span data-slot="weather-icon" aria-hidden="true"></span>
+    <div class="readout">
+      <span class="readout-value" data-slot="weather-temp">--</span>
+      <span class="readout-note" data-slot="weather-desc">读取中</span>
+    </div>
+    <div class="readout hero-side">
+      <span class="readout-label">高低温</span>
+      <span class="readout-value readout-small" data-slot="weather-range">--</span>
+    </div>
+  </div>
+
+  <dl class="stat-list spaced">
+    <div>
+      <dt>体感 / 湿度</dt>
+      <dd>
+        <span data-slot="weather-apparent">--</span> · <span data-slot="weather-humidity">--</span>
+      </dd>
+    </div>
+    <div>
+      <dt>风速</dt>
+      <dd data-slot="weather-wind">--</dd>
+    </div>
+    <div>
+      <dt>空气质量</dt>
+      <dd>
+        <span data-slot="air-aqi">--</span>
+        <span class="readout-unit">AQI</span>
+      </dd>
+    </div>
+    <div>
+      <dt>PM2.5</dt>
+      <dd data-slot="air-pm25">--</dd>
+    </div>
+    <div>
+      <dt>日出 / 日落</dt>
+      <dd>
+        <span data-slot="sun-sunrise">--</span> · <span data-slot="sun-sunset">--</span>
+      </dd>
+    </div>
+    {
+      berth.coastal && (
+        <div>
+          <dt>浪高 / 海温</dt>
+          <dd>
+            <span data-slot="sea-wave">--</span> · <span data-slot="sea-sst">--</span>
+          </dd>
+        </div>
+      )
+    }
+  </dl>
+
+  <div class="panel-error" data-slot="error" hidden></div>
+</article>

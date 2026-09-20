@@ -1,0 +1,28 @@
+---
+import type { Berth } from '../data/berths';
+
+interface Props {
+  berths: Berth[];
+  defaultId: string;
+}
+
+const { berths, defaultId } = Astro.props;
+---
+
+<div class="berths" role="tablist" aria-label="泊位切换">
+  {
+    berths.map((berth) => (
+      <button
+        class="berth-tab"
+        type="button"
+        role="tab"
+        data-berth-tab={berth.id}
+        aria-selected={berth.id === defaultId}
+        title={berth.latin}
+      >
+        <span class="berth-tag">{berth.kindLabel}</span>
+        <span>{berth.name}</span>
+      </button>
+    ))
+  }
+</div>

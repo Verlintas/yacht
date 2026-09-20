@@ -1,0 +1,132 @@
+---
+interface Props {
+  coastal: boolean;
+}
+const { coastal } = Astro.props;
+---
+
+<div data-dashboard>
+  <section class="panel hero-panel">
+    <div class="readout">
+      <span class="readout-label" data-slot="berth-kind">泊位</span>
+      <span class="hero-clock" data-slot="clock">--:--<span>:--</span></span>
+      <span class="hero-meta" data-slot="date">读取中</span>
+    </div>
+    <div class="hero-meta hero-side">
+      <strong data-slot="berth-name">读取中</strong>
+      <span class="hero-latin" data-slot="berth-latin"></span>
+      <span class="readout-note" data-slot="updated"></span>
+    </div>
+  </section>
+
+  <div class="grid grid-wide spaced">
+    <section class="panel panel-pad">
+      <div class="card-head">
+        <span class="readout-label">天气实况</span>
+        <span class="readout-note" data-slot="weather-desc">读取中</span>
+      </div>
+      <div class="weather-head">
+        <span data-slot="weather-icon" aria-hidden="true"></span>
+        <span class="readout-value readout-hero" data-slot="weather-temp">--</span>
+      </div>
+      <dl class="stat-list spaced">
+        <div>
+          <dt>今日高低温</dt>
+          <dd data-slot="weather-range">--</dd>
+        </div>
+        <div>
+          <dt>体感</dt>
+          <dd data-slot="weather-apparent">--</dd>
+        </div>
+        <div>
+          <dt>湿度</dt>
+          <dd data-slot="weather-humidity">--</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="panel panel-pad">
+      <div class="card-head">
+        <span class="readout-label">风与降水</span>
+      </div>
+      <dl class="stat-list">
+        <div>
+          <dt>风速</dt>
+          <dd data-slot="weather-wind">--</dd>
+        </div>
+        <div>
+          <dt>降水</dt>
+          <dd data-slot="weather-precip">--</dd>
+        </div>
+        <div>
+          <dt>降水概率</dt>
+          <dd data-slot="weather-prob">--</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="panel panel-pad" data-card="air">
+      <div class="card-head">
+        <span class="readout-label">空气质量</span>
+        <span class="badge" data-slot="air-badge">--</span>
+      </div>
+      <dl class="stat-list">
+        <div>
+          <dt>AQI（美标）</dt>
+          <dd data-slot="air-aqi">--</dd>
+        </div>
+        <div>
+          <dt>PM2.5</dt>
+          <dd data-slot="air-pm25">--</dd>
+        </div>
+        <div>
+          <dt>PM10</dt>
+          <dd data-slot="air-pm10">--</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="panel panel-pad">
+      <div class="card-head">
+        <span class="readout-label">日照</span>
+      </div>
+      <dl class="stat-list">
+        <div>
+          <dt>日出</dt>
+          <dd data-slot="sun-sunrise">--</dd>
+        </div>
+        <div>
+          <dt>日落</dt>
+          <dd data-slot="sun-sunset">--</dd>
+        </div>
+        <div>
+          <dt>白昼长度</dt>
+          <dd data-slot="sun-daylight">--</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="panel panel-pad" data-card="sea" hidden={!coastal}>
+      <div class="card-head">
+        <span class="readout-label">海况</span>
+        <span class="readout-note">近岸</span>
+      </div>
+      <dl class="stat-list">
+        <div>
+          <dt>浪高</dt>
+          <dd data-slot="sea-wave">--</dd>
+        </div>
+        <div>
+          <dt>浪周期</dt>
+          <dd data-slot="sea-period">--</dd>
+        </div>
+        <div>
+          <dt>海表温度</dt>
+          <dd data-slot="sea-sst">--</dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+
+  <div class="panel panel-pad panel-error spaced" data-slot="error" hidden></div>
+</div>
