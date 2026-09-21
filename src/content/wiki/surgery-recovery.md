@@ -82,7 +82,7 @@ upstream:
 | 事项 | 建议 |
 | --- | --- |
 | **请假** | 提前申请。学生可以说「医疗原因」，不必交代细节，见[请假与考试](/wiki/leave-exam/) |
-| **陪护** | 出院初期一个人会比较吃力，见[就医陪同](/wiki/就医陪同/) |
+| **陪护** | 出院初期一个人会比较吃力，见[就医陪同](/wiki/hospital-companion/) |
 | **住处** | 优先选离医院近的，方便复查与应急 |
 | **衣物** | 准备宽松衣物 |
 | **饮食** | 易消化的食物；具体忌口问医生 |
@@ -131,7 +131,7 @@ upstream:
 - [手术五类导览](/wiki/surgery-overview/)
 - [术前准备与公证](/wiki/surgery-prep/)
 - [手术评价与技术选择](/wiki/surgery-evaluation/)
-- [就医陪同](/wiki/就医陪同/)
+- [就医陪同](/wiki/hospital-companion/)
 - [请假与考试](/wiki/leave-exam/)
 - [材料与档案管理](/wiki/records-management/)
 - [血栓风险与自我评估](/wiki/thrombosis-risk/)
