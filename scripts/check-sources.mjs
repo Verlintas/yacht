@@ -92,7 +92,7 @@ if (checkLinks) {
         const response = await fetch(url, {
           redirect: 'follow',
           signal: AbortSignal.timeout(20000),
-          headers: { 'user-agent': 'yacht-link-check/1.0 (+https://verlintas.github.io/yacht/)' },
+          headers: { 'user-agent': 'Mozilla/5.0 (compatible; link-check/1.0)' },
         });
         if (!response.ok) dead.push(`${response.status} ${url}`);
       } catch (error) {
