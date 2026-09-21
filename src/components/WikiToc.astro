@@ -1,0 +1,124 @@
+---
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+
+const items = headings.filter((heading) => heading.depth >= 1 && heading.depth <= 3);
+
+const minItems = 5;
+const show = items.length >= minItems;
+
+const count = items.filter((heading) => heading.depth === 1).length;
+const openByDefault = items.length >= 10;
+---
+
+{
+  show && (
+    <nav class="toc" id="toc" aria-label="本页目录">
+      <details open={openByDefault}>
+        <summary>
+          <span class="toc-title">目录</span>
+          <span class="toc-count">
+            {items.length} 节{count > 0 ? ` · ${count} 部分` : ''}
+          </span>
+        </summary>
+        <ol class="toc-list">
+          {items.map((heading) => (
+            <li class:list={['toc-item', `toc-d${heading.depth}`]}>
+              <a href={`#${heading.slug}`} data-toc-link={heading.slug}>
+                {heading.text}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </details>
+    </nav>
+  )
+}
+
+<button type="button" class="to-top" id="toTop" aria-label="回到顶部" hidden>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 19V5M6 11l6-6 6 6" />
+  </svg>
+</button>
+
+<script>
+  const toc = document.getElementById('toc');
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]'));
+  const toTop = document.getElementById('toTop');
+
+  if (links.length > 0) {
+    const targets = links
+      .map((link) => {
+        const id = link.dataset.tocLink ?? '';
+        const el = document.getElementById(id);
+        return el ? { link, el } : null;
+      })
+      .filter((item): item is { link: HTMLAnchorElement; el: HTMLElement } => item !== null);
+
+    const list = toc?.querySelector<HTMLElement>('.toc-list') ?? null;
+    let active: HTMLAnchorElement | null = null;
+
+    const setActive = (link: HTMLAnchorElement): void => {
+      if (link === active) return;
+      active?.classList.remove('is-active');
+      link.classList.add('is-active');
+      active = link;
+
+      if (!list) return;
+      const listBox = list.getBoundingClientRect();
+      const itemBox = link.getBoundingClientRect();
+      if (itemBox.top < listBox.top) {
+        list.scrollTop -= listBox.top - itemBox.top;
+      } else if (itemBox.bottom > listBox.bottom) {
+        list.scrollTop += itemBox.bottom - listBox.bottom;
+      }
+    };
+
+    const update = (): void => {
+      const offset = 96;
+      let current = targets[0];
+      for (const item of targets) {
+        if (item.el.getBoundingClientRect().top <= offset) current = item;
+        else break;
+      }
+      setActive(current.link);
+    };
+
+    let queued = false;
+    const onScroll = (): void => {
+      if (queued) return;
+      queued = true;
+      window.requestAnimationFrame(() => {
+        queued = false;
+        update();
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
+
+    links.forEach((link) => {
+      link.addEventListener('click', () => {
+        const details = toc?.querySelector('details');
+        if (details && window.innerWidth < 900) details.removeAttribute('open');
+      });
+    });
+  }
+
+  if (toTop) {
+    const toggle = (): void => {
+      toTop.hidden = window.scrollY < 600;
+    };
+    toTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    window.addEventListener('scroll', toggle, { passive: true });
+    toggle();
+  }
+</script>

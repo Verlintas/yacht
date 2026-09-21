@@ -5,6 +5,7 @@ import WikiRefs from '../../components/WikiRefs.astro';
 import WikiAiNotice from '../../components/WikiAiNotice.astro';
 import WikiNature from '../../components/WikiNature.astro';
 import WikiNatureNotice from '../../components/WikiNatureNotice.astro';
+import WikiToc from '../../components/WikiToc.astro';
 import { getCollection, render } from 'astro:content';
 import { getCategory, getScenario } from '../../data/wiki';
 import { url } from '../../lib/url';
@@ -23,7 +24,7 @@ export async function getStaticPaths() {
 }
 
 const { entry, siblings } = Astro.props;
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
 const category = getCategory(entry.data.category);
 const scenarios = entry.data.scenarios.map((slug) => getScenario(slug));
 const others = siblings.filter((item) => item.id !== entry.id);
@@ -57,6 +58,8 @@ const others = siblings.filter((item) => item.id !== entry.id);
       </p>
     )
   }
+
+  <WikiToc headings={headings} />
 
   <article class="panel panel-pad prose spaced">
     <WikiNatureNotice nature={entry.data.nature} />
