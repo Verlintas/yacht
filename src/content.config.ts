@@ -17,8 +17,8 @@ const projects = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/projects' }),
   schema: z.object({
     title: z.string(),
+    owner: z.enum(['personal', 'nusv']).default('personal'),
     status: z.enum(['active', 'paused', 'idea', 'done', 'archived']),
-    progress: z.number().min(0).max(100).optional(),
     updated: z.coerce.date(),
     stack: z.array(z.string()).default([]),
     repo: z.url().optional(),

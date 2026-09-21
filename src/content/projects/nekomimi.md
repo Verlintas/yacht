@@ -1,7 +1,7 @@
 ---
 title: 猫猫助手 Nekomimi
+owner: personal
 status: active
-progress: 80
 updated: 2026-08-26
 stack: [Kotlin, Android, 无障碍服务, Compose]
 repo: https://github.com/Verlintas/nekomimi
@@ -12,11 +12,6 @@ summary: 基于无障碍服务的聊天文本改写工具，字面/正则/随机
 
 为长期运行设计：带保活自愈、熔断器和崩溃捕获。
 
-## 现在的状态
+## 状态
 
 功能完整，主要在打磨稳定性。
-
-## 待办
-
-- 配置的导入导出
-- 更多预设风格包

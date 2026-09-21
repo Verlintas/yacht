@@ -62,14 +62,16 @@ pinned: false
 ```yaml
 ---
 title: 项目名
-status: active        # active | paused | idea | done | archived
-progress: 60          # 0-100，可省略
+owner: personal        # personal | nusv
+status: active         # active | paused | idea | done | archived
 updated: 2026-09-21
 stack: [Kotlin, Android]
 repo: https://github.com/...   # 可省略
 summary: 一句话说明
 ---
 ```
+
+没有进度字段：想到就加，不按计划推进。船坞页按 `owner` 分组显示。
 
 ### 加一条百科
 

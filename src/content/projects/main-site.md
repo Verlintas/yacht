@@ -1,9 +1,9 @@
 ---
 title: 主站 Verlintas.github.io
+owner: personal
 status: active
-progress: 90
 updated: 2026-09-20
-stack: [HTML, CSS, JavaScript, Python]
+stack: [JavaScript, HTML, CSS, Python]
 repo: https://github.com/Verlintas/Verlintas.github.io
 summary: 对外展示的主页，深色科技风，含项目、技术栈与联系方式。
 ---
