@@ -7,16 +7,18 @@ order: 5
 tags: [危机, 求助, 紧急]
 updated: 2026-09-21
 status: sourced
-summary: 情绪撑不住、有伤害自己的想法时该找谁。本站不复述热线号码，只给可靠入口。
+summary: 紧急情况怎么办、本站为什么不写热线号码、可靠入口清单、以及给身边人的建议。
 sources:
   - title: MtF.wiki · 公益组织
     url: https://mtf.wiki/zh-cn/docs/useful-info/organizations
   - title: MtF.wiki · 友情链接
-    url: https://mtf.wiki/zh-cn/docs/friendship
+    url: https://mtf.wiki/zh-cn/docs/useful-info/friendship
   - title: 北京心理危机研究与干预中心
     url: https://www.crisis.org.cn/
-  - title: 世界卫生组织 ICD-11
-    url: https://icd.who.int/
+  - title: 世界卫生组织 · 心理健康
+    url: https://www.who.int/news-room/fact-sheets/detail/mental-health-strengthening-our-response
+  - title: 英国 NHS · 心理健康自助指南
+    url: https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/
   - title: Project Trans
     url: https://project-trans.org/
 upstream:
@@ -28,15 +30,19 @@ upstream:
 
 **出现伤害自己或他人的想法或行为时，这是紧急情况，需要立刻求助：**
 
-1. **拨打当地急救电话**
-2. **前往就近医院急诊**
-3. **联系可信任的人，让对方陪着你**
+| 顺序 | 做法 |
+| --- | --- |
+| 1 | **拨打当地急救电话** |
+| 2 | **前往就近医院急诊** |
+| 3 | **联系可信任的人，让对方陪着你** |
 
 **不要独自待着。**
 
 ## 为什么本站不写具体号码
 
-**热线号码会变更、会停用、会调整服务时间。** 复述一遍就可能给出一个打不通的号码——在最需要的时候。
+**热线号码会变更、会停用、会调整服务时间。**
+
+**复述一遍就可能给出一个打不通的号码——在最需要的时候。**
 
 **所以本站只给可靠入口，你从那里获取最新信息。**
 
@@ -46,27 +52,39 @@ upstream:
 | --- | --- |
 | [北京心理危机研究与干预中心](https://www.crisis.org.cn/) | 提供心理危机干预服务与信息 |
 | [MtF.wiki · 公益组织](https://mtf.wiki/zh-cn/docs/useful-info/organizations) | 社群维护的机构名单，含危机与支持渠道 |
-| [MtF.wiki · 友情链接](https://mtf.wiki/zh-cn/docs/friendship) | 相关站点与社群 |
-| 当地医院精神科 / 急诊 | 最直接的线下渠道 |
-| 当地 12345 政务服务热线 | 可以咨询本地心理援助资源 |
+| [MtF.wiki · 友情链接](https://mtf.wiki/zh-cn/docs/useful-info/friendship) | 相关站点与社群 |
+| **当地医院精神科 / 急诊** | 最直接的线下渠道 |
+| **当地政务服务热线** | 可以咨询本地心理援助资源 |
+
+**把这些入口提前存到手机里。** 需要的时候不一定有力气现找。
 
 ## 如果只是情绪很低落
 
-**这不等于「没事」。** 持续的失眠、食欲变化、无法工作学习、对什么都提不起兴趣，都值得找人聊聊。
+**这不等于「没事」。**
 
-- **找咨询师** —— 见[怎么找心理咨询](/wiki/finding-counselor/)
-- **找社群** —— 见[社群与互助](/wiki/community/)
-- **找朋友** —— 不需要说得很清楚，「我最近不太好」就够了
+**持续的失眠、食欲变化、无法工作学习、对什么都提不起兴趣，都值得找人聊聊。**
+
+| 选项 | 说明 |
+| --- | --- |
+| 找咨询师 | 见[怎么找心理咨询](/wiki/finding-counselor/) |
+| 找社群 | 见[社群与互助](/wiki/community/) |
+| 找朋友 | **不需要说得很清楚，「我最近不太好」就够了** |
+| 自助资料 | [NHS 心理健康自助指南](https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/) |
+| 情绪管理方法 | 见[情绪管理](/wiki/emotion-management/) |
 
 ## 给身边人的建议
 
 **如果朋友向你求助：**
 
-- **认真听，不评判。** 不要说「你想太多了」「这有什么大不了」。
-- **不要承诺保密到危险的程度。** 如果对方有自伤风险，需要让更多人知道。
-- **陪着对方。** 不需要说很多，在场本身就有意义。
-- **帮忙找资源。** 一起打电话、一起去医院。
-- **照顾自己。** 长期支持一个人也会消耗你，必要时寻求支持。
+| 做法 | 说明 |
+| --- | --- |
+| **认真听，不评判** | 不要说「你想太多了」「这有什么大不了」 |
+| **不要承诺保密到危险的程度** | 如果对方有自伤风险，需要让更多人知道 |
+| **陪着对方** | 不需要说很多，**在场本身就有意义** |
+| **帮忙找资源** | 一起打电话、一起去医院 |
+| **照顾自己** | 长期支持一个人也会消耗你，必要时寻求支持 |
+
+**关于「保密」这一条：** 如果你答应了「绝对不告诉任何人」，但对方出现危险，你会陷入两难。**一开始就不要做这种承诺。**
 
 ## 一个提醒
 
@@ -74,9 +92,12 @@ upstream:
 
 **也不要把「不想给别人添麻烦」当成理由。** 你的存在本身值得被认真对待。
 
+**如果曾经有过「说了也没用」的经历**，那不是你的错，也不代表这次也会一样。**可以换一个渠道再试一次。**
+
 ## 相关页面
 
-- [社群与互助](/wiki/community/)
-- [怎么找心理咨询](/wiki/finding-counselor/)
 - [情绪管理](/wiki/emotion-management/)
+- [怎么找心理咨询](/wiki/finding-counselor/)
+- [社群与互助](/wiki/community/)
 - [资源总索引](/wiki/resource-index/)
+- [常见法律问题索引](/wiki/legal-faq-index/)
