@@ -1,6 +1,7 @@
 ---
 title: BetterAIChat
 owner: personal
+flagship: true
 status: active
 updated: 2026-09-18
 stack: [Kotlin, Android, Jetpack Compose, Shizuku]

@@ -1,6 +1,7 @@
 ---
 title: VicinityProbe
 owner: personal
+flagship: true
 status: active
 updated: 2026-09-18
 stack: [Kotlin, Android, Compose, 传感器融合]

@@ -745,6 +745,42 @@ footer.foot {
   padding-top: 12px;
 }
 
+.badge-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-flagship {
+  color: var(--brass);
+  border-color: color-mix(in srgb, var(--brass) 55%, transparent);
+  background: var(--brass-soft);
+}
+
+.flagship-icon {
+  width: 17px;
+  height: 17px;
+  margin-right: 6px;
+  vertical-align: -3px;
+  color: var(--brass);
+}
+
+.project-flagship {
+  border-color: color-mix(in srgb, var(--brass) 34%, var(--border));
+  background:
+    linear-gradient(180deg, var(--brass-soft), transparent 46%),
+    var(--surface);
+}
+
+.project-flagship::before {
+  opacity: 1;
+  background: linear-gradient(90deg, transparent, var(--brass), transparent);
+}
+
+.project-flagship .note-title {
+  font-size: 17.5px;
+}
+
 .project-foot .tag-row {
   margin-top: 0;
 }

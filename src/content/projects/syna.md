@@ -1,6 +1,7 @@
 ---
 title: Syna
 owner: nusv
+flagship: true
 status: active
 updated: 2026-09-18
 stack: [Kotlin Multiplatform, Compose Multiplatform, C, Python, CMake]

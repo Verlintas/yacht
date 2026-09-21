@@ -18,6 +18,7 @@ const projects = defineCollection({
   schema: z.object({
     title: z.string(),
     owner: z.enum(['personal', 'nusv']).default('personal'),
+    flagship: z.boolean().default(false),
     status: z.enum(['active', 'paused', 'idea', 'done', 'archived']),
     updated: z.coerce.date(),
     stack: z.array(z.string()).default([]),

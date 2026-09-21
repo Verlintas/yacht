@@ -23,16 +23,19 @@ const items = await Promise.all(
   projects.map(async (entry) => ({ entry, Content: (await render(entry)).Content })),
 );
 
+const byRecency = (a: (typeof items)[number], b: (typeof items)[number]): number => {
+  const byStatus = order.indexOf(a.entry.data.status) - order.indexOf(b.entry.data.status);
+  if (byStatus !== 0) return byStatus;
+  return b.entry.data.updated.valueOf() - a.entry.data.updated.valueOf();
+};
+
+const flagships = items.filter((item) => item.entry.data.flagship).sort(byRecency);
+
 const byGroup = groups.map((group) => ({
   group,
   items: items
-    .filter((item) => item.entry.data.owner === group.key)
-    .sort((a, b) => {
-      const byStatus =
-        order.indexOf(a.entry.data.status) - order.indexOf(b.entry.data.status);
-      if (byStatus !== 0) return byStatus;
-      return b.entry.data.updated.valueOf() - a.entry.data.updated.valueOf();
-    }),
+    .filter((item) => item.entry.data.owner === group.key && !item.entry.data.flagship)
+    .sort(byRecency),
 }));
 
 const formatDate = (date: Date): string =>
@@ -40,11 +43,76 @@ const formatDate = (date: Date): string =>
 ---
 
 <Base title="船坞 · Verlintas 的小窝">
-  <p class="eyebrow">项目清单 · {items.length} 项</p>
+  <p class="eyebrow">项目清单 · {items.length} 项 · 旗舰 {flagships.length} 条</p>
   <h1 class="page-title">船坞</h1>
   <p class="page-sub">
     手上做过的东西都放在这里，想到就加，没有固定方向。在 <code>src/content/projects/</code> 下新建 Markdown 文件即可添加。
   </p>
+
+  {
+    flagships.length > 0 && (
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">
+            <svg
+              class="flagship-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M5 21V4M5 5h11l-1.6 3.2L16 11.4H5" />
+            </svg>
+            旗舰
+          </h2>
+          <span class="section-note">船坞里最拿得出手的几条船</span>
+        </div>
+        <div class="grid grid-wide">
+          {flagships.map(({ entry, Content }) => (
+            <article class="panel panel-pad project-card project-flagship">
+              <div class="card-head">
+                <span class="readout-label">{formatDate(entry.data.updated)} 更新</span>
+                <span class="badge-row">
+                  <span class="badge badge-flagship">旗舰</span>
+                  <span class={`badge ${statusMeta[entry.data.status].tone}`}>
+                    {statusMeta[entry.data.status].label}
+                  </span>
+                </span>
+              </div>
+              <strong class="note-title">{entry.data.title}</strong>
+              {entry.data.summary && <span class="readout-note">{entry.data.summary}</span>}
+
+              <div class="project-foot">
+                <span class="tag-row">
+                  {entry.data.stack.map((item) => (
+                    <span class="tag tag-sm">{item}</span>
+                  ))}
+                </span>
+                {entry.data.repo && (
+                  <a class="repo-link" href={entry.data.repo} target="_blank" rel="noreferrer noopener">
+                    仓库
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                      <path d="M8 16 16 8M10 8h6v6" />
+                    </svg>
+                  </a>
+                )}
+              </div>
+
+              <details class="project-more">
+                <summary>详细</summary>
+                <div class="prose prose-sm">
+                  <Content />
+                </div>
+              </details>
+            </article>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   {
     byGroup.map(
