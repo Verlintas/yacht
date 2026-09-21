@@ -33,6 +33,12 @@ upstream:
     url: https://mtf.wiki/zh-cn/docs/medicine/antiandrogen
 ---
 
+## 先看完整指南
+
+**如果你想系统了解 HRT**（生理基础、药物选择、监测、风险、特殊情况），看 **[HRT 完整指南](/wiki/hrt-complete-guide/)**——那是把上游两份指南融合成的一篇，约 1.4 万字，每个数字都标注来源。
+
+**如果你只想查某个药去哪看**，继续往下读本页。
+
 ## 剂量写在另一页
 
 具体剂量在 **[药物剂量速查](/wiki/medication-doses/)**。那一页的规则是：
