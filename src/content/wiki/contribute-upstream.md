@@ -1,6 +1,7 @@
 ---
 title: 如何向上游贡献
 category: resources
+nature: reference
 scenarios: []
 order: 44
 tags: [资源, 贡献, 社群]

@@ -23,7 +23,7 @@ upstream:
 
 ## 通用原则
 
-**以说明书为准。** 下面只是常见规律的概括。
+**以你手上药品的说明书为准。** 下面只是常见规律的概括，来源为上游各剂型条目（[针剂](https://mtf.wiki/zh-cn/docs/medicine/estrogen/injection)、[贴片](https://mtf.wiki/zh-cn/docs/medicine/estrogen/estradiol-patch)、[凝胶](https://mtf.wiki/zh-cn/docs/medicine/estrogen/gel)、[片剂](https://mtf.wiki/zh-cn/docs/medicine/estrogen/estradiol-valerate)）。
 
 | 项 | 常见要求 |
 | --- | --- |
@@ -37,21 +37,22 @@ upstream:
 
 **片剂（口服/含服）**
 - 铝箔包装未拆时通常到标注有效期
-- **拆开后按说明书要求尽快用完**，受潮会失效
+- 拆开后按说明书要求使用，受潮可能影响质量
 - 不要分装到没有标识的容器里长期存放
 
 **贴片**
 - 注意有效期与储存温度
-- 贴附后洗澡游泳通常不受影响，但**贴合不牢时要及时处理**
+- 上游说明：如果贴附紧密，洗澡和游泳不会影响贴片；不慎掉落可立即贴回原位
 - 更换周期按产品说明（不同品牌不同，见[雌激素类药物对照](/wiki/estrogen-compare/)）
 
 **凝胶**
-- 注意管口清洁，用后拧紧
-- 涂抹部位按说明，**注意避免与他人皮肤接触转移**
+- 上游提示：**涂抹处 2 小时内不得碰水**
+- 衣物剐蹭、洗澡和游泳可能影响吸收
+- 不得涂抹于乳房处
 - 各部位吸收率不同，按说明使用
 
 **针剂**
-- **部分针剂需要冷藏**，具体看说明书
+- 储存条件看具体产品说明书（上游[针剂](https://mtf.wiki/zh-cn/docs/medicine/estrogen/injection)条目说明了不同产品的包装与用法差异）
 - 不要冷冻
 - 注意避光
 - 开封后按说明期限使用

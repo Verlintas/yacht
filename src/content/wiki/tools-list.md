@@ -1,6 +1,7 @@
 ---
 title: 常用工具清单
 category: resources
+nature: reference
 scenarios: []
 order: 42
 tags: [资源, 工具, 实用]

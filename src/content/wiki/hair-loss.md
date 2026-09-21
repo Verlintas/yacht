@@ -1,6 +1,7 @@
 ---
 title: 脱发与头发
 category: medical
+nature: reference
 scenarios: [life, hrt]
 order: 66
 tags: [脱发, 外观, 药物]

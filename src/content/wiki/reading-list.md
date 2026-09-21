@@ -1,6 +1,7 @@
 ---
 title: 阅读与资料清单
 category: resources
+nature: reference
 scenarios: []
 order: 40
 tags: [资源, 阅读]

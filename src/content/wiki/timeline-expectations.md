@@ -31,10 +31,10 @@ upstream:
 
 | 环节 | 为什么慢 |
 | --- | --- |
-| 挂号与门诊 | 能接诊的医生数量有限，号源紧张 |
-| 复诊间隔 | 有些医生要求间隔数周到数月，这是流程设计，不是针对你 |
-| 手术排期 | 排期通常以月计，不是以周计 |
-| 证件办理 | 各地窗口口径不同，可能来回补材料 |
+| 挂号与门诊 | 上游按城市整理的接诊资源数量有限，见[精神科资源综述](https://mtf.wiki/zh-cn/docs/psyco/overview) |
+| 复诊间隔 | 上游的[介绍信](https://mtf.wiki/zh-cn/docs/psyco/introletter)条目说明多数情况需要多次就诊而非一次开具 |
+| 手术排期 | 上游 [SRS 综述](https://mtf.wiki/zh-cn/docs/srs/china/overview)涉及预约与排期流程 |
+| 证件办理 | 上游[实名信息变更指引](https://mtf.wiki/zh-cn/docs/useful-info/real-name-info)记录了各地口径差异 |
 | 血液监测的节奏 | 需要按间隔复查，急不得 |
 
 ## 可以快的地方

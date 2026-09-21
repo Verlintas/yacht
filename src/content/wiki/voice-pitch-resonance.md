@@ -1,88 +1,84 @@
 ---
 title: 音高与共鸣
 category: life
+nature: practical
 scenarios: [life]
 order: 53
 tags: [声音, 训练, 原理]
 updated: 2026-09-21
 status: sourced
-summary: 两个决定声音听感的维度，以及为什么只提音高通常效果不好。
+summary: 音高与共鸣这两个概念的来源说明，以及标注为经验的练习方向。
 sources:
   - title: MtF.wiki · 嗓音训练综述
     url: https://mtf.wiki/zh-cn/docs/vocal-therapy/overview
-  - title: MtF.wiki · 嗓音训练已知资源
-    url: https://mtf.wiki/zh-cn/docs/vocal-therapy/confirmed
+  - title: MtF.wiki · 声带手术综述
+    url: https://mtf.wiki/zh-cn/docs/vocal-surgery/overview
+  - title: 英文维基百科 · Transgender voice therapy
+    url: https://en.wikipedia.org/wiki/Transgender_voice_therapy
   - title: MtF.wiki · HRT 全面指南（效果表）
     url: https://mtf.wiki/zh-cn/docs/medicine/overview
 upstream:
   - title: MtF.wiki · 嗓音训练综述
     url: https://mtf.wiki/zh-cn/docs/vocal-therapy/overview
+  - title: 英文维基百科 · Transgender voice therapy
+    url: https://en.wikipedia.org/wiki/Transgender_voice_therapy
 ---
 
-## 两个维度
+## 两个概念的来源（有来源）
 
-| 维度 | 是什么 | 影响 |
-| --- | --- | --- |
-| **音高** | 声带振动的基频，也就是「高低」 | 最直观，但不是唯一 |
-| **共鸣** | 声音在咽腔、口腔、鼻腔的分布 | 决定「亮」或「闷」，影响很大 |
+**音高（pitch）与共鸣（resonance）是语音学与言语治疗中的基本概念**，也是嗓音女性化训练涉及的维度。
 
-**上游把训练和手术分开，正是因为：手术主要改音高，共鸣要靠训练。**
+上游的[嗓音训练综述](https://mtf.wiki/zh-cn/docs/vocal-therapy/overview)把训练归入**言语治疗**范畴，并指向英文维基的 [Transgender voice therapy](https://en.wikipedia.org/wiki/Transgender_voice_therapy) 词条——**那里有对这些维度的系统说明**。
 
-## 为什么只提音高效果不好
+**本站不复述这些概念的定义**，因为准确定义需要语音学背景，二手转述容易出错。需要了解请看上述来源。
 
-**音高提上去了但共鸣没变，听起来会像「捏着嗓子说话」。**
+## 音高与手术的关系（有来源）
 
-反过来，**共鸣调整到位时，音高不需要提太多就已经很自然**。
+上游在[嗓音训练综述](https://mtf.wiki/zh-cn/docs/vocal-therapy/overview)中说明，手术的定位是：
 
-所以合理的顺序是：**先调共鸣，再提音高。**
+> 在系统的 **嗓音女性化训练** 完成之后，如果希望 **进一步提升音高**，此时可咨询具有丰富 **嗓音女性化手术** 经验的嗓音外科医师是否适合手术。
 
-## 共鸣的练习方向
+**这表明确切的一点是：手术的目标是「进一步提升音高」。** 上游未把共鸣列为手术目标。
 
-**目标：让声音在口腔前部、面部产生明显振动感，而不是闷在喉咙里。**
+## 上游提到的监控指标（有来源）
 
-练习思路（感觉描述，不是唯一做法）：
+上游列出的监控软件，其功能是**监控相关的指征（音高）**：
 
-1. 发延长音「m——」，感受鼻梁与面部的振动
-2. 保持这个振动位置，换元音：mi - me - ma
-3. 换成词，再换成短句
-4. 录音对比，确认声音变「亮」而不是变「尖」
-
-**判断标准：** 练完喉咙不紧、说话不累。**如果累，方法就不对。**
-
-## 音高的练习方向
-
-- **从舒适音高开始**，每次上移一点点
-- **不要挤压喉咙**去够高音
-- 目标是**可持续的日常说话音高**，不是唱歌的最高音
-- 说话本来就有起伏，**不需要全程维持在一个点**
-
-## 还有两个常被忽略的维度
-
-| 维度 | 说明 |
+| 平台 | 工具 |
 | --- | --- |
-| 语调起伏 | 语句内的音高变化幅度。幅度过小听起来平、闷 |
-| 语速与停顿 | 稍慢、停顿更明显，通常更接近目标听感 |
-| 气息比例 | 适当气声让声音柔和，过多则显得虚弱 |
-| 咬字 | 辅音清晰度也影响听感 |
+| Android / iOS | Voice Tools、Vocal Pitch Monitor |
+| iOS | Singscope |
+| Windows / macOS / Linux | Friture、Praat |
 
-## 一个实用判断方法
+**上游同时明确：软件并不能指导训练。**
 
-**录一段自己的声音，隔一天再听。**
+---
 
-- 第一反应是「像不像」还是「好不好听」？后者说明你在接近目标
-- 自己听觉得别扭，但别人说自然——这很常见，因为骨传导的差异
-- **别一天听十遍**，会放大焦虑
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+下面的练习方向是常见做法整理，<b>没有权威来源支持</b>，也不构成训练指导。
+需要系统训练请找言语治疗师，见<a href="https://mtf.wiki/zh-cn/docs/vocal-therapy/confirmed" target="_blank" rel="noreferrer noopener">已知资源</a>。
+</p>
+</div>
+
+## 经验：共鸣常被提到
+
+社群讨论中常提到「只提音高听起来不自然，还要调整共鸣」。**这一说法本站未找到权威来源支持**，仅作为常见经验列出。
+
+## 经验：练习时的不适
+
+**嗓子疼、沙哑、说话费力时停止练习**，是常见的自我保护做法。**具体的停止标准与禁忌没有来源支持**，持续不适请就医。
+
+## 经验：录音对比
+
+用录音回听自己的声音，是常见的自我观察方式。**注意自己听到的声音（骨传导）与录音存在差异**，这是常见声学常识，但本站未找到可直接引用的来源。
 
 ## 如果训练效果不理想
 
-可能的原因：
+上游给出的路径是：**完成系统训练后，再咨询嗓音外科医师评估是否适合手术**。见[嗓音手术](/wiki/vocal-surgery/)。
 
-1. **练的时间还不够** —— 声音改变通常以月计
-2. **只练了音高** —— 回到共鸣
-3. **方法不对** —— 找专业的嗓音治疗师评估，见[已知资源](https://mtf.wiki/zh-cn/docs/vocal-therapy/confirmed)
-4. **期待过高** —— 目标不是「变成另一个人」，是「自己听着舒服」
-
-**再考虑手术**，见[嗓音手术](/wiki/vocal-surgery/)。
+**本站不提供「训练多久算完成」或「效果不好怎么办」的判断标准**，这需要言语治疗师评估。
 
 ## 相关页面
 

@@ -64,7 +64,7 @@ upstream:
 因为指标异常通常没有体感。见[治疗期间的监测](/wiki/monitoring-index/)。
 
 **HRT 会改变声音/身高/骨架吗？**
-声音不会，骨骼结构成年后基本定型。见[常见误区](/wiki/myths/)与[声音训练入门](/wiki/voice-training/)。
+声音不会——[效果表](https://mtf.wiki/zh-cn/docs/medicine/overview)明确列出「声音改变：无」。骨骼方面上游指出已发育成熟的男性化特征难以仅凭激素逆转。见[HRT 会改变什么](/wiki/hrt-effects/)。
 
 ## 关于证件
 
@@ -78,7 +78,7 @@ upstream:
 各地规定不同，先问窗口。见[改名流程](/wiki/name-change/)。
 
 **被窗口拒绝了怎么办？**
-问清依据、保留记录、换渠道。见[身份证性别信息变更](/wiki/id-card-change/)。
+问清依据、保留记录、换渠道。见[被拒绝后的申诉路径](/wiki/appeal-path/)。
 
 ## 关于生活
 

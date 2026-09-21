@@ -1,6 +1,7 @@
 ---
 title: 性健康
 category: life
+nature: reference
 scenarios: [life]
 order: 67
 tags: [健康, 性, 医疗]

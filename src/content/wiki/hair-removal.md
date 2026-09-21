@@ -1,6 +1,7 @@
 ---
 title: 脱毛方式对比
 category: medical
+nature: reference
 scenarios: [life, surgery]
 order: 65
 tags: [脱毛, 外观, 实用]

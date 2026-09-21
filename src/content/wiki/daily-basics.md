@@ -1,6 +1,7 @@
 ---
 title: 日常入门的顺序
 category: life
+nature: practical
 scenarios: [life]
 order: 40
 tags: [日常, 实用]
@@ -24,6 +25,13 @@ upstream:
 ---
 
 这一页不涉及医疗，只讲**外观与日常**的部分，以及一个省力的推进顺序。
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 为什么顺序重要
 

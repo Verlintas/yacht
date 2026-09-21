@@ -1,6 +1,7 @@
 ---
 title: 出柜策略与安全评估
 category: life
+nature: practical
 scenarios: [unsure, life]
 order: 10
 tags: [出柜, 安全]
@@ -22,6 +23,15 @@ upstream:
   - title: MtF.wiki · 校园指南
     url: https://mtf.wiki/zh-cn/docs/campus
 ---
+
+---
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 先改变一个想法
 

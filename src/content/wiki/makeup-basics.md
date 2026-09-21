@@ -1,6 +1,7 @@
 ---
 title: 妆容入门
 category: life
+nature: practical
 scenarios: [life]
 order: 55
 tags: [外观, 妆容, 实用]
@@ -24,6 +25,15 @@ upstream:
 **新手最容易犯的错是一次上太多步骤**，结果又花时间又不自然。
 
 **建议顺序：** 底妆 → 眉毛 → 唇 → 其他。
+
+---
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 第一步：底妆
 

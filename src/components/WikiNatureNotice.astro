@@ -1,0 +1,24 @@
+---
+interface Props {
+  nature: 'reference' | 'practical';
+}
+const { nature } = Astro.props;
+---
+
+{
+  nature === 'practical' && (
+    <div class="nature-notice">
+      <strong>本页为经验整理，不是研究结论</strong>
+      <p>
+        这一页属于<b>操作性内容</b>，不是资料性条目。事实性说法尽量附了来源；
+        标为「经验」或没有来源的部分，是常见做法与经验的整理，
+        <b>没有权威文献支持，请当作参考而不是依据</b>。
+      </p>
+      <p class="readout-note">
+        需要可核查的内容时，请看页面末尾的来源，或去
+        <a href="https://mtf.wiki" target="_blank" rel="noreferrer noopener">MtF.wiki</a>
+        等上游资料库。
+      </p>
+    </div>
+  )
+}

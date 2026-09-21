@@ -1,6 +1,7 @@
 ---
 title: 旅行与住宿
 category: life
+nature: practical
 scenarios: [life]
 order: 66
 tags: [出行, 住宿, 实用]
@@ -22,6 +23,13 @@ upstream:
   - title: MtF.wiki · 泰国旅行指南
     url: https://mtf.wiki/zh-cn/docs/srs/thailand/thailand-tips
 ---
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 住宿
 

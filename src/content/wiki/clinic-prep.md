@@ -1,6 +1,7 @@
 ---
 title: 就医前准备清单
 category: medical
+nature: reference
 scenarios: [start, hrt, surgery]
 order: 100
 tags: [就诊, 清单, 实用]
@@ -25,7 +26,9 @@ upstream:
     url: https://mtf.wiki/zh-cn/docs/hrt/overview
 ---
 
-门诊时间通常只有几分钟。**准备过的和没准备的，能问到的信息量差好几倍。** 这份清单可以直接抄进备忘录。
+这一页是一份**操作清单**，内容来自上游资料的整理，见[精神科资源综述](https://mtf.wiki/zh-cn/docs/psyco/overview)与 [HRT 医疗资源综述](https://mtf.wiki/zh-cn/docs/hrt/overview)。
+
+**为什么值得提前准备：** 门诊时间有限，把要问的问题写下来能减少遗漏。这是操作建议，不是研究结论。
 
 ## 出发前
 

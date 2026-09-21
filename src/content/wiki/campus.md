@@ -1,6 +1,7 @@
 ---
 title: 校园
 category: life
+nature: practical
 scenarios: [life]
 order: 20
 tags: [校园, 学生]
@@ -22,6 +23,13 @@ upstream:
 ---
 
 上游的[校园指南](https://mtf.wiki/zh-cn/docs/campus)是这一块的主要资料，本站只补充几条原则。
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 在校期间优先办的事
 

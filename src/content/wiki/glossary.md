@@ -23,7 +23,9 @@ upstream:
     url: https://mtf.wiki/zh-cn/docs/useful-info/colloquialism
 ---
 
-这一页是**导航用的速查表**，不是定义大全。要更细的解释，看上游的两份词表。
+这一页是**导航用的速查表**，不是定义大全。要更细的解释，看上游的两份词表：[缩写词语表](https://mtf.wiki/zh-cn/docs/useful-info/abbreviation)与[通俗用语表](https://mtf.wiki/zh-cn/docs/useful-info/colloquialism)。
+
+**本页的词条定义是本站对上述来源的整理**，不是原始定义。
 
 ## 身份与人群
 
@@ -70,6 +72,6 @@ upstream:
 
 ## 关于用语的一点说明
 
-- 词会变。十年前常用的说法，今天可能已经不合适了。这不是谁对谁错，是语言在动。
+- 词会变。上游的[通俗用语表](https://mtf.wiki/zh-cn/docs/useful-info/colloquialism)就专门收录了社群内通行但与字面意思不同的说法。这不是谁对谁错，是语言在动。
 - **别人怎么称呼你，以你自己的选择为准。** 词表是给「看不懂」用的，不是给「应该怎么叫」用的。
 - 如果某份资料里的用词让你不舒服，可以直接去看它的原始出处，或者换一份资料。

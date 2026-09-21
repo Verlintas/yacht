@@ -1,6 +1,7 @@
 ---
 title: 体型修饰与着装
 category: life
+nature: practical
 scenarios: [life]
 order: 54
 tags: [外观, 着装, 实用]
@@ -24,6 +25,15 @@ upstream:
 **HRT 会改变体脂分布**（见 [HRT 会改变什么](/wiki/hrt-effects/)），但需要时间（3–6 月开始，2–5 年稳定）。
 
 **在等待期间，着装是最快见效、完全可逆的方式。**
+
+---
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 三个关键比例
 

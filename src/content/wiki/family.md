@@ -1,6 +1,7 @@
 ---
 title: 家庭沟通
 category: life
+nature: practical
 scenarios: [life, trouble]
 order: 70
 tags: [家庭, 沟通]
@@ -20,6 +21,13 @@ upstream:
   - title: MtF.wiki · 公益组织
     url: https://mtf.wiki/zh-cn/docs/useful-info/organizations
 ---
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 先做安全评估
 

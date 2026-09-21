@@ -1,6 +1,7 @@
 ---
 title: 面试与背调
 category: life
+nature: practical
 scenarios: [life]
 order: 62
 tags: [职场, 求职, 实用]
@@ -18,6 +19,15 @@ upstream:
   - title: MtF.wiki · 常见法律问题
     url: https://mtf.wiki/zh-cn/docs/useful-info/legal-faq
 ---
+
+---
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 面试时要不要说
 

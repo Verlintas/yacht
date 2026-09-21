@@ -1,6 +1,7 @@
 ---
 import WikiLayout from '../../layouts/WikiLayout.astro';
 import WikiStatus from '../../components/WikiStatus.astro';
+import WikiNature from '../../components/WikiNature.astro';
 import { getCollection } from 'astro:content';
 import { wikiCategories, wikiScenarios } from '../../data/wiki';
 import { url } from '../../lib/url';
@@ -109,7 +110,10 @@ const formatDate = (date: Date): string =>
               >
                 <span class="card-head">
                   <span class="readout-label">{formatDate(entry.data.updated)}</span>
-                  <WikiStatus status={entry.data.status} size="sm" />
+                  <span class="badge-row">
+                    <WikiNature nature={entry.data.nature} />
+                    <WikiStatus status={entry.data.status} size="sm" />
+                  </span>
                 </span>
                 <strong class="note-title">{entry.data.title}</strong>
                 {entry.data.summary && <span class="readout-note">{entry.data.summary}</span>}

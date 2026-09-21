@@ -40,12 +40,14 @@ upstream:
 | 凝胶 | 每日涂抹 | 绕过首过效应；需注意涂抹部位与接触转移 |
 | 针剂 | 按周期注射 | 给药间隔较长；需要注射操作与储存条件 |
 
-具体每种的特点、适用与不适用情况，看上游对应条目。**上表只是分类框架，不是选择建议。**
+具体每种的特点、适用与不适用情况，看上游对应条目：[戊酸雌二醇片](https://mtf.wiki/zh-cn/docs/medicine/estrogen/estradiol-valerate)、[雌二醇片](https://mtf.wiki/zh-cn/docs/medicine/estrogen/estradiol)、[贴片](https://mtf.wiki/zh-cn/docs/medicine/estrogen/estradiol-patch)、[凝胶](https://mtf.wiki/zh-cn/docs/medicine/estrogen/gel)、[针剂](https://mtf.wiki/zh-cn/docs/medicine/estrogen/injection)。
+
+**上表只是分类框架，不是选择建议。**
 
 ## 医生通常会考虑什么
 
-1. **肝功能与代谢情况** — 影响口服剂型是否合适。
-2. **血栓风险** — 包括年龄、吸烟、既往病史、家族史。
+1. **肝功能与代谢情况** — 口服剂型经肝脏代谢。
+2. **血栓风险** — 上游指出**同剂量下经口服的静脉血栓风险大于含服、经皮、注射**（见 [HRT 全面指南](https://mtf.wiki/zh-cn/docs/medicine/overview)）。
 3. **可获得性** — 本地能买到什么、医院能开什么。
 4. **依从性** — 能不能做到每日服用、按时换贴、按时注射。
 5. **费用** — 不同剂型价差明显，长期使用要考虑。
@@ -61,10 +63,10 @@ upstream:
 
 ## 关于自行购买
 
-- 无法确认来源与真伪。
-- 无法确认储存条件是否达标（部分剂型对温度敏感）。
-- 跳过了监测环节。
-- 出现问题时没有可追溯的处方记录，会影响后续就医。
+- 无法确认来源与真伪
+- 无法确认储存条件是否达标（部分剂型对温度敏感，见[药品储存与携带](/wiki/medication-storage/)）
+- 跳过了监测环节（上游在[监测](https://mtf.wiki/zh-cn/docs/medicine/monitoring)中说明了其必要性）
+- 出现问题时没有可追溯的处方记录，会影响后续就医
 
 ## 相关页面
 

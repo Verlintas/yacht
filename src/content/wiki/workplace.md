@@ -1,6 +1,7 @@
 ---
 title: 职场
 category: life
+nature: practical
 scenarios: [life]
 order: 30
 tags: [职场, 工作]
@@ -20,6 +21,13 @@ upstream:
   - title: MtF.wiki · 常见法律问题
     url: https://mtf.wiki/zh-cn/docs/useful-info/legal-faq
 ---
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 核心判断：说，还是不说
 

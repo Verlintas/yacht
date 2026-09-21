@@ -1,6 +1,7 @@
 ---
 title: 危机资源与紧急情况
 category: resources
+nature: reference
 scenarios: [trouble]
 order: 5
 tags: [危机, 求助, 紧急]

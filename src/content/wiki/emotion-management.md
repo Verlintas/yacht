@@ -1,6 +1,7 @@
 ---
 title: 情绪管理
 category: life
+nature: practical
 scenarios: [life, trouble, unsure]
 order: 70
 tags: [心理, 情绪, 自助]
@@ -20,6 +21,13 @@ upstream:
   - title: 美国心理学会 · 跨性别与性别多元议题
     url: https://www.apa.org/topics/lgbtq/transgender
 ---
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 几种常见的情绪
 

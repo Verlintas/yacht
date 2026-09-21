@@ -1,6 +1,7 @@
 ---
 title: 社群与互助
 category: life
+nature: practical
 scenarios: [unsure, life, trouble]
 order: 60
 tags: [社群, 支持]
@@ -24,6 +25,13 @@ upstream:
   - title: MtF.wiki · 友情链接
     url: https://mtf.wiki/zh-cn/docs/friendship
 ---
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 社群能提供什么
 

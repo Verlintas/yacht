@@ -1,6 +1,7 @@
 ---
 title: 中介与骗局识别
 category: start
+nature: practical
 scenarios: [trouble, start, surgery]
 order: 22
 tags: [安全, 防骗]
@@ -22,6 +23,13 @@ upstream:
   - title: MtF.wiki · 公益组织
     url: https://mtf.wiki/zh-cn/docs/useful-info/organizations
 ---
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 为什么这一行骗子多
 

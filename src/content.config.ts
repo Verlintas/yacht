@@ -32,6 +32,8 @@ const wiki = defineCollection({
   schema: z.object({
     title: z.string(),
     category: z.enum(['start', 'psych', 'medical', 'legal', 'life', 'resources']),
+    /** reference = 资料性条目（事实性说法须逐条附来源）；practical = 操作性条目（经验整理，非科学结论） */
+    nature: z.enum(['reference', 'practical']).default('reference'),
     scenarios: z
       .array(z.enum(['unsure', 'start', 'hrt', 'surgery', 'documents', 'life', 'trouble']))
       .default([]),

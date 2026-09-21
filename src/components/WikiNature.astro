@@ -1,0 +1,20 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  nature: CollectionEntry<'wiki'>['data']['nature'];
+}
+
+const { nature } = Astro.props;
+---
+
+{
+  nature === 'practical' && (
+    <span
+      class="badge badge-practical"
+      title="这一页是操作经验整理，不是研究结论；事实性内容尽量附了来源，其余为实践经验"
+    >
+      经验整理
+    </span>
+  )
+}

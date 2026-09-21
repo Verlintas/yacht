@@ -3,6 +3,8 @@ import WikiLayout from '../../layouts/WikiLayout.astro';
 import WikiStatus from '../../components/WikiStatus.astro';
 import WikiRefs from '../../components/WikiRefs.astro';
 import WikiAiNotice from '../../components/WikiAiNotice.astro';
+import WikiNature from '../../components/WikiNature.astro';
+import WikiNatureNotice from '../../components/WikiNatureNotice.astro';
 import { getCollection, render } from 'astro:content';
 import { getCategory, getScenario } from '../../data/wiki';
 import { url } from '../../lib/url';
@@ -38,6 +40,7 @@ const others = siblings.filter((item) => item.id !== entry.id);
   <h1 class="page-title">{entry.data.title}</h1>
   <p class="page-sub meta-row">
     <WikiStatus status={entry.data.status} />
+    <WikiNature nature={entry.data.nature} />
     <WikiAiNotice variant="compact" />
     {entry.data.tags.length > 0 && <span class="readout-note">{entry.data.tags.join(' / ')}</span>}
   </p>
@@ -56,6 +59,7 @@ const others = siblings.filter((item) => item.id !== entry.id);
   }
 
   <article class="panel panel-pad prose spaced">
+    <WikiNatureNotice nature={entry.data.nature} />
     <Content />
   </article>
 

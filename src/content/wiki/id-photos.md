@@ -1,6 +1,7 @@
 ---
 title: 证件照拍摄
 category: life
+nature: practical
 scenarios: [documents, life]
 order: 68
 tags: [证件, 实用, 外观]
@@ -35,6 +36,15 @@ upstream:
 | 外观变化较大 | 建议主动更新，减少核验摩擦 |
 
 **如果你已经过渡一段时间、外观与旧照片差异较大，更新证件照会让日常办事顺很多。**
+
+---
+
+<div class="notice">
+<strong>以下为经验整理，非研究结论</strong>
+<p>
+本节内容没有权威来源支持，属于常见做法与经验整理，请当作参考而不是依据。
+</p>
+</div>
 
 ## 拍摄前的准备
 
