@@ -1,0 +1,124 @@
+---
+import Base from '../../layouts/Base.astro';
+import WikiStatus from '../../components/WikiStatus.astro';
+import { getCollection } from 'astro:content';
+import { wikiCategories, statusMeta } from '../../data/wiki';
+import { url } from '../../lib/url';
+
+const entries = await getCollection('wiki');
+
+const sections = wikiCategories
+  .map((category) => ({
+    category,
+    items: entries
+      .filter((entry) => entry.data.category === category.slug)
+      .sort((a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title, 'zh')),
+  }))
+  .filter((section) => section.items.length > 0);
+
+const pending = entries.filter((entry) => entry.data.status !== 'reviewed').length;
+
+const formatDate = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+---
+
+<Base title="百科 · Verlintas 的小窝" description="跨性别资料的索引与导览，不做医疗或法律建议。">
+  <p class="eyebrow">资料索引 · {entries.length} 条 · 待核对 {pending} 条</p>
+  <h1 class="page-title">百科</h1>
+  <p class="page-sub">
+    这里是<b>索引层</b>：告诉你每个问题该去读哪份资料、按什么顺序读，而不是重写一份资料。
+    每个条目都在文末列出上游来源。
+  </p>
+
+  <div class="panel panel-pad notice spaced">
+    <strong>先说清楚</strong>
+    <p>
+      本站不是医疗或法律建议。内容是对 <a href="https://mtf.wiki" target="_blank" rel="noreferrer noopener">MtF.wiki</a>
+      等上游资料的整理与导航，可能有误、可能过时。用药、诊疗、证件与法律事务，一律以来源原文和专业人员意见为准。
+    </p>
+    <p class="readout-note">
+      每条都标了状态：草稿 / 有来源 / 已核对 / 已过时。标注为「草稿」或「有来源」的条目尚未人工复核。
+      <a href={url('wiki/review/')}>查看待核对清单 →</a>
+    </p>
+  </div>
+
+  <div class="search-bar spaced">
+    <input
+      type="search"
+      id="wikiSearch"
+      placeholder="搜索标题、摘要或标签…"
+      aria-label="搜索百科条目"
+      autocomplete="off"
+    />
+    <span class="readout-note" id="wikiSearchCount"></span>
+  </div>
+
+  <div id="wikiSections">
+    {
+      sections.map((section) => (
+        <section class="section" data-wiki-section>
+          <div class="section-head">
+            <h2 class="section-title">{section.category.label}</h2>
+            <span class="section-note">{section.category.latin}</span>
+          </div>
+          <p class="readout-note section-desc">{section.category.description}</p>
+          <div class="grid">
+            {section.items.map((entry) => (
+              <a
+                class="panel panel-pad note-card"
+                href={url(`wiki/${entry.id}/`)}
+                data-wiki-item
+                data-search={`${entry.data.title} ${entry.data.summary ?? ''} ${entry.data.tags.join(' ')} ${section.category.label}`.toLowerCase()}
+              >
+                <span class="card-head">
+                  <span class="readout-label">{formatDate(entry.data.updated)}</span>
+                  <WikiStatus status={entry.data.status} size="sm" />
+                </span>
+                <strong class="note-title">{entry.data.title}</strong>
+                {entry.data.summary && <span class="readout-note">{entry.data.summary}</span>}
+                {entry.data.tags.length > 0 && (
+                  <span class="tag-row">
+                    {entry.data.tags.map((tag) => (
+                      <span class="tag tag-sm">{tag}</span>
+                    ))}
+                  </span>
+                )}
+              </a>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+  </div>
+
+  <p class="panel panel-pad placeholder spaced" id="wikiEmpty" hidden>没有匹配的条目。</p>
+
+  <script>
+    const input = document.getElementById('wikiSearch') as HTMLInputElement | null;
+    const counter = document.getElementById('wikiSearchCount');
+    const empty = document.getElementById('wikiEmpty');
+    const items = Array.from(document.querySelectorAll<HTMLElement>('[data-wiki-item]'));
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-wiki-section]'));
+
+    const apply = (): void => {
+      const query = (input?.value ?? '').trim().toLowerCase();
+      let visible = 0;
+      items.forEach((item) => {
+        const hit = query === '' || (item.dataset.search ?? '').includes(query);
+        item.hidden = !hit;
+        if (hit) visible += 1;
+      });
+      sections.forEach((section) => {
+        const any = Array.from(section.querySelectorAll<HTMLElement>('[data-wiki-item]')).some(
+          (item) => !item.hidden,
+        );
+        section.hidden = !any;
+      });
+      if (counter) counter.textContent = query === '' ? '' : `${visible} / ${items.length}`;
+      if (empty) empty.hidden = !(query !== '' && visible === 0);
+    };
+
+    input?.addEventListener('input', apply);
+    apply();
+  </script>
+</Base>

@@ -1,0 +1,121 @@
+---
+import Base from '../../layouts/Base.astro';
+import WikiStatus from '../../components/WikiStatus.astro';
+import { getCollection } from 'astro:content';
+import { wikiCategories, statusMeta } from '../../data/wiki';
+import { url } from '../../lib/url';
+
+const entries = await getCollection('wiki');
+
+const groups = wikiCategories
+  .map((category) => ({
+    category,
+    items: entries
+      .filter((entry) => entry.data.category === category.slug)
+      .sort((a, b) => a.data.order - b.data.order),
+  }))
+  .filter((group) => group.items.length > 0);
+
+const total = entries.length;
+const reviewed = entries.filter((entry) => entry.data.status === 'reviewed').length;
+
+const formatDate = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+---
+
+<Base title="待核对清单 · 百科 · Verlintas 的小窝">
+  <p class="eyebrow">
+    <a href={url('wiki/')}>← 百科</a>
+    <span> / 核对进度</span>
+  </p>
+  <h1 class="page-title">待核对清单</h1>
+  <p class="page-sub">
+    不用通读全文。逐条打开、扫一眼来源，确认没问题就把该条目的 <code>status</code> 改成 <code>reviewed</code>。
+  </p>
+
+  <div class="panel panel-pad spaced">
+    <div class="card-head">
+      <span class="readout-label">核对进度</span>
+      <span class="readout-note" id="reviewProgress">{reviewed} / {total}</span>
+    </div>
+    <div class="progress progress-lg">
+      <span style={`width: ${total === 0 ? 0 : Math.round((reviewed / total) * 100)}%`}></span>
+    </div>
+    <p class="readout-note spaced">
+      下面的勾选框只存在你自己的浏览器里，方便标记「这条我看过了」，不会改动仓库文件。
+      要正式改状态，编辑对应 Markdown 的 frontmatter：<code>status: reviewed</code>。
+    </p>
+  </div>
+
+  {
+    groups.map((group) => (
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">{group.category.label}</h2>
+          <span class="section-note">
+            {group.items.filter((item) => item.data.status === 'reviewed').length} / {group.items.length}
+          </span>
+        </div>
+        <ul class="review-list">
+          {group.items.map((item) => (
+            <li class="review-item">
+              <input
+                type="checkbox"
+                class="review-check"
+                id={`check-${item.id}`}
+                data-review-id={item.id}
+                checked={item.data.status === 'reviewed'}
+              />
+              <label for={`check-${item.id}`}>
+                <span class="review-title">
+                  <a href={url(`wiki/${item.id}/`)}>{item.data.title}</a>
+                </span>
+                <span class="review-meta">
+                  <WikiStatus status={item.data.status} size="sm" />
+                  <span class="readout-note">
+                    来源 {item.data.sources.length} 条 · 最后核对 {formatDate(item.data.updated)}
+                  </span>
+                </span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+
+  <script>
+    const KEY = 'yacht:wiki-review';
+    const checks = Array.from(document.querySelectorAll<HTMLInputElement>('[data-review-id]'));
+
+    let stored: Record<string, boolean> = {};
+    try {
+      stored = JSON.parse(localStorage.getItem(KEY) ?? '{}') as Record<string, boolean>;
+    } catch {
+      stored = {};
+    }
+
+    const counter = document.getElementById('reviewProgress');
+
+    const update = (): void => {
+      const done = checks.filter((check) => check.checked).length;
+      if (counter) counter.textContent = `${done} / ${checks.length}`;
+    };
+
+    checks.forEach((check) => {
+      const id = check.dataset.reviewId ?? '';
+      if (id in stored) check.checked = stored[id];
+      check.addEventListener('change', () => {
+        stored[id] = check.checked;
+        try {
+          localStorage.setItem(KEY, JSON.stringify(stored));
+        } catch {
+          /* 忽略 */
+        }
+        update();
+      });
+    });
+
+    update();
+  </script>
+</Base>

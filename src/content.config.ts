@@ -30,7 +30,8 @@ const wiki = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/wiki' }),
   schema: z.object({
     title: z.string(),
-    category: z.string(),
+    category: z.enum(['start', 'psych', 'medical', 'legal', 'life', 'resources']),
+    order: z.number().default(100),
     tags: z.array(z.string()).default([]),
     updated: z.coerce.date(),
     status: z.enum(['draft', 'sourced', 'reviewed', 'outdated']),
@@ -44,7 +45,14 @@ const wiki = defineCollection({
         }),
       )
       .min(1),
-    upstream: z.array(z.url()).default([]),
+    upstream: z
+      .array(
+        z.object({
+          title: z.string(),
+          url: z.url(),
+        }),
+      )
+      .default([]),
   }),
 });
 

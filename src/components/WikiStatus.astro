@@ -1,0 +1,16 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { statusMeta } from '../data/wiki';
+
+interface Props {
+  status: CollectionEntry<'wiki'>['data']['status'];
+  size?: 'sm' | 'md';
+}
+
+const { status, size = 'md' } = Astro.props;
+const meta = statusMeta[status];
+---
+
+<span class:list={['badge', meta.tone, size === 'sm' && 'badge-sm']} title={meta.hint}>
+  {meta.label}
+</span>

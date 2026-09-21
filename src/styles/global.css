@@ -944,3 +944,182 @@ footer.foot {
 .prose-sm h3 {
   font-size: 15px;
 }
+
+/* ── 百科 ───────────────────────────────── */
+
+.notice {
+  border-left: 2px solid var(--brass);
+}
+
+.notice strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.notice p {
+  margin: 0 0 8px;
+  color: var(--text-dim);
+}
+
+.notice p:last-child {
+  margin-bottom: 0;
+}
+
+.notice a {
+  color: var(--sea);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-bar input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.search-bar input::placeholder {
+  color: var(--text-faint);
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: var(--brass);
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.section-desc {
+  margin: -6px 0 14px;
+}
+
+.badge-sm {
+  font-size: 10px;
+  padding: 1px 7px;
+}
+
+.wiki-refs section + section {
+  margin-top: 16px;
+}
+
+.refs-title {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+.refs-list {
+  margin: 0;
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.refs-list li::marker {
+  color: var(--brass);
+}
+
+.refs-list a {
+  color: var(--sea);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--sea) 35%, transparent);
+  word-break: break-word;
+}
+
+.refs-list a:hover {
+  text-decoration-color: var(--sea);
+}
+
+.disclaimer {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.progress-lg {
+  height: 5px;
+}
+
+.review-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.review-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.review-item:hover {
+  border-color: var(--border-strong);
+}
+
+.review-check {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  accent-color: var(--brass);
+}
+
+.review-item label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.review-title a {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.review-title a:hover {
+  color: var(--brass);
+}
+
+.review-meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.review-check:checked ~ label .review-title a {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}

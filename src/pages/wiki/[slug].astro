@@ -1,0 +1,63 @@
+---
+import Base from '../../layouts/Base.astro';
+import WikiStatus from '../../components/WikiStatus.astro';
+import WikiRefs from '../../components/WikiRefs.astro';
+import { getCollection, render } from 'astro:content';
+import { getCategory } from '../../data/wiki';
+import { url } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('wiki');
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry, siblings: entries.filter((item) => item.data.category === entry.data.category) },
+  }));
+}
+
+const { entry, siblings } = Astro.props;
+const { Content } = await render(entry);
+const category = getCategory(entry.data.category);
+const others = siblings
+  .filter((item) => item.id !== entry.id)
+  .sort((a, b) => a.data.order - b.data.order);
+---
+
+<Base title={`${entry.data.title} · 百科 · Verlintas 的小窝`} description={entry.data.summary}>
+  <p class="eyebrow">
+    <a href={url('wiki/')}>← 百科</a>
+    <span> / {category.label}</span>
+  </p>
+  <h1 class="page-title">{entry.data.title}</h1>
+  <p class="page-sub meta-row">
+    <WikiStatus status={entry.data.status} />
+    {entry.data.tags.length > 0 && <span class="readout-note">{entry.data.tags.join(' / ')}</span>}
+  </p>
+
+  <article class="panel panel-pad prose spaced">
+    <Content />
+  </article>
+
+  <WikiRefs entry={entry} />
+
+  {
+    others.length > 0 && (
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">同类条目</h2>
+          <span class="section-note">{category.label}</span>
+        </div>
+        <div class="grid">
+          {others.map((item) => (
+            <a class="panel panel-pad note-card" href={url(`wiki/${item.id}/`)}>
+              <span class="card-head">
+                <WikiStatus status={item.data.status} size="sm" />
+              </span>
+              <strong class="note-title">{item.data.title}</strong>
+              {item.data.summary && <span class="readout-note">{item.data.summary}</span>}
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
+</Base>

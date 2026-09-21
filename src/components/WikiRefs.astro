@@ -1,0 +1,53 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry: CollectionEntry<'wiki'>;
+}
+
+const { entry } = Astro.props;
+const { sources, upstream, updated } = entry.data;
+
+const formatDate = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+---
+
+<div class="panel panel-pad spaced wiki-refs">
+  {
+    upstream.length > 0 && (
+      <section>
+        <h2 class="refs-title">上游资料</h2>
+        <ul class="refs-list">
+          {upstream.map((item) => (
+            <li>
+              <a href={item.url} target="_blank" rel="noreferrer noopener">
+                {item.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <section>
+    <h2 class="refs-title">本页来源</h2>
+    <ul class="refs-list">
+      {
+        sources.map((source) => (
+          <li>
+            <a href={source.url} target="_blank" rel="noreferrer noopener">
+              {source.title}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="readout-note">最后核对：{formatDate(updated)}</p>
+  </section>
+
+  <p class="disclaimer">
+    本站是资料索引，不提供医疗或法律建议。条目内容是对上游资料的整理与导航，
+    具体诊疗、用药与法律事务请以来源原文和专业人员意见为准。
+  </p>
+</div>
