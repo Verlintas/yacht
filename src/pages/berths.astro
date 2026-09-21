@@ -7,10 +7,15 @@ import { berths } from '../data/berths';
 <Base title="泊位 · Verlintas 的小窝">
   <p class="eyebrow">四处常驻点</p>
   <h1 class="page-title">泊位</h1>
-  <p class="page-sub">同时读取全部泊位的天况。沿海泊位额外显示近岸浪高与海表温度。</p>
+  <p class="page-sub">
+    同时读取全部泊位的实时天况、未来 24 小时温度曲线与未来几天预报。沿海泊位额外显示浪高、浪向、涌浪、海表温度与表层流。
+  </p>
+  <p class="readout-note spaced">
+    数据来源 Open-Meteo（天气 / 空气质量 / 海浪），无需 API key。每次打开时现取，失败时回退到最近一次缓存。
+  </p>
 
   <section class="section">
-    <div class="grid grid-wide">
+    <div class="grid-berths">
       {berths.map((berth) => <BerthCard berth={berth} />)}
     </div>
   </section>

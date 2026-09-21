@@ -7,66 +7,189 @@ interface Props {
 const { berth } = Astro.props;
 ---
 
-<article class="panel panel-pad" data-berth-card={berth.id}>
-  <div class="card-head">
-    <span class="readout-label">
-      <span class="berth-tag">{berth.kindLabel}</span>
-      <span class="berth-name-inline" data-slot="berth-name">{berth.name}</span>
+<article class="panel panel-pad berth-card" data-berth-card={berth.id}>
+  <header class="berth-head">
+    <span class="berth-tag">{berth.kindLabel}</span>
+    <span class="berth-head-name">
+      <strong data-slot="berth-name">{berth.name}</strong>
+      <span class="hero-latin" data-slot="berth-latin">{berth.latin}</span>
     </span>
     <span class="readout-note" data-slot="updated"></span>
-  </div>
+  </header>
 
-  <div class="weather-head">
+  <div class="berth-now">
     <span data-slot="weather-icon" aria-hidden="true"></span>
-    <div class="readout">
-      <span class="readout-value" data-slot="weather-temp">--</span>
+    <span class="readout-value readout-hero" data-slot="weather-temp">--</span>
+    <span class="berth-now-meta">
       <span class="readout-note" data-slot="weather-desc">读取中</span>
-    </div>
-    <div class="readout hero-side">
-      <span class="readout-label">高低温</span>
-      <span class="readout-value readout-small" data-slot="weather-range">--</span>
-    </div>
+      <span class="readout-note">
+        今日 <b data-slot="weather-range">--</b>
+      </span>
+      <span class="readout-note">
+        体感 <b data-slot="weather-apparent">--</b>
+      </span>
+    </span>
   </div>
 
-  <dl class="stat-list spaced">
-    <div>
-      <dt>体感 / 湿度</dt>
-      <dd>
-        <span data-slot="weather-apparent">--</span> · <span data-slot="weather-humidity">--</span>
-      </dd>
+  <section class="berth-block">
+    <div class="card-head">
+      <span class="readout-label">未来 24 小时</span>
+      <span class="readout-note">
+        <span data-slot="hourly-min">--</span> ~ <span data-slot="hourly-max">--</span>
+      </span>
     </div>
-    <div>
-      <dt>风速</dt>
-      <dd data-slot="weather-wind">--</dd>
+    <div class="spark-wrap" data-slot="hourly-chart"></div>
+  </section>
+
+  <section class="berth-block">
+    <div class="card-head">
+      <span class="readout-label">未来几天</span>
+      <span class="readout-note">最高 / 最低 · 降水概率 · 风</span>
     </div>
-    <div>
-      <dt>空气质量</dt>
-      <dd>
-        <span data-slot="air-aqi">--</span>
-        <span class="readout-unit">AQI</span>
-      </dd>
+    <div class="forecast" data-slot="forecast"></div>
+  </section>
+
+  <section class="berth-block">
+    <div class="card-head">
+      <span class="readout-label">实时指标</span>
     </div>
-    <div>
-      <dt>PM2.5</dt>
-      <dd data-slot="air-pm25">--</dd>
+    <dl class="stat-list">
+      <div>
+        <dt>湿度 / 露点</dt>
+        <dd>
+          <span data-slot="weather-humidity">--</span> · <span data-slot="weather-dewpoint">--</span>
+        </dd>
+      </div>
+      <div>
+        <dt>风速 / 阵风</dt>
+        <dd>
+          <span data-slot="weather-wind">--</span> · <span data-slot="weather-gusts">--</span>
+        </dd>
+      </div>
+      <div>
+        <dt>风向</dt>
+        <dd>
+          <span class="wind-cell">
+            <span data-slot="weather-windarrow"></span>
+            <span data-slot="weather-winddir">--</span>
+          </span>
+        </dd>
+      </div>
+      <div>
+        <dt>气压</dt>
+        <dd data-slot="weather-pressure">--</dd>
+      </div>
+      <div>
+        <dt>能见度 / 云量</dt>
+        <dd>
+          <span data-slot="weather-visibility">--</span> · <span data-slot="weather-cloud">--</span>
+        </dd>
+      </div>
+      <div>
+        <dt>降水 / 概率</dt>
+        <dd>
+          <span data-slot="weather-precip">--</span> · <span data-slot="weather-prob">--</span>
+        </dd>
+      </div>
+      <div>
+        <dt>紫外线</dt>
+        <dd>
+          <span data-slot="weather-uv">--</span>
+          <span class="badge badge-sm" data-slot="weather-uv-badge">--</span>
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="berth-block" data-card="air">
+    <div class="card-head">
+      <span class="readout-label">空气质量</span>
+      <span class="badge" data-slot="air-badge">--</span>
     </div>
-    <div>
-      <dt>日出 / 日落</dt>
-      <dd>
-        <span data-slot="sun-sunrise">--</span> · <span data-slot="sun-sunset">--</span>
-      </dd>
+    <dl class="stat-list">
+      <div>
+        <dt>AQI（美标）</dt>
+        <dd data-slot="air-aqi">--</dd>
+      </div>
+      <div>
+        <dt>PM2.5 / PM10</dt>
+        <dd>
+          <span data-slot="air-pm25">--</span> · <span data-slot="air-pm10">--</span>
+        </dd>
+      </div>
+      <div>
+        <dt>NO₂ / O₃</dt>
+        <dd>
+          <span data-slot="air-no2">--</span> · <span data-slot="air-o3">--</span>
+        </dd>
+      </div>
+      <div>
+        <dt>SO₂ / CO</dt>
+        <dd>
+          <span data-slot="air-so2">--</span> · <span data-slot="air-co">--</span>
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="berth-block">
+    <div class="card-head">
+      <span class="readout-label">日照</span>
     </div>
-    {
-      berth.coastal && (
-        <div>
-          <dt>浪高 / 海温</dt>
-          <dd>
-            <span data-slot="sea-wave">--</span> · <span data-slot="sea-sst">--</span>
-          </dd>
+    <dl class="stat-list">
+      <div>
+        <dt>日出 / 日落</dt>
+        <dd>
+          <span data-slot="sun-sunrise">--</span> · <span data-slot="sun-sunset">--</span>
+        </dd>
+      </div>
+      <div>
+        <dt>白昼长度</dt>
+        <dd data-slot="sun-daylight">--</dd>
+      </div>
+      <div>
+        <dt>紫外线峰值</dt>
+        <dd data-slot="sun-uvmax">--</dd>
+      </div>
+    </dl>
+  </section>
+
+  {
+    berth.coastal && (
+      <section class="berth-block" data-card="sea">
+        <div class="card-head">
+          <span class="readout-label">近岸海况</span>
+          <span class="readout-note">取自最近有效海区</span>
         </div>
-      )
-    }
-  </dl>
+        <dl class="stat-list">
+          <div>
+            <dt>浪高 / 浪向</dt>
+            <dd>
+              <span data-slot="sea-wave">--</span> · <span data-slot="sea-wavedir">--</span>
+            </dd>
+          </div>
+          <div>
+            <dt>浪周期</dt>
+            <dd data-slot="sea-period">--</dd>
+          </div>
+          <div>
+            <dt>涌浪 / 方向</dt>
+            <dd>
+              <span data-slot="sea-swell">--</span> · <span data-slot="sea-swelldir">--</span>
+            </dd>
+          </div>
+          <div>
+            <dt>海表温度</dt>
+            <dd data-slot="sea-sst">--</dd>
+          </div>
+          <div>
+            <dt>表层流</dt>
+            <dd data-slot="sea-current">--</dd>
+          </div>
+        </dl>
+      </section>
+    )
+  }
 
   <div class="panel-error" data-slot="error" hidden></div>
 </article>
