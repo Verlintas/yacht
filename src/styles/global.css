@@ -967,7 +967,21 @@ footer.foot {
   border-left: 2px solid var(--brass);
 }
 
-.notice strong {
+.notice-warn {
+  border-left-color: var(--bad);
+  border-color: color-mix(in srgb, var(--bad) 40%, var(--border));
+}
+
+.notice > strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.notice-warn > strong {
+  color: var(--bad);
+}
+
+.notice > strong {
   display: block;
   margin-bottom: 6px;
 }
@@ -1028,6 +1042,42 @@ footer.foot {
 .badge-sm {
   font-size: 10px;
   padding: 1px 7px;
+}
+
+.badge-ai {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+
+.ai-notice {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, var(--border));
+  border-left: 2px solid var(--warn);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--warn) 7%, transparent);
+}
+
+.ai-notice > strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--warn);
+}
+
+.ai-notice p {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.ai-notice p:last-child {
+  margin-bottom: 0;
+}
+
+.ai-notice b {
+  color: var(--text);
 }
 
 .wiki-refs section + section {

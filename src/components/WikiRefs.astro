@@ -1,5 +1,6 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import WikiAiNotice from './WikiAiNotice.astro';
 
 interface Props {
   entry: CollectionEntry<'wiki'>;
@@ -13,6 +14,8 @@ const formatDate = (date: Date): string =>
 ---
 
 <div class="panel panel-pad spaced wiki-refs">
+  <WikiAiNotice variant="full" />
+
   {
     upstream.length > 0 && (
       <section>
@@ -49,5 +52,6 @@ const formatDate = (date: Date): string =>
   <p class="disclaimer">
     本站是资料索引，不提供医疗或法律建议。条目内容是对上游资料的整理与导航，
     具体诊疗、用药与法律事务请以来源原文和专业人员意见为准。
+    <b>内容由 AI 协助整理，可能有误。</b>
   </p>
 </div>

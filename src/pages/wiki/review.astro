@@ -42,6 +42,9 @@ const formatDate = (date: Date): string =>
       <span style={`width: ${total === 0 ? 0 : Math.round((reviewed / total) * 100)}%`}></span>
     </div>
     <p class="readout-note spaced">
+      <b>这些条目由 AI 整理，可能有误。</b>核对时重点看：来源链接是否真的支持页面上的说法、数字有没有抄错、有没有漏掉限制条件。
+    </p>
+    <p class="readout-note">
       下面的勾选框只存在你自己的浏览器里，方便标记「这条我看过了」，不会改动仓库文件。
       要正式改状态，编辑对应 Markdown 的 frontmatter：<code>status: reviewed</code>。
     </p>

@@ -5,7 +5,7 @@ order: 40
 tags: [HRT, 药物]
 updated: 2026-09-21
 status: sourced
-summary: 常见抗雄药物的作用机制与风险类型差异，不含剂量。
+summary: 常见抗雄药物的作用机制与风险类型差异。剂量见速查页。
 sources:
   - title: MtF.wiki · 抗雄激素药物
     url: https://mtf.wiki/zh-cn/docs/medicine/antiandrogen
@@ -28,7 +28,7 @@ upstream:
     url: https://mtf.wiki/zh-cn/docs/medicine/antiandrogen
 ---
 
-抗雄药物之间差别比很多人以为的大：**作用机制不同，风险类型也不同**。这一页帮你理解医生在权衡什么。**不含剂量。**
+抗雄药物之间差别比很多人以为的大：**作用机制不同，风险类型也不同**。这一页帮你理解医生在权衡什么。剂量见[药物剂量速查](/wiki/medication-doses/)。
 
 ## 机制分类
 

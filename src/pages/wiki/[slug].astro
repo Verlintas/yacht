@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import WikiStatus from '../../components/WikiStatus.astro';
 import WikiRefs from '../../components/WikiRefs.astro';
+import WikiAiNotice from '../../components/WikiAiNotice.astro';
 import { getCollection, render } from 'astro:content';
 import { getCategory } from '../../data/wiki';
 import { url } from '../../lib/url';
@@ -30,6 +31,7 @@ const others = siblings
   <h1 class="page-title">{entry.data.title}</h1>
   <p class="page-sub meta-row">
     <WikiStatus status={entry.data.status} />
+    <WikiAiNotice variant="compact" />
     {entry.data.tags.length > 0 && <span class="readout-note">{entry.data.tags.join(' / ')}</span>}
   </p>
 

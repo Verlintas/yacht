@@ -51,8 +51,8 @@ export function getCategory(slug: string): WikiCategory {
 }
 
 export const statusMeta: Record<string, { label: string; tone: string; hint: string }> = {
-  draft: { label: '草稿', tone: 'badge-warn', hint: '内容尚未核对，请谨慎参考' },
-  sourced: { label: '有来源', tone: 'badge', hint: '每个事实性说法都附了来源，但未经人工复核' },
+  draft: { label: '草稿', tone: 'badge-warn', hint: 'AI 整理且未经核对，可能有误，请谨慎参考' },
+  sourced: { label: '有来源', tone: 'badge', hint: 'AI 整理并附了来源，但未经人工复核，可能有误' },
   reviewed: { label: '已核对', tone: 'badge-good', hint: '已人工核对过来源与表述' },
   outdated: { label: '已过时', tone: 'badge-bad', hint: '内容可能已经过期，请以上游来源为准' },
 };

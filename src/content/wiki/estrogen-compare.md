@@ -5,7 +5,7 @@ order: 30
 tags: [HRT, 药物]
 updated: 2026-09-21
 status: sourced
-summary: 各类剂型的特点与取舍维度，不含剂量。选哪种由医生决定。
+summary: 各类剂型的特点与取舍维度。剂量见速查页，选哪种由医生决定。
 sources:
   - title: MtF.wiki · 雌激素药物
     url: https://mtf.wiki/zh-cn/docs/medicine/estrogen
@@ -28,7 +28,7 @@ upstream:
     url: https://mtf.wiki/zh-cn/docs/medicine/estrogen
 ---
 
-这一页只做**维度对照**，帮你理解医生在权衡什么，以及为什么不同人拿到不同方案。**不含剂量，也不构成推荐。**
+这一页只做**维度对照**，帮你理解医生在权衡什么，以及为什么不同人拿到不同方案。具体剂量见[药物剂量速查](/wiki/medication-doses/)，本页不构成推荐。
 
 ## 剂型与取舍维度
 

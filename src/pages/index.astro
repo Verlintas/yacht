@@ -12,7 +12,7 @@ const defaultBerth = getBerth(defaultBerthId);
 const quickLinks = linkGroups.flatMap((group) => group.links).slice(0, 6);
 
 const wikiEntries = await getCollection('wiki');
-const featuredIds = ['start-here', 'medication-index', 'real-name-overview', 'resource-index'];
+const featuredIds = ['start-here', 'medication-doses', 'real-name-overview', 'resource-index'];
 const featured = featuredIds
   .map((id) => wikiEntries.find((entry) => entry.id === id))
   .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));

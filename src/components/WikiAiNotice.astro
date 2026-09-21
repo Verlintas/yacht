@@ -1,0 +1,25 @@
+---
+interface Props {
+  variant?: 'full' | 'compact';
+}
+const { variant = 'full' } = Astro.props;
+---
+
+{
+  variant === 'full' ? (
+    <div class="ai-notice">
+      <strong>AI 整理说明</strong>
+      <p>
+        本站百科内容由 <b>AI 协助整理</b>，<b>可能有误、可能过时、可能遗漏关键信息</b>。
+        每个条目都在文末列出了来源，请以来源原文和专业人员意见为准。
+      </p>
+      <p class="readout-note">
+        发现错误请在仓库提 issue，或直接修改对应 Markdown 文件。
+      </p>
+    </div>
+  ) : (
+    <span class="badge badge-ai" title="内容由 AI 协助整理，可能有误">
+      AI 整理
+    </span>
+  )
+}
