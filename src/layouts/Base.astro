@@ -31,6 +31,14 @@ function isActive(href: string): boolean {
     <meta name="theme-color" content="#f5f2ea" media="(prefers-color-scheme: light)" />
     <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
     <link rel="canonical" href={new URL(currentPath, Astro.site).href} />
+    <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
+    <link rel="preconnect" href="https://air-quality-api.open-meteo.com" crossorigin />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Verlintas 的小窝" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={new URL(currentPath, Astro.site).href} />
+    <meta name="twitter:card" content="summary" />
     <title>{title}</title>
     <script is:inline>
       (() => {
@@ -47,6 +55,7 @@ function isActive(href: string): boolean {
     </script>
   </head>
   <body>
+    <a class="skip-link" href="#main">跳到正文</a>
     <header class="nav">
       <div class="nav-inner">
         <a class="brand" href={url('/')}>
@@ -76,7 +85,7 @@ function isActive(href: string): boolean {
     </header>
 
     <div class="shell">
-      <main>
+      <main id="main">
         <slot />
       </main>
 

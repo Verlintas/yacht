@@ -2,9 +2,20 @@
 import Base from '../layouts/Base.astro';
 import BerthSwitcher from '../components/BerthSwitcher.astro';
 import Dashboard from '../components/Dashboard.astro';
+import { getCollection } from 'astro:content';
 import { berths, defaultBerthId, getBerth } from '../data/berths';
+import { linkGroups } from '../data/links';
+import { url } from '../lib/url';
 
 const defaultBerth = getBerth(defaultBerthId);
+
+const quickLinks = linkGroups.flatMap((group) => group.links).slice(0, 6);
+
+const wikiEntries = await getCollection('wiki');
+const featuredIds = ['start-here', 'medication-index', 'real-name-overview', 'resource-index'];
+const featured = featuredIds
+  .map((id) => wikiEntries.find((entry) => entry.id === id))
+  .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
 ---
 
 <Base title="小窝 · Verlintas">
@@ -22,6 +33,53 @@ const defaultBerth = getBerth(defaultBerthId);
     <BerthSwitcher berths={berths} defaultId={defaultBerthId} />
     <Dashboard coastal={defaultBerth.coastal} />
   </section>
+
+  {
+    quickLinks.length > 0 && (
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">港口速览</h2>
+          <a class="section-note" href={url('links/')}>
+            全部入口 →
+          </a>
+        </div>
+        <div class="grid">
+          {quickLinks.map((link) => (
+            <a class="panel panel-pad link-item" href={link.url} target="_blank" rel="noreferrer noopener">
+              <span class="link-title">
+                {link.title}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                  <path d="M8 16 16 8M10 8h6v6" />
+                </svg>
+              </span>
+              {link.note && <span class="readout-note">{link.note}</span>}
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  {
+    featured.length > 0 && (
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">百科入口</h2>
+          <a class="section-note" href={url('wiki/')}>
+            {wikiEntries.length} 条索引 →
+          </a>
+        </div>
+        <div class="grid">
+          {featured.map((entry) => (
+            <a class="panel panel-pad note-card" href={url(`wiki/${entry.id}/`)}>
+              <strong class="note-title">{entry.data.title}</strong>
+              {entry.data.summary && <span class="readout-note">{entry.data.summary}</span>}
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   <script>
     import { initDashboard } from '../lib/instruments';

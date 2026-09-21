@@ -109,6 +109,22 @@ a {
   padding: 0 20px 88px;
 }
 
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 0 0 var(--radius-sm) 0;
+  background: var(--brass);
+  color: #0b1a25;
+  font-size: 14px;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
 /* ── 顶部导航 ───────────────────────────── */
 
 .nav {

@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import WikiStatus from '../../components/WikiStatus.astro';
 import { getCollection } from 'astro:content';
-import { wikiCategories, statusMeta } from '../../data/wiki';
+import { wikiCategories } from '../../data/wiki';
 import { url } from '../../lib/url';
 
 const entries = await getCollection('wiki');

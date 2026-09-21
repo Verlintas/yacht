@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import { url } from '../lib/url';
+---
+
+<Base title="404 · Verlintas 的小窝">
+  <p class="eyebrow">404 · 航图之外</p>
+  <h1 class="page-title">这里没有东西</h1>
+  <p class="page-sub">
+    要么是链接写错了，要么是这一页还没建。从下面挑一个回去。
+  </p>
+
+  <div class="grid spaced">
+    <a class="panel panel-pad link-item" href={url('/')}>
+      <span class="link-title">小窝</span>
+      <span class="readout-note">首页与仪表盘</span>
+    </a>
+    <a class="panel panel-pad link-item" href={url('berths/')}>
+      <span class="link-title">泊位</span>
+      <span class="readout-note">四处常驻点</span>
+    </a>
+    <a class="panel panel-pad link-item" href={url('wiki/')}>
+      <span class="link-title">百科</span>
+      <span class="readout-note">资料索引</span>
+    </a>
+    <a class="panel panel-pad link-item" href={url('links/')}>
+      <span class="link-title">港口</span>
+      <span class="readout-note">常用入口</span>
+    </a>
+  </div>
+</Base>
