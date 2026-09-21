@@ -1,21 +1,24 @@
 ---
 title: ICD-11 与去病理化
 category: psych
+nature: reference
 scenarios: [unsure, start]
 order: 30
 tags: [制度, ICD-11]
 updated: 2026-09-21
 status: sourced
-summary: 诊断从精神障碍章节移出意味着什么，以及为什么流程看起来还没变。
+summary: 分类改动具体改了什么、为什么流程还没跟着变、以及它对不同场景的实际影响。
 sources:
-  - title: MtF.wiki · 关于 ICD-11
-    url: https://mtf.wiki/zh-cn/docs/psyco/ICD11
   - title: 世界卫生组织 ICD-11
     url: https://icd.who.int/
-  - title: WPATH Standards of Care, Version 8
-    url: https://www.wpath.org/publications/soc
+  - title: MtF.wiki · 关于 ICD-11
+    url: https://mtf.wiki/zh-cn/docs/psyco/ICD11
   - title: MtF.wiki · 精神科医疗资源综述
     url: https://mtf.wiki/zh-cn/docs/psyco/overview
+  - title: WPATH 跨性别健康照护指南第八版（中文版）
+    url: https://project-trans.org/SOC-8/
+  - title: 美国心理学会 · 跨性别与性别多元议题
+    url: https://www.apa.org/topics/lgbtq/transgender
 upstream:
   - title: MtF.wiki · 关于 ICD-11
     url: https://mtf.wiki/zh-cn/docs/psyco/ICD11
@@ -25,39 +28,63 @@ upstream:
 
 ## 发生了什么
 
-世界卫生组织在《国际疾病分类》第 11 版（ICD-11）中，把跨性别相关条目从「精神与行为障碍」章节移出，放进了一个新的章节：**性健康相关状况**。
+世界卫生组织在《国际疾病分类》第 11 版（ICD-11）中，把跨性别相关条目从**「精神与行为障碍」章节移出**，放进了一个新章节：**性健康相关状况**（Conditions related to sexual health）。
 
-措辞也随之变化：不再叫「性别认同障碍」，改为「性别不一致」。
+措辞也随之变化：不再叫「性别认同障碍」，改为**「性别不一致」**（gender incongruence）。
 
-## 这个变化的实质
+原始文件可以在 [WHO ICD-11 网站](https://icd.who.int/)查询；上游的[关于 ICD-11](https://mtf.wiki/zh-cn/docs/psyco/ICD11)条目有面向中文读者的整理。
 
-它把问题从**「这个人有没有病」**改成**「这个人是否需要这项医疗服务」**。
+## 改动具体改了什么
 
-两者听起来接近，但含义差别很大：
+| 维度 | ICD-10 | ICD-11 |
+| --- | --- | --- |
+| 所属章节 | 精神与行为障碍 | 性健康相关状况 |
+| 名称 | 性别认同障碍 | 性别不一致 |
+| 隐含判断 | 这是一种精神障碍 | 这是一种需要医疗支持的状态 |
+| 医疗意义 | 需要「治疗」 | 需要「肯定性照护」 |
 
-- 前者把跨性别本身当作病理状态，需要「治愈」。
-- 后者把跨性别当作一种需要医疗支持的状态，医疗的目的是缓解痛苦、提供肯定性照护。
+**核心区别在于：问题从「这个人有没有病」变成「这个人是否需要这项医疗服务」。**
 
-这也是[上游资料](https://mtf.wiki/zh-cn/docs/psyco/ICD11)和国际指南共同的取向。
+这个取向与 [WPATH SOC-8](https://project-trans.org/SOC-8/) 的立场一致——照护的目标是缓解痛苦、提供肯定性支持，而不是改变一个人的性别认同。
 
 ## 为什么流程看起来还没变
 
-因为制度有惯性。具体表现：
+因为**制度有惯性，而且改动是分层落地的**。
 
-- 国内多数医院、办证窗口仍在沿用旧的分类与旧的材料要求。
-- 保险、统计口径、病历模板的更新更慢。
-- 一线工作人员的认知更新速度不一致。
+| 层面 | 现状 |
+| --- | --- |
+| 国际分类 | 已改（ICD-11 生效） |
+| 国内医院病历模板 | 更新较慢，部分仍沿用旧分类 |
+| 办证窗口的材料要求 | 与 ICD 版本关联不大，仍要求医院材料 |
+| 保险与统计口径 | 更新更慢 |
+| 一线工作人员认知 | 更新速度不一致 |
 
-**这不是你的问题，是流程的滞后。** 在窗口办事时，和对方争论分类学通常没有用，按现行要求办完更省时间。
+**这不是你的问题，是流程的滞后。**
+
+在窗口办事时，和对方争论分类学通常没有用——**按现行要求办完更省时间**。分类学的改动会在更长的时间尺度上起作用。
 
 ## 对你实际的影响
 
 | 场景 | 影响 |
 | --- | --- |
 | 就医 | 医生可能仍按旧标准评估，但多数关注的是「是否需要这项服务」 |
-| 办证 | 仍要求医院材料，与 ICD 版本关系不大 |
+| 办证 | 仍要求医院材料，与 ICD 版本关系不大，见[实名信息变更总览](/wiki/real-name-overview/) |
+| 心理层面 | **有实际意义**——你的状态不是「障碍」 |
 | 社会认知 | 长期看有正面影响，短期感受不明显 |
-| 自我认知 | 有实际意义——你的状态不是「障碍」 |
+| 学术与政策 | 影响后续指南、教材、政策的修订方向 |
+
+**最后两行值得分开看：** 分类改动对当下的窗口办事帮助有限，但它是后续所有制度变化的依据。
+
+## 一个容易混淆的点
+
+**ICD-11 与 DSM-5-TR 不一样。**
+
+- **ICD-11**（世界卫生组织）—— 已移出精神障碍章节
+- **DSM-5-TR**（美国精神医学学会）—— 仍保留在精神障碍分类内，但改名为「性别焦虑」而非「性别认同障碍」
+
+两套体系用途不同，见[诊断标准是什么](/wiki/diagnosis-criteria/)。
+
+**所以看到「仍是精神障碍」的说法时，先确认对方在说哪一套体系。**
 
 ## 一句话总结
 
@@ -65,4 +92,13 @@ ICD-11 的改变是**方向和依据**，不是**立刻生效的流程**。知�
 
 ## 想深入读
 
-上游的 [ICD-11 条目](https://mtf.wiki/zh-cn/docs/psyco/ICD11)有更细的说明。原始文件可以直接查世卫组织的 [ICD-11 网站](https://icd.who.int/)。
+- 上游的 [ICD-11 条目](https://mtf.wiki/zh-cn/docs/psyco/ICD11)有更细的说明
+- 原始文件：世界卫生组织 [ICD-11 网站](https://icd.who.int/)
+- 照护标准：[WPATH SOC-8 中文版](https://project-trans.org/SOC-8/)
+
+## 相关页面
+
+- [诊断标准是什么](/wiki/diagnosis-criteria/)
+- [性别焦虑是什么](/wiki/gender-dysphoria/)
+- [精神科资源怎么用](/wiki/psych-resources/)
+- [常见误区与谣言](/wiki/myths/)
