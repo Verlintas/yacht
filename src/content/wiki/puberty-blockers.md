@@ -68,6 +68,10 @@ upstream:
 
 上游提到的国内机构包括[北京大学第三医院](https://mtf.wiki/zh-cn/docs/hrt/puth)与上海[复旦大学附属儿童医院](https://mtf.wiki/zh-cn/docs/hrt/shanghai/fudan-ch)。
 
+## 年龄门槛与家长要求
+
+**这一环的家长要求最明确：需监护人同意。** 完整的年龄门槛对照见[各阶段的年龄门槛与家长要求](/wiki/age-thresholds/)。
+
 ## 需要家庭支持这件事
 
 这是最现实的障碍。**未成年人就医通常需要监护人同意**，这意味着：
