@@ -1,6 +1,7 @@
 ---
 title: 常见问题速查
 category: resources
+scenarios: [unsure, trouble]
 order: 30
 tags: [速查, FAQ]
 updated: 2026-09-21

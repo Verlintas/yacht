@@ -1,6 +1,7 @@
 ---
 title: 职场
 category: life
+scenarios: [life]
 order: 30
 tags: [职场, 工作]
 updated: 2026-09-21

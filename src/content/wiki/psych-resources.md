@@ -1,6 +1,7 @@
 ---
 title: 精神科资源怎么用
 category: psych
+scenarios: [start]
 order: 10
 tags: [精神科, 就诊]
 updated: 2026-09-21

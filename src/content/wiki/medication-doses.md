@@ -1,6 +1,7 @@
 ---
 title: 药物剂量速查
 category: medical
+scenarios: [hrt]
 order: 25
 tags: [HRT, 药物, 剂量]
 updated: 2026-09-21
@@ -65,6 +66,8 @@ upstream:
 来源缩写：**简** = HRT 简明指南 · **全** = HRT 全面指南 · **SOC8** = WPATH SOC-8 中文版 · **Aly** = 雌激素等效剂量对照 · **CPA** = 醋酸环丙孕酮剂量研究 · **针** = 雌二醇针剂荟萃分析 · **GnRH** = 青春期阻断剂综述 · **Lab** = LabCorp 参考值表
 
 ## 一、治疗目标（血液指标）
+
+![雌二醇水平参考范围与治疗目标](/images/wiki/e2-levels.svg)
 
 | 人群 | 雌二醇目标 | 睾酮目标 | 来源 |
 | --- | --- | --- | --- |

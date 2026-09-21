@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 400" width="940" height="400" role="img" aria-label="跨性别医疗与证件流程总览">
+  <style>
+    .box { fill: rgba(128,150,170,0.09); stroke: rgba(128,150,170,0.42); stroke-width: 1.5; }
+    .box-a { fill: rgba(63,158,148,0.13); stroke: #3f9e94; stroke-width: 1.5; }
+    .box-b { fill: rgba(193,154,62,0.13); stroke: #c19a3e; stroke-width: 1.5; }
+    .t { font-family: system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; fill: #8b9aa8; font-size: 15px; }
+    .tb { font-family: system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; fill: #8b9aa8; font-size: 16px; font-weight: 600; }
+    .ts { font-family: system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; fill: #8b9aa8; font-size: 12.5px; }
+    .line { stroke: rgba(128,150,170,0.5); stroke-width: 1.5; fill: none; }
+    .line-a { stroke: #3f9e94; stroke-width: 1.5; fill: none; }
+    .line-b { stroke: #c19a3e; stroke-width: 1.5; fill: none; }
+    .label { font-family: system-ui,-apple-system,"PingFang SC",sans-serif; fill: #8b9aa8; font-size: 11.5px; letter-spacing: 0.06em; }
+  </style>
+
+  <text x="24" y="32" class="label">医疗链条</text>
+  <text x="24" y="52" class="ts">每一步的产出都是下一步的入场材料，跳过前一步通常会被退回</text>
+
+  <rect x="24" y="72" width="196" height="76" rx="10" class="box-a"/>
+  <text x="44" y="103" class="tb">精神科评估</text>
+  <text x="44" y="126" class="ts">通常是第一步</text>
+
+  <path d="M224 110 H268" class="line-a"/>
+  <path d="M262 105 L270 110 L262 115" class="line-a"/>
+
+  <rect x="274" y="72" width="216" height="76" rx="10" class="box-a"/>
+  <text x="294" y="103" class="tb">诊断证明 / 介绍信</text>
+  <text x="294" y="126" class="ts">后续环节的入场券</text>
+
+  <path d="M494 110 H538" class="line-a"/>
+  <path d="M532 105 L540 110 L532 115" class="line-a"/>
+
+  <rect x="544" y="72" width="168" height="76" rx="10" class="box-a"/>
+  <text x="564" y="103" class="tb">HRT</text>
+  <text x="564" y="126" class="ts">需配合定期监测</text>
+
+  <path d="M716 110 H760" class="line-a"/>
+  <path d="M754 105 L762 110 L754 115" class="line-a"/>
+
+  <rect x="766" y="72" width="150" height="76" rx="10" class="box-a"/>
+  <text x="786" y="103" class="tb">手术</text>
+  <text x="786" y="126" class="ts">可选，非必须</text>
+
+  <path d="M841 152 V196 H470" class="line-b"/>
+  <path d="M475 191 L467 196 L475 201" class="line-b"/>
+
+  <text x="24" y="238" class="label">证件链条</text>
+  <text x="24" y="258" class="ts">顺序比材料重要：后办的要看先办的</text>
+
+  <rect x="152" y="212" width="176" height="72" rx="10" class="box-b"/>
+  <text x="172" y="242" class="tb">医院手术证明</text>
+  <text x="172" y="264" class="ts">多数地区需要</text>
+
+  <path d="M332 248 H374" class="line-b"/>
+  <path d="M368 243 L376 248 L368 253" class="line-b"/>
+
+  <rect x="380" y="212" width="150" height="72" rx="10" class="box-b"/>
+  <text x="400" y="242" class="tb">户口本</text>
+  <text x="400" y="264" class="ts">户籍地派出所</text>
+
+  <path d="M534 248 H576" class="line-b"/>
+  <path d="M570 243 L578 248 L570 253" class="line-b"/>
+
+  <rect x="582" y="212" width="150" height="72" rx="10" class="box-b"/>
+  <text x="602" y="242" class="tb">身份证</text>
+  <text x="602" y="264" class="ts">依据户籍信息</text>
+
+  <path d="M736 248 H778" class="line-b"/>
+  <path d="M772 243 L780 248 L772 253" class="line-b"/>
+
+  <rect x="784" y="212" width="132" height="72" rx="10" class="box"/>
+  <text x="800" y="242" class="tb">其余</text>
+  <text x="800" y="262" class="ts">学历 · 医保</text>
+  <text x="800" y="278" class="ts">护照 · 银行</text>
+
+  <rect x="24" y="312" width="892" height="62" rx="10" class="box"/>
+  <text x="46" y="338" class="ts">顺序可逆性不同：社会层面的调整（称呼、着装、社交）几乎都可逆；医疗步骤的可逆性各不相同，值得分开评估。</text>
+  <text x="46" y="360" class="ts">本站只提供顺序框架，具体材料要求与办理条件以当地窗口和上游资料为准。</text>
+</svg>

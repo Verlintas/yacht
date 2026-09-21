@@ -1,6 +1,7 @@
 ---
 title: 时间预期与心理准备
 category: start
+scenarios: [unsure, start, life]
 order: 30
 tags: [导览, 心理]
 updated: 2026-09-21

@@ -1,6 +1,7 @@
 ---
 title: 医保与社保
 category: legal
+scenarios: [documents]
 order: 50
 tags: [证件, 医保, 社保]
 updated: 2026-09-21

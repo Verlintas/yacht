@@ -1,6 +1,7 @@
 ---
 title: 声音训练入门
 category: life
+scenarios: [life]
 order: 50
 tags: [声音, 训练]
 updated: 2026-09-21

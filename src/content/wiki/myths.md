@@ -1,6 +1,7 @@
 ---
 title: 常见误区与谣言
 category: start
+scenarios: [unsure]
 order: 50
 tags: [入门, 辟谣]
 updated: 2026-09-21

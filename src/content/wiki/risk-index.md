@@ -1,6 +1,7 @@
 ---
 title: 用药风险索引
 category: medical
+scenarios: [hrt]
 order: 60
 tags: [HRT, 风险]
 updated: 2026-09-21

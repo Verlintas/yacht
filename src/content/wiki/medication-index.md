@@ -1,6 +1,7 @@
 ---
 title: 药物与剂量索引
 category: medical
+scenarios: [hrt]
 order: 20
 tags: [HRT, 药物, 索引]
 updated: 2026-09-21

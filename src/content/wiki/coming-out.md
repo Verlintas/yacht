@@ -1,6 +1,7 @@
 ---
 title: 出柜策略与安全评估
 category: life
+scenarios: [unsure, life]
 order: 10
 tags: [出柜, 安全]
 updated: 2026-09-21

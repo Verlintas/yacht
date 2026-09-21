@@ -1,6 +1,7 @@
 ---
 title: 护照与旅行证件
 category: legal
+scenarios: [documents]
 order: 60
 tags: [证件, 护照, 出行]
 updated: 2026-09-21

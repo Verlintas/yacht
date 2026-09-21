@@ -1,6 +1,7 @@
 ---
 title: 怎么找心理咨询
 category: psych
+scenarios: [unsure, start, life]
 order: 40
 tags: [心理, 咨询]
 updated: 2026-09-21

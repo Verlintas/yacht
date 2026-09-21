@@ -1,6 +1,7 @@
 ---
 title: 自我注射安全
 category: medical
+scenarios: [hrt]
 order: 70
 tags: [HRT, 注射, 安全]
 updated: 2026-09-21

@@ -1,6 +1,7 @@
 ---
 title: 身份证性别信息变更
 category: legal
+scenarios: [documents]
 order: 20
 tags: [证件, 身份证]
 updated: 2026-09-21

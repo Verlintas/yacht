@@ -1,6 +1,7 @@
 ---
 title: 家庭沟通
 category: life
+scenarios: [life, trouble]
 order: 70
 tags: [家庭, 沟通]
 updated: 2026-09-21

@@ -1,6 +1,7 @@
 ---
 title: 诊断证明与介绍信
 category: psych
+scenarios: [start, documents]
 order: 20
 tags: [精神科, 材料]
 updated: 2026-09-21

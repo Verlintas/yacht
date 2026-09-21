@@ -1,6 +1,7 @@
 ---
 title: 治疗期间的监测
 category: medical
+scenarios: [hrt]
 order: 50
 tags: [HRT, 监测, 验血]
 updated: 2026-09-21

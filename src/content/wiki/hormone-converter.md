@@ -1,6 +1,7 @@
 ---
 title: 激素换算工具
 category: medical
+scenarios: [hrt]
 order: 80
 tags: [HRT, 工具, 单位]
 updated: 2026-09-21

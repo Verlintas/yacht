@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 360" width="940" height="360" role="img" aria-label="HRT 预期效果时间线">
+  <style>
+    .t { font-family: system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; fill: #8b9aa8; }
+    .tb { font-size: 16px; font-weight: 600; }
+    .ts { font-size: 13px; }
+    .label { font-size: 11.5px; letter-spacing: 0.06em; }
+    .col { fill: rgba(128,150,170,0.08); stroke: rgba(128,150,170,0.4); stroke-width: 1.5; }
+    .c1 { fill: rgba(63,158,148,0.13); stroke: #3f9e94; stroke-width: 1.5; }
+    .c2 { fill: rgba(63,158,148,0.09); stroke: #3f9e94; stroke-width: 1.5; }
+    .c3 { fill: rgba(193,154,62,0.11); stroke: #c19a3e; stroke-width: 1.5; }
+    .axis { stroke: rgba(128,150,170,0.45); stroke-width: 1.5; }
+    .tick { stroke: rgba(128,150,170,0.35); stroke-width: 1.2; }
+  </style>
+
+  <text x="24" y="30" class="t label">HRT 预期效果时间线</text>
+  <text x="24" y="52" class="t ts">资料来源：MtF.wiki《HRT 全面指南》，引自北医三院与多份医学指南。个体差异很大，仅作参考。</text>
+
+  <line x1="40" y1="86" x2="900" y2="86" class="axis"/>
+  <line x1="40" y1="80" x2="40" y2="92" class="tick"/>
+  <line x1="256" y1="80" x2="256" y2="92" class="tick"/>
+  <line x1="472" y1="80" x2="472" y2="92" class="tick"/>
+  <line x1="688" y1="80" x2="688" y2="92" class="tick"/>
+  <line x1="900" y1="80" x2="900" y2="92" class="tick"/>
+
+  <text x="40" y="74" class="t label">开始</text>
+  <text x="256" y="74" class="t label">3–6 月</text>
+  <text x="472" y="74" class="t label">6–12 月</text>
+  <text x="688" y="74" class="t label">1–2 年</text>
+  <text x="876" y="74" class="t label">2–5 年</text>
+
+  <rect x="40" y="104" width="212" height="216" rx="10" class="c1"/>
+  <text x="58" y="130" class="t tb">3–6 月开始出现</text>
+  <text x="58" y="158" class="t ts">· 乳房发育</text>
+  <text x="58" y="180" class="t ts">· 体脂重新分布</text>
+  <text x="58" y="202" class="t ts">· 肌肉质量与力量降低</text>
+  <text x="58" y="224" class="t ts">· 皮肤变软、油性减少</text>
+  <text x="58" y="246" class="t ts">· 睾丸体积减小</text>
+  <text x="58" y="276" class="t ts">性欲减退与自发勃起</text>
+  <text x="58" y="298" class="t ts">减少出现更早（1–3 月）</text>
+
+  <rect x="264" y="104" width="204" height="216" rx="10" class="c2"/>
+  <text x="282" y="130" class="t tb">6–12 个月</text>
+  <text x="282" y="158" class="t ts">· 肢端毛发生长减少</text>
+  <text x="282" y="186" class="t ts">面部与体毛变化慢，</text>
+  <text x="282" y="208" class="t ts">稳定需要 3 年以上</text>
+  <text x="282" y="240" class="t ts">脱发减少：时间不定</text>
+  <text x="282" y="268" class="t ts">精子产量减少：时间不定</text>
+
+  <rect x="480" y="104" width="204" height="216" rx="10" class="c2"/>
+  <text x="498" y="130" class="t tb">1–2 年</text>
+  <text x="498" y="158" class="t ts">· 肌肉质量稳定</text>
+  <text x="498" y="180" class="t ts">· 性欲减退稳定</text>
+  <text x="498" y="208" class="t ts">男性性功能障碍</text>
+  <text x="498" y="230" class="t ts">约 2 年</text>
+
+  <rect x="696" y="104" width="204" height="216" rx="10" class="c3"/>
+  <text x="714" y="130" class="t tb">2–5 年</text>
+  <text x="714" y="158" class="t ts">· 乳房发育稳定</text>
+  <text x="714" y="180" class="t ts">· 体脂分布稳定</text>
+  <text x="714" y="208" class="t ts">睾丸体积减小稳定</text>
+  <text x="714" y="230" class="t ts">约 2–3 年</text>
+
+  <rect x="40" y="336" width="860" height="1" fill="none"/>
+  <text x="40" y="348" class="t ts">注意：声音不会因 HRT 改变。需要单独的训练或手术。</text>
+</svg>

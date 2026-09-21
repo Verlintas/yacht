@@ -1,6 +1,7 @@
 ---
 title: ICD-11 与去病理化
 category: psych
+scenarios: [unsure, start]
 order: 30
 tags: [制度, ICD-11]
 updated: 2026-09-21

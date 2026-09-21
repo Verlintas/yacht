@@ -1,0 +1,115 @@
+---
+import WikiLayout from '../../../layouts/WikiLayout.astro';
+import WikiStatus from '../../../components/WikiStatus.astro';
+import { getCollection } from 'astro:content';
+import { wikiCategories, wikiScenarios } from '../../../data/wiki';
+import { url } from '../../../lib/url';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('wiki');
+  return wikiScenarios.map((scenario) => ({
+    params: { scenario: scenario.slug },
+    props: {
+      scenario,
+      items: entries
+        .filter((entry) => entry.data.scenarios.includes(scenario.slug))
+        .sort((a, b) => {
+          const byCategory =
+            wikiCategories.findIndex((c) => c.slug === a.data.category) -
+            wikiCategories.findIndex((c) => c.slug === b.data.category);
+          if (byCategory !== 0) return byCategory;
+          return a.data.order - b.data.order;
+        }),
+    },
+  }));
+}
+
+const { scenario, items } = Astro.props;
+
+const grouped = wikiCategories
+  .map((category) => ({
+    category,
+    items: items.filter((item) => item.data.category === category.slug),
+  }))
+  .filter((group) => group.items.length > 0);
+
+const others = wikiScenarios.filter((item) => item.slug !== scenario.slug);
+
+const formatDate = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+---
+
+<WikiLayout title={`${scenario.title} · 百科 · Verlintas 的小窝`} description={scenario.intro}>
+  <p class="eyebrow">
+    <a href={url('wiki/')}>← 百科</a>
+    <span> / {scenario.latin}</span>
+  </p>
+  <h1 class="page-title scenario-title">
+    <svg
+      class="scenario-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.6"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+      set:html={scenario.icon}
+    />
+    {scenario.title}
+  </h1>
+  <p class="page-sub">{scenario.intro}</p>
+
+  <p class="readout-note spaced">
+    共 {items.length} 条 · 按主题顺序排的，从上往下读就行
+  </p>
+
+  {
+    grouped.map(({ category, items: groupItems }) => (
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">{category.label}</h2>
+          <span class="section-note">{groupItems.length} 条</span>
+        </div>
+        <div class="grid">
+          {groupItems.map((entry) => (
+            <a class="panel panel-pad note-card" href={url(`wiki/${entry.id}/`)}>
+              <span class="card-head">
+                <span class="readout-label">{formatDate(entry.data.updated)}</span>
+                <WikiStatus status={entry.data.status} size="sm" />
+              </span>
+              <strong class="note-title">{entry.data.title}</strong>
+              {entry.data.summary && <span class="readout-note">{entry.data.summary}</span>}
+            </a>
+          ))}
+        </div>
+      </section>
+    ))
+  }
+
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title">换个处境</h2>
+      <span class="section-note">其他入口</span>
+    </div>
+    <div class="scenario-row">
+      {
+        others.map((item) => (
+          <a class="scenario-chip" href={url(`wiki/path/${item.slug}/`)}>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+              set:html={item.icon}
+            />
+            {item.title}
+          </a>
+        ))
+      }
+    </div>
+  </section>
+</WikiLayout>

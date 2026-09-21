@@ -1,6 +1,7 @@
 ---
 title: 户口本信息变更
 category: legal
+scenarios: [documents]
 order: 30
 tags: [证件, 户籍]
 updated: 2026-09-21

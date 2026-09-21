@@ -1,0 +1,84 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { wikiCategories, wikiScenarios } from '../data/wiki';
+import { url } from '../lib/url';
+
+interface Props {
+  entries: CollectionEntry<'wiki'>[];
+  currentPath: string;
+}
+
+const { entries, currentPath } = Astro.props;
+
+const groups = wikiCategories
+  .map((category) => ({
+    category,
+    items: entries
+      .filter((entry) => entry.data.category === category.slug)
+      .sort((a, b) => a.data.order - b.data.order),
+  }))
+  .filter((group) => group.items.length > 0);
+
+const activeCategory = groups.find((group) =>
+  group.items.some((item) => currentPath === `/wiki/${item.id}/`),
+)?.category.slug;
+---
+
+<aside class="wiki-side">
+  <nav class="wiki-nav" aria-label="百科导航">
+    <section class="wiki-nav-block">
+      <p class="wiki-nav-title">我现在…</p>
+      <ul class="wiki-nav-list">
+        {
+          wikiScenarios.map((scenario) => (
+            <li>
+              <a
+                href={url(`wiki/path/${scenario.slug}/`)}
+                aria-current={currentPath.startsWith(`/wiki/path/${scenario.slug}`) ? 'page' : undefined}
+              >
+                {scenario.title}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="wiki-nav-block">
+      <p class="wiki-nav-title">按主题</p>
+      {
+        groups.map(({ category, items }) => (
+          <details class="wiki-nav-group" open={category.slug === activeCategory}>
+            <summary>
+              <span>{category.label}</span>
+              <span class="wiki-nav-count">{items.length}</span>
+            </summary>
+            <ul class="wiki-nav-list">
+              {items.map((item) => (
+                <li>
+                  <a
+                    href={url(`wiki/${item.id}/`)}
+                    aria-current={currentPath === `/wiki/${item.id}/` ? 'page' : undefined}
+                  >
+                    {item.data.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </details>
+        ))
+      }
+    </section>
+
+    <section class="wiki-nav-block">
+      <p class="wiki-nav-title">维护</p>
+      <ul class="wiki-nav-list">
+        <li>
+          <a href={url('wiki/review/')} aria-current={currentPath.startsWith('/wiki/review') ? 'page' : undefined}>
+            待核对清单
+          </a>
+        </li>
+      </ul>
+    </section>
+  </nav>
+</aside>

@@ -1,6 +1,7 @@
 ---
 title: 如何判断一条信息是否可信
 category: start
+scenarios: [unsure, trouble]
 order: 70
 tags: [信息素养, 入门]
 updated: 2026-09-21

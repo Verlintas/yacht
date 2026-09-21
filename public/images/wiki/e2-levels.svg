@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 320" width="940" height="320" role="img" aria-label="雌二醇水平参考范围与治疗目标">
+  <style>
+    .t { font-family: system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; fill: #8b9aa8; }
+    .tb { font-size: 15px; font-weight: 600; }
+    .ts { font-size: 12.5px; }
+    .label { font-size: 11.5px; letter-spacing: 0.06em; }
+    .bar { fill: rgba(128,150,170,0.22); }
+    .bar-a { fill: rgba(63,158,148,0.42); }
+    .bar-b { fill: rgba(193,154,62,0.42); }
+    .grid { stroke: rgba(128,150,170,0.22); stroke-width: 1; }
+    .axis { stroke: rgba(128,150,170,0.45); stroke-width: 1.5; }
+  </style>
+
+  <text x="24" y="30" class="t label">雌二醇水平（pg/mL）</text>
+  <text x="24" y="52" class="t ts">参考范围来自 LabCorp，经 MtF.wiki 引用；目标区间来自 WPATH SOC-8 与多份指南。以你的报告单为准。</text>
+
+  <line x1="230" y1="76" x2="230" y2="252" class="axis"/>
+
+  <line x1="230" y1="76" x2="900" y2="76" class="grid"/>
+  <line x1="230" y1="120" x2="900" y2="120" class="grid"/>
+  <line x1="230" y1="164" x2="900" y2="164" class="grid"/>
+  <line x1="230" y1="208" x2="900" y2="208" class="grid"/>
+  <line x1="230" y1="252" x2="900" y2="252" class="grid"/>
+
+  <text x="222" y="81" class="t ts" text-anchor="end">400</text>
+  <text x="222" y="125" class="t ts" text-anchor="end">300</text>
+  <text x="222" y="169" class="t ts" text-anchor="end">200</text>
+  <text x="222" y="213" class="t ts" text-anchor="end">100</text>
+  <text x="222" y="257" class="t ts" text-anchor="end">0</text>
+
+  <rect x="290" y="239" width="70" height="13" rx="4" class="bar"/>
+  <text x="290" y="228" class="t ts">成年男性</text>
+  <text x="370" y="250" class="t ts">8–35</text>
+
+  <rect x="450" y="230" width="90" height="22" rx="4" class="bar"/>
+  <text x="450" y="219" class="t ts">卵泡期</text>
+  <text x="550" y="246" class="t ts">30–100</text>
+
+  <rect x="620" y="208" width="130" height="44" rx="4" class="bar-b"/>
+  <text x="620" y="197" class="t ts">治疗目标区间</text>
+  <text x="760" y="235" class="t ts">100–200</text>
+
+  <rect x="620" y="175" width="250" height="33" rx="4" class="bar-a" opacity="0.5"/>
+  <text x="620" y="165" class="t ts">黄体期</text>
+  <text x="760" y="197" class="t ts">70–300</text>
+
+  <rect x="24" y="272" width="892" height="34" rx="8" fill="rgba(193,154,62,0.12)" stroke="#c19a3e" stroke-width="1.5"/>
+  <text x="44" y="294" class="t ts">高于 200 pg/mL 不会带来更强的女性化作用，只会加强抑制促性腺激素与睾酮。</text>
+</svg>

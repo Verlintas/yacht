@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 400" width="940" height="400" role="img" aria-label="证件与信息变更顺序">
+  <style>
+    .t { font-family: system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; fill: #8b9aa8; }
+    .tb { font-size: 15px; font-weight: 600; }
+    .ts { font-size: 12.5px; }
+    .label { font-size: 11.5px; letter-spacing: 0.06em; }
+    .box { fill: rgba(128,150,170,0.09); stroke: rgba(128,150,170,0.42); stroke-width: 1.5; }
+    .box-a { fill: rgba(193,154,62,0.13); stroke: #c19a3e; stroke-width: 1.5; }
+    .box-b { fill: rgba(63,158,148,0.13); stroke: #3f9e94; stroke-width: 1.5; }
+    .line { stroke: rgba(128,150,170,0.5); stroke-width: 1.5; fill: none; }
+    .line-a { stroke: #c19a3e; stroke-width: 1.5; fill: none; }
+  </style>
+
+  <text x="24" y="30" class="t label">证件与信息变更顺序</text>
+  <text x="24" y="52" class="t ts">后办的要看先办的，顺序错了要重跑。各地口径不同，办之前先打电话问当地窗口。</text>
+
+  <rect x="24" y="80" width="180" height="70" rx="10" class="box-a"/>
+  <text x="44" y="110" class="t tb">医院证明</text>
+  <text x="44" y="132" class="t ts">多数地区需要</text>
+
+  <path d="M208 115 H252" class="line-a"/>
+  <path d="M246 110 L254 115 L246 120" class="line-a"/>
+
+  <rect x="258" y="80" width="170" height="70" rx="10" class="box-a"/>
+  <text x="278" y="110" class="t tb">户口本</text>
+  <text x="278" y="132" class="t ts">户籍地派出所</text>
+
+  <path d="M432 115 H476" class="line-a"/>
+  <path d="M470 110 L478 115 L470 120" class="line-a"/>
+
+  <rect x="482" y="80" width="170" height="70" rx="10" class="box-a"/>
+  <text x="502" y="110" class="t tb">身份证</text>
+  <text x="502" y="132" class="t ts">换领，有制证周期</text>
+
+  <path d="M656 115 H700" class="line-a"/>
+  <path d="M694 110 L702 115 L694 120" class="line-a"/>
+
+  <rect x="706" y="80" width="210" height="70" rx="10" class="box-b"/>
+  <text x="726" y="110" class="t tb">其余全部</text>
+  <text x="726" y="132" class="t ts">都依据身份证信息</text>
+
+  <path d="M811 154 V186 H470" class="line"/>
+  <path d="M476 181 L468 186 L476 191" class="line"/>
+
+  <rect x="24" y="200" width="196" height="82" rx="10" class="box"/>
+  <text x="44" y="228" class="t tb">学历 / 学籍</text>
+  <text x="44" y="250" class="t ts">在读办比毕业后办</text>
+  <text x="44" y="268" class="t ts">容易得多</text>
+
+  <rect x="232" y="200" width="176" height="82" rx="10" class="box"/>
+  <text x="252" y="228" class="t tb">医保 / 社保</text>
+  <text x="252" y="250" class="t ts">通常跟随身份证</text>
+  <text x="252" y="268" class="t ts">但要主动确认</text>
+
+  <rect x="420" y="200" width="176" height="82" rx="10" class="box"/>
+  <text x="440" y="228" class="t tb">护照 / 通行证</text>
+  <text x="440" y="250" class="t ts">换发而非修改</text>
+  <text x="440" y="268" class="t ts">旧签证会失效</text>
+
+  <rect x="608" y="200" width="152" height="82" rx="10" class="box"/>
+  <text x="628" y="228" class="t tb">银行 / 手机号</text>
+  <text x="628" y="250" class="t ts">实名信息</text>
+  <text x="628" y="268" class="t ts">逐个更新</text>
+
+  <rect x="772" y="200" width="144" height="82" rx="10" class="box"/>
+  <text x="792" y="228" class="t tb">驾驶证</text>
+  <text x="792" y="250" class="t ts">房产 · 婚姻</text>
+  <text x="792" y="268" class="t ts">各类实名账号</text>
+
+  <rect x="24" y="306" width="892" height="76" rx="10" class="box"/>
+  <text x="46" y="332" class="t ts">先问清三件事：① 改名和性别变更能不能一起办 ② 各自需要什么材料 ③ 先办哪个。</text>
+  <text x="46" y="354" class="t ts">各地执行口径不一样，甚至同一城市不同窗口也不同。别人能办不代表你能办，别人被拒也不代表你不行。</text>
+  <text x="46" y="374" class="t ts">把每一项记录成一张表：项目、办理日期、所需材料、窗口电话、状态、下一步。</text>
+</svg>

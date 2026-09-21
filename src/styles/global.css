@@ -1225,3 +1225,302 @@ footer.foot {
   color: var(--text-faint);
   text-decoration: line-through;
 }
+
+/* ── 百科侧边栏布局 ─────────────────────── */
+
+.wiki-layout {
+  display: grid;
+  grid-template-columns: 234px minmax(0, 1fr);
+  gap: 36px;
+  align-items: start;
+}
+
+.wiki-side {
+  position: sticky;
+  top: 74px;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+}
+
+.wiki-side::-webkit-scrollbar {
+  width: 5px;
+}
+
+.wiki-side::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--border-strong);
+}
+
+.wiki-nav-block + .wiki-nav-block {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.wiki-nav-title {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.wiki-nav-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.wiki-nav-list a {
+  display: block;
+  padding: 4px 9px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  border-left: 2px solid transparent;
+  transition: color 0.14s, background 0.14s, border-color 0.14s;
+}
+
+.wiki-nav-list a:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.wiki-nav-list a[aria-current='page'] {
+  color: var(--brass);
+  background: var(--brass-soft);
+  border-left-color: var(--brass);
+}
+
+.wiki-nav-group summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+}
+
+.wiki-nav-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.wiki-nav-group summary::before {
+  content: '+';
+  margin-right: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.wiki-nav-group[open] summary::before {
+  content: '−';
+  color: var(--brass);
+}
+
+.wiki-nav-group summary:hover {
+  background: var(--surface-2);
+}
+
+.wiki-nav-group .wiki-nav-list {
+  margin: 2px 0 6px;
+}
+
+.wiki-nav-count {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+/* ── 场景（我现在…）────────────────────── */
+
+.scenario-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(248px, 1fr));
+}
+
+.scenario-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transition: border-color 0.16s, transform 0.16s;
+}
+
+.scenario-card:hover {
+  border-color: var(--brass);
+  transform: translateY(-2px);
+}
+
+.scenario-card-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.scenario-card-head svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  color: var(--brass);
+}
+
+.scenario-card-head strong {
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.scenario-count {
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+}
+
+.scenario-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+
+.scenario-row-sm {
+  margin: 12px 0 0;
+}
+
+.scenario-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 13.5px;
+  color: var(--text-dim);
+  transition: color 0.16s, border-color 0.16s;
+}
+
+.scenario-chip svg {
+  width: 15px;
+  height: 15px;
+  color: var(--brass);
+}
+
+.scenario-chip:hover {
+  color: var(--text);
+  border-color: var(--brass);
+}
+
+.scenario-chip-sm {
+  padding: 3px 11px;
+  font-size: 12.5px;
+}
+
+.scenario-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.scenario-icon {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  color: var(--brass);
+}
+
+/* ── 正文里的引导框与图片 ───────────────── */
+
+.guide {
+  margin: 1.3em 0;
+  padding: 13px 16px;
+  border-left: 2px solid var(--sea);
+  border-radius: var(--radius-sm);
+  background: var(--sea-soft);
+  font-size: 14px;
+}
+
+.guide > strong:first-child {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--sea);
+}
+
+.guide p {
+  margin: 0 0 7px;
+}
+
+.guide p:last-child {
+  margin-bottom: 0;
+}
+
+.guide ul,
+.guide ol {
+  margin: 6px 0 0;
+}
+
+.prose img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 1.5em auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.prose figure {
+  margin: 1.5em 0;
+}
+
+.prose figure img {
+  margin: 0;
+}
+
+.prose figcaption {
+  margin-top: 8px;
+  font-size: 12.5px;
+  text-align: center;
+  color: var(--text-faint);
+}
+
+@media (max-width: 900px) {
+  .wiki-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .wiki-side {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding: 0 0 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wiki-nav-block + .wiki-nav-block {
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+}

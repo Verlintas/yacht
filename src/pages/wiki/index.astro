@@ -1,11 +1,18 @@
 ---
-import Base from '../../layouts/Base.astro';
+import WikiLayout from '../../layouts/WikiLayout.astro';
 import WikiStatus from '../../components/WikiStatus.astro';
 import { getCollection } from 'astro:content';
-import { wikiCategories } from '../../data/wiki';
+import { wikiCategories, wikiScenarios } from '../../data/wiki';
 import { url } from '../../lib/url';
 
 const entries = await getCollection('wiki');
+
+const scenarioCounts = new Map(
+  wikiScenarios.map((scenario) => [
+    scenario.slug,
+    entries.filter((entry) => entry.data.scenarios.includes(scenario.slug)).length,
+  ]),
+);
 
 const sections = wikiCategories
   .map((category) => ({
@@ -22,12 +29,11 @@ const formatDate = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 ---
 
-<Base title="百科 · Verlintas 的小窝" description="跨性别资料的索引与导览，不做医疗或法律建议。">
+<WikiLayout title="百科 · Verlintas 的小窝" description="跨性别资料的索引与导览，不做医疗或法律建议。">
   <p class="eyebrow">资料索引 · {entries.length} 条 · 待核对 {pending} 条</p>
   <h1 class="page-title">百科</h1>
   <p class="page-sub">
-    这里是<b>索引层</b>：告诉你每个问题该去读哪份资料、按什么顺序读，而不是重写一份资料。
-    每个条目都在文末列出上游来源。
+    先按<b>你现在的处境</b>找入口，再按主题深入。每个条目都在文末列出上游来源。
   </p>
 
   <div class="panel panel-pad notice notice-warn spaced">
@@ -42,6 +48,36 @@ const formatDate = (date: Date): string =>
       <a href={url('wiki/review/')}>查看待核对清单 →</a>
     </p>
   </div>
+
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title">我现在…</h2>
+      <span class="section-note">按处境找入口</span>
+    </div>
+    <div class="scenario-grid">
+      {
+        wikiScenarios.map((scenario) => (
+          <a class="scenario-card" href={url(`wiki/path/${scenario.slug}/`)}>
+            <span class="scenario-card-head">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                set:html={scenario.icon}
+              />
+              <strong>{scenario.title}</strong>
+            </span>
+            <span class="readout-note">{scenario.intro}</span>
+            <span class="scenario-count">{scenarioCounts.get(scenario.slug) ?? 0} 条</span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
 
   <div class="search-bar spaced">
     <input
@@ -122,4 +158,4 @@ const formatDate = (date: Date): string =>
     input?.addEventListener('input', apply);
     apply();
   </script>
-</Base>
+</WikiLayout>

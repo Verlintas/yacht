@@ -1,6 +1,7 @@
 ---
 title: 从哪里开始
 category: start
+scenarios: [unsure, start]
 order: 10
 tags: [导览, 入门]
 updated: 2026-09-21

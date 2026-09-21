@@ -32,6 +32,9 @@ const wiki = defineCollection({
   schema: z.object({
     title: z.string(),
     category: z.enum(['start', 'psych', 'medical', 'legal', 'life', 'resources']),
+    scenarios: z
+      .array(z.enum(['unsure', 'start', 'hrt', 'surgery', 'documents', 'life', 'trouble']))
+      .default([]),
     order: z.number().default(100),
     tags: z.array(z.string()).default([]),
     updated: z.coerce.date(),

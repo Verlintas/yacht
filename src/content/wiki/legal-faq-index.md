@@ -1,6 +1,7 @@
 ---
 title: 常见法律问题索引
 category: legal
+scenarios: [documents, trouble]
 order: 70
 tags: [法律, 权益]
 updated: 2026-09-21

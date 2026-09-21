@@ -8,10 +8,11 @@ function rehypeBaseLinks() {
   const prefix = base.replace(/\/+$/, '');
   return (tree) => {
     const walk = (node) => {
-      if (node.type === 'element' && node.tagName === 'a') {
-        const href = node.properties?.href;
-        if (typeof href === 'string' && href.startsWith('/') && !href.startsWith(`${prefix}/`)) {
-          node.properties.href = `${prefix}${href}`;
+      if (node.type === 'element' && (node.tagName === 'a' || node.tagName === 'img')) {
+        const key = node.tagName === 'a' ? 'href' : 'src';
+        const value = node.properties?.[key];
+        if (typeof value === 'string' && value.startsWith('/') && !value.startsWith(`${prefix}/`)) {
+          node.properties[key] = `${prefix}${value}`;
         }
       }
       for (const child of node.children ?? []) walk(child);

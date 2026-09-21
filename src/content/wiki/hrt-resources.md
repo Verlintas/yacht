@@ -1,6 +1,7 @@
 ---
 title: HRT 医疗资源怎么用
 category: medical
+scenarios: [start, hrt]
 order: 10
 tags: [HRT, 就诊, 资源]
 updated: 2026-09-21

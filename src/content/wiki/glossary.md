@@ -1,6 +1,7 @@
 ---
 title: 术语表
 category: start
+scenarios: [unsure]
 order: 40
 tags: [术语, 入门]
 updated: 2026-09-21

@@ -1,0 +1,25 @@
+---
+import Base from './Base.astro';
+import WikiSidebar from '../components/WikiSidebar.astro';
+import { getCollection } from 'astro:content';
+import { basePath } from '../lib/url';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+
+const entries = await getCollection('wiki');
+const currentPath = Astro.url.pathname.replace(basePath, '') || '/';
+---
+
+<Base title={title} description={description}>
+  <div class="wiki-layout">
+    <WikiSidebar entries={entries} currentPath={currentPath} />
+    <div class="wiki-main">
+      <slot />
+    </div>
+  </div>
+</Base>

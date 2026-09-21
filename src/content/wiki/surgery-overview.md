@@ -1,6 +1,7 @@
 ---
 title: 手术五类导览
 category: medical
+scenarios: [surgery]
 order: 90
 tags: [手术, 导览]
 updated: 2026-09-21

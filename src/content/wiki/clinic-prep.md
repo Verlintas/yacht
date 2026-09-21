@@ -1,6 +1,7 @@
 ---
 title: 就医前准备清单
 category: medical
+scenarios: [start, hrt, surgery]
 order: 100
 tags: [就诊, 清单, 实用]
 updated: 2026-09-21

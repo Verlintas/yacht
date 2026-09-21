@@ -1,6 +1,7 @@
 ---
 title: 改名流程
 category: legal
+scenarios: [documents]
 order: 2
 tags: [证件, 改名]
 updated: 2026-09-21

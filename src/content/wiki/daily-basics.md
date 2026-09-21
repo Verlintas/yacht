@@ -1,6 +1,7 @@
 ---
 title: 日常入门的顺序
 category: life
+scenarios: [life]
 order: 40
 tags: [日常, 实用]
 updated: 2026-09-21

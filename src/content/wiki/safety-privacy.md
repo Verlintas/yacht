@@ -1,6 +1,7 @@
 ---
 title: 安全与隐私基础
 category: start
+scenarios: [unsure, life, trouble]
 order: 60
 tags: [隐私, 安全, 入门]
 updated: 2026-09-21

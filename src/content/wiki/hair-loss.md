@@ -1,0 +1,90 @@
+---
+title: 脱发与头发
+category: medical
+scenarios: [life, hrt]
+order: 66
+tags: [脱发, 外观, 药物]
+updated: 2026-09-21
+status: sourced
+summary: 脱发的类型、常见的治疗方向，以及为什么不能等太久。
+sources:
+  - title: MtF.wiki · 脱发的治疗
+    url: https://mtf.wiki/zh-cn/docs/ffs/hair-loss-med
+  - title: MtF.wiki · HRT 全面指南
+    url: https://mtf.wiki/zh-cn/docs/medicine/overview
+  - title: MtF.wiki · 用药风险
+    url: https://mtf.wiki/zh-cn/docs/medicine/risk
+  - title: 美国内分泌学会 · 性别焦虑诊疗指南
+    url: https://www.endocrine.org/clinical-practice-guidelines/gender-dysphoria-guideline
+upstream:
+  - title: MtF.wiki · 脱发的治疗
+    url: https://mtf.wiki/zh-cn/docs/ffs/hair-loss-med
+---
+
+## 为什么这件事要早处理
+
+**已经萎缩的毛囊很难恢复。** 脱发是渐进过程，越早干预，能保住的就越多。
+
+上游在 HRT 效果表里把「脱发减少」列为**时间不定**的一项——意思是激素可能帮助减缓，但不是确定效果，也不是主要治疗手段。
+
+## 常见类型
+
+| 类型 | 特点 |
+| --- | --- |
+| 雄激素性脱发 | 最常见。发际线后移、头顶稀疏 |
+| 休止期脱发 | 短期内大量掉发，常与压力、营养、疾病相关 |
+| 斑秃 | 局部圆形脱发 |
+| 其他 | 甲状腺问题、贫血、药物影响 |
+
+**先确认类型再治。** 不同类型处理方式完全不同。
+
+## 常见治疗方向
+
+上游的[脱发的治疗](https://mtf.wiki/zh-cn/docs/ffs/hair-loss-med)条目整理了主要方向。常见的包括：
+
+| 方向 | 说明 |
+| --- | --- |
+| 抑制雄激素作用 | 通过 HRT 中的抗雄方案间接起效 |
+| 外用制剂 | 部分外用药可促进毛发生长 |
+| 口服药物 | 部分药物用于特定类型脱发 |
+| 物理治疗 | 低能量激光等 |
+| 植发 | 把后枕部毛囊移植到脱发区 |
+
+**具体药物的适应症、用法与风险，看上游条目与说明书。** 本站不复述具体用法。
+
+<div class="guide">
+<strong>就诊时问什么</strong>
+<p>· 我这是哪种类型的脱发？</p>
+<p>· 现在处于什么阶段？还能恢复吗？</p>
+<p>· 适合用哪种治疗？</p>
+<p>· 和我的 HRT 方案有冲突吗？</p>
+<p>· 多久能看到效果？要维持多久？</p>
+</div>
+
+## 关于植发
+
+- **需要先控制住脱发进展**，否则移植的头发也会掉
+- **需要供区毛发充足**
+- **费用较高，通常按毛囊单位计费**
+- **要选正规医疗机构**
+
+## 日常能做的
+
+- **不要过度烫染**，尤其在脱发期
+- **不要用力拉扯头发**（紧扎发型会加重）
+- **保证营养与睡眠**
+- **减少压力**（休止期脱发与压力明确相关）
+- **避免频繁高温造型**
+
+## 一个现实提醒
+
+**头发对很多人来说是重要的心理支撑。** 如果你因为脱发感到焦虑，这是真实且合理的困扰，不需要觉得「这点小事也在意」。
+
+同时也要知道：**发型、假发、发际线修饰都是有效的应对方式**，不是「放弃治疗」。有人用假发过得很好。
+
+## 相关页面
+
+- [日常入门的顺序](/wiki/daily-basics/)
+- [HRT 会改变什么、不会改变什么](/wiki/hrt-effects/)
+- [用药风险索引](/wiki/risk-index/)
+- [手术五类导览](/wiki/surgery-overview/)

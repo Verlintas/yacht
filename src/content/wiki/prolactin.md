@@ -1,0 +1,96 @@
+---
+title: 泌乳素升高怎么办
+category: medical
+scenarios: [hrt]
+order: 57
+tags: [监测, 泌乳素]
+updated: 2026-09-21
+status: sourced
+summary: 泌乳素为什么会被关注、升高意味着什么、以及上游建议的随访方式。
+sources:
+  - title: MtF.wiki · 治疗期间的监测
+    url: https://mtf.wiki/zh-cn/docs/medicine/monitoring
+  - title: MtF.wiki · 色普龙（醋酸环丙孕酮）
+    url: https://mtf.wiki/zh-cn/docs/medicine/antiandrogen/cyproterone
+  - title: MtF.wiki · 醋酸甲羟孕酮
+    url: https://mtf.wiki/zh-cn/docs/medicine/antiandrogen/medroxyprogesterone
+  - title: MtF.wiki · 用药风险
+    url: https://mtf.wiki/zh-cn/docs/medicine/risk
+  - title: LabCorp · 内分泌参考值与单位换算表（PDF）
+    url: https://specialtytesting.labcorp.com/sites/default/files/2021-07/L5167-0421-18%20Endocrine%20Expected%20Values_0.pdf
+upstream:
+  - title: MtF.wiki · 治疗期间的监测
+    url: https://mtf.wiki/zh-cn/docs/medicine/monitoring
+  - title: MtF.wiki · 色普龙（醋酸环丙孕酮）
+    url: https://mtf.wiki/zh-cn/docs/medicine/antiandrogen/cyproterone
+---
+
+## 为什么要查泌乳素
+
+上游把泌乳素（PRL）列为**建议观察**的项目，原因是**部分孕激素类药物会影响泌乳素水平**：
+
+- 醋酸环丙孕酮（色普龙）—— 上游明确提示「注意监测泌乳素」
+- 醋酸甲羟孕酮（MPA）—— 同样提示监测泌乳素
+
+参考范围（女性）：4.79–23.3（**LabCorp**，具体单位与范围以报告单为准）。
+
+## 升高了意味着什么
+
+**先别慌。** 泌乳素是波动很大的指标，影响因素包括：
+
+| 因素 | 说明 |
+| --- | --- |
+| 采血时间 | 一天内波动明显，通常建议上午、安静状态下采血 |
+| 应激 | 紧张、疼痛、剧烈运动都会推高 |
+| 睡眠 | 睡眠不足或刚睡醒时偏高 |
+| 乳头刺激 | 会影响数值 |
+| 药物 | 部分孕激素类、部分抗抑郁药、部分胃药 |
+| 其他疾病 | 甲状腺功能减退、垂体相关问题 |
+
+**所以单次轻度升高通常需要复查确认**，而不是立刻改方案。
+
+## 上游的建议
+
+上游的说法是：**发现升高时密切随访**。
+
+具体到醋酸环丙孕酮，上游还提到：**服用 5 年以上，应接受脑部 CT 或磁共振（MRI）扫描以排除肿瘤**。这是基于该药与脑膜瘤风险关联的研究，来源见[醋酸环丙孕酮与脑膜瘤风险](https://tfsci.mtf.wiki/zh-cn/articles/cpa-meningioma/)。
+
+## 实际操作顺序
+
+1. **复查。** 按医生要求的时间与状态重新采血，确认是不是持续升高。
+2. **排除干扰因素。** 采血前一晚睡眠、当天是否紧张、有没有用其他药。
+3. **带报告找医生。** 由医生判断是继续观察、调整方案，还是做进一步检查。
+4. **不要自行停药或减量。** 突然停用抗雄可能导致激素水平剧烈波动。
+
+<div class="guide">
+<strong>该问医生的问题</strong>
+<p>· 这个数值需要处理，还是先复查？</p>
+<p>· 和我现在用的药有关系吗？需要换药吗？</p>
+<p>· 需要做影像检查吗？</p>
+<p>· 多久复查一次？</p>
+</div>
+
+## 需要尽快就医的信号
+
+- 头痛持续加重，尤其是晨起头痛
+- 视力变化、视野缺损
+- 乳房异常分泌（非预期情况下）
+- 月经相关症状（顺性别女性语境）
+- 性欲与性功能明显异常变化
+
+**这些不等于一定有问题，但需要专业评估。**
+
+## 降低干扰的做法
+
+- 采血前一天保证睡眠
+- 采血当天避免剧烈运动
+- 采血前静坐休息一会儿
+- 按医生要求的时间点采血（通常是上午）
+- 如实告知正在使用的全部药物与保健品
+
+## 相关页面
+
+- [治疗期间的监测](/wiki/monitoring-index/)
+- [激素六项怎么看](/wiki/hormone-panel/)
+- [肝功能指标怎么看](/wiki/liver-function/)
+- [抗雄药物对照](/wiki/antiandrogen-compare/)

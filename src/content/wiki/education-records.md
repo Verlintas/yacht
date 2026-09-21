@@ -1,6 +1,7 @@
 ---
 title: 学籍与学历变更
 category: legal
+scenarios: [documents, life]
 order: 40
 tags: [证件, 学历, 校园]
 updated: 2026-09-21

@@ -1,6 +1,7 @@
 ---
 title: 校园
 category: life
+scenarios: [life]
 order: 20
 tags: [校园, 学生]
 updated: 2026-09-21

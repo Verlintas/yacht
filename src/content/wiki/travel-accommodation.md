@@ -1,0 +1,99 @@
+---
+title: 旅行与住宿
+category: life
+scenarios: [life]
+order: 66
+tags: [出行, 住宿, 实用]
+updated: 2026-09-21
+status: sourced
+summary: 订酒店、过安检、异地就医时的实际问题与应对方式。
+sources:
+  - title: MtF.wiki · 实名信息变更指引
+    url: https://mtf.wiki/zh-cn/docs/useful-info/real-name-info
+  - title: MtF.wiki · 中国大陆旅行证件
+    url: https://mtf.wiki/zh-cn/docs/useful-info/document-updates/name-change
+  - title: MtF.wiki · 泰国旅行指南
+    url: https://mtf.wiki/zh-cn/docs/srs/thailand/thailand-tips
+  - title: MtF.wiki · 常见法律问题
+    url: https://mtf.wiki/zh-cn/docs/useful-info/legal-faq
+upstream:
+  - title: MtF.wiki · 中国大陆旅行证件
+    url: https://mtf.wiki/zh-cn/docs/useful-info/document-updates/name-change
+  - title: MtF.wiki · 泰国旅行指南
+    url: https://mtf.wiki/zh-cn/docs/srs/thailand/thailand-tips
+---
+
+## 住宿
+
+**证件与外观不一致时，办理入住可能被多看两眼。** 通常不会有实质问题，但心理上要有准备。
+
+**降低摩擦的做法：**
+
+| 做法 | 说明 |
+| --- | --- |
+| 选连锁酒店 | 流程标准化，前台按证件核对即可 |
+| 自助入住 | 部分酒店有机器办理，减少人际接触 |
+| 提前在线办理 | 减少前台停留时间 |
+| 避免民宿 | 房东个人态度差异大，也可能有额外沟通 |
+| 一个人住 | 避免与他人同住带来的额外问题 |
+
+**如果遇到盘问：**
+
+- 简洁回答，不需要解释身份
+- 要求对方按流程核对证件即可
+- 如果被拒绝入住，要求书面说明，之后投诉
+
+## 交通
+
+**火车、飞机、长途汽车都是按证件核验。** 证件信息与外观不一致时，安检可能多问几句。
+
+- **不需要主动解释。** 出示证件配合核验即可
+- **如果被问**，回答「是本人」即可
+- **担心的话可以早到**，留出可能的额外时间
+- **证件已变更**则没有这个问题
+
+## 异地就医
+
+**如果要去外地就诊或手术：**
+
+- [ ] 提前确认挂号方式与时间
+- [ ] 确认需要带的材料（原件还是复印件）
+- [ ] 安排住宿（离医院近一些，术后复查方便）
+- [ ] 确认复诊安排与时间间隔
+- [ ] 带足药物（见[药品储存与携带](/wiki/medication-storage/)）
+- [ ] 查清医保异地就医备案流程
+
+**如果是手术：**
+
+- 留出足够的恢复期，不要安排得太紧
+- 安排陪护（见[就医陪同](/wiki/hospital-companion/)）
+- 确认术后复查能否在当地做
+
+## 出国
+
+**涉及护照、签证、入境审查，规则更复杂。**
+
+| 事项 | 说明 |
+| --- | --- |
+| 护照换发 | 换发后旧护照上的签证通常失效，见[护照与旅行证件](/wiki/travel-documents/) |
+| 入境审查 | 不同国家规定差异大，以目的国官方说明为准 |
+| 携带药物 | **部分药物在某些国家属于管制药品**，务必提前查清 |
+| 就医 | 涉及签证类型、停留期、复诊安排、医疗记录认可等 |
+
+**携带药物出国前，务必查目的国的规定。** 部分在国内合法的处方药，在其他国家可能受管制。
+
+上游的[泰国旅行指南](https://mtf.wiki/zh-cn/docs/srs/thailand/thailand-tips)是境外就医场景的一个参考。
+
+## 安全提醒
+
+- **不要在社交平台实时发布行程与定位**
+- **住宿地址不要公开发布**
+- **告知一个可信任的人你的行程**
+- **保留紧急联系人信息**
+
+## 相关页面
+
+- [护照与旅行证件](/wiki/travel-documents/)
+- [药品储存与携带](/wiki/medication-storage/)
+- [安全与隐私基础](/wiki/safety-privacy/)
+- [就医陪同](/wiki/hospital-companion/)

@@ -1,6 +1,7 @@
 ---
 title: 自评量表的边界
 category: psych
+scenarios: [unsure]
 order: 50
 tags: [心理, 自评]
 updated: 2026-09-21

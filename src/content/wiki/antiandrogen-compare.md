@@ -1,6 +1,7 @@
 ---
 title: 抗雄药物对照
 category: medical
+scenarios: [hrt]
 order: 40
 tags: [HRT, 药物]
 updated: 2026-09-21

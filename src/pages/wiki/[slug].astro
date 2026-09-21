@@ -1,29 +1,36 @@
 ---
-import Base from '../../layouts/Base.astro';
+import WikiLayout from '../../layouts/WikiLayout.astro';
 import WikiStatus from '../../components/WikiStatus.astro';
 import WikiRefs from '../../components/WikiRefs.astro';
 import WikiAiNotice from '../../components/WikiAiNotice.astro';
 import { getCollection, render } from 'astro:content';
-import { getCategory } from '../../data/wiki';
+import { getCategory, getScenario } from '../../data/wiki';
 import { url } from '../../lib/url';
 
 export async function getStaticPaths() {
   const entries = await getCollection('wiki');
   return entries.map((entry) => ({
     params: { slug: entry.id },
-    props: { entry, siblings: entries.filter((item) => item.data.category === entry.data.category) },
+    props: {
+      entry,
+      siblings: entries
+        .filter((item) => item.data.category === entry.data.category)
+        .sort((a, b) => a.data.order - b.data.order),
+    },
   }));
 }
 
 const { entry, siblings } = Astro.props;
 const { Content } = await render(entry);
 const category = getCategory(entry.data.category);
-const others = siblings
-  .filter((item) => item.id !== entry.id)
-  .sort((a, b) => a.data.order - b.data.order);
+const scenarios = entry.data.scenarios.map((slug) => getScenario(slug));
+const others = siblings.filter((item) => item.id !== entry.id);
 ---
 
-<Base title={`${entry.data.title} · 百科 · Verlintas 的小窝`} description={entry.data.summary}>
+<WikiLayout
+  title={`${entry.data.title} · 百科 · Verlintas 的小窝`}
+  description={entry.data.summary}
+>
   <p class="eyebrow">
     <a href={url('wiki/')}>← 百科</a>
     <span> / {category.label}</span>
@@ -34,6 +41,19 @@ const others = siblings
     <WikiAiNotice variant="compact" />
     {entry.data.tags.length > 0 && <span class="readout-note">{entry.data.tags.join(' / ')}</span>}
   </p>
+
+  {
+    scenarios.length > 0 && (
+      <p class="scenario-row scenario-row-sm">
+        <span class="readout-note">属于：</span>
+        {scenarios.map((scenario) => (
+          <a class="scenario-chip scenario-chip-sm" href={url(`wiki/path/${scenario.slug}/`)}>
+            {scenario.title}
+          </a>
+        ))}
+      </p>
+    )
+  }
 
   <article class="panel panel-pad prose spaced">
     <Content />
@@ -62,4 +82,4 @@ const others = siblings
       </section>
     )
   }
-</Base>
+</WikiLayout>

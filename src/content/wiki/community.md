@@ -1,6 +1,7 @@
 ---
 title: 社群与互助
 category: life
+scenarios: [unsure, life, trouble]
 order: 60
 tags: [社群, 支持]
 updated: 2026-09-21
