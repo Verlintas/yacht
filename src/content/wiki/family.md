@@ -90,6 +90,21 @@ upstream:
 - **保持经济独立。** 这是最实际的保护。
 - **允许自己难过。** 不被家人接受是真实的损失，不需要假装不在意。
 
+## 如果家人想了解更多
+
+**给他们看权威来源，而不是社群帖子。**
+
+| 资料 | 适合 |
+| --- | --- |
+| [英国 NHS · 性别焦虑](https://www.nhs.uk/conditions/gender-dysphoria/) | 语言平实的公众科普 |
+| [美国心理学会](https://www.apa.org/topics/lgbtq/transgender) | 心理与科普 |
+| [WPATH SOC-8 中文版](https://project-trans.org/SOC-8/) | 想深入了解照护标准 |
+| [青春期阻断剂综述](https://tfsci.mtf.wiki/zh-cn/articles/puberty-blockers/) | 未成年人家庭 |
+
+**一次给一篇就够。** 给太多会适得其反。
+
+**家长互助群存在。** 上游的[公益组织](https://mtf.wiki/zh-cn/docs/useful-info/organizations)可能有线索——有些家长通过与其他家长交流接受得更快。
+
 ## 相关页面
 
 - [出柜策略与安全评估](/wiki/coming-out/)

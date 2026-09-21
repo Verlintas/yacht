@@ -94,6 +94,20 @@ upstream:
 
 **如果曾经有过「说了也没用」的经历**，那不是你的错，也不代表这次也会一样。**可以换一个渠道再试一次。**
 
+## 自助资源
+
+**如果暂时不想找人或找不到人，这些是可以自己用的资料：**
+
+| 资源 | 说明 |
+| --- | --- |
+| [NHS 心理健康自助指南](https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/) | 结构化的自助方法 |
+| [WHO 心理健康资料](https://www.who.int/news-room/fact-sheets/detail/mental-health-strengthening-our-response) | 基础科普与应对建议 |
+| [情绪管理](/wiki/emotion-management/) | 本站整理的常见方法 |
+
+**自助资源的作用是「撑过一段时间」，不能替代专业帮助。**
+
+**如果自助方法用了两周以上没有改善，或者情况在恶化，请找人。**
+
 ## 相关页面
 
 - [情绪管理](/wiki/emotion-management/)
