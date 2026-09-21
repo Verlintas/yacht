@@ -2,6 +2,8 @@ export interface QuickLink {
   title: string;
   url: string;
   note?: string;
+  /** 站内路径（以 / 开头），渲染时不加 target 与新窗口图标 */
+  internal?: boolean;
 }
 
 export interface LinkGroup {
@@ -12,13 +14,24 @@ export interface LinkGroup {
 
 export const linkGroups: LinkGroup[] = [
   {
+    group: '我的站点',
+    hint: '自己搭的',
+    links: [
+      { title: '主站', url: 'https://verlintas.github.io', note: '对外展示的主页' },
+      { title: '小窝', url: '/', note: '本站 · 私人港口', internal: true },
+      { title: 'USV', url: 'https://usv.mysxl.cn', note: 'United Science Vaca' },
+      { title: 'USV Elec Center', url: 'https://elecusv.mysxl.cn', note: '电子中心' },
+      { title: 'NUSV 官网', url: 'https://nusv.github.io', note: '开源组织 · 项目与文档' },
+      { title: 'NUSV', url: 'https://nusv.mysxl.cn', note: '组织介绍' },
+    ],
+  },
+  {
     group: '常用',
     hint: '每天都会开',
     links: [
-      { title: 'GitHub', url: 'https://github.com', note: '代码与仓库' },
+      { title: 'GitHub', url: 'https://github.com/Verlintas', note: '@Verlintas' },
+      { title: 'X', url: 'https://x.com/Verlintas', note: '@Verlintas' },
       { title: 'Gmail', url: 'https://mail.google.com', note: '邮箱' },
-      { title: 'Google 日历', url: 'https://calendar.google.com', note: '日程' },
-      { title: 'Google Drive', url: 'https://drive.google.com', note: '文件' },
     ],
   },
   {
