@@ -124,6 +124,8 @@ upstream:
 
 ## 相关页面
 
+- [宗教、文化与家庭背景](/wiki/religion-culture/)
+
 - [出柜话术参考](/wiki/coming-out-scripts/)
 - [家人常见反应与应对](/wiki/family-reactions/)
 - [家庭沟通](/wiki/family/)

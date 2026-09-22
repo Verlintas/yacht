@@ -123,6 +123,7 @@ upstream:
 
 ## 相关页面
 
+- [创伤经历与应对](/wiki/trauma-coping/)
 - [个人信息与隐私保护](/wiki/privacy-law/)
 - [安全与隐私基础](/wiki/safety-privacy/)
 - [常见法律问题索引](/wiki/legal-faq-index/)

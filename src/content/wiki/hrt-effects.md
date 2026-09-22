@@ -133,6 +133,8 @@ upstream:
 ## 相关页面
 
 - [HRT 完整指南](/wiki/hrt-complete-guide/) — 融合版完整指南
+- [中老年与年龄相关的考虑](/wiki/older-age/)
+- [器官筛查与定期体检](/wiki/organ-screening/)
 - [药物剂量速查](/wiki/medication-doses/) — 剂量与治疗目标（每行附来源）
 - [治疗期间的监测](/wiki/monitoring-index/) — 查什么、多久查
 - [常见误区与谣言](/wiki/myths/) — 流传广但不准的说法

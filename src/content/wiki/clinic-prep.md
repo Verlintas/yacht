@@ -174,6 +174,9 @@ upstream:
 
 ## 相关页面
 
+- [紧急情况下的医疗信息](/wiki/emergency-medical-info/)
+- [器官筛查与定期体检](/wiki/organ-screening/)
+
 - [怎么跟医生说话](/wiki/doctor-communication/)
 - [第一次去精神科](/wiki/psych-first-visit/)
 - [精神科资源怎么用](/wiki/psych-resources/)

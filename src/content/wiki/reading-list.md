@@ -86,6 +86,8 @@ upstream:
 
 ## 相关页面
 
+- [资料库与社群地图](/wiki/resource-map/)
+
 - [资源总索引](/wiki/resource-index/)
 - [这个百科怎么维护的](/wiki/wiki-maintenance/)
 - [如何判断一条信息是否可信](/wiki/info-literacy/)

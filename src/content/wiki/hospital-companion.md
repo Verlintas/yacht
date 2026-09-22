@@ -118,6 +118,8 @@ upstream:
 
 ## 相关页面
 
+- [紧急情况下的医疗信息](/wiki/emergency-medical-info/)
+
 - [就医前准备清单](/wiki/clinic-prep/)
 - [社群与互助](/wiki/community/)
 - [术后护理与恢复](/wiki/surgery-recovery/)

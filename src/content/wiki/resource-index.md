@@ -108,5 +108,7 @@ upstream:
 
 ## 相关页面
 
+- [资料库与社群地图](/wiki/resource-map/)
+
 - [这个百科怎么维护的](/wiki/wiki-maintenance/)
 - [常见问题速查](/wiki/faq/)

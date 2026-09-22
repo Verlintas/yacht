@@ -106,6 +106,7 @@ upstream:
 | --- | --- |
 | 想先弄懂词 | [术语表](/wiki/glossary/) |
 | 想看清整条路 | [全流程地图](/wiki/full-path-map/) |
+| 想知道要花多少钱和时间 | [费用与时间规划](/wiki/cost-timeline/) |
 | **还未成年，想知道年龄门槛** | **[各阶段的年龄门槛与家长要求](/wiki/age-thresholds/)** |
 | 想了解 HRT 全貌 | [HRT 完整指南](/wiki/hrt-complete-guide/) |
 | 担心信息真假 | [如何判断信息是否可信](/wiki/info-literacy/) |

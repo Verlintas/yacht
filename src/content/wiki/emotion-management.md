@@ -134,6 +134,8 @@ upstream:
 
 ## 相关页面
 
+- [焦虑与抑郁](/wiki/anxiety-depression/)
+- [睡眠与作息](/wiki/sleep-routine/)
 - [危机资源与紧急情况](/wiki/crisis-resources/)
 - [怎么找心理咨询](/wiki/finding-counselor/)
 - [时间预期与心理准备](/wiki/timeline-expectations/)
