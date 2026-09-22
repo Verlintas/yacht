@@ -5,8 +5,22 @@ import WikiNature from '../../components/WikiNature.astro';
 import { getCollection } from 'astro:content';
 import { wikiCategories, wikiScenarios } from '../../data/wiki';
 import { url } from '../../lib/url';
+import { countChars, formatDate, stripMarkdown } from '../../lib/wiki-text';
 
 const entries = await getCollection('wiki');
+
+const totalChars = entries.reduce(
+  (sum, entry) => sum + countChars(stripMarkdown(entry.body ?? '')),
+  0,
+);
+const totalSources = entries.reduce((sum, entry) => sum + entry.data.sources.length, 0);
+const tagCounts = new Map<string, number>();
+for (const entry of entries) {
+  for (const tag of entry.data.tags) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+}
+const topTags = Array.from(tagCounts.entries())
+  .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh'))
+  .slice(0, 24);
 
 const scenarioCounts = new Map(
   wikiScenarios.map((scenario) => [
@@ -25,13 +39,12 @@ const sections = wikiCategories
   .filter((section) => section.items.length > 0);
 
 const pending = entries.filter((entry) => entry.data.status !== 'reviewed').length;
-
-const formatDate = (date: Date): string =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 ---
 
 <WikiLayout title="百科 · Verlintas 的小窝" description="跨性别资料的索引与导览，不做医疗或法律建议。">
-  <p class="eyebrow">资料索引 · {entries.length} 条 · 待核对 {pending} 条</p>
+  <p class="eyebrow">
+    资料索引 · {entries.length} 条 · {totalChars.toLocaleString('zh-CN')} 字 · {totalSources} 条来源
+  </p>
   <h1 class="page-title">百科</h1>
   <p class="page-sub">
     先按<b>你现在的处境</b>找入口，再按主题深入。每个条目都在文末列出上游来源。
@@ -45,8 +58,10 @@ const formatDate = (date: Date): string =>
       等上游资料的整理与导航，请以来源原文和专业人员意见为准。
     </p>
     <p class="readout-note">
-      每条都标了状态：草稿 / 有来源 / 已核对 / 已过时。标注为「草稿」或「有来源」的条目尚未人工复核。
-      <a href={url('wiki/review/')}>查看待核对清单 →</a>
+      每条都标了状态：草稿 / 有来源 / 已核对 / 已过时。标注为「草稿」或「有来源」的条目尚未人工复核，目前有 {pending} 条。
+      <a href={url('wiki/review/')}>待核对清单 →</a>
+      <a href={url('wiki/updates/')}>最近更新 →</a>
+      <a href={url('wiki/all/')}>全部条目 →</a>
     </p>
   </div>
 
@@ -84,12 +99,28 @@ const formatDate = (date: Date): string =>
     <input
       type="search"
       id="wikiSearch"
-      placeholder="搜索标题、摘要或标签…"
+      placeholder="搜索标题、摘要、标签，或按回车搜正文…"
       aria-label="搜索百科条目"
       autocomplete="off"
     />
     <span class="readout-note" id="wikiSearchCount"></span>
+    <button class="tag tag-sm tag-link" type="button" id="wikiDeepSearch" hidden>
+      在正文中搜索
+    </button>
   </div>
+
+  {
+    topTags.length > 0 && (
+      <div class="tag-row spaced tag-row-wrap">
+        <span class="readout-note">常用标签：</span>
+        {topTags.map(([tag, count]) => (
+          <a class="tag tag-sm tag-link" href={url(`wiki/tag/${encodeURIComponent(tag)}/`)}>
+            {tag} <span class="tag-count">{count}</span>
+          </a>
+        ))}
+      </div>
+    )
+  }
 
   <div id="wikiSections">
     {
@@ -106,10 +137,16 @@ const formatDate = (date: Date): string =>
                 class="panel panel-pad note-card"
                 href={url(`wiki/${entry.id}/`)}
                 data-wiki-item
+                data-wiki-id={entry.id}
                 data-search={`${entry.data.title} ${entry.data.summary ?? ''} ${entry.data.tags.join(' ')} ${section.category.label}`.toLowerCase()}
               >
                 <span class="card-head">
-                  <span class="readout-label">{formatDate(entry.data.updated)}</span>
+                  <span class="readout-label">
+                    {formatDate(entry.data.updated)}
+                    <span class="read-mark" data-read-mark={entry.id} hidden>
+                      已读
+                    </span>
+                  </span>
                   <span class="badge-row">
                     <WikiNature nature={entry.data.nature} />
                     <WikiStatus status={entry.data.status} size="sm" />
@@ -140,12 +177,43 @@ const formatDate = (date: Date): string =>
     const empty = document.getElementById('wikiEmpty');
     const items = Array.from(document.querySelectorAll<HTMLElement>('[data-wiki-item]'));
     const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-wiki-section]'));
+    const searchUrl = new URL('search.json', window.location.href).href;
+    const deepButton = document.getElementById('wikiDeepSearch') as HTMLButtonElement | null;
+
+    let fullText: Map<string, string> | null = null;
+    let loading = false;
+    let deepWanted = false;
+
+    const loadFullText = async (): Promise<void> => {
+      if (fullText || loading) return;
+      loading = true;
+      try {
+        const response = await fetch(searchUrl);
+        const payload = (await response.json()) as {
+          index: Array<{ id: string; haystack: string }>;
+        };
+        fullText = new Map(payload.index.map((row) => [row.id, row.haystack]));
+      } catch {
+        fullText = new Map();
+      } finally {
+        loading = false;
+      }
+    };
 
     const apply = (): void => {
       const query = (input?.value ?? '').trim().toLowerCase();
       let visible = 0;
+      let deepHits = 0;
+      let shallowHits = 0;
       items.forEach((item) => {
-        const hit = query === '' || (item.dataset.search ?? '').includes(query);
+        const shallow = query === '' || (item.dataset.search ?? '').includes(query);
+        const deep =
+          query !== '' && deepWanted && fullText !== null
+            ? (fullText.get(item.dataset.wikiId ?? '') ?? '').includes(query)
+            : false;
+        const hit = shallow || deep;
+        if (shallow && query !== '') shallowHits += 1;
+        if (deep && !shallow) deepHits += 1;
         item.hidden = !hit;
         if (hit) visible += 1;
       });
@@ -155,11 +223,44 @@ const formatDate = (date: Date): string =>
         );
         section.hidden = !any;
       });
-      if (counter) counter.textContent = query === '' ? '' : `${visible} / ${items.length}`;
+
+      if (deepButton) {
+        deepButton.hidden = !(
+          query.length >= 2 && !deepWanted && fullText === null && shallowHits <= 2
+        );
+        deepButton.textContent = loading ? '正在加载…' : '在正文中搜索';
+      }
+
+      if (counter) {
+        if (query === '') counter.textContent = '';
+        else if (loading) counter.textContent = `${visible} 条 · 加载全文索引…`;
+        else if (deepHits > 0) counter.textContent = `${visible} 条（其中 ${deepHits} 条命中正文）`;
+        else counter.textContent = `${visible} 条`;
+      }
       if (empty) empty.hidden = !(query !== '' && visible === 0);
     };
 
-    input?.addEventListener('input', apply);
+    deepButton?.addEventListener('click', () => {
+      deepWanted = true;
+      deepButton.textContent = '正在加载…';
+      void loadFullText().then(apply);
+    });
+
+    input?.addEventListener('input', () => {
+      deepWanted = false;
+      apply();
+    });
+
+    const readMarks = document.querySelectorAll<HTMLElement>('[data-read-mark]');
+    try {
+      const read = new Set<string>(JSON.parse(localStorage.getItem('yacht:wiki:read') ?? '[]'));
+      readMarks.forEach((mark) => {
+        if (read.has(mark.dataset.readMark ?? '')) mark.hidden = false;
+      });
+    } catch {
+      /* 忽略 */
+    }
+
     apply();
   </script>
 </WikiLayout>

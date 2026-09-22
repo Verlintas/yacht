@@ -71,6 +71,22 @@ const activeCategory = groups.find((group) =>
     </section>
 
     <section class="wiki-nav-block">
+      <p class="wiki-nav-title">总览</p>
+      <ul class="wiki-nav-list">
+        <li>
+          <a href={url('wiki/updates/')} aria-current={currentPath.startsWith('/wiki/updates') ? 'page' : undefined}>
+            最近更新与统计
+          </a>
+        </li>
+        <li>
+          <a href={url('wiki/all/')} aria-current={currentPath.startsWith('/wiki/all') ? 'page' : undefined}>
+            全部条目
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section class="wiki-nav-block">
       <p class="wiki-nav-title">维护</p>
       <ul class="wiki-nav-list">
         <li>

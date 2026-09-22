@@ -1,0 +1,95 @@
+---
+import WikiLayout from '../../../layouts/WikiLayout.astro';
+import WikiStatus from '../../../components/WikiStatus.astro';
+import WikiNature from '../../../components/WikiNature.astro';
+import { getCollection } from 'astro:content';
+import { getCategory } from '../../../data/wiki';
+import { url } from '../../../lib/url';
+import { countChars, formatDate, stripMarkdown } from '../../../lib/wiki-text';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('wiki');
+  const counts = new Map<string, number>();
+  for (const entry of entries) {
+    for (const tag of entry.data.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  }
+  return Array.from(counts.keys()).map((tag) => ({
+    params: { tag },
+    props: { tag, count: counts.get(tag) ?? 0 },
+  }));
+}
+
+const { tag } = Astro.props;
+const entries = await getCollection('wiki');
+const matches = entries
+  .filter((entry) => entry.data.tags.includes(tag))
+  .sort((a, b) => b.data.updated.getTime() - a.data.updated.getTime());
+
+const related = new Map<string, number>();
+for (const entry of matches) {
+  for (const other of entry.data.tags) {
+    if (other !== tag) related.set(other, (related.get(other) ?? 0) + 1);
+  }
+}
+const relatedTags = Array.from(related.entries())
+  .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh'))
+  .slice(0, 12);
+
+const totalChars = matches.reduce(
+  (sum, entry) => sum + countChars(stripMarkdown(entry.body ?? '')),
+  0,
+);
+---
+
+<WikiLayout
+  title={`标签：${tag} · 百科 · Verlintas 的小窝`}
+  description={`标记为「${tag}」的百科条目，共 ${matches.length} 条。`}
+>
+  <p class="eyebrow">
+    <a href={url('wiki/')}>← 百科</a>
+    <span> / 标签</span>
+  </p>
+  <h1 class="page-title">{tag}</h1>
+  <p class="page-sub">
+    共 {matches.length} 条 · {totalChars.toLocaleString('zh-CN')} 字
+  </p>
+
+  {
+    relatedTags.length > 0 && (
+      <div class="tag-row spaced tag-row-wrap">
+        <span class="readout-note">相关标签：</span>
+        {relatedTags.map(([other, count]) => (
+          <a class="tag tag-sm tag-link" href={url(`wiki/tag/${encodeURIComponent(other)}/`)}>
+            {other} <span class="tag-count">{count}</span>
+          </a>
+        ))}
+      </div>
+    )
+  }
+
+  <div class="grid spaced">
+    {
+      matches.map((entry) => (
+        <a class="panel panel-pad note-card" href={url(`wiki/${entry.id}/`)}>
+          <span class="card-head">
+            <span class="readout-label">
+              {formatDate(entry.data.updated)}
+              <span class="readout-note"> · {getCategory(entry.data.category).label}</span>
+            </span>
+            <span class="badge-row">
+              <WikiNature nature={entry.data.nature} />
+              <WikiStatus status={entry.data.status} size="sm" />
+            </span>
+          </span>
+          <strong class="note-title">{entry.data.title}</strong>
+          {entry.data.summary && <span class="readout-note">{entry.data.summary}</span>}
+        </a>
+      ))
+    }
+  </div>
+
+  <p class="readout-note spaced">
+    标签是人工添加的主题词，不是自动分类。同一个条目可以有多个标签。
+    <a href={url('wiki/')}>回百科索引 →</a>
+  </p>
+</WikiLayout>

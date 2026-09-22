@@ -1,0 +1,148 @@
+---
+import WikiLayout from '../../layouts/WikiLayout.astro';
+import WikiStatus from '../../components/WikiStatus.astro';
+import { getCollection } from 'astro:content';
+import { getCategory, statusMeta } from '../../data/wiki';
+import { url } from '../../lib/url';
+import { countChars, formatDate, staleness, stripMarkdown } from '../../lib/wiki-text';
+
+const entries = await getCollection('wiki');
+
+const rows = entries.map((entry) => {
+  const chars = countChars(stripMarkdown(entry.body ?? ''));
+  return { entry, chars, stale: staleness(entry.data.updated) };
+});
+
+const totalChars = rows.reduce((sum, row) => sum + row.chars, 0);
+const totalSources = entries.reduce((sum, entry) => sum + entry.data.sources.length, 0);
+const avgChars = Math.round(totalChars / entries.length);
+
+const statusCounts = new Map<string, number>();
+for (const entry of entries) {
+  const key = entry.data.status;
+  statusCounts.set(key, (statusCounts.get(key) ?? 0) + 1);
+}
+
+const stale = rows
+  .filter((row) => row.stale.level !== 'fresh')
+  .sort((a, b) => b.stale.days - a.stale.days);
+
+const byMonth = new Map<string, typeof rows>();
+for (const row of rows.slice().sort((a, b) => b.entry.data.updated.getTime() - a.entry.data.updated.getTime())) {
+  const date = row.entry.data.updated;
+  const key = `${date.getFullYear()} 年 ${date.getMonth() + 1} 月`;
+  const bucket = byMonth.get(key) ?? [];
+  bucket.push(row);
+  byMonth.set(key, bucket);
+}
+
+const months = Array.from(byMonth.entries()).slice(0, 12);
+---
+
+<WikiLayout title="最近更新 · 百科 · Verlintas 的小窝" description="百科条目的更新时间、篇幅与核对状态总览。">
+  <p class="eyebrow">
+    <a href={url('wiki/')}>← 百科</a>
+    <span> / 更新与统计</span>
+  </p>
+  <h1 class="page-title">最近更新</h1>
+  <p class="page-sub">
+    按最后核对日期排列。每条都标了篇幅与核对状态，方便判断哪些内容需要重新核对。
+  </p>
+
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title">全站统计</h2>
+      <span class="section-note">Overview</span>
+    </div>
+    <div class="stat-grid">
+      <div class="panel panel-pad stat-cell">
+        <span class="readout-label">条目</span>
+        <strong class="stat-value">{entries.length}</strong>
+      </div>
+      <div class="panel panel-pad stat-cell">
+        <span class="readout-label">总字数</span>
+        <strong class="stat-value">{totalChars.toLocaleString('zh-CN')}</strong>
+      </div>
+      <div class="panel panel-pad stat-cell">
+        <span class="readout-label">平均每篇</span>
+        <strong class="stat-value">{avgChars.toLocaleString('zh-CN')}</strong>
+      </div>
+      <div class="panel panel-pad stat-cell">
+        <span class="readout-label">来源条目数</span>
+        <strong class="stat-value">{totalSources}</strong>
+      </div>
+    </div>
+    <div class="tag-row spaced tag-row-wrap">
+      <span class="readout-note">核对状态：</span>
+      {
+        Object.entries(statusMeta).map(([key, meta]) => (
+          <span class="tag tag-sm">
+            {meta.label} <span class="tag-count">{statusCounts.get(key) ?? 0}</span>
+          </span>
+        ))
+      }
+    </div>
+  </section>
+
+  {
+    stale.length > 0 && (
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">需要重新核对</h2>
+          <span class="section-note">{stale.length} 条 · 超过半年</span>
+        </div>
+        <p class="readout-note section-desc">
+          这些条目的最后核对日期已超过半年。上游资料可能已经变化，请以来源原文为准。
+        </p>
+        <div class="grid">
+          {stale.slice(0, 24).map((row) => (
+            <a class="panel panel-pad note-card" href={url(`wiki/${row.entry.id}/`)}>
+              <span class="card-head">
+                <span class="readout-label">{formatDate(row.entry.data.updated)}</span>
+                <span class="badge-row">
+                  <span class:list={['tag', 'tag-sm', row.stale.level === 'stale' ? 'tag-warn' : '']}>
+                    {row.stale.label}
+                  </span>
+                </span>
+              </span>
+              <strong class="note-title">{row.entry.data.title}</strong>
+              <span class="readout-note">
+                {getCategory(row.entry.data.category).label} · {row.stale.days} 天未核对
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  {
+    months.map(([label, bucket]) => (
+      <section class="section">
+        <div class="section-head">
+          <h2 class="section-title">{label}</h2>
+          <span class="section-note">{bucket.length} 条</span>
+        </div>
+        <ul class="update-list">
+          {bucket.map((row) => (
+            <li class="update-row">
+              <span class="update-date">{formatDate(row.entry.data.updated)}</span>
+              <a class="update-title" href={url(`wiki/${row.entry.id}/`)}>
+                {row.entry.data.title}
+              </a>
+              <span class="update-meta">
+                <span class="readout-note">{row.chars.toLocaleString('zh-CN')} 字</span>
+                <WikiStatus status={row.entry.data.status} size="sm" />
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+
+  <p class="readout-note spaced">
+    「最后核对」指的是本页内容与来源对照的日期，不等于上游页面本身的更新日期。
+    <a href={url('wiki/all/')}>全部条目 →</a>
+  </p>
+</WikiLayout>

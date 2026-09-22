@@ -1,0 +1,144 @@
+---
+import WikiLayout from '../../layouts/WikiLayout.astro';
+import WikiStatus from '../../components/WikiStatus.astro';
+import WikiNature from '../../components/WikiNature.astro';
+import { getCollection } from 'astro:content';
+import { getCategory, wikiCategories } from '../../data/wiki';
+import { url } from '../../lib/url';
+import { countChars, formatDate, stripMarkdown } from '../../lib/wiki-text';
+
+const entries = await getCollection('wiki');
+
+const rows = entries
+  .map((entry) => ({
+    entry,
+    chars: countChars(stripMarkdown(entry.body ?? '')),
+    category: getCategory(entry.data.category),
+  }))
+  .sort((a, b) => a.entry.data.title.localeCompare(b.entry.data.title, 'zh'));
+
+const grouped = new Map<string, typeof rows>();
+for (const row of rows) {
+  const bucket = grouped.get(row.category.label) ?? [];
+  bucket.push(row);
+  grouped.set(row.category.label, bucket);
+}
+---
+
+<WikiLayout
+  title="全部条目 · 百科 · Verlintas 的小窝"
+  description={`百科全部 ${entries.length} 个条目的平铺清单，可按分类与关键词筛选。`}
+>
+  <p class="eyebrow">
+    <a href={url('wiki/')}>← 百科</a>
+    <span> / 全部条目</span>
+  </p>
+  <h1 class="page-title">全部条目</h1>
+  <p class="page-sub">
+    共 {entries.length} 条，按标题排列。适合「我知道要找什么，但不知道在哪一类」的时候用。
+  </p>
+
+  <div class="search-bar spaced">
+    <input
+      type="search"
+      id="allSearch"
+      placeholder="按标题、摘要或标签筛选…"
+      aria-label="筛选百科条目"
+      autocomplete="off"
+    />
+    <span class="readout-note" id="allCount"></span>
+  </div>
+
+  <div class="tag-row spaced tag-row-wrap">
+    <span class="readout-note">分类：</span>
+    <button class="tag tag-sm tag-link is-active" type="button" data-cat="">
+      全部 <span class="tag-count">{entries.length}</span>
+    </button>
+    {
+      wikiCategories.map((category) => {
+        const count = entries.filter((entry) => entry.data.category === category.slug).length;
+        return (
+          <button class="tag tag-sm tag-link" type="button" data-cat={category.label}>
+            {category.label} <span class="tag-count">{count}</span>
+          </button>
+        );
+      })
+    }
+  </div>
+
+  {
+    Array.from(grouped.entries()).map(([label, bucket]) => (
+      <section class="section" data-all-section data-section-label={label}>
+        <div class="section-head">
+          <h2 class="section-title">{label}</h2>
+          <span class="section-note">{bucket.length} 条</span>
+        </div>
+        <ul class="index-list">
+          {bucket.map((row) => (
+            <li
+              class="index-row"
+              data-all-item
+              data-cat={label}
+              data-search={`${row.entry.data.title} ${row.entry.data.summary ?? ''} ${row.entry.data.tags.join(' ')}`.toLowerCase()}
+            >
+              <a class="index-link" href={url(`wiki/${row.entry.id}/`)}>
+                <span class="index-title">{row.entry.data.title}</span>
+                <span class="index-desc readout-note">{row.entry.data.summary}</span>
+                <span class="index-meta">
+                  <span class="readout-note">{formatDate(row.entry.data.updated)}</span>
+                  <span class="readout-note">{row.chars.toLocaleString('zh-CN')} 字</span>
+                  <WikiNature nature={row.entry.data.nature} />
+                  <WikiStatus status={row.entry.data.status} size="sm" />
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+
+  <p class="panel panel-pad placeholder spaced" id="allEmpty" hidden>没有匹配的条目。</p>
+
+  <script>
+    const input = document.getElementById('allSearch') as HTMLInputElement | null;
+    const count = document.getElementById('allCount');
+    const empty = document.getElementById('allEmpty');
+    const items = Array.from(document.querySelectorAll<HTMLElement>('[data-all-item]'));
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-all-section]'));
+    const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-cat]'));
+
+    let activeCat = '';
+
+    const apply = (): void => {
+      const query = (input?.value ?? '').trim().toLowerCase();
+      let visible = 0;
+      items.forEach((item) => {
+        const catOk = activeCat === '' || item.dataset.cat === activeCat;
+        const hit = catOk && (query === '' || (item.dataset.search ?? '').includes(query));
+        item.hidden = !hit;
+        if (hit) visible += 1;
+      });
+      sections.forEach((section) => {
+        const any = Array.from(section.querySelectorAll<HTMLElement>('[data-all-item]')).some(
+          (item) => !item.hidden,
+        );
+        section.hidden = !any;
+      });
+      if (count) count.textContent = `${visible} / ${items.length}`;
+      if (empty) empty.hidden = visible !== 0;
+    };
+
+    input?.addEventListener('input', apply);
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        activeCat = button.dataset.cat ?? '';
+        buttons.forEach((other) => other.classList.toggle('is-active', other === button));
+        apply();
+      });
+    });
+
+    apply();
+  </script>
+</WikiLayout>

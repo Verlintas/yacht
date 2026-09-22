@@ -94,8 +94,44 @@ function isActive(href: string): boolean {
         <span>内容由 AI 协助整理 · 可能有误</span>
         <span>天气与空气数据 · Open-Meteo</span>
         <span>不接入追踪</span>
+        <span class="foot-hint">
+          连按两次 <kbd>Esc</kbd> 立刻离开本站
+        </span>
       </footer>
     </div>
+
+    <div class="escape-toast" id="escapeToast" role="status" aria-live="polite" hidden>
+      再按一次 <kbd>Esc</kbd> 立刻离开
+    </div>
+
+    <script>
+      const PANIC_TARGET = 'https://www.bing.com/';
+      const toast = document.getElementById('escapeToast');
+      let lastEsc = 0;
+      let timer: number | undefined;
+
+      const hideToast = (): void => {
+        if (toast) toast.hidden = true;
+      };
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        const now = Date.now();
+        if (now - lastEsc < 700) {
+          window.location.replace(PANIC_TARGET);
+          return;
+        }
+        lastEsc = now;
+        if (toast) toast.hidden = false;
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          lastEsc = 0;
+          hideToast();
+        }, 2200);
+      });
+
+      document.addEventListener('click', hideToast);
+    </script>
 
     <script>
       const toggle = document.getElementById('themeToggle');

@@ -132,3 +132,78 @@ export const statusMeta: Record<string, { label: string; tone: string; hint: str
 };
 
 export const statusOrder = ['draft', 'sourced', 'reviewed', 'outdated'];
+
+/**
+ * 搜索别名：社群俗称、商品名、英文缩写 → 条目 id。
+ * 让「色普龙」「补佳乐」这类词也能搜到对应条目。
+ */
+export const wikiAliases: Record<string, string[]> = {
+  'antiandrogen-compare': [
+    '色普龙', '色谱龙', '醋酸环丙孕酮', 'CPA', '安体舒通', '螺内酯', '比卡鲁胺',
+    '康士得', '日色', '醋酸氯地孕酮', '抗雄', '抗雄激素',
+  ],
+  'estrogen-compare': [
+    '补佳乐', '芬吗通', '戊酸雌二醇', '雌二醇', '贴片', '凝胶', '日雌', 'E2',
+    '雌激素', '雌二醇凝胶', '雌二醇贴片',
+  ],
+  progesterone: [
+    '孕酮', '黄体酮', '孕激素', '安宫黄体酮', '醋酸甲羟孕酮', 'MPA', '地屈孕酮',
+  ],
+  'medication-doses': ['剂量', '用量', '吃多少', '多少毫克'],
+  'medication-index': ['药物索引', '药品', '药名'],
+  'puberty-blockers': ['青春期阻断', 'GnRH', '曲普瑞林', '亮丙瑞林', '青春期抑制'],
+  'hrt-complete-guide': ['HRT 指南', '激素治疗指南', '完整指南', '激素'],
+  'monitoring-index': ['复查', '化验', '抽血', '检查项目', '监测'],
+  'hormone-panel': ['性激素六项', '激素六项', '化验单', '参考范围'],
+  'hormone-converter': ['单位换算', 'pg/mL', 'pmol/L', '换算'],
+  'thrombosis-risk': ['血栓', '静脉血栓', '凝血', 'D-二聚体'],
+  'liver-function': ['肝功能', '转氨酶', 'ALT', 'AST', '肝酶'],
+  prolactin: ['泌乳素', 'PRL', '催乳素'],
+  'bone-density': ['骨密度', '骨质疏松', '骨量'],
+  'hair-removal': ['脱毛', '激光脱毛', '电解', '胡须', '体毛'],
+  'hair-loss': ['脱发', '发际线', '米诺地尔', '非那雄胺'],
+  'surgery-overview': ['手术', '性别肯定手术', 'SRS', 'GRS', '手术类别'],
+  'surgery-prep': ['术前准备', '术前', '公证', '手术材料'],
+  'surgery-recovery': ['术后护理', '恢复', '扩张', '术后'],
+  'vocal-surgery': ['声带手术', '嗓音手术', '音高手术'],
+  'voice-training': ['嗓音训练', '声音训练', '女声', '伪音'],
+  'ffs-overview': ['FFS', '面部女性化', '面部手术', '削骨', '喉结'],
+  'breast-augmentation': ['隆胸', '乳房增大', '假体', '丰胸'],
+  'diagnosis-letter': ['诊断证明', '介绍信', '易性症证明', '证明'],
+  'diagnosis-criteria': ['诊断标准', '易性症', '性别不一致', '诊断依据'],
+  'psych-first-visit': ['精神科', '心理科', '第一次就诊', '挂号'],
+  'gender-dysphoria': ['性别不安', '性别焦虑', '性别烦躁'],
+  'household-register': ['户口', '户籍', '户口本'],
+  'id-card-change': ['身份证', '身份证变更'],
+  'name-change': ['改名', '姓名变更'],
+  'education-records': ['学籍', '学历', '毕业证'],
+  'healthcare-insurance': ['医保', '社保', '报销'],
+  notarization: ['公证', '公证处'],
+  'travel-documents': ['护照', '通行证', '签证'],
+  'real-name-overview': ['实名信息', '证件变更', '变更顺序'],
+  'coming-out': ['出柜', '坦白', '告诉家人'],
+  'family-reactions': ['家人反对', '家庭冲突', '父母'],
+  'chest-shape': ['内衣', '义乳', '垫胸', '束胸', '胸垫', 'binding'],
+  'clothing-style': ['穿搭', '服装', '衣服', '尺码'],
+  'eating-disorders': ['进食障碍', '厌食', '暴食', '催吐'],
+  neurodiversity: ['自闭', '自闭症', '谱系', 'ADHD', '注意力缺陷', '神经多样性'],
+  'small-city': ['县城', '农村', '小地方', '异地就医'],
+  'student-earning': ['打工', '兼职', '未成年工', '攒钱'],
+  'changing-rooms': ['更衣室', '泳池', '浴室', '澡堂', '游泳课'],
+  'crisis-resources': ['危机', '自杀', '自伤', '紧急'],
+  'scam-awareness': ['诈骗', '骗局', '被骗'],
+  'privacy-law': ['隐私', '个人信息', '泄露'],
+  'online-harassment': ['网暴', '骚扰', '人肉'],
+  'employment-discrimination': ['歧视', '就业歧视', '被开除'],
+  'appeal-path': ['申诉', '投诉', '维权'],
+  'age-thresholds': ['年龄', '几岁', '家长要求', '监护人'],
+  'cost-timeline': ['费用', '多少钱', '时间规划'],
+};
+
+/** 词表自动链接：正文中首次出现的术语 → 站内条目。数据源见 glossary.mjs。 */
+export { glossaryTerms, wikiGlossaryLinks } from './glossary.mjs';
+
+/** 条目 id → 搜索别名（含自身标题），用于索引。 */
+export function aliasesFor(id: string): string[] {
+  return wikiAliases[id] ?? [];
+}
