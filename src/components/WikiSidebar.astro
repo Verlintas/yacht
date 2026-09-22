@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { wikiCategories, wikiScenarios } from '../data/wiki';
+import { wikiPaths } from '../data/paths';
 import { url } from '../lib/url';
 
 interface Props {
@@ -83,6 +84,24 @@ const activeCategory = groups.find((group) =>
             全部条目
           </a>
         </li>
+      </ul>
+    </section>
+
+    <section class="wiki-nav-block">
+      <p class="wiki-nav-title">阅读路径</p>
+      <ul class="wiki-nav-list">
+        {
+          wikiPaths.map((path) => (
+            <li>
+              <a
+                href={url(`wiki/paths/${path.slug}/`)}
+                aria-current={currentPath === `/wiki/paths/${path.slug}/` ? 'page' : undefined}
+              >
+                {path.title}
+              </a>
+            </li>
+          ))
+        }
       </ul>
     </section>
 

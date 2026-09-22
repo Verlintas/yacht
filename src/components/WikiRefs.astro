@@ -11,6 +11,18 @@ const { sources, upstream, updated } = entry.data;
 
 const formatDate = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+const errataTitle = `[百科] ${entry.data.title}`;
+const errataBody = [
+  '条目：' + entry.id,
+  '',
+  '问题描述：',
+  '',
+  '（请说明哪一句有问题、依据是什么。不要写个人信息。）',
+].join('\n');
+const errataUrl = `https://github.com/Verlintas/yacht/issues/new?title=${encodeURIComponent(
+  errataTitle,
+)}&body=${encodeURIComponent(errataBody)}`;
 ---
 
 <div class="panel panel-pad spaced wiki-refs">
@@ -54,4 +66,16 @@ const formatDate = (date: Date): string =>
     具体诊疗、用药与法律事务请以来源原文和专业人员意见为准。
     <b>内容由 AI 协助整理，可能有误。</b>
   </p>
+
+  <section>
+    <h2 class="refs-title">发现错误</h2>
+    <p class="readout-note">
+      如果本页有说错的地方、链接失效，或者你手上有更权威的来源，可以
+      <a href={errataUrl} target="_blank" rel="noreferrer noopener">在 GitHub 上提一个 issue</a>。
+      提 issue 需要 GitHub 账号，内容公开可见——<b>请不要在 issue 里写任何个人信息</b>。
+    </p>
+    <p class="readout-note">
+      只想核对原文的话，直接看上面的上游资料与本页来源即可，不必联系我们。
+    </p>
+  </section>
 </div>

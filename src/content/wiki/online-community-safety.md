@@ -12,7 +12,7 @@ sources:
   - title: MtF.wiki · 公益组织
     url: https://mtf.wiki/zh-cn/docs/useful-info/organizations
   - title: MtF.wiki · 友情链接
-    url: https://mtf.wiki/zh-cn/docs/useful-info/friendship
+    url: https://mtf.wiki/zh-cn/docs/friendship
   - title: MtF.wiki · 常见法律问题
     url: https://mtf.wiki/zh-cn/docs/useful-info/legal-faq
   - title: Project Trans
@@ -21,7 +21,7 @@ upstream:
   - title: MtF.wiki · 公益组织
     url: https://mtf.wiki/zh-cn/docs/useful-info/organizations
   - title: MtF.wiki · 友情链接
-    url: https://mtf.wiki/zh-cn/docs/useful-info/friendship
+    url: https://mtf.wiki/zh-cn/docs/friendship
 ---
 
 <div class="notice">
@@ -93,7 +93,7 @@ upstream:
 | 入口 | 说明 |
 | --- | --- |
 | [公益组织](https://mtf.wiki/zh-cn/docs/useful-info/organizations) | 有实体或长期运营的机构 |
-| [友情链接](https://mtf.wiki/zh-cn/docs/useful-info/friendship) | 相关站点与社群 |
+| [友情链接](https://mtf.wiki/zh-cn/docs/friendship) | 相关站点与社群 |
 
 **优先选择有公开主体、有长期记录的组织**，比来历不明的群可靠。
 

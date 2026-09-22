@@ -1,0 +1,183 @@
+---
+import WikiLayout from '../../../layouts/WikiLayout.astro';
+import WikiStatus from '../../../components/WikiStatus.astro';
+import { getCollection } from 'astro:content';
+import { getCategory } from '../../../data/wiki';
+import { wikiPaths } from '../../../data/paths';
+import { url } from '../../../lib/url';
+import { countChars, stripMarkdown } from '../../../lib/wiki-text';
+
+export async function getStaticPaths() {
+  return wikiPaths.map((path) => ({ params: { slug: path.slug }, props: { path } }));
+}
+
+const { path: readingPath } = Astro.props;
+const entries = await getCollection('wiki');
+const byId = new Map(entries.map((entry) => [entry.id, entry]));
+
+const steps = readingPath.steps
+  .map((step, index) => {
+    const entry = byId.get(step.id);
+    if (!entry) return null;
+    return {
+      index: index + 1,
+      entry,
+      why: step.why,
+      chars: countChars(stripMarkdown(entry.body ?? '')),
+      category: getCategory(entry.data.category),
+    };
+  })
+  .filter((step): step is NonNullable<typeof step> => step !== null);
+
+const totalChars = steps.reduce((sum, step) => sum + step.chars, 0);
+const totalMinutes = Math.max(1, Math.round(totalChars / 400));
+
+const order = wikiPaths.findIndex((item) => item.slug === readingPath.slug);
+const prevPath = order > 0 ? wikiPaths[order - 1] : null;
+const nextPath = order >= 0 && order < wikiPaths.length - 1 ? wikiPaths[order + 1] : null;
+---
+
+<WikiLayout
+  title={`${readingPath.title} · 阅读路径 · Verlintas 的小窝`}
+  description={readingPath.intro}
+>
+  <p class="eyebrow">
+    <a href={url('wiki/')}>← 百科</a>
+    <span> / 阅读路径</span>
+  </p>
+  <h1 class="page-title">{readingPath.title}</h1>
+  <p class="page-sub meta-row">
+    <span class="readout-note">{readingPath.latin}</span>
+    <span class="readout-note">{steps.length} 步 · 约 {totalChars.toLocaleString('zh-CN')} 字 · {totalMinutes} 分钟</span>
+  </p>
+
+  <div class="panel panel-pad notice spaced">
+    <strong>适合谁</strong>
+    <p>{readingPath.audience}</p>
+    <p>{readingPath.intro}</p>
+  </div>
+
+  <div class="path-progress panel panel-pad spaced">
+    <div class="path-progress-head">
+      <span class="readout-label">进度</span>
+      <span class="readout-note" id="pathProgressText">0 / {steps.length}</span>
+    </div>
+    <div class="path-progress-track">
+      <div class="path-progress-fill" id="pathProgressFill"></div>
+    </div>
+    <p class="readout-note">
+      进度只存在你自己的浏览器里，不会上传。可以随时清空。
+      <button class="tag tag-sm tag-link" type="button" id="pathReset">清空进度</button>
+    </p>
+  </div>
+
+  <ol class="path-steps">
+    {
+      steps.map((step) => (
+        <li class="path-step panel panel-pad" data-path-step={step.entry.id}>
+          <div class="path-step-head">
+            <span class="path-step-no">{String(step.index).padStart(2, '0')}</span>
+            <span class="path-step-body">
+              <a class="path-step-title" href={url(`wiki/${step.entry.id}/`)}>
+                {step.entry.data.title}
+              </a>
+              <span class="path-step-meta">
+                <span class="readout-note">{step.category.label}</span>
+                <span class="readout-note">{step.chars.toLocaleString('zh-CN')} 字</span>
+                <WikiStatus status={step.entry.data.status} size="sm" />
+              </span>
+            </span>
+            <label class="path-check">
+              <input type="checkbox" data-path-check={step.entry.id} />
+              <span class="path-check-label">读完</span>
+            </label>
+          </div>
+          <p class="path-step-why">
+            <span class="readout-label">为什么读这篇</span>
+            {step.why}
+          </p>
+          {step.entry.data.summary && <p class="readout-note">{step.entry.data.summary}</p>}
+        </li>
+      ))
+    }
+  </ol>
+
+  <nav class="pager spaced" aria-label="其他阅读路径">
+    <span class="pager-side">
+      {
+        prevPath && (
+          <a class="pager-link" href={url(`wiki/paths/${prevPath.slug}/`)}>
+            <span class="readout-label">上一条路径</span>
+            <strong>{prevPath.title}</strong>
+          </a>
+        )
+      }
+    </span>
+    <span class="pager-side pager-side-end">
+      {
+        nextPath && (
+          <a class="pager-link" href={url(`wiki/paths/${nextPath.slug}/`)}>
+            <span class="readout-label">下一条路径</span>
+            <strong>{nextPath.title}</strong>
+          </a>
+        )
+      }
+    </span>
+  </nav>
+
+  <script>
+    const slug = window.location.pathname.replace(/\/+$/, '').split('/').pop() ?? '';
+    const STORE = `yacht:wiki:path:${slug}`;
+    const boxes = Array.from(document.querySelectorAll<HTMLInputElement>('[data-path-check]'));
+    const text = document.getElementById('pathProgressText');
+    const fill = document.getElementById('pathProgressFill');
+    const reset = document.getElementById('pathReset');
+
+    const load = (): Set<string> => {
+      try {
+        return new Set<string>(JSON.parse(localStorage.getItem(STORE) ?? '[]'));
+      } catch {
+        return new Set<string>();
+      }
+    };
+
+    let done = load();
+
+    const render = (): void => {
+      boxes.forEach((box) => {
+        const id = box.dataset.pathCheck ?? '';
+        const isDone = done.has(id);
+        box.checked = isDone;
+        box.closest('.path-step')?.classList.toggle('is-done', isDone);
+      });
+      if (text) text.textContent = `${done.size} / ${boxes.length}`;
+      if (fill) fill.style.width = `${boxes.length === 0 ? 0 : (done.size / boxes.length) * 100}%`;
+    };
+
+    const save = (): void => {
+      try {
+        localStorage.setItem(STORE, JSON.stringify(Array.from(done)));
+      } catch {
+        /* 忽略 */
+      }
+    };
+
+    boxes.forEach((box) => {
+      box.addEventListener('change', () => {
+        const id = box.dataset.pathCheck ?? '';
+        if (box.checked) done.add(id);
+        else done.delete(id);
+        save();
+        render();
+      });
+    });
+
+    reset?.addEventListener('click', () => {
+      done = new Set();
+      save();
+      render();
+    });
+
+    render();
+  </script>
+</WikiLayout>

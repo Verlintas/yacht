@@ -1,0 +1,63 @@
+name: Link rot check
+
+on:
+  schedule:
+    # 每周一 03:00 UTC（北京时间 11:00）
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Check upstream and source links
+        id: check
+        continue-on-error: true
+        run: npm run check:sources -- --links
+      - name: Open an issue when links are broken
+        if: steps.check.outcome == 'failure'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const title = `来源链接失效检查（${new Date().toISOString().slice(0, 10)}）`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'link-rot',
+            });
+            if (issues.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body: `又一次检查发现失效链接。运行记录：${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                labels: ['link-rot'],
+                body: [
+                  '每周的链接存活检查发现了失效链接。',
+                  '',
+                  `运行记录：${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+                  '',
+                  '处理方式：打开日志找到失效的 URL，替换成新的上游地址，或把该来源从条目的 `sources` 里移除。',
+                ].join('\n'),
+              });
+            }
+      - name: Fail the job if links are broken
+        if: steps.check.outcome == 'failure'
+        run: exit 1

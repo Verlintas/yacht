@@ -4,6 +4,7 @@ import WikiStatus from '../../components/WikiStatus.astro';
 import WikiNature from '../../components/WikiNature.astro';
 import { getCollection } from 'astro:content';
 import { wikiCategories, wikiScenarios } from '../../data/wiki';
+import { wikiPaths } from '../../data/paths';
 import { url } from '../../lib/url';
 import { countChars, formatDate, stripMarkdown } from '../../lib/wiki-text';
 
@@ -21,6 +22,10 @@ for (const entry of entries) {
 const topTags = Array.from(tagCounts.entries())
   .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh'))
   .slice(0, 24);
+
+const charCounts = new Map(
+  entries.map((entry) => [entry.id, countChars(stripMarkdown(entry.body ?? ''))]),
+);
 
 const scenarioCounts = new Map(
   wikiScenarios.map((scenario) => [
@@ -91,6 +96,37 @@ const pending = entries.filter((entry) => entry.data.status !== 'reviewed').leng
             <span class="scenario-count">{scenarioCounts.get(scenario.slug) ?? 0} 条</span>
           </a>
         ))
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title">阅读路径</h2>
+      <span class="section-note">按处境排好顺序</span>
+    </div>
+    <p class="readout-note section-desc">
+      每条路径都排好了顺序，并说明「为什么在这一步读这篇」。比自己在 {entries.length} 条里翻要快。
+    </p>
+    <div class="path-grid">
+      {
+        wikiPaths.map((item) => {
+          const chars = item.steps.reduce(
+            (sum, step) => sum + (charCounts.get(step.id) ?? 0),
+            0,
+          );
+          return (
+            <a class="panel panel-pad path-card" href={url(`wiki/paths/${item.slug}/`)}>
+              <span class="readout-label">{item.latin}</span>
+              <strong class="note-title">{item.title}</strong>
+              <span class="readout-note">{item.audience}</span>
+              <span class="path-card-foot">
+                <span class="readout-note">{item.steps.length} 步</span>
+                <span class="readout-note">约 {chars.toLocaleString('zh-CN')} 字</span>
+              </span>
+            </a>
+          );
+        })
       }
     </div>
   </section>

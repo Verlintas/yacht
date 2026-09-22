@@ -51,6 +51,14 @@ function isActive(href: string): boolean {
         } catch {
           document.documentElement.dataset.theme = 'dark';
         }
+        try {
+          const scale = Number(localStorage.getItem('yacht:prose-scale'));
+          if (Number.isFinite(scale) && scale >= 0.85 && scale <= 1.6) {
+            document.documentElement.style.setProperty('--prose-scale', String(scale));
+          }
+        } catch {
+          /* 忽略 */
+        }
       })();
     </script>
   </head>

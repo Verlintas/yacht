@@ -12,7 +12,7 @@ sources:
   - title: MtF.wiki · 公益组织
     url: https://mtf.wiki/zh-cn/docs/useful-info/organizations
   - title: MtF.wiki · 友情链接
-    url: https://mtf.wiki/zh-cn/docs/useful-info/friendship
+    url: https://mtf.wiki/zh-cn/docs/friendship
   - title: 北京心理危机研究与干预中心
     url: https://www.crisis.org.cn/
   - title: 世界卫生组织 · 心理健康
@@ -52,7 +52,7 @@ upstream:
 | --- | --- |
 | [北京心理危机研究与干预中心](https://www.crisis.org.cn/) | 提供心理危机干预服务与信息 |
 | [MtF.wiki · 公益组织](https://mtf.wiki/zh-cn/docs/useful-info/organizations) | 社群维护的机构名单，含危机与支持渠道 |
-| [MtF.wiki · 友情链接](https://mtf.wiki/zh-cn/docs/useful-info/friendship) | 相关站点与社群 |
+| [MtF.wiki · 友情链接](https://mtf.wiki/zh-cn/docs/friendship) | 相关站点与社群 |
 | **当地医院精神科 / 急诊** | 最直接的线下渠道 |
 | **当地政务服务热线** | 可以咨询本地心理援助资源 |
 
@@ -150,7 +150,7 @@ upstream:
 | --- | --- | --- |
 | [北京心理危机研究与干预中心](https://www.crisis.org.cn/) | 提供心理危机干预服务与信息 | 全国可查 |
 | [MtF.wiki · 公益组织](https://mtf.wiki/zh-cn/docs/useful-info/organizations) | 社群维护的机构名单 | 含危机与支持渠道 |
-| [MtF.wiki · 友情链接](https://mtf.wiki/zh-cn/docs/useful-info/friendship) | 相关站点与社群 | — |
+| [MtF.wiki · 友情链接](https://mtf.wiki/zh-cn/docs/friendship) | 相关站点与社群 | — |
 | **当地医院精神科 / 急诊** | 最直接的线下渠道 | — |
 | **当地政务服务热线** | 可以咨询本地心理援助资源 | — |
 | [WHO 心理健康](https://www.who.int/news-room/fact-sheets/detail/mental-health-strengthening-our-response) | 基础科普 | 自助参考 |
