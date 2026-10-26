@@ -1,6 +1,6 @@
 # yacht
 
-Verlintas 的小窝 —— 自己用的私人港口，部署在 <https://verlintas.github.io/yacht/>。
+Verlintas 的小窝 —— 自己用的私人港口，部署在 <https://verlintas.dev/yacht/>。
 
 对外展示的主页是另一个仓库（`Verlintas.github.io`），两者独立部署、互不影响。
 

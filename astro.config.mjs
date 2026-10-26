@@ -94,7 +94,7 @@ function rehypeGlossaryLinks() {
 }
 
 export default defineConfig({
-  site: 'https://verlintas.github.io',
+  site: 'https://verlintas.dev',
   base,
   build: {
     format: 'directory',

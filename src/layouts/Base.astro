@@ -30,14 +30,14 @@ function isActive(href: string): boolean {
     <meta name="theme-color" content="#06111a" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f5f2ea" media="(prefers-color-scheme: light)" />
     <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
-    <link rel="canonical" href={new URL(currentPath, Astro.site).href} />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site).href} />
     <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
     <link rel="preconnect" href="https://air-quality-api.open-meteo.com" crossorigin />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Verlintas 的小窝" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={new URL(currentPath, Astro.site).href} />
+    <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site).href} />
     <meta name="twitter:card" content="summary" />
     <title>{title}</title>
     <script is:inline>

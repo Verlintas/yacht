@@ -17,7 +17,7 @@ export const linkGroups: LinkGroup[] = [
     group: '我的站点',
     hint: '自己搭的',
     links: [
-      { title: '主站', url: 'https://verlintas.github.io', note: '对外展示的主页' },
+      { title: '主站', url: 'https://verlintas.dev', note: '对外展示的主页' },
       { title: '小窝', url: '/', note: '本站 · 私人港口', internal: true },
       { title: 'USV', url: 'https://usv.mysxl.cn', note: 'United Science Vaca' },
       { title: 'USV Elec Center', url: 'https://elecusv.mysxl.cn', note: '电子中心' },
