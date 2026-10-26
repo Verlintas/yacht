@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { url } from '../lib/url';
+import { berths } from '../data/berths';
 ---
 
 <Base title="404 · Verlintas 的小窝">
@@ -17,7 +18,7 @@ import { url } from '../lib/url';
     </a>
     <a class="panel panel-pad link-item" href={url('berths/')}>
       <span class="link-title">泊位</span>
-      <span class="readout-note">四处常驻点</span>
+      <span class="readout-note">{berths.length} 处常驻点</span>
     </a>
     <a class="panel panel-pad link-item" href={url('wiki/')}>
       <span class="link-title">百科</span>

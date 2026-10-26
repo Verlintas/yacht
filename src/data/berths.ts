@@ -1,4 +1,4 @@
-export type BerthKind = 'city' | 'port' | 'ship';
+export type BerthKind = 'city' | 'port' | 'ship' | 'base';
 
 export interface Berth {
   id: string;
@@ -50,6 +50,16 @@ export const berths: Berth[] = [
     latitude: 38.94755,
     longitude: 118.55078,
     coastal: true,
+  },
+  {
+    id: 'nezav',
+    name: 'Nezav综合基地',
+    latin: 'NezavMedLab (NML)',
+    kind: 'base',
+    kindLabel: '基地',
+    latitude: 40.31628,
+    longitude: 116.6319,
+    coastal: false,
   },
   {
     id: 'orcano',
