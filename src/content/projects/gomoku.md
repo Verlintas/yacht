@@ -3,6 +3,11 @@ title: Gomoku-NUSV
 owner: nusv
 status: active
 updated: 2026-09-18
+loc: 8379
+commits: 48
+tests: 56
+versions: 25
+metricsAt: 2026-10-31
 stack: [Kotlin, Compose Multiplatform, Swift]
 repo: https://github.com/NUSV/Gomoku-NUSV
 summary: 从 NUSV-lite 内置小游戏独立出来的五子棋，支持 Android、iOS 与桌面。

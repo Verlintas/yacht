@@ -1,8 +1,14 @@
 ---
 title: OpenVisum
 owner: personal
+flagship: true
 status: active
 updated: 2026-10-30
+loc: 20456
+commits: 48
+tests: 21
+versions: 16
+metricsAt: 2026-10-31
 stack: [Kotlin, Jetpack Compose, libVLC, GPL-3.0]
 repo: https://github.com/Verlintas/OpenVisum
 summary: 开源 Android 视频播放器，libVLC 驱动：全格式、字幕自动匹配、DLNA 投屏。

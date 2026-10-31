@@ -1,0 +1,83 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry: CollectionEntry<'projects'>;
+}
+
+const { entry } = Astro.props;
+const { loc, commits, tests, versions, metricsAt } = entry.data;
+
+const hasAny = [loc, commits, tests, versions].some((value) => typeof value === 'number');
+const format = (value: number | undefined): string =>
+  typeof value === 'number' ? value.toLocaleString('zh-CN') : '—';
+---
+
+{
+  hasAny && (
+    <dl class="proj-metrics" aria-label="工程指标">
+      <div>
+        <dt>代码行</dt>
+        <dd>{format(loc)}</dd>
+      </div>
+      <div>
+        <dt>提交</dt>
+        <dd>{format(commits)}</dd>
+      </div>
+      <div>
+        <dt>测试用例</dt>
+        <dd>{format(tests)}</dd>
+      </div>
+      <div>
+        <dt>版本</dt>
+        <dd>{format(versions)}</dd>
+      </div>
+      {metricsAt && (
+        <span class="proj-metrics-note">
+          采集于 {metricsAt.getFullYear()}-{String(metricsAt.getMonth() + 1).padStart(2, '0')}
+        </span>
+      )}
+    </dl>
+  )
+}
+
+<style>
+  .proj-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 14px;
+    margin: 2px 0 0;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+  }
+
+  .proj-metrics > div {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+
+  .proj-metrics dt {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+  }
+
+  .proj-metrics dd {
+    margin: 0;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 12.5px;
+    color: var(--text);
+  }
+
+  .proj-metrics-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+  }
+</style>

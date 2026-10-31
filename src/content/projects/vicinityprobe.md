@@ -1,9 +1,13 @@
 ---
 title: VicinityProbe
 owner: personal
-flagship: true
 status: active
 updated: 2026-09-18
+loc: 22143
+commits: 54
+tests: 87
+versions: 20
+metricsAt: 2026-10-31
 stack: [Kotlin, Android, Compose, 传感器融合]
 repo: https://github.com/Verlintas/VicinityProbe
 summary: 环境测量系统，96 种探针、传感器融合与统计、抓包与协议识别、NFC 安全测试。

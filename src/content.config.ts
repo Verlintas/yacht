@@ -24,6 +24,12 @@ const projects = defineCollection({
     stack: z.array(z.string()).default([]),
     repo: z.url().optional(),
     summary: z.string().optional(),
+    /** 工程指标（可选）。手动采集：shallow clone 后数 LOC / 提交 / 测试注解 / tag。 */
+    loc: z.number().int().nonnegative().optional(),
+    commits: z.number().int().nonnegative().optional(),
+    tests: z.number().int().nonnegative().optional(),
+    versions: z.number().int().nonnegative().optional(),
+    metricsAt: z.coerce.date().optional(),
   }),
 });
 

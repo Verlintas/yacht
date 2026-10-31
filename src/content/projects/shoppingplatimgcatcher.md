@@ -3,6 +3,11 @@ title: ShoppingPlatImgCatcher
 owner: personal
 status: done
 updated: 2026-09-29
+loc: 5229
+commits: 3
+tests: 53
+versions: 1
+metricsAt: 2026-10-31
 stack: [Python, Windows]
 repo: https://github.com/Verlintas/ShoppingPlatImgCatcher
 summary: 电商图片采集器：批量下载京东 / 淘宝 / 拼多多的主图、SKU 图与详情图。

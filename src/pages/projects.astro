@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
+import ProjectMetrics from '../components/ProjectMetrics.astro';
 
 const projects = await getCollection('projects');
 
@@ -40,6 +41,14 @@ const byGroup = groups.map((group) => ({
 
 const formatDate = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+const withMetrics = projects.filter((entry) => typeof entry.data.loc === 'number');
+const totals = {
+  loc: withMetrics.reduce((sum, entry) => sum + (entry.data.loc ?? 0), 0),
+  commits: withMetrics.reduce((sum, entry) => sum + (entry.data.commits ?? 0), 0),
+  tests: withMetrics.reduce((sum, entry) => sum + (entry.data.tests ?? 0), 0),
+  versions: withMetrics.reduce((sum, entry) => sum + (entry.data.versions ?? 0), 0),
+};
 ---
 
 <Base title="船坞 · Verlintas 的小窝">
@@ -48,6 +57,35 @@ const formatDate = (date: Date): string =>
   <p class="page-sub">
     手上做过的东西都放在这里，想到就加，没有固定方向。在 <code>src/content/projects/</code> 下新建 Markdown 文件即可添加。
   </p>
+
+  <div class="panel panel-pad spaced">
+    <div class="card-head">
+      <span class="readout-label">工程总览</span>
+      <span class="readout-note">{withMetrics.length} 项有指标 · 采集于 2026-10</span>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-cell">
+        <span class="readout-label">代码行</span>
+        <strong class="stat-value">{totals.loc.toLocaleString('zh-CN')}</strong>
+      </div>
+      <div class="stat-cell">
+        <span class="readout-label">提交</span>
+        <strong class="stat-value">{totals.commits.toLocaleString('zh-CN')}</strong>
+      </div>
+      <div class="stat-cell">
+        <span class="readout-label">测试用例</span>
+        <strong class="stat-value">{totals.tests.toLocaleString('zh-CN')}</strong>
+      </div>
+      <div class="stat-cell">
+        <span class="readout-label">发布版本</span>
+        <strong class="stat-value">{totals.versions.toLocaleString('zh-CN')}</strong>
+      </div>
+    </div>
+    <p class="readout-note spaced">
+      旗舰按六项打分选出：规模与架构、测试、CI 与发布纪律、文档、持续投入、成熟度。
+      <b>星数不进评分</b>——它衡量的是传播，不是工程质量。
+    </p>
+  </div>
 
   {
     flagships.length > 0 && (
@@ -84,6 +122,7 @@ const formatDate = (date: Date): string =>
               </div>
               <strong class="note-title">{entry.data.title}</strong>
               {entry.data.summary && <span class="readout-note">{entry.data.summary}</span>}
+                <ProjectMetrics entry={entry} />
 
               <div class="project-foot">
                 <span class="tag-row">
@@ -141,6 +180,7 @@ const formatDate = (date: Date): string =>
                   </div>
                   <strong class="note-title">{entry.data.title}</strong>
                   {entry.data.summary && <span class="readout-note">{entry.data.summary}</span>}
+                <ProjectMetrics entry={entry} />
 
                   <div class="project-foot">
                     <span class="tag-row">

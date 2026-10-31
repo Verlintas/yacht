@@ -4,6 +4,11 @@ owner: personal
 flagship: true
 status: active
 updated: 2026-10-24
+loc: 17407
+commits: 143
+tests: 63
+versions: 61
+metricsAt: 2026-10-31
 stack: [Kotlin, Android, Jetpack Compose, Shizuku]
 repo: https://github.com/Verlintas/BetterAIChat
 summary: 原生 Android AI 代理，自带 API key，opencode 风格的模式切换，能调用设备工具。
