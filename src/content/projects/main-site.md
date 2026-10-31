@@ -1,11 +1,11 @@
 ---
-title: 主站 Verlintas.github.io
+title: 主站 verlintas.dev
 owner: personal
 status: active
-updated: 2026-09-20
+updated: 2026-10-31
 stack: [JavaScript, HTML, CSS, Python]
 repo: https://github.com/Verlintas/Verlintas.github.io
-summary: 对外展示的主页，深色科技风，含项目、技术栈与联系方式。
+summary: 对外展示的主页，深色科技风，含项目、技术栈与联系方式；同时也是 verlintas.dev 的根站点。
 ---
 
 对外展示的主页，就是这个账号的 `verlintas.dev`。深色科技风，纯 HTML/CSS/JS 手写，没有构建步骤。

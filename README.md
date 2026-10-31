@@ -23,10 +23,12 @@ npm run verify       # check + check:sources + build
 ```
 src/
 ├─ data/
-│  ├─ berths.ts       # 四个泊位（名称与坐标）
+│  ├─ berths.ts       # 五个泊位（名称与坐标）
 │  ├─ links.ts        # 港口页的快捷入口
 │  ├─ nav.ts          # 顶部导航
-│  └─ wiki.ts         # 百科分类与状态定义
+│  ├─ paths.ts        # 百科阅读路径（10 条）
+│  ├─ glossary.mjs    # 术语自动链接表（构建期与页面共用）
+│  └─ wiki.ts         # 百科分类、场景、状态与搜索别名
 ├─ content/
 │  ├─ notes/          # 航海日志（笔记）
 │  ├─ projects/       # 船坞（项目清单）
@@ -35,8 +37,12 @@ src/
 ├─ layouts/Base.astro # 页面外壳
 ├─ lib/
 │  ├─ instruments.ts  # 天气/空气/海况的取数与渲染
+│  ├─ wiki-text.ts    # 字数统计、纯文本化、时效判断
 │  └─ url.ts          # 链接工具（自动带 base 前缀）
-└─ pages/             # 路由
+├─ pages/
+│  ├─ wiki/           # 百科：条目、分类、标签、路径、更新、全部、搜索索引
+│  └─ ...             # 其他路由
+└─ ...
 ```
 
 ## 怎么加内容
@@ -116,8 +122,21 @@ Markdown 里的站内链接写 `/wiki/其他条目/` 就行，构建时会自动
 外链可用性检查（不阻塞部署）：
 
 ```bash
-node scripts/check-sources.mjs --links
+npm run check:sources -- --links
 ```
+
+`.github/workflows/link-check.yml` 每周自动跑一次，发现失效链接会开 issue（带 `link-rot` 标签）。
+
+## 百科的结构
+
+| 参数 | 说明 |
+| --- | --- |
+| `nature: reference` | 资料性条目，事实性说法必须逐条附来源 |
+| `nature: practical` | 操作性条目，页首会自动渲染「经验整理，非研究结论」声明 |
+| `status` | `draft` / `sourced` / `reviewed` / `outdated` |
+
+搜索别名写在 `src/data/wiki.ts` 的 `wikiAliases`，让「色普龙」「补佳乐」这类俗称也能搜到。
+术语自动链接由 `astro.config.mjs` 里的 `rehypeGlossaryLinks` 完成，数据来自 `src/data/glossary.mjs`。
 
 ## 隐私约定
 
