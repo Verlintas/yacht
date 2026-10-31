@@ -45,6 +45,7 @@ const formatDate = (date: Date): string =>
 const withMetrics = projects.filter((entry) => typeof entry.data.loc === 'number');
 const totals = {
   loc: withMetrics.reduce((sum, entry) => sum + (entry.data.loc ?? 0), 0),
+  chars: withMetrics.reduce((sum, entry) => sum + (entry.data.chars ?? 0), 0),
   commits: withMetrics.reduce((sum, entry) => sum + (entry.data.commits ?? 0), 0),
   tests: withMetrics.reduce((sum, entry) => sum + (entry.data.tests ?? 0), 0),
   versions: withMetrics.reduce((sum, entry) => sum + (entry.data.versions ?? 0), 0),
@@ -67,6 +68,10 @@ const totals = {
       <div class="stat-cell">
         <span class="readout-label">代码行</span>
         <strong class="stat-value">{totals.loc.toLocaleString('zh-CN')}</strong>
+      </div>
+      <div class="stat-cell">
+        <span class="readout-label">字符</span>
+        <strong class="stat-value">{totals.chars.toLocaleString('zh-CN')}</strong>
       </div>
       <div class="stat-cell">
         <span class="readout-label">提交</span>

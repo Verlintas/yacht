@@ -4,6 +4,7 @@ owner: personal
 status: done
 updated: 2026-10-04
 loc: 6108
+chars: 251712
 commits: 5
 tests: 19
 versions: 2

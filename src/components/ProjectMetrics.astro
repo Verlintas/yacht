@@ -6,9 +6,9 @@ interface Props {
 }
 
 const { entry } = Astro.props;
-const { loc, commits, tests, versions, metricsAt } = entry.data;
+const { loc, chars, commits, tests, versions, metricsAt } = entry.data;
 
-const hasAny = [loc, commits, tests, versions].some((value) => typeof value === 'number');
+const hasAny = [loc, chars, commits, tests, versions].some((value) => typeof value === 'number');
 const format = (value: number | undefined): string =>
   typeof value === 'number' ? value.toLocaleString('zh-CN') : '—';
 ---
@@ -19,6 +19,10 @@ const format = (value: number | undefined): string =>
       <div>
         <dt>代码行</dt>
         <dd>{format(loc)}</dd>
+      </div>
+      <div>
+        <dt>字符</dt>
+        <dd>{format(chars)}</dd>
       </div>
       <div>
         <dt>提交</dt>

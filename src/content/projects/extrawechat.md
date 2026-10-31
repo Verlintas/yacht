@@ -4,6 +4,7 @@ owner: personal
 status: active
 updated: 2026-10-30
 loc: 7635
+chars: 289442
 commits: 21
 tests: 17
 versions: 11

@@ -5,6 +5,7 @@ flagship: true
 status: active
 updated: 2026-10-24
 loc: 17407
+chars: 777464
 commits: 143
 tests: 63
 versions: 61

@@ -4,6 +4,7 @@ owner: nusv
 status: active
 updated: 2026-09-18
 loc: 8379
+chars: 316398
 commits: 48
 tests: 56
 versions: 25
