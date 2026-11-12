@@ -9,6 +9,7 @@ commits: 27
 tests: 88
 versions: 18
 metricsAt: 2026-11-12
+score: 44.2
 stack: [Kotlin, Android, 无障碍服务, Compose]
 repo: https://github.com/Verlintas/nekomimi
 summary: 基于无障碍服务的聊天文本改写工具，字面/正则/随机替换，含保活自愈与熔断器。

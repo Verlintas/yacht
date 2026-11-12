@@ -9,6 +9,7 @@ commits: 60
 tests: 0
 versions: 0
 metricsAt: 2026-11-12
+score: 36.8
 stack: [Astro, TypeScript, GitHub Actions, GitHub Pages]
 repo: https://github.com/Verlintas/yacht
 summary: 给自己用的私人港口：五处泊位仪表盘、百科 128 条、阅读路径与全文搜索。

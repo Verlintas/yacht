@@ -31,6 +31,8 @@ const projects = defineCollection({
     tests: z.number().int().nonnegative().optional(),
     versions: z.number().int().nonnegative().optional(),
     metricsAt: z.coerce.date().optional(),
+    /** 六维工程质量评分（0-100），口径见船坞页说明。 */
+    score: z.number().min(0).max(100).optional(),
   }),
 });
 

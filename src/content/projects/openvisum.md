@@ -10,6 +10,7 @@ commits: 48
 tests: 21
 versions: 16
 metricsAt: 2026-11-12
+score: 70.6
 stack: [Kotlin, Jetpack Compose, libVLC, GPL-3.0]
 repo: https://github.com/Verlintas/OpenVisum
 summary: 开源 Android 视频播放器，libVLC 驱动：全格式、字幕自动匹配、DLNA 投屏。

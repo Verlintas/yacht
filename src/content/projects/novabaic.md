@@ -10,6 +10,7 @@ commits: 98
 tests: 370
 versions: 29
 metricsAt: 2026-11-12
+score: 84.2
 stack: [Kotlin, Android, Jetpack Compose, MCP, GPL-3.0]
 repo: https://github.com/Verlintas/NovaBAIC
 summary: BetterAIChat 的第二代：本地优先的 Android AI 智能体，57 个真实设备工具，无 GMS 依赖。

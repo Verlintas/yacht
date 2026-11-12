@@ -9,6 +9,7 @@ commits: 53
 tests: 78
 versions: 15
 metricsAt: 2026-11-12
+score: 64.1
 stack: [Kotlin Multiplatform, adb, jadx, TUI, MIT]
 repo: https://github.com/Verlintas/NOIR
 summary: 手机隐私审计：用 adb 扫出 Android 应用的权限、上报端点与数据流向，给出可回滚的处置。

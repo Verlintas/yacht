@@ -6,6 +6,7 @@ updated: 2026-11-12
 loc: 738
 chars: 29126
 metricsAt: 2026-11-12
+score: 47.2
 stack: [Markdown]
 repo: https://github.com/Verlintas/Verlintas
 summary: 个人主页 README，打字动画、徽章与统计卡片。

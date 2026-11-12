@@ -30,7 +30,10 @@ const byRecency = (a: (typeof items)[number], b: (typeof items)[number]): number
   return b.entry.data.updated.valueOf() - a.entry.data.updated.valueOf();
 };
 
-const flagships = items.filter((item) => item.entry.data.flagship).sort(byRecency);
+const byScore = (a: (typeof items)[number], b: (typeof items)[number]): number =>
+  (b.entry.data.score ?? 0) - (a.entry.data.score ?? 0) || byRecency(a, b);
+
+const flagships = items.filter((item) => item.entry.data.flagship).sort(byScore);
 
 const byGroup = groups.map((group) => ({
   group,
@@ -96,6 +99,7 @@ const totals = {
     <p class="readout-note spaced">
       旗舰按六项打分选出：规模与架构、测试、CI 与发布纪律、文档、持续投入、成熟度。
       <b>星数不进评分</b>——它衡量的是传播，不是工程质量。
+      规模按 30 万行、测试按 4000 用例作为满分参考点（对数刻度），所以大项目之间也能拉开差距。
     </p>
   </div>
 

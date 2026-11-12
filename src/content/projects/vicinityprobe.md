@@ -9,6 +9,7 @@ commits: 54
 tests: 87
 versions: 20
 metricsAt: 2026-11-12
+score: 58.3
 stack: [Kotlin, Android, Compose, 传感器融合]
 repo: https://github.com/Verlintas/VicinityProbe
 summary: 环境测量系统，96 种探针、传感器融合与统计、抓包与协议识别、NFC 安全测试。
