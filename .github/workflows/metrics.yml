@@ -31,9 +31,11 @@ jobs:
         run: npm run metrics
 
       - name: Commit if changed
+        id: commit
         run: |
           if git diff --quiet -- src/data/project-metrics.json; then
             echo "指标没有变化"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
@@ -41,3 +43,12 @@ jobs:
           git add src/data/project-metrics.json
           git commit -m "自动更新项目指标（$(date -u +%Y-%m-%d)）"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # 用 GITHUB_TOKEN 推送的提交不会触发新的 workflow（GitHub 防递归），
+      # 所以这里显式调用一次部署。
+      - name: Trigger deploy
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main
