@@ -8,7 +8,7 @@ chars: 325452
 commits: 20
 tests: 2
 versions: 4
-metricsAt: 2026-10-31
+metricsAt: 2026-11-12
 stack: [TypeScript, Electron, React, Mineflayer]
 repo: https://github.com/Verlintas/SecurLab
 summary: Minecraft 服务器安全测试工作台：攻击链、手工工具箱、内置靶场、双终端监控。

@@ -3,12 +3,12 @@ title: 小窝（本站）
 owner: personal
 status: active
 updated: 2026-10-31
-loc: 6895
-chars: 182906
-commits: 58
+loc: 7224
+chars: 193265
+commits: 60
 tests: 0
 versions: 0
-metricsAt: 2026-10-31
+metricsAt: 2026-11-12
 stack: [Astro, TypeScript, GitHub Actions, GitHub Pages]
 repo: https://github.com/Verlintas/yacht
 summary: 给自己用的私人港口：五处泊位仪表盘、百科 128 条、阅读路径与全文搜索。

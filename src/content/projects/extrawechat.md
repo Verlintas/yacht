@@ -8,7 +8,7 @@ chars: 289442
 commits: 21
 tests: 17
 versions: 11
-metricsAt: 2026-10-31
+metricsAt: 2026-11-12
 stack: [Swift, SwiftUI, macOS, Apple Silicon]
 repo: https://github.com/Verlintas/ExtraWeChat
 summary: 微信 4.x macOS 端的本地增强：防撤回、补丁副本、多开、窗口隐私、主题。

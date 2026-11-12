@@ -3,13 +3,13 @@ title: NovaBAIC
 owner: personal
 flagship: true
 status: active
-updated: 2026-10-30
-loc: 46791
-chars: 1925030
-commits: 76
-tests: 288
-versions: 25
-metricsAt: 2026-10-31
+updated: 2026-11-11
+loc: 64266
+chars: 2604790
+commits: 98
+tests: 370
+versions: 29
+metricsAt: 2026-11-12
 stack: [Kotlin, Android, Jetpack Compose, MCP, GPL-3.0]
 repo: https://github.com/Verlintas/NovaBAIC
 summary: BetterAIChat 的第二代：本地优先的 Android AI 智能体，57 个真实设备工具，无 GMS 依赖。

@@ -2,13 +2,13 @@
 title: 主站 verlintas.dev
 owner: personal
 status: active
-updated: 2026-10-31
-loc: 4981
-chars: 223307
-commits: 380
+updated: 2026-11-12
+loc: 6900
+chars: 293539
+commits: 438
 tests: 0
 versions: 0
-metricsAt: 2026-10-31
+metricsAt: 2026-11-12
 stack: [JavaScript, HTML, CSS, Python]
 repo: https://github.com/Verlintas/Verlintas.github.io
 summary: 对外展示的主页，深色科技风，含项目、技术栈与联系方式；同时也是 verlintas.dev 的根站点。

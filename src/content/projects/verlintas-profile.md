@@ -2,10 +2,10 @@
 title: GitHub 主页仓库
 owner: personal
 status: done
-updated: 2026-10-31
-loc: 183
-chars: 5424
-metricsAt: 2026-10-31
+updated: 2026-11-12
+loc: 738
+chars: 29126
+metricsAt: 2026-11-12
 stack: [Markdown]
 repo: https://github.com/Verlintas/Verlintas
 summary: 个人主页 README，打字动画、徽章与统计卡片。

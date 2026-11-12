@@ -8,7 +8,7 @@ chars: 788038
 commits: 26
 tests: 8
 versions: 2
-metricsAt: 2026-10-31
+metricsAt: 2026-11-12
 stack: [Kotlin, Android, Jetpack Compose, Material 3]
 repo: https://github.com/NUSV/NUSV-lite
 summary: NUSV 官方 Android 客户端，含小组件、游戏、主题商店与每日签到积分。

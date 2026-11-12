@@ -1,14 +1,15 @@
 ---
 title: VerlinPark
 owner: personal
+flagship: true
 status: active
-updated: 2026-10-31
-loc: 33763
-chars: 1198909
-commits: 85
-tests: 116
+updated: 2026-11-12
+loc: 452937
+chars: 16539637
+commits: 279
+tests: 3850
 versions: 0
-metricsAt: 2026-10-31
+metricsAt: 2026-11-12
 stack: [Rust, Swift, macOS, ACP, MCP]
 repo: https://github.com/Verlintas/VerlinPark
 summary: macOS 原生的多智能体开发环境，给「一队并行 agent」用的工作台。

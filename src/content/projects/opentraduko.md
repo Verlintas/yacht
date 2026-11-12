@@ -8,7 +8,7 @@ chars: 251712
 commits: 5
 tests: 19
 versions: 2
-metricsAt: 2026-10-31
+metricsAt: 2026-11-12
 stack: [Kotlin, Jetpack Compose, Vosk, ML Kit]
 repo: https://github.com/Verlintas/OpenTraduko
 summary: 离线优先的 Android 同声传译：流式识别 + 离线翻译 + 系统 TTS，无账号无后端。
