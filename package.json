@@ -9,7 +9,8 @@
     "preview": "astro preview",
     "check": "astro check",
     "check:sources": "node scripts/check-sources.mjs",
-    "verify": "npm run check && npm run check:sources && npm run build"
+    "verify": "npm run check && npm run check:sources && npm run build",
+    "metrics": "node scripts/collect-metrics.mjs"
   },
   "dependencies": {
     "astro": "^7.3.3"

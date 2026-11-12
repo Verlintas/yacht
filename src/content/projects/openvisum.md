@@ -4,13 +4,6 @@ owner: personal
 flagship: true
 status: active
 updated: 2026-10-30
-loc: 21532
-chars: 859171
-commits: 48
-tests: 21
-versions: 16
-metricsAt: 2026-11-12
-score: 70.6
 stack: [Kotlin, Jetpack Compose, libVLC, GPL-3.0]
 repo: https://github.com/Verlintas/OpenVisum
 summary: 开源 Android 视频播放器，libVLC 驱动：全格式、字幕自动匹配、DLNA 投屏。

@@ -2,6 +2,9 @@
 import Base from '../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
 import ProjectMetrics from '../components/ProjectMetrics.astro';
+import ProjectVolume from '../components/ProjectVolume.astro';
+import metricsData from '../data/project-metrics.json';
+import { scoreProject, type ProjectMetrics as Metrics } from '../lib/project-score';
 
 const projects = await getCollection('projects');
 
@@ -20,18 +23,34 @@ const groups = [
   { key: 'nusv', label: 'NUSV', note: 'United Science Vaca 组织', link: 'https://github.com/NUSV' },
 ] as const;
 
+/** repo 全名 → 采集到的指标 */
+const metricsByRepo = (metricsData.projects ?? {}) as Record<string, Metrics>;
+
+const repoOf = (repo?: string): string =>
+  (repo ?? '').replace(/^https:\/\/github\.com\//, '').replace(/\/+$/, '');
+
 const items = await Promise.all(
-  projects.map(async (entry) => ({ entry, Content: (await render(entry)).Content })),
+  projects.map(async (entry) => {
+    const metrics = metricsByRepo[repoOf(entry.data.repo)];
+    return {
+      entry,
+      Content: (await render(entry)).Content,
+      metrics,
+      score: metrics ? scoreProject(metrics) : null,
+    };
+  }),
 );
 
-const byRecency = (a: (typeof items)[number], b: (typeof items)[number]): number => {
+type Item = (typeof items)[number];
+
+const byRecency = (a: Item, b: Item): number => {
   const byStatus = order.indexOf(a.entry.data.status) - order.indexOf(b.entry.data.status);
   if (byStatus !== 0) return byStatus;
   return b.entry.data.updated.valueOf() - a.entry.data.updated.valueOf();
 };
 
-const byScore = (a: (typeof items)[number], b: (typeof items)[number]): number =>
-  (b.entry.data.score ?? 0) - (a.entry.data.score ?? 0) || byRecency(a, b);
+const byScore = (a: Item, b: Item): number =>
+  (b.score?.total ?? 0) - (a.score?.total ?? 0) || byRecency(a, b);
 
 const flagships = items.filter((item) => item.entry.data.flagship).sort(byScore);
 
@@ -45,20 +64,20 @@ const byGroup = groups.map((group) => ({
 const formatDate = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
-const withMetrics = projects.filter((entry) => typeof entry.data.loc === 'number');
-const latestMetrics = projects
-  .map((entry) => entry.data.metricsAt)
-  .filter((date): date is Date => date instanceof Date)
-  .sort((a, b) => b.valueOf() - a.valueOf())[0];
-const metricsLabel = latestMetrics
-  ? `${latestMetrics.getFullYear()}-${String(latestMetrics.getMonth() + 1).padStart(2, '0')}`
-  : '—';
+const measured = items.filter((item) => (item.metrics?.loc ?? 0) > 0);
+const latestMetrics = Object.values(metricsByRepo)
+  .map((metric) => metric.measuredAt)
+  .filter((value): value is string => typeof value === 'string')
+  .sort()
+  .at(-1);
+const metricsLabel = latestMetrics ? latestMetrics.slice(0, 7) : '—';
+
 const totals = {
-  loc: withMetrics.reduce((sum, entry) => sum + (entry.data.loc ?? 0), 0),
-  chars: withMetrics.reduce((sum, entry) => sum + (entry.data.chars ?? 0), 0),
-  commits: withMetrics.reduce((sum, entry) => sum + (entry.data.commits ?? 0), 0),
-  tests: withMetrics.reduce((sum, entry) => sum + (entry.data.tests ?? 0), 0),
-  versions: withMetrics.reduce((sum, entry) => sum + (entry.data.versions ?? 0), 0),
+  loc: measured.reduce((sum, item) => sum + (item.metrics?.loc ?? 0), 0),
+  chars: measured.reduce((sum, item) => sum + (item.metrics?.chars ?? 0), 0),
+  commits: Object.values(metricsByRepo).reduce((sum, metric) => sum + (metric.commits ?? 0), 0),
+  tests: Object.values(metricsByRepo).reduce((sum, metric) => sum + (metric.tests ?? 0), 0),
+  versions: Object.values(metricsByRepo).reduce((sum, metric) => sum + (metric.versions ?? 0), 0),
 };
 ---
 
@@ -72,7 +91,7 @@ const totals = {
   <div class="panel panel-pad spaced">
     <div class="card-head">
       <span class="readout-label">工程总览</span>
-      <span class="readout-note">{withMetrics.length} 项有指标 · 采集于 {metricsLabel}</span>
+      <span class="readout-note">{measured.length} 项有指标 · 采集于 {metricsLabel}</span>
     </div>
     <div class="stat-grid">
       <div class="stat-cell">
@@ -125,12 +144,13 @@ const totals = {
           <span class="section-note">船坞里最拿得出手的几条船</span>
         </div>
         <div class="grid grid-wide">
-          {flagships.map(({ entry, Content }) => (
+          {flagships.map(({ entry, Content, metrics, score }) => (
             <article class="panel panel-pad project-card project-flagship">
               <div class="card-head">
                 <span class="readout-label">{formatDate(entry.data.updated)} 更新</span>
                 <span class="badge-row">
                   <span class="badge badge-flagship">旗舰</span>
+                  {score && <span class="badge">评分 {score.total.toFixed(1)}</span>}
                   <span class={`badge ${statusMeta[entry.data.status].tone}`}>
                     {statusMeta[entry.data.status].label}
                   </span>
@@ -138,7 +158,7 @@ const totals = {
               </div>
               <strong class="note-title">{entry.data.title}</strong>
               {entry.data.summary && <span class="readout-note">{entry.data.summary}</span>}
-                <ProjectMetrics entry={entry} />
+                <ProjectMetrics metrics={metrics} />
 
               <div class="project-foot">
                 <span class="tag-row">
@@ -186,17 +206,18 @@ const totals = {
               )}
             </div>
             <div class="grid grid-wide">
-              {groupItems.map(({ entry, Content }) => (
+              {groupItems.map(({ entry, Content, metrics, score }) => (
                 <article class="panel panel-pad project-card">
                   <div class="card-head">
                     <span class="readout-label">{formatDate(entry.data.updated)} 更新</span>
+                    {score && <span class="badge">{score.total.toFixed(1)}</span>}
                     <span class={`badge ${statusMeta[entry.data.status].tone}`}>
                       {statusMeta[entry.data.status].label}
                     </span>
                   </div>
                   <strong class="note-title">{entry.data.title}</strong>
                   {entry.data.summary && <span class="readout-note">{entry.data.summary}</span>}
-                <ProjectMetrics entry={entry} />
+                <ProjectMetrics metrics={metrics} />
 
                   <div class="project-foot">
                     <span class="tag-row">
@@ -227,4 +248,7 @@ const totals = {
         ),
     )
   }
+  <ProjectVolume
+    items={items.map((item) => ({ title: item.entry.data.title, metrics: item.metrics }))}
+  />
 </Base>

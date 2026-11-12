@@ -3,9 +3,6 @@ title: NUSV 官网
 owner: nusv
 status: active
 updated: 2026-11-12
-commits: 410
-versions: 0
-metricsAt: 2026-11-12
 stack: [HTML, CSS, JavaScript]
 repo: https://github.com/NUSV/NUSV.github.io
 summary: NUSV 组织官网，开源项目与文档的入口，同时是下载分发页。

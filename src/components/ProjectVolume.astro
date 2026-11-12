@@ -1,0 +1,171 @@
+---
+import { HUMAN_SCALE, type ProjectMetrics } from '../lib/project-score';
+
+interface Props {
+  items: Array<{ title: string; metrics?: ProjectMetrics }>;
+}
+
+const { items } = Astro.props;
+
+const measured = items.filter((item) => (item.metrics?.loc ?? 0) > 0);
+const sorted = measured.slice().sort((a, b) => (b.metrics?.loc ?? 0) - (a.metrics?.loc ?? 0));
+
+const totalLoc = sorted.reduce((sum, item) => sum + (item.metrics?.loc ?? 0), 0);
+const totalChars = sorted.reduce((sum, item) => sum + (item.metrics?.chars ?? 0), 0);
+const maxLoc = sorted[0]?.metrics?.loc ?? 1;
+
+const pages = Math.round(totalLoc / HUMAN_SCALE.linesPerPage);
+const reams = pages / HUMAN_SCALE.sheetsPerReam;
+const stackCm = reams * HUMAN_SCALE.reamThicknessCm;
+const books = Math.round(totalChars / HUMAN_SCALE.charsPerBook);
+const typingHours = totalChars / HUMAN_SCALE.charsPerMinute / 60;
+const readHours = totalLoc / HUMAN_SCALE.readingSpeeds[1];
+
+const over2k = measured.reduce((sum, item) => sum + (item.metrics?.filesOver2k ?? 0), 0);
+const over5k = measured.reduce((sum, item) => sum + (item.metrics?.filesOver5k ?? 0), 0);
+const over10k = measured.reduce((sum, item) => sum + (item.metrics?.filesOver10k ?? 0), 0);
+
+const biggest = sorted[0];
+const biggestShare = biggest ? ((biggest.metrics?.loc ?? 0) / totalLoc) * 100 : 0;
+
+const fmt = (n: number): string => Math.round(n).toLocaleString('zh-CN');
+---
+
+<section class="section">
+  <div class="section-head">
+    <h2 class="section-title">体量</h2>
+    <span class="section-note">按实测代码量排列</span>
+  </div>
+  <p class="readout-note section-desc">
+    代码行数只统计源码（Kotlin / Rust / Swift / TS / Python 等），不含依赖、构建产物与图片。
+    每个仓库的实际构成不一样，行数只能横向比「规模」，不能比「好坏」。
+  </p>
+
+  <div class="volume-bars">
+    {
+      sorted.map((item) => {
+        const loc = item.metrics?.loc ?? 0;
+        const width = Math.max(1, (loc / maxLoc) * 100);
+        return (
+          <div class="volume-row">
+            <span class="volume-name">{item.title}</span>
+            <span class="volume-track">
+              <span class="volume-fill" style={`width:${width}%`} />
+            </span>
+            <span class="volume-value">{fmt(loc)}</span>
+          </div>
+        );
+      })
+    }
+  </div>
+
+  <div class="stat-grid spaced">
+    <div class="panel panel-pad stat-cell">
+      <span class="readout-label">合计代码行</span>
+      <strong class="stat-value">{fmt(totalLoc)}</strong>
+    </div>
+    <div class="panel panel-pad stat-cell">
+      <span class="readout-label">合计字符</span>
+      <strong class="stat-value">{fmt(totalChars)}</strong>
+    </div>
+    <div class="panel panel-pad stat-cell">
+      <span class="readout-label">最大项目占比</span>
+      <strong class="stat-value">{biggestShare.toFixed(0)}%</strong>
+      <span class="readout-note">{biggest?.title ?? '—'}</span>
+    </div>
+  </div>
+
+  <div class="panel panel-pad spaced">
+    <div class="card-head">
+      <span class="readout-label">换成人的尺度</span>
+      <span class="readout-note">粗略换算，用来说明量级</span>
+    </div>
+    <dl class="stat-list">
+      <div>
+        <dt>打印出来</dt>
+        <dd>{fmt(pages)} 页 · {reams.toFixed(1)} 包纸 · 摞起来约 {(stackCm / 100).toFixed(2)} 米</dd>
+      </div>
+      <div>
+        <dt>换成书</dt>
+        <dd>{fmt(books)} 本（按 30 万字/本）</dd>
+      </div>
+      <div>
+        <dt>一个人打字</dt>
+        <dd>{fmt(typingHours)} 小时（60 WPM，不停）</dd>
+      </div>
+      <div>
+        <dt>一个人读完</dt>
+        <dd>{fmt(readHours)} 小时（300 行/小时）</dd>
+      </div>
+      <div>
+        <dt>文件集中度</dt>
+        <dd>
+          超过 2000 行 {over2k} 个 · 5000 行 {over5k} 个 · 10000 行 {over10k} 个
+        </dd>
+      </div>
+    </dl>
+    <p class="readout-note">
+      换算用的常数：每页 {HUMAN_SCALE.linesPerPage} 行、{HUMAN_SCALE.sheetsPerReam} 张/包、
+      每本 {HUMAN_SCALE.charsPerBook.toLocaleString('zh-CN')} 字符、每秒 5 字符打字、每小时 300 行阅读。
+    </p>
+  </div>
+</section>
+
+<style>
+  .volume-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .volume-row {
+    display: grid;
+    grid-template-columns: minmax(120px, 190px) 1fr 76px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .volume-name {
+    font-size: 13px;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .volume-track {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+
+  .volume-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--sea), var(--brass));
+  }
+
+  .volume-value {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    color: var(--text);
+    text-align: right;
+  }
+
+  @media (max-width: 640px) {
+    .volume-row {
+      grid-template-columns: 1fr 60px;
+    }
+
+    .volume-name {
+      grid-column: 1 / -1;
+    }
+
+    .volume-track {
+      grid-column: 1;
+    }
+  }
+</style>

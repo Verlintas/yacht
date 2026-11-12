@@ -4,13 +4,6 @@ owner: nusv
 flagship: true
 status: active
 updated: 2026-09-18
-loc: 19508
-chars: 753008
-commits: 138
-tests: 91
-versions: 42
-metricsAt: 2026-11-12
-score: 74.2
 stack: [Kotlin Multiplatform, Compose Multiplatform, C, Python, CMake]
 repo: https://github.com/NUSV/Syna-NUSV
 summary: 离线优先的局域网通讯工具，端到端加密，支持阅后即焚、群聊与自建服务器。

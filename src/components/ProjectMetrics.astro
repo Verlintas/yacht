@@ -1,16 +1,20 @@
 ---
-import type { CollectionEntry } from 'astro:content';
+import type { ProjectMetrics } from '../lib/project-score';
 
 interface Props {
-  entry: CollectionEntry<'projects'>;
+  metrics?: ProjectMetrics;
 }
 
-const { entry } = Astro.props;
-const { loc, chars, commits, tests, versions, metricsAt } = entry.data;
+const { metrics } = Astro.props;
 
-const hasAny = [loc, chars, commits, tests, versions].some((value) => typeof value === 'number');
-const format = (value: number | undefined): string =>
-  typeof value === 'number' ? value.toLocaleString('zh-CN') : '—';
+const format = (value: number | null | undefined): string =>
+  typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString('zh-CN') : '—';
+
+const hasAny =
+  metrics &&
+  [metrics.loc, metrics.chars, metrics.commits, metrics.tests, metrics.versions].some(
+    (value) => typeof value === 'number',
+  );
 ---
 
 {
@@ -18,29 +22,25 @@ const format = (value: number | undefined): string =>
     <dl class="proj-metrics" aria-label="工程指标">
       <div>
         <dt>代码行</dt>
-        <dd>{format(loc)}</dd>
+        <dd>{format(metrics?.loc)}</dd>
       </div>
       <div>
         <dt>字符</dt>
-        <dd>{format(chars)}</dd>
+        <dd>{format(metrics?.chars)}</dd>
       </div>
       <div>
         <dt>提交</dt>
-        <dd>{format(commits)}</dd>
+        <dd>{format(metrics?.commits)}</dd>
       </div>
       <div>
         <dt>测试用例</dt>
-        <dd>{format(tests)}</dd>
+        <dd>{format(metrics?.tests)}</dd>
       </div>
       <div>
         <dt>版本</dt>
-        <dd>{format(versions)}</dd>
+        <dd>{format(metrics?.versions)}</dd>
       </div>
-      {metricsAt && (
-        <span class="proj-metrics-note">
-          采集于 {metricsAt.getFullYear()}-{String(metricsAt.getMonth() + 1).padStart(2, '0')}
-        </span>
-      )}
+      {metrics?.measuredAt && <span class="proj-metrics-note">采集于 {metrics.measuredAt}</span>}
     </dl>
   )
 }
