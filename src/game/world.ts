@@ -171,7 +171,7 @@ export function createWorld(
     vertexShader: PLANET_VERT,
     fragmentShader: SUN_FRAG,
   });
-  const sun = new THREE.Mesh(new THREE.SphereGeometry(240, 64, 48), sunMaterial);
+  const sun = new THREE.Mesh(new THREE.SphereGeometry(900, 64, 48), sunMaterial);
   sunGroup.add(sun);
 
   const glow = new THREE.Sprite(
@@ -183,7 +183,7 @@ export function createWorld(
       opacity: 0.22,
     }),
   );
-  glow.scale.setScalar(300);
+  glow.scale.setScalar(2600);
   sunGroup.add(glow);
 
   const corona = new THREE.Sprite(
@@ -195,7 +195,7 @@ export function createWorld(
       opacity: 0.1,
     }),
   );
-  corona.scale.setScalar(700);
+  corona.scale.setScalar(5200);
   sunGroup.add(corona);
 
   scene.add(sunGroup);
@@ -234,9 +234,12 @@ export function createWorld(
   scene.environmentIntensity = 0.85;
   pmrem.dispose();
 
-  const sunLight = new THREE.PointLight(0xfff0dd, 260000, 0, 1.5);
-  sunLight.position.copy(sunPosition);
-  scene.add(sunLight);
+  // 平行光：不随距离衰减，避免远距离精度问题导致的闪烁
+  const sunKey = new THREE.DirectionalLight(0xfff0dd, 2.6);
+  sunKey.position.set(0, 0, 0);
+  sunKey.target.position.set(0, 0, -1);
+  scene.add(sunKey);
+  scene.add(sunKey.target);
 
   const ambient = new THREE.AmbientLight(0x22334f, 0.9);
   scene.add(ambient);
@@ -386,6 +389,10 @@ export function createWorld(
   const tmpPos = new THREE.Vector3();
 
   const update = (dt: number, elapsed: number, camera: THREE.Camera) => {
+    const toSun = camera.position.clone().negate().normalize();
+    sunKey.position.copy(camera.position).addScaledVector(toSun, 9000);
+    sunKey.target.position.copy(camera.position);
+    sunKey.target.updateMatrixWorld();
     sunMaterial.uniforms.uTime.value = elapsed;
     (nebula.material as THREE.ShaderMaterial).uniforms.uTime.value = elapsed;
     starMaterial.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
@@ -395,7 +402,7 @@ export function createWorld(
         const def = body.planet;
         body.object.rotation.y += dt * 0.02;
 
-        const angle = def.phase + elapsed * (0.018 / Math.sqrt(def.orbit / 1000));
+        const angle = def.phase + elapsed * (0.0035 / Math.sqrt(def.orbit / 1000));
         tmpPos.set(
           Math.cos(angle) * def.orbit,
           Math.sin(angle) * def.orbit * Math.sin(def.inclination),
@@ -427,7 +434,7 @@ export function createWorld(
         }
       } else if (body.type === 'station' && body.station) {
         const def = body.station;
-        const angle = def.phase + elapsed * (0.06 / Math.sqrt(def.orbit / 800));
+        const angle = def.phase + elapsed * (0.012 / Math.sqrt(def.orbit / 800));
         tmpPos.set(
           Math.cos(angle) * def.orbit,
           Math.sin(angle) * def.orbit * Math.sin(def.inclination),
@@ -451,159 +458,147 @@ export function createWorld(
   return { scene, sun: sunGroup, bodies, planetMaterials, stationGroups, update };
 }
 
-/** 空间站：竖向主轴 + 多层环 + 太阳能桁架 + 对接口。 */
+/** 未来空港：发光核心 + 三层环 + 放射状停泊臂 + 全息导航环。 */
 function buildStation(def: StationDef): THREE.Group {
   const group = new THREE.Group();
-
-  const metal = new THREE.MeshStandardMaterial({
-    color: 0x9aa6b4,
-    roughness: 0.4,
-    metalness: 0.82,
-    envMapIntensity: 1.1,
-  });
-  const dark = new THREE.MeshStandardMaterial({
-    color: 0x232c38,
-    roughness: 0.55,
-    metalness: 0.8,
-    envMapIntensity: 0.9,
-  });
-  const panel = new THREE.MeshStandardMaterial({
-    color: 0x123252,
-    roughness: 0.24,
-    metalness: 0.6,
-    emissive: new THREE.Color(0x0a2140),
-    emissiveIntensity: 0.9,
-    envMapIntensity: 1.4,
-  });
-  const accent = new THREE.MeshStandardMaterial({
-    color: def.accent,
-    emissive: new THREE.Color(def.accent),
-    emissiveIntensity: 0.7,
-    roughness: 0.4,
-    metalness: 0.2,
-  });
-
   const R = def.radius;
 
-  // 竖向主轴
-  const spine = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.055, R * 0.075, R * 1.5, 16), metal);
+  const hull = new THREE.MeshStandardMaterial({
+    color: 0x8e9aa8,
+    roughness: 0.32,
+    metalness: 0.94,
+    envMapIntensity: 1.5,
+  });
+  const dark = new THREE.MeshStandardMaterial({
+    color: 0x1b232c,
+    roughness: 0.42,
+    metalness: 0.9,
+    envMapIntensity: 1.1,
+  });
+  const glow = new THREE.MeshStandardMaterial({
+    color: def.accent,
+    emissive: new THREE.Color(def.accent),
+    emissiveIntensity: 1.1,
+    roughness: 0.3,
+    metalness: 0.1,
+  });
+  const holo = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(def.accent),
+    transparent: true,
+    opacity: 0.09,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+
+  /* 中央核心 */
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(R * 0.2, 2), dark);
+  group.add(core);
+
+  const coreGlow = new THREE.Mesh(new THREE.IcosahedronGeometry(R * 0.215, 2), glow);
+  coreGlow.scale.setScalar(1.02);
+  group.add(coreGlow);
+
+  /* 主轴 */
+  const spine = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.045, R * 0.06, R * 3.2, 14), hull);
   group.add(spine);
 
-  // 主轴上的舱段
-  for (let i = 0; i < 5; i += 1) {
-    const y = -R * 0.6 + (i / 4) * R * 1.2;
-    const module = new THREE.Mesh(
-      new THREE.CylinderGeometry(R * (0.13 + (i % 2) * 0.03), R * (0.13 + (i % 2) * 0.03), R * 0.16, 14),
-      i % 2 === 0 ? metal : dark,
-    );
-    module.position.y = y;
-    group.add(module);
+  /* 三层环 */
+  const rings: Array<{ radius: number; tube: number; tilt: [number, number, number]; y: number }> = [
+    { radius: R * 1.12, tube: R * 0.05, tilt: [Math.PI / 2, 0, 0], y: 0 },
+    { radius: R * 0.86, tube: R * 0.04, tilt: [Math.PI / 2.3, 0.32, 0.12], y: -R * 0.42 },
+    { radius: R * 0.62, tube: R * 0.032, tilt: [Math.PI / 1.7, -0.4, -0.2], y: R * 0.52 },
+  ];
 
-    const band = new THREE.Mesh(new THREE.TorusGeometry(R * 0.14, R * 0.012, 6, 24), accent);
-    band.rotation.x = Math.PI / 2;
-    band.position.y = y + R * 0.08;
-    group.add(band);
+  for (const ring of rings) {
+    const mesh = new THREE.Mesh(new THREE.TorusGeometry(ring.radius, ring.tube, 12, 128), hull);
+    mesh.rotation.set(...ring.tilt);
+    mesh.position.y = ring.y;
+    group.add(mesh);
+
+    const trim = new THREE.Mesh(new THREE.TorusGeometry(ring.radius, ring.tube * 0.35, 8, 128), glow);
+    trim.rotation.copy(mesh.rotation);
+    trim.position.copy(mesh.position);
+    trim.scale.setScalar(1.008);
+    group.add(trim);
   }
 
-  // 中央枢纽
-  const hub = new THREE.Mesh(new THREE.SphereGeometry(R * 0.2, 28, 20), dark);
-  hub.position.y = R * 0.12;
-  group.add(hub);
-
-  // 主环（横向）
-  const ringA = new THREE.Mesh(new THREE.TorusGeometry(R * 0.78, R * 0.045, 12, 96), metal);
-  ringA.rotation.x = Math.PI / 2;
-  ringA.position.y = R * 0.12;
-  group.add(ringA);
-
-  const ringAInner = new THREE.Mesh(new THREE.TorusGeometry(R * 0.62, R * 0.022, 8, 84), dark);
-  ringAInner.rotation.x = Math.PI / 2;
-  ringAInner.position.y = R * 0.12;
-  group.add(ringAInner);
-
-  // 辐条
-  for (let i = 0; i < 8; i += 1) {
-    const angle = (i / 8) * Math.PI * 2;
-    const spoke = new THREE.Mesh(new THREE.BoxGeometry(R * 0.62, R * 0.022, R * 0.03), metal);
-    spoke.position.set(Math.cos(angle) * R * 0.39, R * 0.12, Math.sin(angle) * R * 0.39);
-    spoke.rotation.y = -angle;
-    group.add(spoke);
-  }
-
-  // 环形窗灯
-  const windowGeo = new THREE.BoxGeometry(R * 0.02, R * 0.012, R * 0.008);
-  for (let i = 0; i < 40; i += 1) {
-    const angle = (i / 40) * Math.PI * 2;
-    const light = new THREE.Mesh(windowGeo, accent);
-    light.position.set(Math.cos(angle) * R * 0.9, R * 0.12, Math.sin(angle) * R * 0.9);
-    light.rotation.y = -angle;
-    group.add(light);
-  }
-
-  // 第二环（倾斜）
-  const ringB = new THREE.Mesh(new THREE.TorusGeometry(R * 0.46, R * 0.03, 10, 72), metal);
-  ringB.rotation.set(Math.PI / 2.6, 0.4, 0.2);
-  ringB.position.y = -R * 0.38;
-  group.add(ringB);
-
-  // 顶部天线
-  const mast = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.012, R * 0.016, R * 0.5, 8), metal);
-  mast.position.y = R * 0.95;
-  group.add(mast);
-
-  const dish = new THREE.Mesh(
-    new THREE.SphereGeometry(R * 0.2, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2.4),
-    metal,
-  );
-  dish.position.y = R * 1.22;
-  dish.rotation.x = -0.5;
-  group.add(dish);
-
-  const dishCore = new THREE.Mesh(new THREE.SphereGeometry(R * 0.03, 8, 6), accent);
-  dishCore.position.y = R * 1.24;
-  group.add(dishCore);
-
-  // 太阳能桁架
-  for (const side of [-1, 1]) {
-    const boom = new THREE.Mesh(new THREE.BoxGeometry(R * 0.34, R * 0.02, R * 0.02), metal);
-    boom.position.set(side * R * 0.72, -R * 0.55, 0);
-    group.add(boom);
-
-    const array = new THREE.Mesh(new THREE.BoxGeometry(R * 0.5, R * 0.012, R * 0.3), panel);
-    array.position.set(side * R * 1.1, -R * 0.55, 0);
-    array.rotation.z = side * 0.06;
-    group.add(array);
-
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(R * 0.52, R * 0.004, R * 0.32), metal);
-    frame.position.copy(array.position);
-    group.add(frame);
-  }
-
-  // 对接口
-  const bay = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.16, R * 0.19, R * 0.22, 16), dark);
-  bay.position.y = -R * 0.82;
-  group.add(bay);
-
-  const bayGlow = new THREE.Mesh(new THREE.CircleGeometry(R * 0.13, 24), accent);
-  bayGlow.position.y = -R * 0.94;
-  bayGlow.rotation.x = Math.PI / 2;
-  group.add(bayGlow);
-
+  /* 放射状停泊臂 */
   for (let i = 0; i < 6; i += 1) {
     const angle = (i / 6) * Math.PI * 2;
-    const lamp = new THREE.Mesh(new THREE.SphereGeometry(R * 0.018, 8, 6), accent);
-    lamp.position.set(Math.cos(angle) * R * 0.2, -R * 0.78, Math.sin(angle) * R * 0.2);
+    const length = R * 1.12;
+
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(length, R * 0.03, R * 0.075), hull);
+    arm.position.set(Math.cos(angle) * length * 0.55, 0, Math.sin(angle) * length * 0.55);
+    arm.rotation.y = -angle;
+    group.add(arm);
+
+    // 停泊位
+    const pad = new THREE.Mesh(new THREE.BoxGeometry(R * 0.16, R * 0.02, R * 0.2), dark);
+    pad.position.set(Math.cos(angle) * length, -R * 0.02, Math.sin(angle) * length);
+    pad.rotation.y = -angle;
+    group.add(pad);
+
+    const padGlow = new THREE.Mesh(new THREE.PlaneGeometry(R * 0.14, R * 0.18), holo);
+    padGlow.position.set(Math.cos(angle) * length, R * 0.01, Math.sin(angle) * length);
+    padGlow.rotation.set(-Math.PI / 2, 0, -angle);
+    group.add(padGlow);
+
+    const beacon = new THREE.Mesh(new THREE.SphereGeometry(R * 0.012, 8, 6), glow);
+    beacon.position.set(Math.cos(angle) * length, R * 0.04, Math.sin(angle) * length);
+    group.add(beacon);
+  }
+
+  /* 全息导航环 */
+  for (const scale of [1.35, 1.55, 1.78]) {
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(R * scale, R * 0.004, 6, 160), holo);
+    halo.rotation.x = Math.PI / 2;
+    group.add(halo);
+  }
+
+  /* 散热/太阳能巨板 */
+  for (const side of [-1, 1]) {
+    const boom = new THREE.Mesh(new THREE.BoxGeometry(R * 0.5, R * 0.018, R * 0.018), hull);
+    boom.position.set(side * R * 0.55, -R * 1.05, 0);
+    group.add(boom);
+
+    const sail = new THREE.Mesh(
+      new THREE.BoxGeometry(R * 0.85, R * 0.008, R * 0.42),
+      new THREE.MeshStandardMaterial({
+        color: 0x0d2b45,
+        roughness: 0.18,
+        metalness: 0.7,
+        emissive: new THREE.Color(0x081a2e),
+        emissiveIntensity: 1.1,
+        envMapIntensity: 1.8,
+      }),
+    );
+    sail.position.set(side * R * 1.2, -R * 1.05, 0);
+    sail.rotation.z = side * 0.05;
+    group.add(sail);
+  }
+
+  /* 顶部天线群 */
+  for (let i = 0; i < 3; i += 1) {
+    const length = R * (0.5 + i * 0.18);
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.008, R * 0.012, length, 6), hull);
+    mast.position.set((i - 1) * R * 0.12, R * 1.5 + length / 2, 0);
+    mast.rotation.z = (i - 1) * 0.12;
+    group.add(mast);
+
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(R * 0.014, 8, 6), glow);
+    tip.position.set((i - 1) * R * 0.12 + (i - 1) * length * 0.12, R * 1.5 + length, 0);
+    group.add(tip);
+  }
+
+  /* 环上的窗灯 */
+  for (let i = 0; i < 72; i += 1) {
+    const angle = (i / 72) * Math.PI * 2;
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(R * 0.008, R * 0.005, R * 0.014), glow);
+    lamp.position.set(Math.cos(angle) * R * 1.12, R * 0.028, Math.sin(angle) * R * 1.12);
+    lamp.rotation.y = -angle;
     group.add(lamp);
   }
 
-  // 侧面小舱
-  for (const side of [-1, 1]) {
-    const pod = new THREE.Mesh(new THREE.CapsuleGeometry(R * 0.07, R * 0.28, 6, 12), dark);
-    pod.position.set(side * R * 0.34, R * 0.42, 0);
-    pod.rotation.z = side * 0.5;
-    group.add(pod);
-  }
-
-  group.scale.setScalar(1);
   return group;
 }

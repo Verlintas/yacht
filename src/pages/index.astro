@@ -53,7 +53,7 @@ const systemData = {
         <p class="boot-sub">第一人称星图</p>
         <div class="boot-track"><div id="boot-bar"></div></div>
         <p class="boot-status" id="boot-status">正在点火</p>
-        <p class="boot-hint">W 推进 · 鼠标转向 · Shift 加速 · M 星图 · E 交互</p>
+        <p class="boot-hint">W/S 推进·反推 · 鼠标转向 · X 刹车 · Shift 加速 · F 交互 · M 星图</p>
       </div>
     </div>
 
@@ -69,6 +69,23 @@ const systemData = {
           <strong id="hud-target">未设定</strong>
           <span class="hud-target-dist" id="hud-target-dist">按 M 选择</span>
         </div>
+      </div>
+
+      <div id="cockpit" aria-hidden="true">
+        <div class="cockpit-canopy"></div>
+        <div class="cockpit-hud">
+          <div class="cockpit-tile">
+            <span>速度</span>
+            <strong id="cockpit-speed">0</strong>
+            <em>m/s</em>
+          </div>
+          <div class="cockpit-tile cockpit-tile-right">
+            <span>目标</span>
+            <strong id="cockpit-target">—</strong>
+            <em id="cockpit-dist">—</em>
+          </div>
+        </div>
+        <div class="cockpit-visor"></div>
       </div>
 
       <div class="hud-reticle" aria-hidden="true">
@@ -87,6 +104,11 @@ const systemData = {
             <span>m/s</span>
           </div>
           <div class="hud-bar"><i id="hud-speed-bar"></i></div>
+          <div class="hud-throttle">
+            <span class="hud-label">推力</span>
+            <div class="hud-bar"><i id="hud-throttle-bar"></i></div>
+            <span class="hud-assist" id="hud-assist">辅助 开</span>
+          </div>
         </div>
 
         <div class="hud-coords" id="hud-coords">X 0 · Y 0 · Z 0</div>
@@ -114,6 +136,9 @@ const systemData = {
           </div>
           <button class="map-close" id="map-close" type="button" aria-label="关闭">×</button>
         </header>
+        <div class="map-stage">
+          <canvas id="map-canvas" width="560" height="320"></canvas>
+        </div>
         <div class="map-list" id="map-list"></div>
       </div>
     </div>
@@ -131,6 +156,8 @@ const systemData = {
       </div>
     </div>
 
+    <div id="heat-warning">⚠ 恒星辐射区 · 自动脱离</div>
+    <div id="fade"></div>
     <div id="toast"></div>
   </div>
 
@@ -934,3 +961,196 @@ const systemData = {
     }
   });
 </script>
+
+<style is:global>
+  /* ── 第一人称座舱 ─────────────────────── */
+  #cockpit {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.28s ease;
+  }
+
+  #cockpit.is-on { opacity: 1; }
+
+  .cockpit-canopy {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(120% 96% at 50% 46%, transparent 52%, rgba(2, 5, 9, 0.82) 100%),
+      linear-gradient(to bottom, rgba(2, 5, 9, 0.55) 0%, transparent 18%, transparent 82%, rgba(2, 5, 9, 0.6) 100%);
+  }
+
+  .cockpit-canopy::before,
+  .cockpit-canopy::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    width: 46%;
+    height: 62%;
+    border-top: 2px solid rgba(150, 200, 220, 0.22);
+    filter: drop-shadow(0 0 6px rgba(120, 220, 255, 0.25));
+  }
+
+  .cockpit-canopy::before {
+    left: -6%;
+    transform: skewY(-23deg);
+    background: linear-gradient(115deg, rgba(2, 6, 10, 0.85) 0%, rgba(2, 6, 10, 0.25) 42%, transparent 60%);
+  }
+
+  .cockpit-canopy::after {
+    right: -6%;
+    transform: skewY(23deg);
+    background: linear-gradient(-115deg, rgba(2, 6, 10, 0.85) 0%, rgba(2, 6, 10, 0.25) 42%, transparent 60%);
+  }
+
+  .cockpit-visor {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, rgba(120, 220, 255, 0.035) 0 1px, transparent 1px 3px);
+    mix-blend-mode: screen;
+    opacity: 0.5;
+  }
+
+  .cockpit-hud {
+    position: absolute;
+    left: clamp(24px, 6vw, 90px);
+    right: clamp(24px, 6vw, 90px);
+    bottom: clamp(120px, 18vh, 190px);
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .cockpit-tile {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 1px solid rgba(94, 200, 184, 0.35);
+    border-left: 2px solid rgba(94, 200, 184, 0.8);
+    background: linear-gradient(90deg, rgba(10, 40, 46, 0.55), rgba(6, 18, 24, 0.25));
+    box-shadow: inset 0 0 24px rgba(94, 200, 184, 0.08);
+    font-family: var(--mono);
+    color: #bdf3ea;
+    text-shadow: 0 0 10px rgba(94, 200, 184, 0.45);
+  }
+
+  .cockpit-tile-right {
+    border-left: 0;
+    border-right: 2px solid rgba(201, 165, 92, 0.8);
+    border-color: rgba(201, 165, 92, 0.35);
+    background: linear-gradient(270deg, rgba(46, 34, 10, 0.5), rgba(6, 18, 24, 0.2));
+    color: #f0d9a8;
+    text-shadow: 0 0 10px rgba(201, 165, 92, 0.45);
+    flex-direction: row-reverse;
+  }
+
+  .cockpit-tile span {
+    font-size: 9px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .cockpit-tile strong {
+    font-size: 26px;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cockpit-tile em {
+    font-size: 10px;
+    font-style: normal;
+    opacity: 0.65;
+  }
+
+  /* ── 推力条 ─────────────────────────── */
+  .hud-throttle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hud-throttle .hud-bar {
+    width: 84px;
+  }
+
+  #hud-throttle-bar {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #5ec8b8, #9fe6cf);
+    transition: width 0.08s linear;
+  }
+
+  .hud-assist {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: #5ec8b8;
+  }
+
+  .hud-assist.is-off {
+    color: #e0a45f;
+  }
+
+  /* ── 恒星警告 ───────────────────────── */
+  #heat-warning {
+    position: absolute;
+    top: 76px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 22;
+    padding: 8px 18px;
+    border: 1px solid rgba(255, 120, 90, 0.5);
+    background: rgba(40, 8, 4, 0.72);
+    color: #ffb59f;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+  }
+
+  #heat-warning.is-on {
+    opacity: 1;
+    animation: heatPulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes heatPulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(255, 110, 80, 0); }
+    50% { box-shadow: 0 0 34px rgba(255, 110, 80, 0.35); }
+  }
+
+  /* ── 着陆黑场 ───────────────────────── */
+  #fade {
+    position: absolute;
+    inset: 0;
+    z-index: 34;
+    background: #02040a;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+
+  #fade.is-black {
+    opacity: 1;
+  }
+
+  /* ── 星图舞台 ───────────────────────── */
+  .map-stage {
+    padding: 14px 16px 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  #map-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #04080d;
+  }
+</style>

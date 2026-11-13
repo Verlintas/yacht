@@ -22,7 +22,6 @@ interface GameContext {
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
-/** 站点部署在 /yacht/ 下，站内链接要补 base。 */
 const BASE = import.meta.env.BASE_URL.replace(/\/+$/, '');
 const withBase = (path: string): string => `${BASE}/${path.replace(/^\/+/, '')}`;
 
@@ -31,7 +30,6 @@ function formatNumber(value: number): string {
 }
 
 function distanceLabel(value: number): string {
-  if (value > 10000) return `${(value / 1000).toFixed(1)} km`;
   if (value > 1000) return `${(value / 1000).toFixed(2)} km`;
   return `${Math.round(value)} m`;
 }
@@ -59,12 +57,16 @@ export async function startGame(system: SystemData): Promise<void> {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMappingExposure = 0.98;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 120000);
-  camera.position.set(0, 240, 1500);
+  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 220000);
+  // 挂在相机上的补光，避免飞船暗面全黑
+  const fillLight = new THREE.PointLight(0x9fd8ff, 900, 260, 1.6);
+  fillLight.position.set(0, 6, 4);
+  camera.add(fillLight);
+  scene.add(camera);
 
   await step('生成恒星', 0.2);
 
@@ -76,28 +78,20 @@ export async function startGame(system: SystemData): Promise<void> {
   scene.add(ship.group);
 
   const audio = new EngineAudio();
-
   const flight = new FlightController(camera);
   flight.attach(canvas);
-
   canvas.addEventListener('pointerdown', () => audio.start(), { once: true });
 
   await step('装载飞船', 0.62);
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.3,
-    0.5,
-    0.86,
-  );
+  const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.34, 0.55, 0.86);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
   await step('编译着色器', 0.82);
 
-  // 预编译，避免进场卡顿
   renderer.compile(scene, camera);
   world.update(0.016, 0, camera);
   composer.render();
@@ -108,17 +102,13 @@ export async function startGame(system: SystemData): Promise<void> {
 
   const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio };
 
-  // 起始位置：面向母港
   const dock = world.bodies.find((body) => body.id === 'station-dock');
   if (dock) {
-    flight.position.copy(dock.position).add(new THREE.Vector3(190, 130, 400));
+    flight.position.copy(dock.position).add(new THREE.Vector3(900, 520, 1900));
     const look = dock.position.clone().sub(flight.position).normalize();
     (flight as unknown as { yaw: number }).yaw = Math.atan2(-look.x, -look.z);
     (flight as unknown as { pitch: number }).pitch = -Math.asin(look.y);
-    camera.position
-      .copy(flight.position)
-      .addScaledVector(look, -30)
-      .add(new THREE.Vector3(0, 8, 0));
+    camera.position.copy(flight.position).addScaledVector(look, -34).add(new THREE.Vector3(0, 10, 0));
   }
 
   const params = new URLSearchParams(window.location.search);
@@ -131,25 +121,29 @@ export async function startGame(system: SystemData): Promise<void> {
       ctx.flight.position.copy(body.position).addScaledVector(dir, dist);
       const look = body.position.clone().sub(ctx.flight.position).normalize();
       (ctx.flight as unknown as { yaw: number }).yaw = Math.atan2(-look.x, -look.z);
-      (ctx.flight as unknown as { pitch: number }).pitch = Math.asin(look.y);
-      ctx.flight.velocity.set(0, 0, 0);
-      ctx.camera.position.copy(ctx.flight.position).add(new THREE.Vector3(0, 8, 24));
+      (ctx.flight as unknown as { pitch: number }).pitch = -Math.asin(look.y);
+      ctx.flight.halt();
+      ctx.camera.position.copy(ctx.flight.position).addScaledVector(look, -34).add(new THREE.Vector3(0, 10, 0));
     }
   }
 
-  setupHud(ctx, system);
+  const hud = setupHud(ctx, system);
 
   const openParam = params.get('open');
   if (openParam) {
-    window.setTimeout(() => {
-      (window as unknown as { __openById?: (id: string) => void }).__openById?.(openParam);
-    }, 500);
+    window.setTimeout(() => hud.openById(openParam), 600);
   }
 
-  loop(ctx);
+  loop(ctx, hud);
 }
 
-function loop(ctx: GameContext): void {
+interface Hud {
+  update: (dt: number) => void;
+  openById: (id: string) => void;
+  toast: (message: string) => void;
+}
+
+function loop(ctx: GameContext, hud: Hud): void {
   const clock = new THREE.Clock();
   let elapsed = 0;
 
@@ -160,13 +154,23 @@ function loop(ctx: GameContext): void {
     ctx.flight.update(dt);
     ctx.ship.group.position.copy(ctx.flight.position);
     ctx.ship.group.quaternion.copy(ctx.flight.quaternion);
-    ctx.ship.group.position.add(new THREE.Vector3(0, -1.4, 0));
+    ctx.ship.group.position.add(new THREE.Vector3(0, -2.2, 0));
     ctx.ship.update(dt, ctx.flight.throttle, ctx.flight.boost);
+    ctx.ship.group.visible = ctx.flight.cameraMode === 'third';
 
     ctx.world.update(dt, elapsed, ctx.camera);
     ctx.world.sun.position.set(0, 0, 0);
 
-    updateHud(ctx, dt);
+    // 恒星热屏障：太近会被推开
+    const sunDistance = ctx.flight.position.length();
+    if (sunDistance < 2800) {
+      const push = (2800 - sunDistance) / 2800;
+      const dir = ctx.flight.position.clone().normalize();
+      ctx.flight.velocity.addScaledVector(dir, push * 900 * dt);
+      hud.toast('警告：恒星辐射过强，自动脱离');
+    }
+
+    hud.update(dt);
     ctx.audio.update(ctx.flight.speed, ctx.flight.throttle, ctx.flight.boost);
     ctx.composer.render();
     requestAnimationFrame(tick);
@@ -175,18 +179,7 @@ function loop(ctx: GameContext): void {
   tick();
 }
 
-/* ── HUD ───────────────────────────────────── */
-
-interface HudState {
-  target: CelestialBody | null;
-  nearest: CelestialBody | null;
-  panelOpen: boolean;
-  locked: boolean;
-}
-
-const state: HudState = { target: null, nearest: null, panelOpen: false, locked: true };
-
-function setupHud(ctx: GameContext, system: SystemData): void {
+function setupHud(ctx: GameContext, system: SystemData): Hud {
   const speedValue = $('hud-speed');
   const speedBar = $('hud-speed-bar');
   const targetName = $('hud-target');
@@ -195,97 +188,167 @@ function setupHud(ctx: GameContext, system: SystemData): void {
   const coords = $('hud-coords');
   const modeLabel = $('hud-mode');
   const fpsLabel = $('hud-fps');
+  const throttleBar = $('hud-throttle-bar');
+  const assistLabel = $('hud-assist');
+  const marker = $('nav-marker');
+  const cockpit = $('cockpit');
+  const cockpitSpeed = $('cockpit-speed');
+  const cockpitTarget = $('cockpit-target');
+  const cockpitDist = $('cockpit-dist');
+  const heat = $('heat-warning');
+  const fade = $('fade');
 
   let fpsAccum = 0;
   let fpsFrames = 0;
+  let target: CelestialBody | null = null;
+  let nearest: CelestialBody | null = null;
+  let panelOpen = false;
+  let docking: { body: CelestialBody; t: number; from: THREE.Vector3; to: THREE.Vector3; landing: boolean } | null = null;
+  let toastTimer = 0;
 
-  const marker = $('nav-marker');
+  const toast = (message: string): void => {
+    const el = $('toast');
+    el.textContent = message;
+    el.classList.add('is-on');
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => el.classList.remove('is-on'), 2400);
+  };
 
-  // 星图
+  /* ── 星图 ── */
   const map = $('map');
   const mapList = $('map-list');
-  const mapToggle = $('map-toggle');
+  const mapCanvas = $('map-canvas') as unknown as HTMLCanvasElement;
 
-  const entries: Array<{ body: CelestialBody; title: string; subtitle: string }> = ctx.world.bodies.map((body) => ({
-    body,
-    title: body.planet?.title ?? body.station?.title ?? '',
-    subtitle: body.planet ? body.planet.subtitle : '空间站',
-  }));
+  const drawMap = (): void => {
+    const c = mapCanvas.getContext('2d');
+    if (!c) return;
+    const w = mapCanvas.width;
+    const h = mapCanvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const range = 40000;
+
+    c.clearRect(0, 0, w, h);
+    c.fillStyle = '#04080d';
+    c.fillRect(0, 0, w, h);
+
+    const forward = ctx.flight.forwardVector;
+    const yaw = Math.atan2(forward.x, forward.z);
+
+    c.strokeStyle = 'rgba(120,180,200,0.16)';
+    c.lineWidth = 1;
+    for (const r of [0.25, 0.5, 0.75, 1]) {
+      c.beginPath();
+      c.arc(cx, cy, (Math.min(w, h) / 2 - 10) * r, 0, Math.PI * 2);
+      c.stroke();
+    }
+
+    // 太阳
+    c.fillStyle = 'rgba(255,200,120,0.9)';
+    c.beginPath();
+    c.arc(cx, cy, 5, 0, Math.PI * 2);
+    c.fill();
+
+    for (const body of ctx.world.bodies) {
+      const rel = body.position.clone().sub(ctx.flight.position);
+      const distance = rel.length();
+      if (distance > range) continue;
+
+      const angle = Math.atan2(rel.x, rel.z) - yaw;
+      const radius = (distance / range) * (Math.min(w, h) / 2 - 14);
+      const x = cx + Math.sin(angle) * radius;
+      const y = cy - Math.cos(angle) * radius;
+
+      const isStation = body.type === 'station';
+      const isTarget = target?.id === body.id;
+
+      c.fillStyle = isStation ? 'rgba(201,165,92,0.95)' : 'rgba(126,220,205,0.9)';
+      c.beginPath();
+      c.arc(x, y, isStation ? 4 : 2.6, 0, Math.PI * 2);
+      c.fill();
+
+      if (isTarget) {
+        c.strokeStyle = '#fff';
+        c.lineWidth = 1.4;
+        c.beginPath();
+        c.arc(x, y, 8, 0, Math.PI * 2);
+        c.stroke();
+        c.beginPath();
+        c.moveTo(cx, cy);
+        c.lineTo(x, y);
+        c.strokeStyle = 'rgba(255,255,255,0.25)';
+        c.lineWidth = 1;
+        c.stroke();
+      }
+    }
+
+    // 本舰
+    c.fillStyle = '#e9eff3';
+    c.beginPath();
+    c.moveTo(cx, cy - 7);
+    c.lineTo(cx - 4.5, cy + 5);
+    c.lineTo(cx + 4.5, cy + 5);
+    c.closePath();
+    c.fill();
+  };
 
   const renderMap = (): void => {
     mapList.innerHTML = '';
-    const sorted = entries
+    const sorted = ctx.world.bodies
       .slice()
-      .sort((a, b) => a.body.position.distanceTo(ctx.flight.position) - b.body.position.distanceTo(ctx.flight.position));
+      .sort((a, b) => a.position.distanceTo(ctx.flight.position) - b.position.distanceTo(ctx.flight.position));
 
-    for (const entry of sorted) {
-      const distance = entry.body.position.distanceTo(ctx.flight.position);
+    for (const body of sorted) {
+      const distance = body.position.distanceTo(ctx.flight.position);
       const row = document.createElement('button');
       row.className = 'map-row';
       row.type = 'button';
       row.innerHTML = `
         <span class="map-row-main">
-          <span class="map-row-title">${entry.title}</span>
-          <span class="map-row-sub">${entry.subtitle}</span>
+          <span class="map-row-title">${body.planet?.title ?? body.station?.title ?? ''}</span>
+          <span class="map-row-sub">${body.planet ? body.planet.subtitle : '空港'}</span>
         </span>
         <span class="map-row-dist">${distanceLabel(distance)}</span>
       `;
       row.addEventListener('click', () => {
-        state.target = entry.body;
+        target = body;
         map.classList.remove('is-open');
-        toast(`目标已设为 ${entry.title}`);
+        toast(`目标：${body.planet?.title ?? body.station?.title ?? ''}`);
       });
       mapList.append(row);
     }
+    drawMap();
   };
 
-  mapToggle?.addEventListener('click', () => {
+  const toggleMap = (): void => {
     map.classList.toggle('is-open');
     if (map.classList.contains('is-open')) renderMap();
-  });
+  };
 
-  document.addEventListener('keydown', (event) => {
-    if (event.code === 'KeyM') {
-      map.classList.toggle('is-open');
-      if (map.classList.contains('is-open')) renderMap();
-    }
-    if (event.code === 'KeyE') interact();
-    if (event.code === 'Escape') closePanel();
-  });
+  $('map-toggle')?.addEventListener('click', toggleMap);
 
-  // 交互
+  /* ── 面板 ── */
   const panel = $('panel');
   const panelTitle = $('panel-title');
   const panelSub = $('panel-sub');
   const panelBody = $('panel-body');
-  const panelClose = $('panel-close');
 
-  panelClose?.addEventListener('click', closePanel);
-
-  function closePanel(): void {
+  const closePanel = (): void => {
     panel.classList.remove('is-open');
-    state.panelOpen = false;
+    panelOpen = false;
     if (document.pointerLockElement) document.exitPointerLock();
-  }
-
-  function interact(): void {
-    if (state.panelOpen) {
-      closePanel();
-      return;
-    }
-    const body = state.nearest;
-    if (!body) return;
-    openBody(body);
-  }
-
-  (window as unknown as { __openBody?: (body: CelestialBody) => void }).__openBody = openBody;
-  (window as unknown as { __openById?: (id: string) => void }).__openById = (id: string) => {
-    const body = ctx.world.bodies.find((item) => item.id === id);
-    if (body) openBody(body);
   };
+  $('panel-close')?.addEventListener('click', closePanel);
+  $('map-close')?.addEventListener('click', () => map.classList.remove('is-open'));
+  map?.addEventListener('click', (event) => {
+    if (event.target === map) map.classList.remove('is-open');
+  });
+  panel?.addEventListener('click', (event) => {
+    if (event.target === panel) closePanel();
+  });
 
-  function openBody(body: CelestialBody): void {
-    state.panelOpen = true;
+  const openBody = (body: CelestialBody): void => {
+    panelOpen = true;
     panel.classList.add('is-open');
     if (document.pointerLockElement) document.exitPointerLock();
 
@@ -309,7 +372,7 @@ function setupHud(ctx: GameContext, system: SystemData): void {
       panelTitle.textContent = def.title;
       panelSub.textContent = def.subtitle;
       if (def.to === '#board') {
-        renderBoard(panelBody);
+        void renderBoard(panelBody);
       } else {
         panelBody.innerHTML = `
           <p class="panel-desc">${def.description}</p>
@@ -320,22 +383,17 @@ function setupHud(ctx: GameContext, system: SystemData): void {
         `;
       }
     }
-  }
+  };
 
-  // 留言板
   async function renderBoard(container: HTMLElement): Promise<void> {
     container.innerHTML = `
       <p class="panel-desc">公共频道。留言会以 GitHub issue 的形式提交，需要 GitHub 账号。</p>
       <div class="board-list" id="board-list"><p class="board-empty">读取中…</p></div>
       <a class="panel-action" id="board-new" href="#" target="_blank" rel="noreferrer noopener">写一条留言 →</a>
     `;
-
     const list = container.querySelector('#board-list') as HTMLElement;
     const newLink = container.querySelector('#board-new') as HTMLAnchorElement;
-
-    const title = encodeURIComponent('[留言板] ');
-    const body = encodeURIComponent('写下你想说的话：\n\n');
-    newLink.href = `https://github.com/Verlintas/yacht/issues/new?labels=board&title=${title}&body=${body}`;
+    newLink.href = `https://github.com/Verlintas/yacht/issues/new?labels=board&title=${encodeURIComponent('[留言板] ')}&body=${encodeURIComponent('写下你想说的话：\n\n')}`;
 
     try {
       const response = await fetch(
@@ -363,26 +421,71 @@ function setupHud(ctx: GameContext, system: SystemData): void {
         )
         .join('');
     } catch {
-      list.innerHTML =
-        '<p class="board-empty">读取失败。可以直接点下面的按钮去 GitHub 留言。</p>';
+      list.innerHTML = '<p class="board-empty">读取失败。可以直接点下面的按钮去 GitHub 留言。</p>';
     }
   }
 
-  // 提示
-  let toastTimer = 0;
-  function toast(message: string): void {
-    const el = $('toast');
-    el.textContent = message;
-    el.classList.add('is-on');
-    window.clearTimeout(toastTimer);
-    toastTimer = window.setTimeout(() => el.classList.remove('is-on'), 2400);
-  }
-  (window as unknown as { gameToast: typeof toast }).gameToast = toast;
+  /* ── 停靠 / 着陆 ── */
+  const startDock = (body: CelestialBody): void => {
+    const landing = body.type === 'planet';
+    const dir = body.position.clone().sub(ctx.flight.position).normalize();
+    const stop = body.position
+      .clone()
+      .addScaledVector(dir, -body.radius * (landing ? 1.35 : 1.6))
+      .add(new THREE.Vector3(0, landing ? 0 : body.radius * 0.18, 0));
 
-  // 每帧更新
+    docking = {
+      body,
+      t: 0,
+      from: ctx.flight.position.clone(),
+      to: stop,
+      landing,
+    };
+    ctx.flight.halt();
+    ctx.flight.boost = 0;
+    ctx.flight.throttle = 0;
+    if (landing) fade.classList.add('is-black');
+  };
+
+  const finishDock = (body: CelestialBody, landing: boolean): void => {
+    openBody(body);
+    if (landing) {
+      window.setTimeout(() => {
+        const dir = ctx.flight.position.clone().normalize();
+        ctx.flight.position.copy(body.position).addScaledVector(dir, body.radius * 2.4);
+        ctx.flight.halt();
+        fade.classList.remove('is-black');
+      }, 700);
+    }
+  };
+
+  /* ── 键盘 ── */
+  document.addEventListener('keydown', (event) => {
+    if (event.code === 'KeyM') toggleMap();
+    if (event.code === 'KeyF') {
+      if (panelOpen) {
+        closePanel();
+        return;
+      }
+      if (docking) return;
+      if (!nearest) return;
+      if (nearest.type === 'station') {
+        if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius * 3.2) startDock(nearest);
+      } else if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius * 2.2) {
+        startDock(nearest);
+      }
+    }
+    if (event.code === 'Escape') {
+      if (map.classList.contains('is-open')) map.classList.remove('is-open');
+      else closePanel();
+    }
+  });
+
+  /* ── 每帧 ── */
   const projected = new THREE.Vector3();
+  const tmp = new THREE.Vector3();
 
-  (window as unknown as { gameUpdateHud: (dt: number) => void }).gameUpdateHud = (dt: number) => {
+  const update = (dt: number): void => {
     fpsAccum += dt;
     fpsFrames += 1;
     if (fpsAccum > 0.5) {
@@ -391,39 +494,63 @@ function setupHud(ctx: GameContext, system: SystemData): void {
       fpsFrames = 0;
     }
 
+    // 停靠动画
+    if (docking) {
+      docking.t = Math.min(1, docking.t + dt / 1.6);
+      const eased = docking.t * docking.t * (3 - 2 * docking.t);
+      ctx.flight.position.lerpVectors(docking.from, docking.to, eased);
+      if (docking.t >= 1) {
+        const done = docking;
+        docking = null;
+        finishDock(done.body, done.landing);
+      }
+    }
+
     const speed = ctx.flight.speed;
     speedValue.textContent = Math.round(speed).toString();
-    speedBar.style.width = `${Math.min(100, (speed / 1200) * 100)}%`;
+    speedBar.style.width = `${Math.min(100, (speed / 1500) * 100)}%`;
+    throttleBar.style.width = `${Math.round(ctx.flight.throttle * 100)}%`;
+    assistLabel.textContent = ctx.flight.assist ? '辅助 开' : '辅助 关';
+    assistLabel.classList.toggle('is-off', !ctx.flight.assist);
 
     coords.textContent = `X ${Math.round(ctx.flight.position.x)}  Y ${Math.round(ctx.flight.position.y)}  Z ${Math.round(ctx.flight.position.z)}`;
     modeLabel.textContent = ctx.flight.cameraMode === 'third' ? '第三人称' : '第一人称';
+    cockpit.classList.toggle('is-on', ctx.flight.cameraMode === 'first');
 
-    // 最近目标
-    let nearest: CelestialBody | null = null;
-    let nearestDist = Infinity;
+    // 最近天体
+    let best: CelestialBody | null = null;
+    let bestDist = Infinity;
     for (const body of ctx.world.bodies) {
       const d = body.position.distanceTo(ctx.flight.position);
-      if (d < nearestDist) {
-        nearestDist = d;
-        nearest = body;
+      if (d < bestDist) {
+        bestDist = d;
+        best = body;
       }
     }
-    state.nearest = nearest;
+    nearest = best;
 
-    const interactRange = nearest ? nearest.radius * 4 + 260 : 0;
-    if (nearest && nearestDist < interactRange && !state.panelOpen) {
+    const canDock =
+      best &&
+      !docking &&
+      ((best.type === 'station' && bestDist < best.radius * 3.2) ||
+        (best.type === 'planet' && bestDist < best.radius * 2.2));
+
+    if (best && canDock && !panelOpen) {
       prompt.classList.add('is-on');
-      prompt.innerHTML = `<b>E</b> 靠近 ${nearest.planet?.title ?? nearest.station?.title ?? ''}`;
+      prompt.innerHTML = `<b>F</b> ${best.type === 'station' ? '停靠' : '进入'} ${best.planet?.title ?? best.station?.title ?? ''}`;
     } else {
       prompt.classList.remove('is-on');
     }
 
-    if (state.target) {
-      const dist = state.target.position.distanceTo(ctx.flight.position);
-      targetName.textContent = state.target.planet?.title ?? state.target.station?.title ?? '';
+    // 目标
+    if (target) {
+      const dist = target.position.distanceTo(ctx.flight.position);
+      targetName.textContent = target.planet?.title ?? target.station?.title ?? '';
       targetDist.textContent = distanceLabel(dist);
+      cockpitTarget.textContent = target.planet?.title ?? target.station?.title ?? '';
+      cockpitDist.textContent = distanceLabel(dist);
 
-      projected.copy(state.target.position).project(ctx.camera);
+      projected.copy(target.position).project(ctx.camera);
       const onScreen = projected.z < 1;
       if (onScreen) {
         marker.style.transform = `translate(-50%, -50%) translate(${(projected.x * 0.5 + 0.5) * window.innerWidth}px, ${(-projected.y * 0.5 + 0.5) * window.innerHeight}px)`;
@@ -434,16 +561,26 @@ function setupHud(ctx: GameContext, system: SystemData): void {
     } else {
       targetName.textContent = '未设定';
       targetDist.textContent = '按 M 选择';
+      cockpitTarget.textContent = '—';
+      cockpitDist.textContent = '—';
       marker.classList.remove('is-on');
     }
+
+    cockpitSpeed.textContent = Math.round(speed).toString();
+
+    // 恒星警告
+    const sunDist = ctx.flight.position.length();
+    heat.classList.toggle('is-on', sunDist < 3600);
+
+    // 雷达
+    drawRadar();
   };
 
-  // 雷达
   const radar = $('radar') as unknown as HTMLCanvasElement;
   const rctx = radar.getContext('2d')!;
-  const radarRange = 9000;
+  const radarRange = 20000;
 
-  (window as unknown as { gameDrawRadar: () => void }).gameDrawRadar = () => {
+  const drawRadar = (): void => {
     const size = radar.width;
     const half = size / 2;
     rctx.clearRect(0, 0, size, size);
@@ -481,7 +618,7 @@ function setupHud(ctx: GameContext, system: SystemData): void {
       rctx.arc(x, y, isStation ? 2.8 : 2.1, 0, Math.PI * 2);
       rctx.fill();
 
-      if (state.target?.id === body.id) {
+      if (target?.id === body.id) {
         rctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
         rctx.beginPath();
         rctx.arc(x, y, 5.5, 0, Math.PI * 2);
@@ -497,16 +634,13 @@ function setupHud(ctx: GameContext, system: SystemData): void {
     rctx.closePath();
     rctx.fill();
   };
-}
 
-function updateHud(ctx: GameContext, dt: number): void {
-  const fn = (window as unknown as { gameUpdateHud?: (d: number) => void }).gameUpdateHud;
-  fn?.(dt);
-
-  const radarFn = (window as unknown as { gameDrawRadar?: () => void }).gameDrawRadar;
-  if (Math.random() < 0.35) radarFn?.();
-
-  // 自适应画质
-  const composite = ctx.renderer.info.render;
-  void composite;
+  return {
+    update,
+    toast,
+    openById: (id: string) => {
+      const body = ctx.world.bodies.find((item) => item.id === id);
+      if (body) openBody(body);
+    },
+  };
 }

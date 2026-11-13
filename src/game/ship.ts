@@ -7,65 +7,30 @@ export interface Ship {
   update: (dt: number, throttle: number, boost: number) => void;
 }
 
-/** 用一组截面环生成机身，截面半径沿 Z 轴变化。 */
-function hullGeometry(rings: Array<{ z: number; r: number; flat?: number }>): THREE.BufferGeometry {
-  const radial = 32;
-  const positions: number[] = [];
-  const indices: number[] = [];
+/**
+ * 用平面轮廓挤出舰体。轮廓定义在 XY 平面，挤出后旋转到 XZ，
+ * 机头朝 -Z（Three.js 的「前方」约定）。
+ */
+function planform(
+  points: Array<[number, number]>,
+  thickness: number,
+  bevel = 0.12,
+): THREE.BufferGeometry {
+  const shape = new THREE.Shape();
+  shape.moveTo(points[0][0], points[0][1]);
+  for (let i = 1; i < points.length; i += 1) shape.lineTo(points[i][0], points[i][1]);
+  shape.closePath();
 
-  for (const ring of rings) {
-    for (let i = 0; i < radial; i += 1) {
-      const a = (i / radial) * Math.PI * 2;
-      positions.push(
-        Math.cos(a) * ring.r,
-        Math.sin(a) * ring.r * (ring.flat ?? 0.78),
-        ring.z,
-      );
-    }
-  }
-
-  for (let s = 0; s < rings.length - 1; s += 1) {
-    for (let i = 0; i < radial; i += 1) {
-      const a = s * radial + i;
-      const b = s * radial + ((i + 1) % radial);
-      const c = (s + 1) * radial + i;
-      const d = (s + 1) * radial + ((i + 1) % radial);
-      indices.push(a, c, b, b, c, d);
-    }
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  return geometry;
-}
-
-/** 机翼：带后掠与收窄的薄板。 */
-function wingGeometry(span: number, rootChord: number, tipChord: number, sweep: number, thickness: number): THREE.BufferGeometry {
-  const half = thickness / 2;
-  const verts = [
-    // root 上/下
-    0, half, rootChord * 0.5, 0, half, -rootChord * 0.5,
-    // tip 上/下
-    span, half * 0.45, tipChord * 0.5 - sweep, span, half * 0.45, -tipChord * 0.5 - sweep,
-    // 底面
-    0, -half, rootChord * 0.5, span, -half * 0.45, tipChord * 0.5 - sweep,
-    0, -half, -rootChord * 0.5, span, -half * 0.45, -tipChord * 0.5 - sweep,
-  ];
-
-  const idx = [
-    0, 1, 2, 1, 3, 2, // 顶
-    4, 5, 6, 5, 7, 6, // 底
-    0, 2, 4, 2, 6, 4, // 前缘
-    1, 5, 3, 3, 5, 7, // 后缘
-    2, 3, 6, 3, 7, 6, // 尖端
-    0, 4, 1, 1, 4, 5, // 根部
-  ];
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
-  geometry.setIndex(idx);
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: thickness,
+    bevelEnabled: true,
+    bevelThickness: bevel,
+    bevelSize: bevel,
+    bevelSegments: 2,
+    curveSegments: 6,
+  });
+  geometry.rotateX(-Math.PI / 2);
+  geometry.translate(0, thickness / 2, 0);
   geometry.computeVertexNormals();
   return geometry;
 }
@@ -74,121 +39,145 @@ export function createShip(): Ship {
   const group = new THREE.Group();
 
   const hullMat = new THREE.MeshStandardMaterial({
-    color: 0x7d8a99,
-    roughness: 0.46,
-    metalness: 0.7,
-    envMapIntensity: 0.75,
+    color: 0x3d4650,
+    roughness: 0.36,
+    metalness: 0.82,
+    envMapIntensity: 1.25,
   });
-  const panelMat = new THREE.MeshStandardMaterial({
-    color: 0x1c2530,
+  const plateMat = new THREE.MeshStandardMaterial({
+    color: 0x1a2028,
     roughness: 0.5,
     metalness: 0.85,
     envMapIntensity: 0.9,
   });
-  const accentMat = new THREE.MeshStandardMaterial({
-    color: 0x4fd0bd,
-    emissive: new THREE.Color(0x2fa898),
-    emissiveIntensity: 1.1,
-    roughness: 0.4,
-    metalness: 0.2,
+  const trimMat = new THREE.MeshStandardMaterial({
+    color: 0x9aa6b2,
+    roughness: 0.26,
+    metalness: 0.95,
+    envMapIntensity: 1.4,
+  });
+  const glowMat = new THREE.MeshStandardMaterial({
+    color: 0x59e0c8,
+    emissive: new THREE.Color(0x3fd6bd),
+    emissiveIntensity: 2.6,
+    roughness: 0.3,
+    metalness: 0.1,
   });
   const glassMat = new THREE.MeshStandardMaterial({
-    color: 0x08131b,
-    roughness: 0.05,
+    color: 0x04121a,
+    roughness: 0.03,
     metalness: 1,
-    envMapIntensity: 2.2,
-    emissive: new THREE.Color(0x123845),
-    emissiveIntensity: 0.45,
+    envMapIntensity: 2.6,
+    emissive: new THREE.Color(0x0d3a4a),
+    emissiveIntensity: 0.8,
   });
 
-  // 机身
-  const hull = new THREE.Mesh(
-    hullGeometry([
-      { z: -8.4, r: 0.55 },
-      { z: -6.6, r: 1.25 },
-      { z: -4.2, r: 1.85 },
-      { z: -1.2, r: 2.05 },
-      { z: 1.8, r: 1.9 },
-      { z: 4.2, r: 1.55 },
-      { z: 6.4, r: 1.05 },
-      { z: 8.2, r: 0.42 },
-      { z: 9.1, r: 0.06 },
-    ]),
+  /* ── 主舰体：楔形，无翼 ───────────────── */
+  const body = new THREE.Mesh(
+    planform(
+      [
+        [0, -9.8],
+        [1.1, -5.6],
+        [2.8, -1.0],
+        [4.0, 2.8],
+        [2.5, 5.8],
+        [1.0, 5.0],
+        [0, 6.2],
+        [-1.0, 5.0],
+        [-2.5, 5.8],
+        [-3.0, 2.8],
+        [-2.2, -1.0],
+        [-1.1, -5.6],
+      ],
+      1.7,
+      0.16,
+    ),
     hullMat,
   );
-  group.add(hull);
+  group.add(body);
 
-  // 背脊
-  const spine = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.34, 6.2), panelMat);
-  spine.position.set(0, 1.5, 0.6);
+  // 上层装甲板（略小、抬起）
+  const deck = new THREE.Mesh(
+    planform(
+      [
+        [0, -6.4],
+        [0.9, -3.2],
+        [1.7, 0.8],
+        [2.0, 3.0],
+        [0.9, 2.8],
+        [0, 3.6],
+        [-0.9, 2.8],
+        [-2.0, 3.0],
+        [-1.7, 0.8],
+        [-0.9, -3.2],
+      ],
+      0.6,
+      0.1,
+    ),
+    plateMat,
+  );
+  deck.position.y = 0.86;
+  group.add(deck);
+
+  // 中脊
+  const spine = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.42, 7.2), trimMat);
+  spine.position.set(0, 1.16, 0.6);
   group.add(spine);
 
-  // 机腹
-  const belly = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.42, 5.6), panelMat);
-  belly.position.set(0, -1.5, 0.2);
-  group.add(belly);
-
-  // 座舱
+  // 座舱（朝前）
   const canopy = new THREE.Mesh(
-    new THREE.SphereGeometry(1.05, 28, 18, 0, Math.PI * 2, 0, Math.PI * 0.58),
+    new THREE.SphereGeometry(1.15, 32, 20, 0, Math.PI * 2, 0, Math.PI * 0.55),
     glassMat,
   );
-  canopy.scale.set(0.92, 0.68, 2.3);
-  canopy.position.set(0, 1.42, 1.7);
+  canopy.scale.set(0.82, 0.62, 1.9);
+  canopy.position.set(0, 1.05, -2.1);
   group.add(canopy);
 
-  // 座舱框
-  const canopyFrame = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.05, 6, 24, Math.PI), panelMat);
-  canopyFrame.rotation.set(Math.PI / 2, 0, 0);
-  canopyFrame.scale.set(1, 2.1, 1);
-  canopyFrame.position.set(0, 1.42, 1.7);
-  group.add(canopyFrame);
+  const canopyRim = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.055, 8, 32), trimMat);
+  canopyRim.rotation.x = Math.PI / 2;
+  canopyRim.scale.set(0.82, 1.9, 1);
+  canopyRim.position.set(0, 1.06, -2.1);
+  group.add(canopyRim);
 
-  // 机翼（带上反角）
+  /* ── 侧舱 ─────────────────────────────── */
   for (const side of [-1, 1]) {
-    const wing = new THREE.Mesh(wingGeometry(5.6, 4.4, 1.8, 2.1, 0.24), hullMat);
-    wing.position.set(side * 1.35, -0.15, 0.2);
-    wing.scale.x = side;
-    wing.rotation.z = side * 0.1;
-    group.add(wing);
+    const pod = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.25, 6.6), plateMat);
+    pod.position.set(side * 4.1, -0.15, 1.2);
+    pod.rotation.y = side * 0.04;
+    group.add(pod);
 
-    // 前缘灯条
-    const edge = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.07, 0.16), accentMat);
-    edge.position.set(side * 3.7, 0.02, 1.55);
-    edge.rotation.z = side * 0.1;
-    edge.rotation.y = side * 0.2;
-    group.add(edge);
+    const podTop = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.3, 5.4), trimMat);
+    podTop.position.set(side * 4.1, 0.55, 1.0);
+    group.add(podTop);
 
-    // 翼尖
-    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.3, 2.2, 6), panelMat);
-    tip.rotation.z = side * Math.PI * 0.5;
-    tip.position.set(side * 6.9, 0.05, 0.9);
-    group.add(tip);
-
-    const tipLight = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), accentMat);
-    tipLight.position.set(side * 7.0, 0.05, 1.9);
-    group.add(tipLight);
+    const podGlow = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.06, 4.2), glowMat);
+    podGlow.position.set(side * 4.86, -0.1, 1.2);
+    group.add(podGlow);
   }
 
-  // 鸭翼
+  /* ── 垂尾 ─────────────────────────────── */
+  const fin = new THREE.Mesh(
+    new THREE.BoxGeometry(0.18, 3.4, 3.0),
+    plateMat,
+  );
+  fin.position.set(0, 2.2, 3.9);
+  fin.rotation.x = -0.24;
+  group.add(fin);
+
+  const finEdge = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.08, 2.6), glowMat);
+  finEdge.position.set(0, 3.85, 3.5);
+  finEdge.rotation.x = -0.24;
+  group.add(finEdge);
+
   for (const side of [-1, 1]) {
-    const canard = new THREE.Mesh(wingGeometry(1.5, 1.4, 0.7, 0.5, 0.12), panelMat);
-    canard.position.set(side * 1.1, 0.14, 4.3);
-    canard.scale.x = side;
-    canard.rotation.z = side * 0.16;
-    group.add(canard);
+    const vfin = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.5, 2.0), plateMat);
+    vfin.position.set(side * 2.6, -0.9, 3.4);
+    vfin.rotation.x = -0.3;
+    vfin.rotation.z = side * 0.18;
+    group.add(vfin);
   }
 
-  // 垂尾
-  for (const side of [-1, 1]) {
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.9, 2.2), panelMat);
-    fin.position.set(side * 0.85, 1.55, -4.1);
-    fin.rotation.x = -0.22;
-    fin.rotation.z = side * 0.22;
-    group.add(fin);
-  }
-
-  // 引擎
+  /* ── 引擎组 ───────────────────────────── */
   const engineGlow: THREE.Sprite[] = [];
   const engineCore: THREE.Mesh[] = [];
 
@@ -199,35 +188,43 @@ export function createShip(): Ship {
     canvas.height = size;
     const ctx = canvas.getContext('2d')!;
     const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-    g.addColorStop(0, 'rgba(220,255,250,1)');
-    g.addColorStop(0.22, 'rgba(94,200,184,0.75)');
-    g.addColorStop(1, 'rgba(20,60,70,0)');
+    g.addColorStop(0, 'rgba(230,255,252,1)');
+    g.addColorStop(0.2, 'rgba(89,224,200,0.8)');
+    g.addColorStop(1, 'rgba(10,50,60,0)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, size, size);
     return new THREE.CanvasTexture(canvas);
   })();
 
-  for (const side of [-1, 1]) {
-    const pylon = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.28, 2.4), panelMat);
-    pylon.position.set(side * 2.1, -0.55, -1.6);
-    group.add(pylon);
+  const nozzles: Array<[number, number, number]> = [
+    [0, 0.05, 7.1],
+    [-4.1, -0.15, 4.4],
+    [4.1, -0.15, 4.4],
+  ];
 
-    const nacelle = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.78, 3.6, 20), panelMat);
-    nacelle.rotation.x = Math.PI / 2;
-    nacelle.position.set(side * 2.6, -0.6, -3.1);
-    group.add(nacelle);
+  for (const [x, y, z] of nozzles) {
+    const housing = new THREE.Mesh(new THREE.CylinderGeometry(0.86, 1.02, 2.4, 20), plateMat);
+    housing.rotation.x = Math.PI / 2;
+    housing.position.set(x, y, z);
+    group.add(housing);
 
-    const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.52, 0.7, 20), hullMat);
-    nozzle.rotation.x = Math.PI / 2;
-    nozzle.position.set(side * 2.6, -0.6, -5.0);
-    group.add(nozzle);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.92, 0.09, 8, 28), trimMat);
+    ring.position.set(x, y, z + 1.2);
+    group.add(ring);
+
+    const throat = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.66, 0.78, 0.5, 20),
+      new THREE.MeshStandardMaterial({ color: 0x0a0f14, roughness: 0.9, metalness: 0.4 }),
+    );
+    throat.rotation.x = Math.PI / 2;
+    throat.position.set(x, y, z + 1.15);
+    group.add(throat);
 
     const core = new THREE.Mesh(
-      new THREE.CircleGeometry(0.5, 24),
-      new THREE.MeshBasicMaterial({ color: 0xd8fff8, transparent: true, opacity: 0.95 }),
+      new THREE.CircleGeometry(0.56, 28),
+      new THREE.MeshBasicMaterial({ color: 0xd6fff7, transparent: true, opacity: 0.95 }),
     );
-    core.position.set(side * 2.6, -0.6, -5.36);
-    core.rotation.y = Math.PI;
+    core.position.set(x, y, z + 1.42);
     group.add(core);
     engineCore.push(core);
 
@@ -239,38 +236,118 @@ export function createShip(): Ship {
         transparent: true,
       }),
     );
-    sprite.position.set(side * 2.6, -0.6, -5.7);
-    sprite.scale.setScalar(1.15);
+    sprite.position.set(x, y, z + 1.7);
+    sprite.scale.setScalar(1.1);
     group.add(sprite);
     engineGlow.push(sprite);
   }
 
-  // 机头
-  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), accentMat);
-  nose.position.set(0, 0, 9.0);
-  group.add(nose);
+  // 尾部引擎舱
+  const aft = new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.0, 2.6), plateMat);
+  aft.position.set(0, 0.15, 5.4);
+  group.add(aft);
 
-  // 机身细节：面板线与小方块
-  for (let i = 0; i < 6; i += 1) {
-    const line = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.05, 0.9), panelMat);
-    line.position.set(-1.2 + i * 0.48, 0.95, 2.4 + (i % 2) * 0.5);
+  const aftTop = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.4, 2.0), trimMat);
+  aftTop.position.set(0, 1.2, 5.5);
+  group.add(aftTop);
+
+  for (const side of [-1, 1]) {
+    const strut = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 2.2), trimMat);
+    strut.position.set(side * 3.2, 0.5, 4.6);
+    strut.rotation.z = side * 0.3;
+    group.add(strut);
+  }
+
+  /* ── 舰体细节 ─────────────────────────── */
+  // 进气道
+  for (const side of [-1, 1]) {
+    const intake = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.34, 2.2), plateMat);
+    intake.position.set(side * 2.6, 0.55, -0.4);
+    intake.rotation.y = side * 0.12;
+    group.add(intake);
+
+    const lip = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.06, 0.12), glowMat);
+    lip.position.set(side * 2.6, 0.55, -1.52);
+    lip.rotation.y = side * 0.12;
+    group.add(lip);
+  }
+
+  // 侧向推进器（用于姿态）
+  for (const side of [-1, 1]) {
+    const pod = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.8, 6, 12), plateMat);
+    pod.rotation.z = Math.PI / 2;
+    pod.position.set(side * 4.1, 0.1, 2.0);
+    group.add(pod);
+
+    const vent = new THREE.Mesh(new THREE.CircleGeometry(0.16, 12), glowMat);
+    vent.position.set(side * 4.62, 0.1, 2.0);
+    vent.rotation.y = side * Math.PI / 2;
+    group.add(vent);
+  }
+
+  // 腹部散热片
+  for (let i = 0; i < 4; i += 1) {
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.5, 1.6), plateMat);
+    fin.position.set(-1.8 + i * 1.2, -0.9, 1.2);
+    group.add(fin);
+  }
+
+  // 面板线与铆钉
+  for (let i = 0; i < 10; i += 1) {
+    const line = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.02, 0.7 + (i % 3) * 0.4), trimMat);
+    line.position.set(-2.6 + i * 0.58, 1.32, -0.4 + (i % 3) * 1.1);
     group.add(line);
   }
 
-  for (let i = 0; i < 5; i += 1) {
-    const block = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.1, 0.3), panelMat);
-    block.position.set(-0.8 + i * 0.4, 1.15, -2.2 - (i % 3) * 0.5);
-    group.add(block);
+  for (let i = 0; i < 8; i += 1) {
+    const stud = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 5), trimMat);
+    stud.position.set(-2.2 + (i % 4) * 1.45, 1.36, -2.6 + Math.floor(i / 4) * 1.4);
+    group.add(stud);
   }
 
+  // 边缘灯条（左右各一条，拉出轮廓）
+  for (const side of [-1, 1]) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.09, 6.4), glowMat);
+    rail.position.set(side * 2.05, 0.72, 0.2);
+    rail.rotation.y = side * 0.03;
+    group.add(rail);
+  }
+
+  // 舰首传感器
+  const sensor = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), glassMat);
+  sensor.position.set(0, 0.35, -9.1);
+  group.add(sensor);
+
+  const sensorRing = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.045, 6, 20), trimMat);
+  sensorRing.position.set(0, 0.35, -8.95);
+  group.add(sensorRing);
+
+  // 顶部小天线
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.9, 6), trimMat);
+  mast.position.set(0, 1.95, 1.4);
+  group.add(mast);
+
+  const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), glowMat);
+  beacon.position.set(0, 2.4, 1.4);
+  group.add(beacon);
+
+  // 尾焰口
+  for (const side of [-1, 1]) {
+    const vent = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.1, 0.7), glowMat);
+    vent.position.set(side * 1.3, 0.6, 4.6);
+    group.add(vent);
+  }
+
+  group.scale.setScalar(0.86);
+
   const update = (_dt: number, throttle: number, boost: number): void => {
-    const power = 1 + throttle * 1.8 + boost * 2.6;
+    const power = 0.25 + throttle * 1.5 + boost * 2.2;
     for (const sprite of engineGlow) {
-      sprite.scale.setScalar(1.0 + power * 0.55);
-      (sprite.material as THREE.SpriteMaterial).opacity = 0.32 + Math.min(power * 0.1, 0.3);
+      sprite.scale.setScalar(0.85 + power * 0.7);
+      (sprite.material as THREE.SpriteMaterial).opacity = 0.3 + Math.min(power * 0.16, 0.5);
     }
     for (const core of engineCore) {
-      (core.material as THREE.MeshBasicMaterial).opacity = 0.55 + Math.min(power * 0.05, 0.2);
+      (core.material as THREE.MeshBasicMaterial).opacity = 0.55 + Math.min(power * 0.09, 0.35);
     }
   };
 
