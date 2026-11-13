@@ -55,7 +55,6 @@ export async function startGame(system: SystemData): Promise<void> {
     antialias: true,
     powerPreference: 'high-performance',
     alpha: false,
-    logarithmicDepthBuffer: true,
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -64,7 +63,7 @@ export async function startGame(system: SystemData): Promise<void> {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 1, 2_400_000);
+  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 8, 2_200_000);
   // 挂在相机上的补光，避免飞船暗面全黑
   const fillLight = new THREE.PointLight(0xa8dcff, 5200, 900, 1.5);
   fillLight.position.set(0, 6, 4);
@@ -146,8 +145,8 @@ export async function startGame(system: SystemData): Promise<void> {
     const tangent = new THREE.Vector3(-radial.z, 0, radial.x).normalize();
     flight.position
       .copy(dock.position)
-      .addScaledVector(tangent, 15000)
-      .add(new THREE.Vector3(0, 4500, 0));
+      .addScaledVector(tangent, 42000)
+      .add(new THREE.Vector3(0, 12000, 0));
     const look = dock.position.clone().sub(flight.position).normalize();
     (flight as unknown as { yaw: number }).yaw = Math.atan2(-look.x, -look.z);
     (flight as unknown as { pitch: number }).pitch = -Math.asin(look.y);
@@ -200,7 +199,7 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     // 实体碰撞：撞上天体就被推开并卸掉法向速度
     for (const body of ctx.world.bodies) {
-      const min = body.radius * (body.type === 'station' ? 1.05 : 1.02);
+      const min = body.radius * (body.type === 'station' ? 0.34 : 1.03);
       const delta = ctx.flight.position.clone().sub(body.position);
       const distance = delta.length();
       if (distance < min && distance > 0.001) {
@@ -219,7 +218,7 @@ function loop(ctx: GameContext, hud: Hud): void {
         if (dock) {
           const radial = dock.position.clone().normalize();
           const tangent = new THREE.Vector3(-radial.z, 0, radial.x).normalize();
-          ctx.flight.position.copy(dock.position).addScaledVector(tangent, 15000).add(new THREE.Vector3(0, 4500, 0));
+          ctx.flight.position.copy(dock.position).addScaledVector(tangent, 42000).add(new THREE.Vector3(0, 12000, 0));
         }
         ctx.flight.halt();
         fade.classList.remove('is-black');
@@ -305,7 +304,7 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
     const h = mapCanvas.height;
     const cx = w / 2;
     const cy = h / 2;
-    const range = 700000;
+    const range = 1200000;
 
     c.clearRect(0, 0, w, h);
     c.fillStyle = '#04080d';
@@ -549,8 +548,8 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
       if (docking) return;
       if (!nearest) return;
       if (nearest.type === 'station') {
-        if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius * 2.4) startDock(nearest);
-      } else if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius * 1.8) {
+        if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius * 1.9) startDock(nearest);
+      } else if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius * 1.25) {
         startDock(nearest);
       }
     }
@@ -611,8 +610,8 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
     const canDock =
       best &&
       !docking &&
-      ((best.type === 'station' && bestDist < best.radius * 2.4) ||
-        (best.type === 'planet' && bestDist < best.radius * 1.8));
+      ((best.type === 'station' && bestDist < best.radius * 1.9) ||
+        (best.type === 'planet' && bestDist < best.radius * 1.25));
 
     if (best && canDock && !panelOpen) {
       prompt.classList.add('is-on');
@@ -657,7 +656,7 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
 
   const radar = $('radar') as unknown as HTMLCanvasElement;
   const rctx = radar.getContext('2d')!;
-  const radarRange = 700000;
+  const radarRange = 1200000;
 
   const drawRadar = (): void => {
     const size = radar.width;

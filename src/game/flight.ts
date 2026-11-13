@@ -111,19 +111,19 @@ export class FlightController {
 
     // 前向 / 反推：反推只有 45% 推力
     if (forwardInput > 0) {
-      const accel = 220 + this.boost * 2200;
+      const accel = 2600 + this.boost * 42000;
       this.velocity.addScaledVector(forward, accel * forwardInput * dt);
     } else if (forwardInput < 0) {
-      this.velocity.addScaledVector(forward, 110 * dt);
+      this.velocity.addScaledVector(forward, 1500 * dt);
     }
 
     // 侧移
     const strafe = (has('KeyD') ? 1 : 0) - (has('KeyA') ? 1 : 0);
-    if (strafe !== 0) this.velocity.addScaledVector(right, strafe * 120 * dt);
+    if (strafe !== 0) this.velocity.addScaledVector(right, strafe * 1800 * dt);
 
     // 垂直
     const lift = (has('KeyR') ? 1 : 0) - (has('KeyF') ? 1 : 0);
-    if (lift !== 0) this.velocity.addScaledVector(up, lift * 120 * dt);
+    if (lift !== 0) this.velocity.addScaledVector(up, lift * 1800 * dt);
 
     /* ── 阻尼：assist 开时像有推进器的飞行器，关时接近纯惯性 ── */
     const damping = this.assist ? 1.9 : 0.06;
@@ -145,7 +145,7 @@ export class FlightController {
       this.velocity.copy(forward).multiplyScalar(vForward).addScaledVector(right, nRight).addScaledVector(up, nUp);
     }
 
-    const maxSpeed = 340 + this.boost * 2400;
+    const maxSpeed = 4200 + this.boost * 52000;
     if (this.velocity.lengthSq() > maxSpeed * maxSpeed) this.velocity.setLength(maxSpeed);
 
     this.position.addScaledVector(this.velocity, dt);

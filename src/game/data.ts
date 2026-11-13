@@ -127,8 +127,8 @@ export function buildSystem(input: {
     const surface = lang.surfaces[seed % lang.surfaces.length];
     const ratio = Math.log10(project.loc + 1) / Math.log10(maxLoc + 1);
 
-    const radius = 1400 + ratio * 2000 + rand() * 400;
-    const orbit = 40000 + index * 22000 + rand() * 4000;
+    const radius = 3400 + ratio * 4600 + rand() * 900;
+    const orbit = 95000 + index * 52000 + rand() * 9000;
 
     return {
       id: project.id,
@@ -169,8 +169,8 @@ export function buildSystem(input: {
       subtitle: '五处泊位',
       description: '实时天况、空气质量、海况与未来几天预报。',
       to: '/berths/',
-      radius: 1250,
-      orbit: 36000,
+      radius: 3200,
+      orbit: 78000,
       phase: Math.PI * 0.35,
       inclination: 0.03,
       spin: 0.1,
@@ -183,8 +183,8 @@ export function buildSystem(input: {
       subtitle: `${input.counts.wiki} 条资料`,
       description: '百科、阅读路径、标签与全文搜索。',
       to: '/wiki/',
-      radius: 1500,
-      orbit: 82000,
+      radius: 3800,
+      orbit: 210000,
       phase: Math.PI * 1.15,
       inclination: -0.05,
       spin: -0.08,
@@ -197,8 +197,8 @@ export function buildSystem(input: {
       subtitle: '公共频道',
       description: '在这里留下航迹。',
       to: '#board',
-      radius: 1200,
-      orbit: 152000,
+      radius: 3000,
+      orbit: 420000,
       phase: Math.PI * 1.72,
       inclination: 0.07,
       spin: 0.14,
@@ -211,8 +211,8 @@ export function buildSystem(input: {
       subtitle: '船坞',
       description: '项目清单、工程指标与体量统计。',
       to: '/projects/',
-      radius: 1450,
-      orbit: 44000,
+      radius: 3600,
+      orbit: 120000,
       phase: Math.PI * 0.92,
       inclination: 0.02,
       spin: 0.07,
