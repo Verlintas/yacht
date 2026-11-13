@@ -10,7 +10,8 @@ import {
 } from './shaders';
 import type { PlanetDef, StationDef, SystemData } from './data';
 import { makeRandom } from './data';
-import { greebles, panel, truss } from './kit';
+import { greebles, mergeStatic, panel, truss } from './kit';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const RING_VERT = /* glsl */ `
   varying vec2 vUv;
@@ -60,6 +61,8 @@ export interface World {
   sun: THREE.Object3D;
   sunRadius: number;
   bodies: CelestialBody[];
+  hangars: Array<{ group: THREE.Group; depth: number; width: number; height: number }>;
+  mixers: THREE.AnimationMixer[];
   update: (dt: number, elapsed: number, camera: THREE.Camera) => void;
 }
 
@@ -70,6 +73,7 @@ export function createWorld(
 ): World {
   const sunPosition = new THREE.Vector3(0, 0, 0);
   const bodies: CelestialBody[] = [];
+  const hangars: Array<{ group: THREE.Group; depth: number; width: number; height: number }> = [];
   const sunRadius = 9000;
 
   /* ── 星空 ─────────────────────────────────── */
@@ -291,7 +295,7 @@ export function createWorld(
       fragmentShader: PLANET_FRAG,
     });
 
-    const planet = new THREE.Mesh(new THREE.SphereGeometry(def.radius, 160, 110), material);
+    const planet = new THREE.Mesh(new THREE.SphereGeometry(def.radius, 120, 80), material);
     planet.rotation.z = def.axialTilt;
     bodyGroup.add(planet);
 
@@ -364,7 +368,9 @@ export function createWorld(
     const bodyGroup = new THREE.Group();
     scene.add(bodyGroup);
 
-    bodyGroup.add(buildStation(def));
+    const built = buildStation(def);
+    bodyGroup.add(built.group);
+    hangars.push(...built.hangars);
 
     const curve = new THREE.EllipseCurve(0, 0, def.orbit, def.orbit, 0, Math.PI * 2);
     const points = curve.getPoints(320).map((p) => new THREE.Vector3(p.x, p.y, 0));
@@ -439,12 +445,17 @@ export function createWorld(
     }
   };
 
-  return { scene, sun: sunGroup, sunRadius, bodies, update };
+  return { scene, sun: sunGroup, sunRadius, bodies, hangars, mixers: [], update };
 }
 
 /** 空港：桁架主轴 + 三层环 + 四座机库 + 停泊臂 + 散热阵。 */
-function buildStation(def: StationDef): THREE.Group {
+function buildStation(def: StationDef): {
+  group: THREE.Group;
+  hangars: Array<{ group: THREE.Group; depth: number; width: number; height: number }>;
+} {
   const group = new THREE.Group();
+  const body = new THREE.Group();
+  const hangarList: Array<{ group: THREE.Group; depth: number; width: number; height: number }> = [];
   const R = def.radius;
   const rand = makeRandom(def.radius * 13 + 7);
 
@@ -469,11 +480,11 @@ function buildStation(def: StationDef): THREE.Group {
 
   /* 主轴桁架 */
   const spine = new THREE.Mesh(panel(R * 0.1, R * 3.4, R * 0.1, R * 0.02, 2), hull);
-  group.add(spine);
+  body.add(spine);
 
   const spineTruss = truss(R * 3.0, R * 0.12, dark, 8);
   spineTruss.rotation.z = Math.PI / 2;
-  group.add(spineTruss);
+  body.add(spineTruss);
 
   /* 舱段：沿主轴分布 */
   for (let i = 0; i < 7; i += 1) {
@@ -481,12 +492,12 @@ function buildStation(def: StationDef): THREE.Group {
     const radius = R * (0.1 + (i % 3) * 0.02);
     const module = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, R * 0.3, 20), i % 2 ? plate : hull);
     module.position.y = y;
-    group.add(module);
+    body.add(module);
 
     const ring = new THREE.Mesh(new THREE.TorusGeometry(radius * 1.06, R * 0.008, 6, 32), glow);
     ring.rotation.x = Math.PI / 2;
     ring.position.y = y + R * 0.15;
-    group.add(ring);
+    body.add(ring);
 
     // 舷窗
     for (let k = 0; k < 10; k += 1) {
@@ -494,7 +505,7 @@ function buildStation(def: StationDef): THREE.Group {
       const win = new THREE.Mesh(new THREE.BoxGeometry(R * 0.012, R * 0.02, R * 0.006), glow);
       win.position.set(Math.cos(a) * radius * 1.02, y, Math.sin(a) * radius * 1.02);
       win.rotation.y = -a;
-      group.add(win);
+      body.add(win);
     }
   }
 
@@ -509,7 +520,7 @@ function buildStation(def: StationDef): THREE.Group {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(spec.radius, spec.tube, 14, 160), hull);
     ring.rotation.set(...spec.tilt);
     ring.position.y = spec.y;
-    group.add(ring);
+    body.add(ring);
 
     // 环上的舱段
     const count = Math.round(spec.radius / (R * 0.12));
@@ -518,12 +529,12 @@ function buildStation(def: StationDef): THREE.Group {
       const pod = new THREE.Mesh(panel(R * 0.12, R * 0.1, R * 0.16, R * 0.02, 1), plate);
       pod.position.set(Math.cos(a) * spec.radius, spec.y + Math.sin(a) * 0, Math.sin(a) * spec.radius);
       pod.rotation.y = -a;
-      group.add(pod);
+      body.add(pod);
 
       const lamp = new THREE.Mesh(new THREE.BoxGeometry(R * 0.06, R * 0.006, R * 0.006), glow);
       lamp.position.set(Math.cos(a) * spec.radius, spec.y + R * 0.055, Math.sin(a) * spec.radius);
       lamp.rotation.y = -a;
-      group.add(lamp);
+      body.add(lamp);
     }
 
     // 环与主轴之间的辐条
@@ -532,7 +543,7 @@ function buildStation(def: StationDef): THREE.Group {
       const spoke = new THREE.Mesh(new THREE.BoxGeometry(spec.radius, R * 0.02, R * 0.02), dark);
       spoke.position.set(Math.cos(a) * spec.radius * 0.5, spec.y, Math.sin(a) * spec.radius * 0.5);
       spoke.rotation.y = -a;
-      group.add(spoke);
+      body.add(spoke);
     }
   }
 
@@ -543,38 +554,39 @@ function buildStation(def: StationDef): THREE.Group {
     hangar.position.set(Math.cos(angle) * R * 0.95, -R * 0.15, Math.sin(angle) * R * 0.95);
     hangar.rotation.y = -angle;
     group.add(hangar);
+    hangarList.push({ group: hangar, depth: R * 0.62, width: R * 0.66, height: R * 0.34 });
 
     // 连接臂
     const arm = new THREE.Mesh(new THREE.BoxGeometry(R * 0.5, R * 0.06, R * 0.1), plate);
     arm.position.set(Math.cos(angle) * R * 0.55, -R * 0.15, Math.sin(angle) * R * 0.55);
     arm.rotation.y = -angle;
-    group.add(arm);
+    body.add(arm);
   }
 
   /* 控制塔 */
   const tower = new THREE.Mesh(panel(R * 0.16, R * 0.5, R * 0.16, R * 0.03, 2), hull);
   tower.position.set(R * 0.28, R * 1.55, -R * 0.3);
-  group.add(tower);
+  body.add(tower);
 
   const towerTop = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.16, R * 0.13, R * 0.1, 16), dark);
   towerTop.position.set(R * 0.28, R * 1.82, -R * 0.3);
-  group.add(towerTop);
+  body.add(towerTop);
 
   const towerGlass = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.15, R * 0.15, R * 0.05, 16), glow);
   towerGlass.position.set(R * 0.28, R * 1.84, -R * 0.3);
-  group.add(towerGlass);
+  body.add(towerGlass);
 
   /* 散热阵 */
   for (const side of [-1, 1]) {
     const boom = new THREE.Mesh(new THREE.BoxGeometry(R * 0.6, R * 0.02, R * 0.02), hull);
     boom.position.set(side * R * 0.5, -R * 1.1, R * 0.3);
-    group.add(boom);
+    body.add(boom);
 
     for (let i = 0; i < 5; i += 1) {
       const fin = new THREE.Mesh(new THREE.BoxGeometry(R * 0.34, R * 0.02, R * 0.16), plate);
       fin.position.set(side * (R * 0.72 + i * R * 0.05), -R * 1.1, R * 0.3);
       fin.rotation.x = 0.2;
-      group.add(fin);
+      body.add(fin);
     }
   }
 
@@ -593,11 +605,11 @@ function buildStation(def: StationDef): THREE.Group {
     );
     sail.position.set(side * R * 1.4, R * 0.9, 0);
     sail.rotation.z = side * 0.06;
-    group.add(sail);
+    body.add(sail);
 
     const frame = new THREE.Mesh(new THREE.BoxGeometry(R * 1.14, R * 0.012, R * 0.54), hull);
     frame.position.copy(sail.position);
-    group.add(frame);
+    body.add(frame);
   }
 
   /* 天线阵 */
@@ -606,25 +618,26 @@ function buildStation(def: StationDef): THREE.Group {
     const mast = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.005, R * 0.008, length, 6), hull);
     const a = (i / 5) * Math.PI * 2;
     mast.position.set(Math.cos(a) * R * 0.2, R * 1.7 + length / 2, Math.sin(a) * R * 0.2);
-    group.add(mast);
+    body.add(mast);
 
     const tip = new THREE.Mesh(new THREE.SphereGeometry(R * 0.01, 8, 6), glow);
     tip.position.set(Math.cos(a) * R * 0.2, R * 1.7 + length, Math.sin(a) * R * 0.2);
-    group.add(tip);
+    body.add(tip);
   }
 
   /* 全息导航环 */
   for (const scale of [1.25, 1.45]) {
     const halo = new THREE.Mesh(new THREE.TorusGeometry(R * scale, R * 0.0028, 6, 200), holo);
     halo.rotation.x = Math.PI / 2;
-    group.add(halo);
+    body.add(halo);
   }
 
   /* 表面杂项 */
   const g = greebles(140, { x: R * 1.9, y: R * 0.8, z: R * 1.9 }, dark, rand);
-  group.add(g);
+  body.add(g);
 
-  return group;
+  group.add(mergeStatic(body));
+  return { group, hangars: hangarList };
 }
 
 /** 单座机库：三面围合 + 开口朝 +X，内部有地板灯与内壁灯。 */
@@ -637,6 +650,7 @@ function buildHangar(
   holo: THREE.Material,
 ): THREE.Group {
   const hangar = new THREE.Group();
+  const inner = new THREE.Group();
   const depth = R * 0.62;
   const width = R * 0.66;
   const height = R * 0.34;
@@ -644,26 +658,26 @@ function buildHangar(
   // 背板
   const back = new THREE.Mesh(new THREE.BoxGeometry(R * 0.06, height, width), plate);
   back.position.set(-depth / 2, 0, 0);
-  hangar.add(back);
+  inner.add(back);
 
   // 顶/底
   for (const y of [height / 2, -height / 2]) {
     const slab = new THREE.Mesh(new THREE.BoxGeometry(depth, R * 0.05, width), plate);
     slab.position.set(0, y, 0);
-    hangar.add(slab);
+    inner.add(slab);
   }
 
   // 侧壁
   for (const z of [width / 2, -width / 2]) {
     const wall = new THREE.Mesh(new THREE.BoxGeometry(depth, height, R * 0.05), plate);
     wall.position.set(0, 0, z);
-    hangar.add(wall);
+    inner.add(wall);
 
     // 内壁灯带
     for (let i = 0; i < 6; i += 1) {
       const lamp = new THREE.Mesh(new THREE.BoxGeometry(depth * 0.08, R * 0.008, R * 0.008), glow);
       lamp.position.set(-depth / 2 + (i + 0.5) * (depth / 6), height * 0.32, z * 0.94);
-      hangar.add(lamp);
+      inner.add(lamp);
     }
   }
 
@@ -671,14 +685,14 @@ function buildHangar(
   for (let i = 0; i < 8; i += 1) {
     const line = new THREE.Mesh(new THREE.BoxGeometry(depth * 0.06, R * 0.006, width * 0.56), glow);
     line.position.set(-depth / 2 + (i + 0.5) * (depth / 8), -height / 2 + R * 0.03, 0);
-    hangar.add(line);
+    inner.add(line);
   }
 
   // 中央降落圆
   const pad = new THREE.Mesh(new THREE.RingGeometry(width * 0.16, width * 0.2, 40), glow);
   pad.rotation.x = -Math.PI / 2;
   pad.position.set(0, -height / 2 + R * 0.02, 0);
-  hangar.add(pad);
+  inner.add(pad);
 
   // 开口外框
   for (const [y, z] of [
@@ -689,22 +703,51 @@ function buildHangar(
   ]) {
     const post = new THREE.Mesh(new THREE.BoxGeometry(R * 0.05, R * 0.05, R * 0.05), hull);
     post.position.set(depth / 2 - R * 0.02, y, z);
-    hangar.add(post);
+    inner.add(post);
   }
 
   // 顶部标识
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(width * 0.6, height * 0.4), holo);
   sign.position.set(depth / 2 + R * 0.005, height * 0.22, 0);
   sign.rotation.y = Math.PI / 2;
-  hangar.add(sign);
+  inner.add(sign);
 
   // 外挂机械臂（装饰）
   for (const side of [-1, 1]) {
     const arm = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.012, R * 0.012, height * 0.8, 6), dark);
     arm.position.set(depth * 0.34, height * 0.1, side * width * 0.44);
     arm.rotation.z = 0.5;
-    hangar.add(arm);
+    inner.add(arm);
   }
 
+  hangar.add(mergeStatic(inner));
   return hangar;
+}
+
+
+/** 异步加载 Blender 导出的机库门，按机库尺寸缩放并播放开合动画。 */
+export async function attachHangarDoors(world: World, url: string): Promise<void> {
+  const loader = new GLTFLoader();
+  const gltf = await loader.loadAsync(url);
+
+  for (const hangar of world.hangars) {
+    const clone = gltf.scene.clone(true);
+
+    const scale = (hangar.width * 0.92) / 2.9;
+    clone.scale.setScalar(scale);
+    clone.rotation.y = Math.PI / 2;
+    clone.position.set(hangar.depth / 2 - hangar.depth * 0.06, 0, 0);
+
+    hangar.group.add(clone);
+
+    if (gltf.animations.length > 0) {
+      const mixer = new THREE.AnimationMixer(clone);
+      const action = mixer.clipAction(gltf.animations[0]);
+      action.setLoop(THREE.LoopRepeat, Infinity);
+      action.play();
+      world.mixers.push(mixer);
+    }
+  }
+
+  void world;
 }

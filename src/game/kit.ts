@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 /** 倒角盒：白模细节的基本单元。 */
 export function panel(
@@ -113,4 +114,38 @@ export function lightStrip(
   mat: THREE.Material,
 ): THREE.Mesh {
   return new THREE.Mesh(new THREE.BoxGeometry(length, thickness, thickness * 0.6), mat);
+}
+
+/** 按材质合并静态几何体，把几百个 draw call 压到十几个。 */
+export function mergeStatic(root: THREE.Object3D): THREE.Group {
+  const buckets = new Map<THREE.Material, THREE.BufferGeometry[]>();
+  const meshes: THREE.Mesh[] = [];
+
+  root.updateMatrixWorld(true);
+  root.traverse((obj) => {
+    if (obj instanceof THREE.Mesh && !Array.isArray(obj.material)) {
+      const geometry = obj.geometry.clone();
+      geometry.applyMatrix4(obj.matrixWorld);
+      // 合并要求属性一致，去掉多余属性
+      for (const name of Object.keys(geometry.attributes)) {
+        if (!['position', 'normal', 'uv'].includes(name)) geometry.deleteAttribute(name);
+      }
+      if (!geometry.attributes.uv) {
+        const count = geometry.attributes.position.count;
+        geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(count * 2), 2));
+      }
+      const list = buckets.get(obj.material) ?? [];
+      list.push(geometry);
+      buckets.set(obj.material, list);
+      meshes.push(obj);
+    }
+  });
+
+  const merged = new THREE.Group();
+  for (const [material, geometries] of buckets) {
+    const geometry = mergeGeometries(geometries, false);
+    if (!geometry) continue;
+    merged.add(new THREE.Mesh(geometry, material));
+  }
+  return merged;
 }

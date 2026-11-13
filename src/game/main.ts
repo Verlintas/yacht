@@ -4,7 +4,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { createWorld, type CelestialBody, type World } from './world';
+import { attachHangarDoors, createWorld, type CelestialBody, type World } from './world';
 import { createShip, type Ship } from './ship';
 import { FlightController } from './flight';
 import { EngineAudio } from './audio';
@@ -75,6 +75,9 @@ export async function startGame(system: SystemData): Promise<void> {
   const world = createWorld(system, scene, renderer);
 
   await step('投射行星', 0.45);
+
+  // Blender 导出的机库门（异步，不阻塞进场）
+  void attachHangarDoors(world, `${BASE}/models/hangar_door.glb`);
 
   const ship = createShip();
   scene.add(ship.group);
@@ -237,6 +240,7 @@ function loop(ctx: GameContext, hud: Hud): void {
     ctx.ship.group.visible = ctx.flight.cameraMode === 'third';
 
     ctx.world.update(dt, elapsed, ctx.camera);
+    for (const mixer of ctx.world.mixers) mixer.update(dt);
     ctx.world.sun.position.set(0, 0, 0);
 
     // 恒星热屏障：太近会被推开
