@@ -145,7 +145,7 @@ const totals = {
         </div>
         <div class="grid grid-wide">
           {flagships.map(({ entry, Content, metrics, score }) => (
-            <article class="panel panel-pad project-card project-flagship">
+            <article class="panel panel-pad project-card project-flagship" id={entry.id}>
               <div class="card-head">
                 <span class="readout-label">{formatDate(entry.data.updated)} 更新</span>
                 <span class="badge-row">
@@ -207,7 +207,7 @@ const totals = {
             </div>
             <div class="grid grid-wide">
               {groupItems.map(({ entry, Content, metrics, score }) => (
-                <article class="panel panel-pad project-card">
+                <article class="panel panel-pad project-card" id={entry.id}>
                   <div class="card-head">
                     <span class="readout-label">{formatDate(entry.data.updated)} 更新</span>
                     {score && <span class="badge">{score.total.toFixed(1)}</span>}

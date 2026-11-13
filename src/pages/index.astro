@@ -2,13 +2,15 @@
 import Base from '../layouts/Base.astro';
 import BerthSwitcher from '../components/BerthSwitcher.astro';
 import Dashboard from '../components/Dashboard.astro';
+import StarMap from '../components/StarMap.astro';
 import { getCollection } from 'astro:content';
 import { berths, defaultBerthId, getBerth } from '../data/berths';
 import { linkGroups } from '../data/links';
+import metricsData from '../data/project-metrics.json';
 import { url } from '../lib/url';
+import type { ProjectMetrics } from '../lib/project-score';
 
 const defaultBerth = getBerth(defaultBerthId);
-
 const quickLinks = linkGroups.flatMap((group) => group.links).slice(0, 6);
 
 const wikiEntries = await getCollection('wiki');
@@ -16,16 +18,59 @@ const featuredIds = ['start-here', 'medication-doses', 'real-name-overview', 're
 const featured = featuredIds
   .map((id) => wikiEntries.find((entry) => entry.id === id))
   .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+
+const projectEntries = await getCollection('projects');
+const metricsByRepo = (metricsData.projects ?? {}) as Record<string, ProjectMetrics>;
+const repoOf = (repo?: string): string =>
+  (repo ?? '').replace(/^https:\/\/github\.com\//, '').replace(/\/+$/, '');
+
+const starProjects = projectEntries
+  .map((entry) => ({
+    id: entry.id,
+    title: entry.data.title,
+    url: url(`projects/#${entry.id}`),
+    summary: entry.data.summary,
+    stack: entry.data.stack,
+    metrics: metricsByRepo[repoOf(entry.data.repo)],
+  }))
+  .sort((a, b) => (b.metrics?.loc ?? 0) - (a.metrics?.loc ?? 0));
+
+const totalLoc = starProjects.reduce((sum, project) => sum + (project.metrics?.loc ?? 0), 0);
 ---
 
-<Base title="小窝 · Verlintas">
-  <p class="eyebrow">Verlintas · 私人港口</p>
-  <h1 class="page-title" data-slot="greeting">欢迎回来</h1>
-  <p class="page-sub">
-    {berths.length} 处常驻泊位的实时天况、空气质量与海况，加上一些日常用得上的入口。数据每次打开时现取。
-  </p>
+<Base title="夜航 · Verlintas 的小窝">
+  <section class="hero">
+    <div class="hero-sky">
+      <StarMap projects={starProjects} bare />
+    </div>
+    <div class="hero-scrim" aria-hidden="true"></div>
 
-  <section class="section">
+    <div class="hero-copy">
+      <p class="eyebrow">Verlintas · 私人港口</p>
+      <h1 class="hero-title">夜航</h1>
+      <p class="hero-lede">五处泊位在等天气，十九个项目挂在星图上。</p>
+    </div>
+
+    <dl class="hero-figures">
+      <div><dt>泊位</dt><dd>{berths.length}</dd></div>
+      <div><dt>项目</dt><dd>{projectEntries.length}</dd></div>
+      <div><dt>资料</dt><dd>{wikiEntries.length}</dd></div>
+      <div><dt>代码行</dt><dd>{Math.round(totalLoc / 1000)}k</dd></div>
+      <div><dt>此刻</dt><dd class="hero-time" id="heroClock">--:--</dd></div>
+    </dl>
+
+    <p class="hero-hint">点一下星星看简介 · 再点一下进入</p>
+    <p class="hero-legend">
+      <i style="background:#a78bfa"></i>Kotlin
+      <i style="background:#e08b5a"></i>Rust
+      <i style="background:#f2777a"></i>Swift
+      <i style="background:#d97757"></i>Astro
+      <i style="background:#7fb2e5"></i>TypeScript
+      <i style="background:#6fa8dc"></i>Python
+    </p>
+  </section>
+
+  <section class="section section-rule">
     <div class="section-head">
       <h2 class="section-title">泊位</h2>
       <span class="section-note">选择一处查看实况</span>
@@ -36,7 +81,7 @@ const featured = featuredIds
 
   {
     quickLinks.length > 0 && (
-      <section class="section">
+      <section class="section section-rule">
         <div class="section-head">
           <h2 class="section-title">港口速览</h2>
           <a class="section-note" href={url('links/')}>
@@ -76,7 +121,7 @@ const featured = featuredIds
 
   {
     featured.length > 0 && (
-      <section class="section">
+      <section class="section section-rule">
         <div class="section-head">
           <h2 class="section-title">百科入口</h2>
           <a class="section-note" href={url('wiki/')}>
@@ -98,5 +143,239 @@ const featured = featuredIds
   <script>
     import { initDashboard } from '../lib/instruments';
     initDashboard();
+
+    const clock = document.getElementById('heroClock');
+    const tick = (): void => {
+      if (!clock) return;
+      const now = new Date();
+      clock.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(
+        now.getMinutes(),
+      ).padStart(2, '0')}`;
+    };
+    tick();
+    window.setInterval(tick, 30_000);
   </script>
 </Base>
+
+<style>
+  .hero {
+    /* 首屏永远是夜——浅色主题下也保留一块深色天空 */
+    --bg: #04070d;
+    --text: #e9eff3;
+    --text-dim: #9babb6;
+    --text-faint: #64757f;
+    --border: rgba(255, 255, 255, 0.085);
+    --border-strong: rgba(255, 255, 255, 0.19);
+    --brass: #c9a55c;
+    background: var(--bg);
+    position: relative;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    height: min(94vh, 900px);
+    min-height: 640px;
+    overflow: hidden;
+  }
+
+  .hero-sky {
+    position: absolute;
+    inset: 0;
+  }
+
+  .hero-scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(72% 74% at 15% 78%, rgba(3, 6, 11, 0.9) 0%, rgba(3, 6, 11, 0.45) 40%, transparent 72%),
+      linear-gradient(to right, rgba(3, 6, 11, 0.5) 0%, transparent 34%);
+  }
+
+  .hero-copy {
+    position: absolute;
+    left: var(--gutter);
+    bottom: 132px;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .hero-title {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(76px, 12vw, 168px);
+    font-weight: 500;
+    line-height: 0.86;
+    letter-spacing: -0.04em;
+    text-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  }
+
+  .hero-lede {
+    margin: 20px 0 0;
+    max-width: 30ch;
+    font-family: var(--serif);
+    font-size: clamp(15px, 1.4vw, 18px);
+    line-height: 1.8;
+    color: var(--text-dim);
+  }
+
+  .hero-figures {
+    position: absolute;
+    left: var(--gutter);
+    right: var(--gutter);
+    bottom: 34px;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 34px;
+    margin: 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .hero-figures > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .hero-figures dt {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .hero-figures dd {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 18px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+
+  .hero-legend dd {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+  }
+
+  .hero-time {
+    color: var(--brass);
+  }
+
+  .hero-legend {
+    position: absolute;
+    right: var(--gutter);
+    bottom: 66px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 4px 12px;
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+  }
+
+  .hero-legend i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  .hero-hint {
+    position: absolute;
+    right: var(--gutter);
+    bottom: 40px;
+    z-index: 2;
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .section-rule {
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+  }
+
+  .section-rule .section-head {
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 900px) {
+    .hero {
+      width: auto;
+      margin-left: -20px;
+      margin-right: -20px;
+      height: auto;
+      min-height: 0;
+      padding-bottom: 24px;
+      overflow: visible;
+    }
+
+    .hero-sky {
+      position: relative;
+      height: auto;
+      aspect-ratio: 1200 / 680;
+      min-height: 0;
+      max-height: none;
+    }
+
+    .hero-scrim {
+      background:
+        linear-gradient(to top, var(--bg) 0%, color-mix(in srgb, var(--bg) 40%, transparent) 26%, transparent 52%);
+    }
+
+    .hero-copy {
+      position: relative;
+      left: auto;
+      right: auto;
+      bottom: auto;
+      margin: -34px 20px 0;
+      pointer-events: auto;
+    }
+
+    .hero-title {
+      font-size: clamp(72px, 24vw, 112px);
+    }
+
+    .hero-lede {
+      max-width: 24ch;
+      font-size: 15px;
+    }
+
+    .hero-figures {
+      position: relative;
+      left: auto;
+      right: auto;
+      bottom: auto;
+      margin: 24px 20px 0;
+      gap: 10px 22px;
+    }
+
+    .hero-hint {
+      position: relative;
+      left: auto;
+      right: auto;
+      bottom: auto;
+      margin: 12px 20px 0;
+    }
+
+    .hero-legend {
+      position: relative;
+      left: auto;
+      right: auto;
+      bottom: auto;
+      margin: 10px 20px 0;
+      flex-wrap: wrap;
+      row-gap: 6px;
+    }
+  }
+</style>

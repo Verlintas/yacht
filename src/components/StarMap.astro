@@ -1,0 +1,670 @@
+---
+import type { ProjectMetrics } from '../lib/project-score';
+
+interface StarProject {
+  id: string;
+  title: string;
+  url: string;
+  summary?: string;
+  stack: string[];
+  metrics?: ProjectMetrics;
+}
+
+interface Props {
+  projects: StarProject[];
+  /** 铺满容器：去掉边框与背景，用于首屏全幅 */
+  bare?: boolean;
+}
+
+const { projects, bare = false } = Astro.props;
+
+const LANG = [
+  { key: 'kotlin', match: /kotlin/i, color: '#b49cff', label: 'Kotlin' },
+  { key: 'rust', match: /rust/i, color: '#f09a63', label: 'Rust' },
+  { key: 'swift', match: /swift/i, color: '#ff8b8e', label: 'Swift' },
+  { key: 'web', match: /typescript|javascript/i, color: '#8cc2f0', label: 'TypeScript' },
+  { key: 'site', match: /astro|html|css/i, color: '#ef8a63', label: 'Astro' },
+  { key: 'python', match: /python|markdown|shell/i, color: '#86b8e8', label: 'Python' },
+] as const;
+
+const langOf = (stack: string[]) => {
+  const first = stack[0] ?? '';
+  return LANG.find((entry) => entry.match.test(first)) ?? LANG[LANG.length - 1];
+};
+
+const DAY = 86_400_000;
+const now = Date.now();
+
+const created = projects.map((project) =>
+  project.metrics?.createdAt ? new Date(project.metrics.createdAt).valueOf() : now,
+);
+const minCreated = Math.min(...created);
+const maxCreated = Math.max(...created);
+const createdSpan = Math.max(1, maxCreated - minCreated);
+
+const maxLoc = Math.max(...projects.map((project) => project.metrics?.loc ?? 0), 1);
+
+const W = 1200;
+const H = 680;
+
+/** 确定性哈希，用来做稳定抖动。 */
+const hashOf = (text: string, salt = 0): number => {
+  let hash = salt * 7919;
+  for (const char of text) hash = (hash * 31 + char.charCodeAt(0)) % 1_000_003;
+  return (hash % 1000) / 1000;
+};
+
+const stars = projects.map((project) => {
+  const created = project.metrics?.createdAt ? new Date(project.metrics.createdAt).valueOf() : now;
+  const pushed = project.metrics?.pushedAt ? new Date(project.metrics.pushedAt).valueOf() : now;
+  const idleDays = Math.max(0, (now - pushed) / DAY);
+  const activity = 1 - Math.min(idleDays, 120) / 120;
+  const loc = project.metrics?.loc ?? 0;
+  const ratio = Math.log10(loc + 1) / Math.log10(maxLoc + 1);
+
+  const x = 94 + ((created - minCreated) / createdSpan) * 1012 + (hashOf(project.id, 3) - 0.5) * 54;
+  const y = 540 - activity * 366 + (hashOf(project.id, 11) - 0.5) * 92;
+
+  return {
+    project,
+    x: Math.round(Math.max(74, Math.min(1126, x)) * 10) / 10,
+    y: Math.round(Math.max(88, Math.min(552, y)) * 10) / 10,
+    radius: Math.round((2.2 + Math.pow(ratio, 1.3) * 9.4) * 10) / 10,
+    color: langOf(project.stack).color,
+    langKey: langOf(project.stack).key,
+    activity: Math.round(activity * 100) / 100,
+    major: false,
+    labelDx: 0,
+    labelDy: 0,
+    labelAnchor: 'start' as 'start' | 'end' | 'middle',
+  };
+});
+
+/** 最大的 6 颗常驻名字，其余悬停显示。 */
+const labeled = stars
+  .slice()
+  .sort((a, b) => b.radius - a.radius)
+  .slice(0, 6)
+  .map((star) => star.project.id);
+
+/** 标签避让：贪心找一个不重叠的位置。 */
+const placed: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
+const overlaps = (box: { x1: number; y1: number; x2: number; y2: number }) =>
+  placed.some((item) => !(box.x2 < item.x1 || box.x1 > item.x2 || box.y2 < item.y1 || box.y1 > item.y2));
+
+for (const star of stars) {
+  if (!labeled.includes(star.project.id)) continue;
+  star.major = true;
+
+  const width = star.project.title.length * 5.2 + 8;
+  const candidates: Array<{ dx: number; dy: number; anchor: 'start' | 'end' | 'middle' }> = [
+    { dx: star.radius + 10, dy: 3.4, anchor: 'start' },
+    { dx: -star.radius - 10, dy: 3.4, anchor: 'end' },
+    { dx: 0, dy: -star.radius - 12, anchor: 'middle' },
+    { dx: 0, dy: star.radius + 18, anchor: 'middle' },
+    { dx: star.radius + 10, dy: -9, anchor: 'start' },
+    { dx: -star.radius - 10, dy: -9, anchor: 'end' },
+    { dx: star.radius + 10, dy: 15, anchor: 'start' },
+    { dx: -star.radius - 10, dy: 15, anchor: 'end' },
+  ];
+
+  for (const option of candidates) {
+    const left =
+      option.anchor === 'start'
+        ? star.x + option.dx
+        : option.anchor === 'end'
+          ? star.x + option.dx - width
+          : star.x - width / 2;
+    const box = { x1: left - 3, y1: star.y + option.dy - 11, x2: left + width + 3, y2: star.y + option.dy + 4 };
+    if (!overlaps(box)) {
+      star.labelDx = option.dx;
+      star.labelDy = option.dy;
+      star.labelAnchor = option.anchor;
+      placed.push(box);
+      break;
+    }
+  }
+}
+
+/** 背景星：一条斜向的银河带 + 均匀散落。 */
+let seed = 20_261_113;
+const rand = (): number => {
+  seed = (seed * 1_103_515_245 + 12_345) % 2_147_483_648;
+  return seed / 2_147_483_648;
+};
+const gauss = (): number => (rand() + rand() + rand() - 1.5) / 1.5;
+
+const backdrop = Array.from({ length: 620 }, () => {
+  const inBand = rand() < 0.62;
+  if (inBand) {
+    const t = rand();
+    return {
+      x: Math.round(t * W * 10) / 10,
+      y: Math.round((300 + (t - 0.5) * 210 + gauss() * 74) * 10) / 10,
+      r: Math.round((0.3 + rand() * 0.95) * 100) / 100,
+      o: Math.round((0.1 + rand() * 0.5) * 100) / 100,
+      d: Math.round(rand() * 12 * 10) / 10,
+      warm: rand() < 0.22,
+    };
+  }
+  return {
+    x: Math.round(rand() * W * 10) / 10,
+    y: Math.round(rand() * H * 10) / 10,
+    r: Math.round((0.25 + rand() * 0.7) * 100) / 100,
+    o: Math.round((0.06 + rand() * 0.34) * 100) / 100,
+    d: Math.round(rand() * 12 * 10) / 10,
+    warm: rand() < 0.15,
+  };
+});
+
+const brightest = stars.reduce((a, b) => (b.radius > a.radius ? b : a), stars[0]);
+
+const data = stars.map((star) => ({
+  id: star.project.id,
+  title: star.project.title,
+  summary: star.project.summary ?? '',
+  url: star.project.url,
+  color: star.color,
+  lang: star.project.stack[0] ?? '',
+  loc: star.project.metrics?.loc ?? 0,
+  chars: star.project.metrics?.chars ?? 0,
+  tests: star.project.metrics?.tests ?? 0,
+  commits: star.project.metrics?.commits ?? 0,
+  versions: star.project.metrics?.versions ?? 0,
+  createdAt: star.project.metrics?.createdAt ?? null,
+  pushedAt: star.project.metrics?.pushedAt ?? null,
+}));
+---
+
+<div class:list={['chart', bare && 'is-bare']} id="starChart">
+  <div class="chart-frame" id="chartFrame">
+    <svg
+      class="chart-svg"
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio={bare ? 'xMidYMid slice' : 'xMidYMid meet'}
+      role="group"
+      aria-label="项目星图"
+    >
+      <defs>
+        {
+          LANG.map((entry) => (
+            <>
+              <radialGradient id={`core-${entry.key}`}>
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
+                <stop offset="16%" stop-color="#ffffff" stop-opacity="0.98" />
+                <stop offset="32%" stop-color={entry.color} stop-opacity="0.96" />
+                <stop offset="58%" stop-color={entry.color} stop-opacity="0.42" />
+                <stop offset="100%" stop-color={entry.color} stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id={`halo-${entry.key}`}>
+                <stop offset="0%" stop-color={entry.color} stop-opacity="0.32" />
+                <stop offset="38%" stop-color={entry.color} stop-opacity="0.1" />
+                <stop offset="100%" stop-color={entry.color} stop-opacity="0" />
+              </radialGradient>
+            </>
+          ))
+        }
+        <radialGradient id="milky">
+          <stop offset="0%" stop-color="#5b6fa8" stop-opacity="0.16" />
+          <stop offset="55%" stop-color="#4a5f96" stop-opacity="0.06" />
+          <stop offset="100%" stop-color="#4a5f96" stop-opacity="0" />
+        </radialGradient>
+        <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0a2a36" stop-opacity="0" />
+          <stop offset="35%" stop-color="#0a2734" stop-opacity="0.9" />
+          <stop offset="100%" stop-color="#050d14" stop-opacity="1" />
+        </linearGradient>
+        <linearGradient id="reflection" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color={brightest.color} stop-opacity="0.34" />
+          <stop offset="55%" stop-color={brightest.color} stop-opacity="0.08" />
+          <stop offset="100%" stop-color={brightest.color} stop-opacity="0" />
+        </linearGradient>
+        <filter id="pinSoft" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="0.9" />
+        </filter>
+        <filter id="spikeBlur" x="-120%" y="-120%" width="340%" height="340%">
+          <feGaussianBlur stdDeviation="1.8" />
+        </filter>
+      </defs>
+
+      {/* 银河带 */}
+      <g class="chart-milky" aria-hidden="true">
+        <ellipse cx="600" cy="300" rx="760" ry="250" fill="url(#milky)" transform="rotate(-16 600 300)" />
+        <ellipse cx="600" cy="300" rx="640" ry="120" fill="url(#milky)" transform="rotate(-16 600 300)" opacity="0.8" />
+      </g>
+
+      {/* 背景星 */}
+      <g class="chart-backdrop" aria-hidden="true">
+        {
+          backdrop.map((dot) => (
+            <circle
+              cx={dot.x}
+              cy={dot.y}
+              r={dot.r}
+              fill={dot.warm ? '#ffe6cf' : '#dbe9ff'}
+              opacity={dot.o}
+              style={`animation-delay:${dot.d}s`}
+            />
+          ))
+        }
+      </g>
+
+      {/* 海面 */}
+      <g class="chart-sea" aria-hidden="true">
+        <rect x="0" y="566" width={W} height={H - 566} fill="url(#sea)" />
+        <path d="M0 566 Q 600 556 1200 566" fill="none" stroke="#7fc4d2" stroke-opacity="0.55" stroke-width="1" />
+        <g class="chart-waves">
+          <path d="M120 600 q 34 -3 68 0 t 68 0 t 68 0" />
+          <path d="M760 614 q 30 -2.5 60 0 t 60 0 t 60 0" />
+          <path d="M380 642 q 40 -3 80 0 t 80 0" />
+          <path d="M900 650 q 34 -2 68 0 t 68 0" />
+        </g>
+      </g>
+
+      {/* 项目星 */}
+      <g class="chart-stars">
+        {
+          stars.map((star) => (
+            <g
+              class:list={['star', star.major && 'is-major']}
+              data-star={star.project.id}
+              transform={`translate(${star.x} ${star.y})`}
+              tabindex="0"
+              role="button"
+              aria-label={`${star.project.title}，${(star.project.metrics?.loc ?? 0).toLocaleString('zh-CN')} 行`}
+            >
+              <circle
+                class="star-halo"
+                r={star.radius * 5.6}
+                fill={`url(#halo-${star.langKey})`}
+                opacity={0.4 + star.activity * 0.4}
+              />
+              <g class="star-spikes" opacity={star.major ? 0.42 : 0.1}>
+                <ellipse rx={star.radius * (star.major ? 2.6 : 1.4)} ry={star.radius * 0.16} />
+                <ellipse rx={star.radius * 0.16} ry={star.radius * (star.major ? 2.6 : 1.4)} />
+                {star.major && (
+                  <ellipse
+                    rx={star.radius * 0.18}
+                    ry={star.radius * 0.18}
+                    stroke="#fff"
+                    strokeWidth="0.4"
+                    fill="none"
+                    opacity="0.4"
+                  />
+                )}
+              </g>
+              <circle
+                class="star-core"
+                r={star.radius}
+                fill={`url(#core-${star.langKey})`}
+                opacity={0.66 + star.activity * 0.34}
+              />
+              <circle class="star-pin" r={Math.max(0.7, star.radius * 0.2)} filter="url(#pinSoft)" />
+              <text
+                class:list={['star-name', star.major && 'is-major']}
+                x={star.labelDx}
+                y={star.labelDy}
+                text-anchor={star.labelAnchor}
+              >
+                {star.project.title}
+              </text>
+            </g>
+          ))
+        }
+      </g>
+    </svg>
+
+    <div class="chart-dossier" id="starDossier" hidden>
+      <button class="chart-close" type="button" id="starClose" aria-label="关闭简介">×</button>
+      <p class="chart-dossier-lang" id="starLang"></p>
+      <h3 class="chart-dossier-title" id="starTitle"></h3>
+      <p class="chart-dossier-summary" id="starSummary"></p>
+      <dl class="chart-dossier-stats" id="starStats"></dl>
+      <a class="chart-dossier-enter" id="starEnter" href="#">
+        进入项目 <span aria-hidden="true">→</span>
+      </a>
+      <p class="chart-dossier-hint">再点一次星星也可以进入</p>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="starData" set:html={JSON.stringify(data)}></script>
+
+<style>
+  .chart { position: relative; }
+
+  .chart-frame {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: #04070d;
+    overflow: hidden;
+  }
+
+  .chart-svg { display: block; width: 100%; height: auto; }
+
+  .chart.is-bare,
+  .chart.is-bare .chart-frame {
+    height: 100%;
+  }
+
+  .chart.is-bare .chart-frame {
+    border: 0;
+    border-radius: 0;
+    background: #04070d;
+  }
+
+  .chart.is-bare .chart-svg {
+    height: 100%;
+    width: 100%;
+  }
+
+  .chart.is-bare .chart-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(115% 90% at 50% 46%, transparent 55%, #02050a 100%);
+  }
+
+  .chart-backdrop circle {
+    animation: twinkle 10s ease-in-out infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.06; }
+    50% { opacity: 0.6; }
+  }
+
+  .chart-sea { pointer-events: none; }
+
+  .chart-waves path {
+    fill: none;
+    stroke: #9ad3e2;
+    stroke-opacity: 0.22;
+    stroke-width: 0.9;
+  }
+
+  .star { cursor: pointer; outline: none; }
+
+  .star-spikes ellipse {
+    fill: #ffffff;
+    filter: url(#spikeBlur);
+    pointer-events: none;
+  }
+
+  .star-core {
+    transition: transform 0.25s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .star-pin {
+    fill: #ffffff;
+    pointer-events: none;
+  }
+
+  .star-name {
+    fill: #dfe8f2;
+    font-family: var(--mono);
+    font-size: 8.4px;
+    letter-spacing: 0.04em;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    paint-order: stroke;
+    stroke: #04070d;
+    stroke-width: 2.4px;
+    stroke-linejoin: round;
+  }
+
+  .star-name.is-major {
+    font-size: 10px;
+    opacity: 0.78;
+  }
+
+  .star:hover .star-core,
+  .star:focus-visible .star-core { transform: scale(1.45); }
+
+  .star:hover .star-name,
+  .star:focus-visible .star-name,
+  .star.is-active .star-name {
+    opacity: 1;
+  }
+
+  .star.is-active .star-core { transform: scale(1.4); }
+
+  .chart-dossier {
+    position: absolute;
+    right: 14px;
+    top: 14px;
+    width: min(292px, calc(100% - 28px));
+    padding: 17px 17px 13px;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    background: color-mix(in srgb, #04070d 82%, transparent);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 30px 70px -34px #000;
+    animation: dossier-in 0.22s ease;
+    z-index: 3;
+  }
+
+  @keyframes dossier-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chart-dossier[hidden] { display: none; }
+
+  .chart-close {
+    position: absolute;
+    top: 6px;
+    right: 9px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-faint);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .chart-close:hover { color: var(--text); }
+
+  .chart-dossier-lang {
+    margin: 0 0 4px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .chart-dossier-title {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 21px;
+    font-weight: 500;
+  }
+
+  .chart-dossier-summary {
+    margin: 8px 0 0;
+    font-size: 12.5px;
+    line-height: 1.62;
+    color: var(--text-dim);
+  }
+
+  .chart-dossier-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px 14px;
+    margin: 13px 0 0;
+    padding-top: 11px;
+    border-top: 1px solid var(--border);
+  }
+
+  .chart-dossier-stats div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .chart-dossier-stats dt {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+  }
+
+  .chart-dossier-stats dd {
+    margin: 0;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+  }
+
+  .chart-dossier-enter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 13px;
+    padding: 6px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    color: var(--text);
+    font-size: 12px;
+    transition: background 0.16s, border-color 0.16s, color 0.16s;
+  }
+
+  .chart-dossier-enter:hover {
+    background: var(--brass-soft);
+    border-color: var(--brass);
+    color: var(--brass);
+  }
+
+  .chart-dossier-hint {
+    margin: 8px 0 0;
+    font-size: 10px;
+    color: var(--text-faint);
+  }
+
+  @media (max-width: 760px) {
+    .chart-dossier {
+      left: 10px;
+      right: 10px;
+      top: auto;
+      bottom: 10px;
+      width: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chart-backdrop circle { animation: none; }
+  }
+</style>
+
+<script>
+  const node = document.getElementById('starData');
+  const chart = document.getElementById('starChart');
+  const frame = document.getElementById('chartFrame');
+  const dossier = document.getElementById('starDossier');
+  const closeButton = document.getElementById('starClose');
+
+  interface StarInfo {
+    id: string; title: string; summary: string; url: string; color: string; lang: string;
+    loc: number; chars: number; tests: number; commits: number; versions: number;
+    createdAt: string | null; pushedAt: string | null;
+  }
+
+  const stars: StarInfo[] = node ? JSON.parse(node.textContent ?? '[]') : [];
+  const byId = new Map(stars.map((star) => [star.id, star]));
+  let selected: string | null = null;
+
+  const fmt = (n: number): string => (n > 0 ? n.toLocaleString('zh-CN') : '—');
+
+  const render = (info: StarInfo): void => {
+    if (!dossier) return;
+    const lang = document.getElementById('starLang');
+    const title = document.getElementById('starTitle');
+    const summary = document.getElementById('starSummary');
+    const stats = document.getElementById('starStats');
+    const enter = document.getElementById('starEnter') as HTMLAnchorElement | null;
+
+    if (lang) lang.textContent = info.lang || '项目';
+    if (title) title.textContent = info.title;
+    if (summary) summary.textContent = info.summary;
+    if (stats) {
+      stats.innerHTML = '';
+      const rows: Array<[string, string]> = [
+        ['代码行', fmt(info.loc)],
+        ['字符', fmt(info.chars)],
+        ['测试', fmt(info.tests)],
+        ['提交', fmt(info.commits)],
+        ['版本', fmt(info.versions)],
+        ['建仓', info.createdAt ?? '—'],
+      ];
+      for (const [label, value] of rows) {
+        const wrap = document.createElement('div');
+        const dt = document.createElement('dt');
+        const dd = document.createElement('dd');
+        dt.textContent = label;
+        dd.textContent = value;
+        wrap.append(dt, dd);
+        stats.append(wrap);
+      }
+    }
+    if (enter) enter.href = info.url;
+    dossier.hidden = false;
+  };
+
+  const clear = (): void => {
+    selected = null;
+    if (dossier) dossier.hidden = true;
+    document.querySelectorAll('.star.is-active').forEach((el) => el.classList.remove('is-active'));
+  };
+
+  const select = (id: string): void => {
+    selected = id;
+    document.querySelectorAll('.star.is-active').forEach((el) => el.classList.remove('is-active'));
+    document.querySelector(`[data-star="${id}"]`)?.classList.add('is-active');
+    const info = byId.get(id);
+    if (info) render(info);
+  };
+
+  chart?.addEventListener('click', (event) => {
+    const target = (event.target as Element).closest('[data-star]');
+    if (!target) { clear(); return; }
+    const id = target.getAttribute('data-star') ?? '';
+    if (selected === id) {
+      const info = byId.get(id);
+      if (info) window.location.href = info.url;
+      return;
+    }
+    select(id);
+  });
+
+  chart?.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') { clear(); return; }
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const target = (event.target as Element).closest('[data-star]');
+    if (!target) return;
+    event.preventDefault();
+    const id = target.getAttribute('data-star') ?? '';
+    if (selected === id) {
+      const info = byId.get(id);
+      if (info) window.location.href = info.url;
+    } else select(id);
+  });
+
+  closeButton?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    clear();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && selected) clear();
+  });
+</script>
