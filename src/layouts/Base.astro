@@ -6,9 +6,11 @@ import { basePath, url } from '../lib/url';
 interface Props {
   title: string;
   description?: string;
+  /** 关闭「双击 Esc 离开」——游戏页会把 Esc 用于关闭面板 */
+  panic?: boolean;
 }
 
-const { title, description = 'Verlintas 的小窝 · 私人港口' } = Astro.props;
+const { title, description = 'Verlintas 的小窝 · 私人港口', panic = true } = Astro.props;
 
 const currentPath = Astro.url.pathname.replace(basePath, '') || '/';
 
@@ -102,9 +104,11 @@ function isActive(href: string): boolean {
         <span>内容由 AI 协助整理 · 可能有误</span>
         <span>天气与空气数据 · Open-Meteo</span>
         <span>不接入追踪</span>
-        <span class="foot-hint">
-          连按两次 <kbd>Esc</kbd> 立刻离开本站
-        </span>
+        {panic && (
+          <span class="foot-hint">
+            连按两次 <kbd>Esc</kbd> 立刻离开本站
+          </span>
+        )}
       </footer>
     </div>
 
@@ -112,6 +116,7 @@ function isActive(href: string): boolean {
       再按一次 <kbd>Esc</kbd> 立刻离开
     </div>
 
+    {panic && (
     <script>
       const PANIC_TARGET = 'https://www.bing.com/';
       const toast = document.getElementById('escapeToast');
@@ -140,6 +145,7 @@ function isActive(href: string): boolean {
 
       document.addEventListener('click', hideToast);
     </script>
+    )}
 
     <script>
       const toggle = document.getElementById('themeToggle');
