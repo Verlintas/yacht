@@ -1,6 +1,9 @@
 /**
- * 星系数据：把船坞的项目变成行星，把站点变成空间站。
- * 这里只做纯数据变换，不碰 Three.js。
+ * 星系数据：项目 → 行星，站点 → 空港。
+ *
+ * 尺度约定：1 单位 ≈ 1 米。行星半径约等于真实行星的 1/10
+ * （地球 6371 km → 约 637 km → 637000 单位），但为了可玩性，
+ * 实际取 2000–6000 单位，靠表面细节和接近感来撑体量。
  */
 
 export interface ProjectInput {
@@ -18,7 +21,7 @@ export interface ProjectInput {
   pushedAt: string | null;
 }
 
-export type PlanetKind = 'ocean' | 'desert' | 'ice' | 'gas' | 'lava' | 'verdigris';
+export type Surface = 'ocean' | 'desert' | 'ice' | 'gas' | 'lava' | 'verdigris' | 'barren';
 
 export interface PlanetDef {
   id: string;
@@ -32,19 +35,24 @@ export interface PlanetDef {
   commits: number;
   versions: number;
   createdAt: string | null;
-  surface: PlanetKind;
   radius: number;
   orbit: number;
+  /** 初始相位（弧度） */
   phase: number;
+  /** 公转周期（天，真实时间） */
+  periodDays: number;
   inclination: number;
-  spin: number;
+  spinHours: number;
+  surface: Surface;
   palette: [number, number, number];
   atmosphere: number;
   ring: boolean;
   moon: boolean;
-  clouds: boolean;
+  clouds: number;
   lights: boolean;
+  axialTilt: number;
   seed: number;
+  roughness: number;
 }
 
 export interface StationDef {
@@ -68,26 +76,25 @@ export interface SystemData {
   counts: { projects: number; wiki: number; berths: number };
 }
 
-const LANG: Array<{ match: RegExp; palettes: PlanetKind[]; color: number }> = [
-  { match: /kotlin/i, palettes: ['verdigris', 'ocean'], color: 0xb49cff },
-  { match: /rust/i, palettes: ['desert', 'lava'], color: 0xf09a63 },
-  { match: /swift/i, palettes: ['ice', 'ocean'], color: 0xff8b8e },
-  { match: /typescript|javascript/i, palettes: ['ocean', 'ice'], color: 0x8cc2f0 },
-  { match: /astro|html|css/i, palettes: ['lava', 'desert'], color: 0xef8a63 },
-  { match: /python|markdown|shell/i, palettes: ['ocean', 'gas'], color: 0x86b8e8 },
+const LANG: Array<{ match: RegExp; surfaces: Surface[] }> = [
+  { match: /kotlin/i, surfaces: ['verdigris', 'ocean'] },
+  { match: /rust/i, surfaces: ['desert', 'lava'] },
+  { match: /swift/i, surfaces: ['ice', 'ocean'] },
+  { match: /typescript|javascript/i, surfaces: ['ocean', 'barren'] },
+  { match: /astro|html|css/i, surfaces: ['lava', 'desert'] },
+  { match: /python|markdown|shell/i, surfaces: ['ocean', 'gas'] },
 ];
 
-/** 每种星球的三段配色（深 / 中 / 高光）。 */
-const PALETTE: Record<PlanetKind, [number, number, number]> = {
-  ocean: [0x0a1d33, 0x1d5f8a, 0x9fd7f0],
-  desert: [0x2a1608, 0x8a4f24, 0xf0c187],
-  ice: [0x142436, 0x5f8ca8, 0xe6f4ff],
-  gas: [0x1a1430, 0x6b4a8a, 0xd9c2f0],
-  lava: [0x1b0a06, 0x8c2d12, 0xff9d5c],
-  verdigris: [0x0d1f1d, 0x1f6b5f, 0x9fe6cf],
+const PALETTE: Record<Surface, [number, number, number]> = {
+  ocean: [0x081826, 0x1b5d86, 0xa9dcf2],
+  desert: [0x2a1608, 0x9a5a28, 0xf2c48a],
+  ice: [0x101d2b, 0x6f9ab8, 0xeaf6ff],
+  gas: [0x1a1430, 0x7a5796, 0xe0cbf5],
+  lava: [0x140705, 0x8f2f14, 0xffa05e],
+  verdigris: [0x091a18, 0x226e62, 0xa8ead6],
+  barren: [0x14161a, 0x5c6168, 0xb8bcc2],
 };
 
-/** 稳定伪随机。 */
 export function makeRandom(seed: number): () => number {
   let state = seed % 2147483647;
   if (state <= 0) state += 2147483646;
@@ -110,23 +117,22 @@ export function buildSystem(input: {
   projects: ProjectInput[];
   counts: { projects: number; wiki: number; berths: number };
 }): SystemData {
-  const sorted = input.projects
-    .slice()
-    .sort((a, b) => b.loc - a.loc);
-
+  const sorted = input.projects.slice().sort((a, b) => b.loc - a.loc);
   const maxLoc = Math.max(...sorted.map((p) => p.loc), 1);
 
   const planets: PlanetDef[] = sorted.map((project, index) => {
     const seed = hashString(project.id);
     const rand = makeRandom(seed);
     const lang = LANG.find((entry) => entry.match.test(project.stack[0] ?? '')) ?? LANG[5];
-    const kind = lang.palettes[seed % lang.palettes.length];
+    const surface = lang.surfaces[seed % lang.surfaces.length];
     const ratio = Math.log10(project.loc + 1) / Math.log10(maxLoc + 1);
+
+    const radius = 1400 + ratio * 2000 + rand() * 400;
+    const orbit = 40000 + index * 22000 + rand() * 4000;
 
     return {
       id: project.id,
       kind: 'planet',
-      surface: kind,
       title: project.title,
       subtitle: project.stack.slice(0, 2).join(' · ') || '项目',
       url: project.url,
@@ -136,18 +142,22 @@ export function buildSystem(input: {
       commits: project.commits,
       versions: project.versions,
       createdAt: project.createdAt,
-      radius: 240 + ratio * 520,
-      orbit: 5200 + index * 1650 + rand() * 400,
+      radius,
+      orbit,
       phase: rand() * Math.PI * 2,
-      inclination: (rand() - 0.5) * 0.16,
-      spin: 0.02 + rand() * 0.05,
-      palette: PALETTE[kind],
-      atmosphere: 0.5 + rand() * 0.6,
-      ring: ratio > 0.62 && rand() > 0.35,
-      moon: rand() > 0.55,
-      clouds: kind === 'ocean' || kind === 'ice' || kind === 'verdigris',
-      lights: kind === 'ocean' || kind === 'verdigris' ? rand() > 0.4 : false,
+      periodDays: 240 + index * 55 + rand() * 60,
+      inclination: (rand() - 0.5) * 0.08,
+      spinHours: 14 + rand() * 40,
+      surface,
+      palette: PALETTE[surface],
+      atmosphere: 0.55 + rand() * 0.7,
+      ring: ratio > 0.55 && rand() > 0.45,
+      moon: rand() > 0.5,
+      clouds: surface === 'gas' ? 1.1 : surface === 'barren' ? 0.05 : 0.4 + rand() * 0.5,
+      lights: surface === 'ocean' || surface === 'verdigris' ? rand() > 0.35 : false,
+      axialTilt: (rand() - 0.5) * 0.5,
       seed: seed % 1000,
+      roughness: 0.55 + rand() * 0.4,
     };
   });
 
@@ -159,11 +169,11 @@ export function buildSystem(input: {
       subtitle: '五处泊位',
       description: '实时天况、空气质量、海况与未来几天预报。',
       to: '/berths/',
-      radius: 300,
-      orbit: 4400,
+      radius: 1250,
+      orbit: 36000,
       phase: Math.PI * 0.35,
-      inclination: 0.05,
-      spin: 0.12,
+      inclination: 0.03,
+      spin: 0.1,
       accent: 0x7fe0d0,
     },
     {
@@ -173,11 +183,11 @@ export function buildSystem(input: {
       subtitle: `${input.counts.wiki} 条资料`,
       description: '百科、阅读路径、标签与全文搜索。',
       to: '/wiki/',
-      radius: 360,
-      orbit: 9200,
+      radius: 1500,
+      orbit: 82000,
       phase: Math.PI * 1.15,
-      inclination: -0.08,
-      spin: -0.09,
+      inclination: -0.05,
+      spin: -0.08,
       accent: 0xc9a55c,
     },
     {
@@ -187,11 +197,11 @@ export function buildSystem(input: {
       subtitle: '公共频道',
       description: '在这里留下航迹。',
       to: '#board',
-      radius: 280,
-      orbit: 15000,
+      radius: 1200,
+      orbit: 152000,
       phase: Math.PI * 1.72,
-      inclination: 0.12,
-      spin: 0.16,
+      inclination: 0.07,
+      spin: 0.14,
       accent: 0xff9d7a,
     },
     {
@@ -201,11 +211,11 @@ export function buildSystem(input: {
       subtitle: '船坞',
       description: '项目清单、工程指标与体量统计。',
       to: '/projects/',
-      radius: 330,
-      orbit: 6000,
+      radius: 1450,
+      orbit: 44000,
       phase: Math.PI * 0.92,
       inclination: 0.02,
-      spin: 0.08,
+      spin: 0.07,
       accent: 0x8cc2f0,
     },
   ];

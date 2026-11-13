@@ -43,15 +43,42 @@ export const NOISE = /* glsl */ `
 `;
 
 export const PLANET_VERT = /* glsl */ `
+  uniform float uSeed;
+  uniform float uAmp;
+  uniform float uTime;
+
   varying vec3 vLocal;
   varying vec3 vWorld;
   varying vec3 vNormalW;
+  varying float vHeight;
+
+  ${NOISE}
+
+  float terrain(vec3 n) {
+    float base = fbm(n * 2.35 + uSeed * 11.0);
+    float ridge = ridged(n * 5.4 + uSeed * 3.0);
+    float detail = fbm(n * 13.0 + uSeed * 21.0);
+    return base * 0.62 + ridge * 0.28 + detail * 0.1;
+  }
 
   void main() {
-    vLocal = normalize(position);
-    vec4 world = modelMatrix * vec4(position, 1.0);
+    vec3 n = normalize(position);
+    float h = terrain(n);
+    vHeight = h;
+
+    vec3 displaced = position + n * (h - 0.5) * uAmp;
+
+    // 用邻域采样估算扰动后的法线
+    vec3 tangent = normalize(cross(n, vec3(0.0, 1.0, 0.0) + vec3(0.001)));
+    vec3 bitangent = normalize(cross(n, tangent));
+    float h1 = terrain(normalize(n + tangent * 0.02));
+    float h2 = terrain(normalize(n + bitangent * 0.02));
+    vec3 bumped = normalize(n - tangent * (h1 - h) * 28.0 - bitangent * (h2 - h) * 28.0);
+
+    vLocal = n;
+    vec4 world = modelMatrix * vec4(displaced, 1.0);
     vWorld = world.xyz;
-    vNormalW = normalize(mat3(modelMatrix) * normal);
+    vNormalW = normalize(mat3(modelMatrix) * bumped);
     gl_Position = projectionMatrix * viewMatrix * world;
   }
 `;
@@ -71,9 +98,12 @@ export const PLANET_FRAG = /* glsl */ `
   uniform float uLights;
   uniform float uAtmo;
 
+  uniform float uRough;
+
   varying vec3 vLocal;
   varying vec3 vWorld;
   varying vec3 vNormalW;
+  varying float vHeight;
 
   ${NOISE}
 
@@ -81,19 +111,19 @@ export const PLANET_FRAG = /* glsl */ `
     vec3 n = normalize(vLocal);
     float seed = uSeed * 7.31;
 
-    float base = fbm(n * 2.3 + seed);
-    float detail = fbm(n * 7.5 + seed * 1.7);
-    float height = base + detail * 0.22;
+    float height = vHeight;
+    float fine = fbm(n * 42.0 + seed * 3.1);
 
-    float sea = mix(0.62, 0.42, uOcean);
-    float isLand = smoothstep(sea, sea + 0.035, height);
+    float sea = mix(0.62, 0.40, uOcean);
+    float isLand = smoothstep(sea, sea + 0.012, height);
 
-    // 地表
-    vec3 rock = mix(uDeep, uMid, smoothstep(sea - 0.05, sea + 0.22, height));
-    rock = mix(rock, uHigh, smoothstep(0.58, 0.86, height) * 0.7);
+    // 地表：低处沙/岩，高处亮
+    vec3 rock = mix(uDeep, uMid, smoothstep(sea - 0.02, sea + 0.18, height));
+    rock = mix(rock, uHigh, smoothstep(0.55, 0.82, height) * 0.75);
+    rock *= 0.85 + fine * 0.3;
 
     // 海面
-    vec3 water = mix(uDeep * 0.7, uMid * 0.9, 0.35);
+    vec3 water = mix(uDeep * 0.6, uMid * 0.8, 0.3);
 
     vec3 albedo = mix(water, rock, isLand);
 
@@ -115,7 +145,7 @@ export const PLANET_FRAG = /* glsl */ `
 
     // 海面高光
     vec3 H = normalize(L + V);
-    float spec = pow(max(dot(N, H), 0.0), 42.0) * (1.0 - isLand) * (1.0 - cloud);
+    float spec = pow(max(dot(N, H), 0.0), 42.0) * (1.0 - isLand) * (1.0 - cloud) * (1.0 - uRough * 0.5);
     color += uHigh * spec * 0.28;
 
     // 云

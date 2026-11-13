@@ -39,7 +39,7 @@ export function createShip(): Ship {
   const group = new THREE.Group();
 
   const hullMat = new THREE.MeshStandardMaterial({
-    color: 0x3d4650,
+    color: 0x525d69,
     roughness: 0.36,
     metalness: 0.82,
     envMapIntensity: 1.25,

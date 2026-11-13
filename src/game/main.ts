@@ -3,6 +3,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { createWorld, type CelestialBody, type World } from './world';
 import { createShip, type Ship } from './ship';
 import { FlightController } from './flight';
@@ -18,6 +19,7 @@ interface GameContext {
   flight: FlightController;
   ship: Ship;
   audio: EngineAudio;
+  motionBlur: ShaderPass;
 }
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -53,6 +55,7 @@ export async function startGame(system: SystemData): Promise<void> {
     antialias: true,
     powerPreference: 'high-performance',
     alpha: false,
+    logarithmicDepthBuffer: true,
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -61,9 +64,9 @@ export async function startGame(system: SystemData): Promise<void> {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 220000);
+  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 1, 2_400_000);
   // 挂在相机上的补光，避免飞船暗面全黑
-  const fillLight = new THREE.PointLight(0x9fd8ff, 900, 260, 1.6);
+  const fillLight = new THREE.PointLight(0xa8dcff, 5200, 900, 1.5);
   fillLight.position.set(0, 6, 4);
   camera.add(fillLight);
   scene.add(camera);
@@ -88,6 +91,40 @@ export async function startGame(system: SystemData): Promise<void> {
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.34, 0.55, 0.86);
   composer.addPass(bloom);
+
+  const motionBlur = new ShaderPass({
+    uniforms: {
+      tDiffuse: { value: null },
+      uStrength: { value: 0 },
+      uCenter: { value: new THREE.Vector2(0.5, 0.5) },
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D tDiffuse;
+      uniform float uStrength;
+      uniform vec2 uCenter;
+      varying vec2 vUv;
+      void main() {
+        vec2 dir = vUv - uCenter;
+        float dist = length(dir);
+        vec3 sum = vec3(0.0);
+        const int SAMPLES = 10;
+        for (int i = 0; i < SAMPLES; i++) {
+          float t = float(i) / float(SAMPLES - 1);
+          float scale = 1.0 - uStrength * t * dist * 1.8;
+          sum += texture2D(tDiffuse, uCenter + dir * scale).rgb;
+        }
+        gl_FragColor = vec4(sum / float(SAMPLES), 1.0);
+      }
+    `,
+  });
+  composer.addPass(motionBlur);
   composer.addPass(new OutputPass());
 
   await step('编译着色器', 0.82);
@@ -100,15 +137,21 @@ export async function startGame(system: SystemData): Promise<void> {
   boot.classList.add('is-done');
   window.setTimeout(() => boot.remove(), 900);
 
-  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio };
+  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur };
 
   const dock = world.bodies.find((body) => body.id === 'station-dock');
   if (dock) {
-    flight.position.copy(dock.position).add(new THREE.Vector3(900, 520, 1900));
+    // 从侧面接近，避免太阳正好在空港背后
+    const radial = dock.position.clone().normalize();
+    const tangent = new THREE.Vector3(-radial.z, 0, radial.x).normalize();
+    flight.position
+      .copy(dock.position)
+      .addScaledVector(tangent, 15000)
+      .add(new THREE.Vector3(0, 4500, 0));
     const look = dock.position.clone().sub(flight.position).normalize();
     (flight as unknown as { yaw: number }).yaw = Math.atan2(-look.x, -look.z);
     (flight as unknown as { pitch: number }).pitch = -Math.asin(look.y);
-    camera.position.copy(flight.position).addScaledVector(look, -34).add(new THREE.Vector3(0, 10, 0));
+    camera.position.copy(flight.position).addScaledVector(look, -34).add(new THREE.Vector3(0, 12, 0));
   }
 
   const params = new URLSearchParams(window.location.search);
@@ -145,6 +188,8 @@ interface Hud {
 
 function loop(ctx: GameContext, hud: Hud): void {
   const clock = new THREE.Clock();
+  const fade = document.getElementById('fade') as HTMLElement;
+  const motionBlur = ctx.motionBlur;
   let elapsed = 0;
 
   const tick = (): void => {
@@ -152,6 +197,40 @@ function loop(ctx: GameContext, hud: Hud): void {
     elapsed += dt;
 
     ctx.flight.update(dt);
+
+    // 实体碰撞：撞上天体就被推开并卸掉法向速度
+    for (const body of ctx.world.bodies) {
+      const min = body.radius * (body.type === 'station' ? 1.05 : 1.02);
+      const delta = ctx.flight.position.clone().sub(body.position);
+      const distance = delta.length();
+      if (distance < min && distance > 0.001) {
+        const normal = delta.normalize();
+        ctx.flight.position.copy(body.position).addScaledVector(normal, min);
+        const vn = ctx.flight.velocity.dot(normal);
+        if (vn < 0) ctx.flight.velocity.addScaledVector(normal, -vn * 1.8);
+      }
+    }
+
+    // 恒星熔毁
+    if (ctx.flight.position.length() < ctx.world.sunRadius * 1.25) {
+      fade.classList.add('is-black');
+      window.setTimeout(() => {
+        const dock = ctx.world.bodies.find((b) => b.id === 'station-dock');
+        if (dock) {
+          const radial = dock.position.clone().normalize();
+          const tangent = new THREE.Vector3(-radial.z, 0, radial.x).normalize();
+          ctx.flight.position.copy(dock.position).addScaledVector(tangent, 15000).add(new THREE.Vector3(0, 4500, 0));
+        }
+        ctx.flight.halt();
+        fade.classList.remove('is-black');
+        hud.toast('船体熔毁 · 已在母港重新装配');
+      }, 700);
+    }
+
+    // 动态模糊：速度越快越明显，加速时再叠一点
+    const speedNorm = Math.min(1, ctx.flight.speed / 9000);
+    motionBlur.uniforms.uStrength.value = speedNorm * 0.035 + ctx.flight.boost * 0.045;
+
     ctx.ship.group.position.copy(ctx.flight.position);
     ctx.ship.group.quaternion.copy(ctx.flight.quaternion);
     ctx.ship.group.position.add(new THREE.Vector3(0, -2.2, 0));
@@ -226,7 +305,7 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
     const h = mapCanvas.height;
     const cx = w / 2;
     const cy = h / 2;
-    const range = 40000;
+    const range = 700000;
 
     c.clearRect(0, 0, w, h);
     c.fillStyle = '#04080d';
@@ -431,8 +510,8 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
     const dir = body.position.clone().sub(ctx.flight.position).normalize();
     const stop = body.position
       .clone()
-      .addScaledVector(dir, -body.radius * (landing ? 1.35 : 1.6))
-      .add(new THREE.Vector3(0, landing ? 0 : body.radius * 0.18, 0));
+      .addScaledVector(dir, -body.radius * (landing ? 1.12 : 1.6))
+      .add(new THREE.Vector3(0, landing ? 0 : body.radius * 0.1, 0));
 
     docking = {
       body,
@@ -470,8 +549,8 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
       if (docking) return;
       if (!nearest) return;
       if (nearest.type === 'station') {
-        if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius * 3.2) startDock(nearest);
-      } else if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius * 2.2) {
+        if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius * 2.4) startDock(nearest);
+      } else if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius * 1.8) {
         startDock(nearest);
       }
     }
@@ -532,8 +611,8 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
     const canDock =
       best &&
       !docking &&
-      ((best.type === 'station' && bestDist < best.radius * 3.2) ||
-        (best.type === 'planet' && bestDist < best.radius * 2.2));
+      ((best.type === 'station' && bestDist < best.radius * 2.4) ||
+        (best.type === 'planet' && bestDist < best.radius * 1.8));
 
     if (best && canDock && !panelOpen) {
       prompt.classList.add('is-on');
@@ -570,7 +649,7 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
 
     // 恒星警告
     const sunDist = ctx.flight.position.length();
-    heat.classList.toggle('is-on', sunDist < 3600);
+    heat.classList.toggle('is-on', sunDist < ctx.world.sunRadius * 2.2);
 
     // 雷达
     drawRadar();
@@ -578,7 +657,7 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
 
   const radar = $('radar') as unknown as HTMLCanvasElement;
   const rctx = radar.getContext('2d')!;
-  const radarRange = 20000;
+  const radarRange = 700000;
 
   const drawRadar = (): void => {
     const size = radar.width;
