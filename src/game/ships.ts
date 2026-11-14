@@ -167,7 +167,7 @@ interface Raw {
 const RAW: Raw[] = [
   {
     id: 'thunderbolt', name: 'A-30 雷霆', code: 'A-30', role: '多用途战斗机', class: 'light', tier: 2, model: 'thunderbolt.glb', length: 25, exhaust: 0x4fd8ff, sensorRange: 15000,
-    speed: [820, 32000, 700, 1.0], hull: [1200, 400, 22, 300],
+    speed: [820, 36000, 700, 1.0], hull: [1200, 400, 22, 300],
     cockpits: [[0.0, 0.3, -9.9]],
     nozzles: [
       ['N1', 3.3, -1.0, 7.6], ['N2', -3.3, -0.8, 8.2],
@@ -182,7 +182,7 @@ const RAW: Raw[] = [
   },
   {
     id: 'f008', name: 'SF-F008 短剑', code: 'F-008', role: '轻型截击机', class: 'light', tier: 2, model: 'f008.glb', length: 22, exhaust: 0xff8a3c, sensorRange: 18000,
-    speed: [980, 38000, 900, 1.25], hull: [780, 620, 30, 220],
+    speed: [980, 40000, 900, 1.25], hull: [780, 620, 30, 220],
     cockpits: [[0.0, 0.7, -7.2]],
     nozzles: [
       ['N1', 5.4, 0.6, 6.4], ['N2', -5.2, 0.5, 5.9],
@@ -195,7 +195,7 @@ const RAW: Raw[] = [
   },
   {
     id: 'bomber', name: 'SF 轰炸机 CR', code: 'CR-3', role: '重型轰炸机', class: 'heavy', tier: 4, model: 'bomber.glb', length: 120, exhaust: 0x4fd8ff, sensorRange: 25000,
-    speed: [620, 28000, 460, 0.72], hull: [9000, 3000, 40, 700],
+    speed: [620, 30000, 460, 0.72], hull: [9000, 3000, 40, 700],
     cockpits: [[0.0, 10.1, -26.0]],
     nozzles: [
       ['N1', 10.1, -4.7, 40.0], ['N2', -10.0, -4.8, 40.0],
@@ -207,7 +207,7 @@ const RAW: Raw[] = [
   },
   {
     id: 'freighter', name: '货船 MB', code: 'MB-4', role: '货船', class: 'large', tier: 5, model: 'freighter.glb', length: 280, exhaust: 0x4fd8ff, sensorRange: 32000,
-    speed: [440, 22000, 300, 0.45], hull: [26000, 9000, 18, 1200],
+    speed: [440, 26000, 300, 0.45], hull: [26000, 9000, 18, 1200],
     cockpits: [[-24.0, 2.1, -125.1]],
     nozzles: [
       ['N1', 75.1, -26.2, 105.6], ['N2', -72.2, -26.6, 105.3],
@@ -219,7 +219,7 @@ const RAW: Raw[] = [
   },
   {
     id: 'commander', name: 'Commander 指挥舰', code: 'CG-7', role: '指挥舰', class: 'flagship', tier: 7, model: 'commander.glb', length: 620, exhaust: 0xbfe0ff, sensorRange: 42000,
-    speed: [380, 18000, 260, 0.55], hull: [82000, 48000, 95, 2600],
+    speed: [380, 24000, 260, 0.55], hull: [82000, 48000, 95, 2600],
     cockpits: [[0.7, 44.1, -161.0]],
     nozzles: [
       ['N1', -0.5, 18.5, 230.4],
@@ -234,7 +234,7 @@ const RAW: Raw[] = [
   },
   {
     id: 'battleship', name: 'SF 战列舰', code: 'BB-6', role: '战列舰', class: 'capital', tier: 6, model: 'battleship.glb', length: 1250, exhaust: 0xff4a3a, sensorRange: 52000,
-    speed: [280, 15000, 180, 0.34], hull: [320000, 120000, 80, 5000],
+    speed: [280, 20000, 180, 0.34], hull: [320000, 120000, 80, 5000],
     cockpits: [[-1.0, 131.3, -170.2]],
     nozzles: [
       ['N1', 192.4, 81.0, 597.3], ['N2', -188.2, 81.2, 597.3],

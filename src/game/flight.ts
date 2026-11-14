@@ -21,8 +21,6 @@ export class FlightController {
   private orbitDistance = 60;
   private keys = new Set<string>();
   private shake = 0;
-  private smoothedOffset = new THREE.Vector3();
-  private readonly up = new THREE.Vector3(0, 1, 0);
   private readonly tmp = new THREE.Vector3();
   private readonly tmpQ = new THREE.Quaternion();
   private readonly forward = new THREE.Vector3();
@@ -200,9 +198,10 @@ export class FlightController {
     const targetBoost = charged ? 1 : shifting ? 0.12 : 0;
     this.boostMode = charged ? 'charged' : shifting ? 'shift' : 'none';
 
+    const autoWarp = charged && forwardInput >= 0;
     this.throttle = THREE.MathUtils.lerp(
       this.throttle,
-      Math.max(0, forwardInput, shifting ? 0.55 : 0),
+      Math.max(0, forwardInput, autoWarp ? 1 : shifting ? 0.55 : 0),
       Math.min(1, dt * 4),
     );
     this.boost = THREE.MathUtils.lerp(this.boost, targetBoost, Math.min(1, dt * 1.5));
@@ -213,9 +212,10 @@ export class FlightController {
     const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.quaternion);
 
     // 前向 / 反推：反推只有 45% 推力
-    if (forwardInput > 0) {
-      const accel = this.spec.accel + this.boost * this.spec.accel * 16;
-      this.velocity.addScaledVector(forward, accel * forwardInput * dt);
+    if (forwardInput > 0 || autoWarp) {
+      const accel = this.spec.accel + this.boost * this.spec.accel * 36;
+      const thrust = forwardInput > 0 ? forwardInput : 1;
+      this.velocity.addScaledVector(forward, accel * thrust * dt);
     } else if (forwardInput < 0) {
       // forwardInput 是负数，乘上去才是真正的反推
       this.velocity.addScaledVector(forward, 1500 * forwardInput * dt);
@@ -319,16 +319,12 @@ export class FlightController {
       const L = this.spec.length ?? 25;
       const back = L * 1.25 + 8;
       const height = L * 0.26 + 2.5;
-      // 速度前馈：抵消平滑跟随造成的滞后，高速时舰体不会被甩出画面
-      const lead = this.velocity.clone().multiplyScalar(1 / 5);
+      // 直接跟随，避免高速跃迁时相机被速度前馈甩到舰体前面
       const desired = this.position
         .clone()
-        .add(lead)
         .addScaledVector(forward, -back)
         .addScaledVector(up, height);
-      if (this.smoothedOffset.lengthSq() === 0) this.smoothedOffset.copy(desired);
-      this.smoothedOffset.lerp(desired, Math.min(1, dt * 5));
-      this.camera.position.copy(this.smoothedOffset);
+      this.camera.position.copy(desired);
       this.camera.up.copy(up).lerp(new THREE.Vector3(0, 1, 0), 0.12).normalize();
       this.camera.lookAt(this.position.clone().addScaledVector(forward, L * 0.7 + 6));
 
