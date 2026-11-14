@@ -112,6 +112,25 @@ const systemData = {
 
       <div id="hud-prompt"></div>
 
+      <div class="hud-vitals">
+        <div class="vital">
+          <span>结构</span>
+          <div class="vital-bar"><i id="hull-fill"></i></div>
+          <b id="hull-text">—</b>
+        </div>
+        <div class="vital">
+          <span>护盾</span>
+          <div class="vital-bar vital-shield"><i id="shield-fill"></i></div>
+          <b id="shield-text">—</b>
+        </div>
+      </div>
+
+      <div id="enemy-box">
+        <span id="enemy-count"></span>
+        <div class="enemy-bar"><i id="enemy-hp"></i></div>
+        <span id="enemy-dist"></span>
+      </div>
+
       <div class="hud-bottom">
         <div class="hud-speed">
           <span class="hud-label">速度</span>
@@ -1214,6 +1233,92 @@ const systemData = {
     color: #e0a45f;
   }
 
+  /* ── 结构与敌机 ─────────────────────── */
+  .hud-vitals {
+    position: absolute;
+    left: 26px;
+    bottom: 128px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 210px;
+  }
+
+  .vital {
+    display: grid;
+    grid-template-columns: 30px 1fr 92px;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
+  }
+
+  .vital-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+  }
+
+  .vital-bar i {
+    display: block;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #c9a55c, #ffd98a);
+    transition: width 0.12s linear;
+  }
+
+  .vital-shield i {
+    background: linear-gradient(90deg, #4fb3a8, #9fe8ff);
+  }
+
+  .vital b {
+    font-weight: 400;
+    font-size: 10px;
+    color: var(--text);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #enemy-box {
+    position: absolute;
+    left: 50%;
+    top: 86px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 14px;
+    border: 1px solid rgba(255, 106, 74, 0.35);
+    background: rgba(24, 6, 4, 0.45);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: #ffb9a8;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  #enemy-box.is-on {
+    opacity: 1;
+  }
+
+  .enemy-bar {
+    width: 150px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .enemy-bar i {
+    display: block;
+    height: 100%;
+    width: 100%;
+    background: #ff6a4a;
+    transition: width 0.1s linear;
+  }
+
   /* ── 恒星警告 ───────────────────────── */
   #heat-warning {
     position: absolute;
@@ -1236,6 +1341,23 @@ const systemData = {
   #heat-warning.is-on {
     opacity: 1;
     animation: heatPulse 1.4s ease-in-out infinite;
+  }
+
+  #heat-warning.is-melting {
+    color: #fff1ec;
+    border-color: rgba(255, 90, 60, 0.9);
+    background: rgba(90, 12, 4, 0.9);
+    animation: heatPulse 0.45s ease-in-out infinite;
+    font-size: 13px;
+  }
+
+  #heat-warning.is-melting::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(120% 100% at 50% 50%, transparent 42%, rgba(255, 60, 30, 0.35) 100%);
   }
 
   @keyframes heatPulse {

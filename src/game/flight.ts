@@ -25,6 +25,7 @@ export class FlightController {
   private readonly forward = new THREE.Vector3();
   private ready = false;
   private cockpitOffset = new THREE.Vector3(0, 2.2, -2.2);
+  private spec = { maxSpeed: 4200, boostSpeed: 52000, accel: 2600, turnRate: 1 };
 
   constructor(private readonly camera: THREE.PerspectiveCamera) {
     this.camera.position.copy(this.position).add(new THREE.Vector3(0, 14, 42));
@@ -72,6 +73,10 @@ export class FlightController {
     return this.forward.copy(new THREE.Vector3(0, 0, -1)).applyQuaternion(this.quaternion);
   }
 
+  configure(spec: { maxSpeed: number; boostSpeed: number; accel: number; turnRate: number }): void {
+    this.spec = spec;
+  }
+
   setCockpitOffset(offset: THREE.Vector3): void {
     this.cockpitOffset.copy(offset);
   }
@@ -98,7 +103,7 @@ export class FlightController {
       this.quaternion.copy(attitude);
       this.ready = true;
     } else {
-      this.quaternion.slerp(attitude, Math.min(1, dt * 8));
+      this.quaternion.slerp(attitude, Math.min(1, dt * 8 * this.spec.turnRate));
     }
 
     /* ── 推进 ── */
@@ -116,7 +121,7 @@ export class FlightController {
 
     // 前向 / 反推：反推只有 45% 推力
     if (forwardInput > 0) {
-      const accel = 2600 + this.boost * 42000;
+      const accel = this.spec.accel + this.boost * this.spec.accel * 16;
       this.velocity.addScaledVector(forward, accel * forwardInput * dt);
     } else if (forwardInput < 0) {
       this.velocity.addScaledVector(forward, 1500 * dt);
@@ -150,7 +155,7 @@ export class FlightController {
       this.velocity.copy(forward).multiplyScalar(vForward).addScaledVector(right, nRight).addScaledVector(up, nUp);
     }
 
-    const maxSpeed = 4200 + this.boost * 52000;
+    const maxSpeed = this.spec.maxSpeed + this.boost * (this.spec.boostSpeed - this.spec.maxSpeed);
     if (this.velocity.lengthSq() > maxSpeed * maxSpeed) this.velocity.setLength(maxSpeed);
 
     this.position.addScaledVector(this.velocity, dt);

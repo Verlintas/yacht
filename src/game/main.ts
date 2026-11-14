@@ -8,6 +8,8 @@ import { attachHangarDoors, createWorld, type CelestialBody, type World } from '
 import { createShip, loadShipModel, type Ship } from './ship';
 import { FlightController } from './flight';
 import { EngineAudio } from './audio';
+import { Combat } from './combat';
+import { SHIPS, getShip, type ShipSpec } from './ships';
 import type { SystemData } from './data';
 
 interface GameContext {
@@ -20,6 +22,8 @@ interface GameContext {
   ship: Ship;
   audio: EngineAudio;
   motionBlur: ShaderPass;
+  combat: Combat;
+  fire: { cooldown: number };
 }
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -151,7 +155,38 @@ export async function startGame(system: SystemData): Promise<void> {
   boot.classList.add('is-done');
   window.setTimeout(() => boot.remove(), 900);
 
-  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur };
+  const fire = { cooldown: 0 };
+  let shipSpec: ShipSpec = getShip('thunderbolt');
+  const specRef = { current: shipSpec };
+  const playerState = {
+    hull: shipSpec.hull,
+    shield: shipSpec.shield,
+    parts: { ...shipSpec.parts },
+    alive: true,
+  };
+
+  const combat = new Combat(scene, {
+    onPlayerDamage: (damage: number) => {
+      if (!playerState.alive) return;
+      const absorbed = Math.min(playerState.shield, damage);
+      playerState.shield -= absorbed;
+      const rest = damage - absorbed;
+      if (rest > 0) {
+        playerState.hull -= rest;
+        const partKeys = ['engine', 'weapon', 'cockpit'] as const;
+        const key = partKeys[Math.floor(Math.random() * partKeys.length)];
+        playerState.parts[key] = Math.max(0, playerState.parts[key] - rest * 0.25);
+        if (playerState.hull <= 0) {
+          playerState.alive = false;
+        }
+      }
+    },
+    onNpcKilled: () => {
+      hud?.toast('敌机击毁');
+    },
+  });
+
+  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, combat, fire };
 
   const dock = world.bodies.find((body) => body.id === 'station-dock');
   if (dock) {
@@ -184,7 +219,49 @@ export async function startGame(system: SystemData): Promise<void> {
     }
   }
 
-  const hud = setupHud(ctx, system);
+  const applyShip = (spec: ShipSpec): void => {
+    shipSpec = spec;
+    specRef.current = spec;
+    ctx.flight.configure({
+      maxSpeed: spec.maxSpeed,
+      boostSpeed: spec.boostSpeed,
+      accel: spec.accel,
+      turnRate: spec.turnRate,
+    });
+    ship.group.scale.setScalar(spec.scale / 0.66);
+    playerState.hull = spec.hull;
+    playerState.shield = spec.shield;
+    playerState.parts = { ...spec.parts };
+    playerState.alive = true;
+  };
+  applyShip(shipSpec);
+
+  canvas.addEventListener('mousedown', (event) => {
+    if (event.button !== 0) return;
+    fireWeapons();
+  });
+
+  const tmpForward = new THREE.Vector3();
+
+  const fireWeapons = (): void => {
+    if (fire.cooldown > 0 || !playerState.alive) return;
+    fire.cooldown = 0.09;
+    ctx.flight.forwardVector.copy(tmpForward);
+    for (const weapon of shipSpec.weapons) {
+      const local = new THREE.Vector3(...weapon.pos).multiplyScalar(shipSpec.scale / 0.66);
+      const origin = local.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
+      ctx.combat.fire(origin, ctx.flight.forwardVector, weapon, ctx.flight.quaternion);
+    }
+  };
+
+  // 开局布置几架敌机
+  for (let i = 0; i < 3; i += 1) {
+    const angle = (i / 3) * Math.PI * 2;
+    const offset = new THREE.Vector3(Math.cos(angle) * 14000, 2500, Math.sin(angle) * 14000);
+    ctx.combat.spawnNpc(ctx.flight.position.clone().add(offset), 1);
+  }
+
+  const hud = setupHud(ctx, system, playerState, specRef);
 
   const openParam = params.get('open');
   if (openParam) {
@@ -203,6 +280,7 @@ interface Hud {
 function loop(ctx: GameContext, hud: Hud): void {
   const clock = new THREE.Clock();
   const fade = document.getElementById('fade') as HTMLElement;
+  const heat = document.getElementById('heat-warning') as HTMLElement;
   const motionBlur = ctx.motionBlur;
   let elapsed = 0;
 
@@ -226,7 +304,13 @@ function loop(ctx: GameContext, hud: Hud): void {
     }
 
     // 恒星熔毁
-    if (ctx.flight.position.length() < ctx.world.sunRadius * 1.25) {
+    if (ctx.flight.position.length() < ctx.world.sunRadius * 1.35) {
+      heat.classList.add('is-melting');
+    } else {
+      heat.classList.remove('is-melting');
+    }
+
+    if (ctx.flight.position.length() < ctx.world.sunRadius * 1.15) {
       fade.classList.add('is-black');
       window.setTimeout(() => {
         const dock = ctx.world.bodies.find((b) => b.id === 'station-dock');
@@ -243,7 +327,18 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     // 动态模糊：速度越快越明显，加速时再叠一点
     const speedNorm = Math.min(1, ctx.flight.speed / 9000);
-    motionBlur.uniforms.uStrength.value = speedNorm * 0.035 + ctx.flight.boost * 0.045;
+    motionBlur.uniforms.uStrength.value = speedNorm * 0.14 + ctx.flight.boost * 0.1;
+
+    ctx.fire.cooldown = Math.max(0, ctx.fire.cooldown - dt);
+    ctx.combat.update(dt, ctx.flight.position, ctx.flight.quaternion);
+
+    // 引力吸附
+    for (const body of ctx.world.bodies) {
+      const delta = body.position.clone().sub(ctx.flight.position);
+      const distance = Math.max(delta.length(), body.radius * 1.15);
+      const pull = (9e5 * body.radius) / (distance * distance);
+      ctx.flight.velocity.addScaledVector(delta.normalize(), Math.min(pull, 220) * dt);
+    }
 
     ctx.ship.group.position.copy(ctx.flight.position);
     ctx.ship.group.quaternion.copy(ctx.flight.quaternion);
@@ -273,7 +368,19 @@ function loop(ctx: GameContext, hud: Hud): void {
   tick();
 }
 
-function setupHud(ctx: GameContext, system: SystemData): Hud {
+interface PlayerState {
+  hull: number;
+  shield: number;
+  parts: { engine: number; weapon: number; cockpit: number };
+  alive: boolean;
+}
+
+function setupHud(
+  ctx: GameContext,
+  system: SystemData,
+  playerState: PlayerState,
+  specRef: { current: ShipSpec },
+): Hud {
   const speedValue = $('hud-speed');
   const speedBar = $('hud-speed-bar');
   const targetName = $('hud-target');
@@ -289,6 +396,14 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
   const cockpitSpeed = $('cockpit-speed');
   const cockpitTarget = $('cockpit-target');
   const cockpitDist = $('cockpit-dist');
+  const hullFill = $('hull-fill');
+  const shieldFill = $('shield-fill');
+  const hullText = $('hull-text');
+  const shieldText = $('shield-text');
+  const enemyBox = $('enemy-box');
+  const enemyHp = $('enemy-hp');
+  const enemyDist = $('enemy-dist');
+  const enemyCount = $('enemy-count');
   const ladder = $('cockpit-ladder');
   const tapeSpeed = $('tape-speed');
   const heat = $('heat-warning');
@@ -663,6 +778,41 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
     }
 
     cockpitSpeed.textContent = Math.round(speed).toString();
+
+    // 结构值
+    const hullRatio = Math.max(0, playerState.hull / specRef.current.hull);
+    const shieldRatio = Math.max(0, playerState.shield / specRef.current.shield);
+    hullFill.style.width = `${hullRatio * 100}%`;
+    shieldFill.style.width = `${shieldRatio * 100}%`;
+    hullText.textContent = `${Math.max(0, Math.round(playerState.hull))} / ${specRef.current.hull}`;
+    shieldText.textContent = `${Math.max(0, Math.round(playerState.shield))} / ${specRef.current.shield}`;
+
+    // 敌机提示
+    const enemy = ctx.combat.nearestNpc(ctx.flight.position);
+    if (enemy) {
+      enemyBox.classList.add('is-on');
+      enemyHp.style.width = `${Math.max(0, (enemy.hp / enemy.maxHp) * 100)}%`;
+      enemyDist.textContent = distanceLabel(enemy.distance);
+      enemyCount.textContent = `敌机 ${ctx.combat.npcCount}`;
+    } else {
+      enemyBox.classList.remove('is-on');
+      enemyCount.textContent = '';
+    }
+
+    // 护盾再生
+    if (playerState.alive && playerState.shield < specRef.current.shield) {
+      playerState.shield = Math.min(specRef.current.shield, playerState.shield + specRef.current.shieldRegen * dt);
+    }
+
+    if (!playerState.alive) {
+      playerState.alive = true;
+      playerState.hull = specRef.current.hull;
+      playerState.shield = specRef.current.shield;
+      const dock = ctx.world.bodies.find((b) => b.id === 'station-dock');
+      if (dock) ctx.flight.position.copy(dock.position).add(new THREE.Vector3(4200, 2200, 9000));
+      ctx.flight.halt();
+      toast('舰体损毁 · 已在母港重生');
+    }
     tapeSpeed.textContent = Math.round(speed).toString();
 
     // 俯仰梯与滚转
