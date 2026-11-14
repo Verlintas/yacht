@@ -63,6 +63,7 @@ const systemData = {
           <span class="hud-brand-mark">V</span>
           <span>夜航</span>
           <a class="hud-classic" href="/port/">经典视图</a>
+          <span class="hud-ship" id="hud-ship">A-30</span>
         </div>
         <div class="hud-target">
           <span class="hud-label">目标</span>
@@ -175,7 +176,7 @@ const systemData = {
             </section>
           </div>
           <p class="help-note">
-            自动炮（Auto）只攻击已经向我方开火的目标。空间站可以免费换船。
+            自动炮（Auto）只攻击已经向我方开火的目标，并带弹道预测。鱼雷会追踪准星附近的飞船。空间站可以免费换船。
           </p>
         </div>
       </div>
@@ -904,6 +905,82 @@ const systemData = {
     font-size: 14px;
     line-height: 1.75;
     color: #b9c8d2;
+  }
+
+  /* ── 空间站换船 ─────────────────────── */
+  .ship-picker {
+    margin: 0 0 20px;
+    padding: 0 0 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .ship-picker-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #64757f;
+  }
+
+  .ship-picker-head small {
+    font-size: 8.5px;
+    letter-spacing: 0.1em;
+    color: #c9a55c;
+  }
+
+  .ship-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .ship-card {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 9px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.018);
+    color: #b9c8d2;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+
+  .ship-card:hover {
+    border-color: rgba(201, 165, 92, 0.55);
+    background: rgba(201, 165, 92, 0.06);
+  }
+
+  .ship-card.is-current {
+    border-color: rgba(89, 224, 200, 0.7);
+    background: rgba(89, 224, 200, 0.07);
+  }
+
+  .ship-card-code {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--brass);
+    letter-spacing: 0.08em;
+  }
+
+  .ship-card.is-current .ship-card-code { color: #59e0c8; }
+
+  .ship-card-name {
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .ship-card-meta {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    color: #64757f;
   }
 
   .panel-stats {

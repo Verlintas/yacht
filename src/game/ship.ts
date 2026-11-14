@@ -482,16 +482,28 @@ export async function loadShipModel(
     sprite.position.set(mount.pos[0], mount.pos[1], mount.pos[2]);
     sprite.scale.setScalar(Math.max(1.2, mount.size * 2.4));
     sprite.userData.role = mount.role;
+    sprite.userData.engineGlow = true;
     group.add(sprite);
     engineGlow.push(sprite);
+
   }
 
-  const update = (_dt: number, throttle: number, boost: number): void => {
+
+
+  const update = (_dt: number, throttle: number, boost: number, retro = false): void => {
     const power = 0.25 + throttle * 1.5 + boost * 2.2;
     for (const sprite of engineGlow) {
-      sprite.scale.setScalar(size.z * (0.1 + power * 0.12));
-      (sprite.material as THREE.SpriteMaterial).opacity = 0.3 + Math.min(power * 0.16, 0.5);
+      const role = sprite.userData.role as string;
+      if (role === 'retro') {
+        sprite.visible = retro;
+        (sprite.material as THREE.SpriteMaterial).opacity = retro ? 0.55 : 0;
+        continue;
+      }
+      sprite.visible = true;
+      sprite.scale.setScalar(Math.max(1.0, targetLength * (0.045 + power * 0.05)));
+      (sprite.material as THREE.SpriteMaterial).opacity = 0.3 + Math.min(power * 0.12, 0.35);
     }
+
   };
 
   return { group, engineGlow, engineCore, cockpit, cockpitGroup, model, update };

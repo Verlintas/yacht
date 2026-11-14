@@ -248,7 +248,7 @@ export function createWorld(
   scene.add(sunKey);
   scene.add(sunKey.target);
 
-  const ambient = new THREE.AmbientLight(0x2a3d5c, 1.15);
+  const ambient = new THREE.AmbientLight(0x2a3d5c, 1.7);
   scene.add(ambient);
 
   /* ── 行星 ─────────────────────────────────── */

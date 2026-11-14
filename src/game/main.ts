@@ -9,6 +9,7 @@ import { createShip, loadShipModel, type Ship } from './ship';
 import { FlightController } from './flight';
 import { EngineAudio } from './audio';
 import { SpeedLines } from './speedlines';
+import { LocalPlume } from './trails';
 import { Combat } from './combat';
 import { SHIPS, getShip, type ShipSpec } from './ships';
 import type { SystemData } from './data';
@@ -28,6 +29,8 @@ interface GameContext {
   spec: { current: ShipSpec };
   autoCooldowns: Map<string, number>;
   speedLines: SpeedLines;
+  trail: { current: LocalPlume | null };
+  switchShip: (id: string) => Promise<boolean>;
 }
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -67,10 +70,11 @@ export async function startGame(system: SystemData): Promise<void> {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.98;
+  renderer.toneMappingExposure = 1.06;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
+
   const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 2_200_000);
   // 高速时的屏幕空间流线
   const speedLines = new SpeedLines(camera);
@@ -78,6 +82,13 @@ export async function startGame(system: SystemData): Promise<void> {
   const fillLight = new THREE.PointLight(0xa8dcff, 1100, 500, 1.6);
   fillLight.position.set(0, 6, 4);
   camera.add(fillLight);
+
+  // 从镜头方向补一条冷色边缘光，避免舰体背光时完全变黑
+  const rimLight = new THREE.DirectionalLight(0xa8c8e8, 0.55);
+  rimLight.position.set(0, 4, 2);
+  rimLight.target.position.set(0, 0, -2);
+  camera.add(rimLight);
+  camera.add(rimLight.target);
   scene.add(camera);
 
   await step('生成恒星', 0.2);
@@ -90,6 +101,7 @@ export async function startGame(system: SystemData): Promise<void> {
   void attachHangarDoors(world, `${BASE}/models/hangar_door.glb`);
 
   let ship = createShip();
+  const trailRef: { current: LocalPlume | null } = { current: null };
   scene.add(ship.group);
 
   const audio = new EngineAudio();
@@ -100,7 +112,7 @@ export async function startGame(system: SystemData): Promise<void> {
   // 优先用 Blender 导出的高模舰，失败则回退到程序化几何
   try {
     const loaded = await loadShipModel(
-      `${BASE}/models/thunderbolt.glb`,
+      `${BASE}/models/${getShip('thunderbolt').model}`,
       getShip("thunderbolt").length,
       getShip("thunderbolt").nozzles,
       getShip("thunderbolt").cockpits[0],
@@ -119,13 +131,12 @@ export async function startGame(system: SystemData): Promise<void> {
 
   // NPC 模板：全部先按各自的舰长缩放好，战斗时直接 clone
   const npcTemplates = new Map<string, { group: THREE.Group; spec: ShipSpec }>();
-  npcTemplates.set('thunderbolt', { group: ship.group, spec: getShip('thunderbolt') });
   await step('集结舰队', 0.7);
   await Promise.all(
-    ['f008', 'bomber', 'freighter', 'commander', 'battleship'].map(async (id) => {
+    ['thunderbolt', 'f008', 'bomber', 'freighter', 'commander', 'battleship'].map(async (id) => {
       const spec = getShip(id);
       const template = await loadShipModel(
-        `${BASE}/models/thunderbolt.glb`,
+        `${BASE}/models/${spec.model}`,
         spec.length,
         spec.nozzles,
         spec.cockpits[0],
@@ -212,12 +223,18 @@ export async function startGame(system: SystemData): Promise<void> {
       }
     },
     onNpcKilled: () => {
+      audio.explosion(0.8);
       hud?.toast('敌机击毁');
+    },
+    onExplosion: (position, size) => {
+      const distance = position.distanceTo(flight.position);
+      const force = Math.max(0, 1 - distance / 5200) * Math.min(1.4, size / 90);
+      flight.addShake(force);
     },
   });
 
   combat.setTemplates(npcTemplates);
-  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, combat, fire, spec: specRef, autoCooldowns, speedLines };
+  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, combat, fire, spec: specRef, autoCooldowns, speedLines, trail: trailRef, switchShip: async () => false };
 
   const dock = world.bodies.find((body) => body.id === 'station-dock');
   if (dock) {
@@ -251,6 +268,12 @@ export async function startGame(system: SystemData): Promise<void> {
   }
 
   const applyShip = (spec: ShipSpec): void => {
+    trailRef.current?.dispose();
+    if (ship.group) {
+      const mainNozzles = spec.nozzles.filter((nozzle) => nozzle.role === 'main');
+      const nozzles = mainNozzles.length > 0 ? mainNozzles : spec.nozzles.slice(0, 2);
+      trailRef.current = new LocalPlume(ship.group, nozzles, spec.length, 0x8fe8ff);
+    }
     shipSpec = spec;
     specRef.current = spec;
     ctx.flight.configure({
@@ -267,6 +290,34 @@ export async function startGame(system: SystemData): Promise<void> {
     playerState.alive = true;
   };
   applyShip(shipSpec);
+
+  const switchShip = async (id: string): Promise<boolean> => {
+    console.log('[switchShip]', id, new Error().stack);
+    if (!id || id === shipSpec.id) return true;
+    const spec = getShip(id);
+    try {
+      const loaded = await loadShipModel(
+        `${BASE}/models/${spec.model}`,
+        spec.length,
+        spec.nozzles,
+        spec.cockpits[0],
+      );
+      scene.remove(ship.group);
+      ship = loaded;
+      ctx.ship = ship;
+      scene.add(ship.group);
+      flight.bindShip(ship.group);
+      flight.setCockpitOffset(new THREE.Vector3(...spec.cockpits[0]).add(new THREE.Vector3(0, 0.1, 0.2)));
+      applyShip(spec);
+      ship.group.position.copy(flight.position);
+      ship.group.quaternion.copy(flight.quaternion);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  ctx.switchShip = switchShip;
 
   canvas.addEventListener('mousedown', (event) => {
     if (event.button !== 0) return;
@@ -373,7 +424,7 @@ function loop(ctx: GameContext, hud: Hud): void {
     motionBlur.uniforms.uStrength.value = speedNorm * 0.14 + ctx.flight.boost * 0.1;
 
     ctx.fire.cooldown = Math.max(0, ctx.fire.cooldown - dt);
-    ctx.combat.update(dt, ctx.flight.position, ctx.flight.quaternion);
+    ctx.combat.update(dt, ctx.flight.position, ctx.flight.velocity, ctx.flight.quaternion, ctx.camera);
 
     // 自动炮：只打「已攻击我方」的目标
     for (const weapon of ctx.spec.current.weapons) {
@@ -388,7 +439,8 @@ function loop(ctx: GameContext, hud: Hud): void {
       const origin = mount.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
       const target = ctx.combat.nearestHostile(origin, weapon.range);
       if (!target) continue;
-      const dir = target.position.clone().sub(origin).normalize();
+      const aim = ctx.combat.leadPoint(origin, target.position, target.velocity, weapon.speed);
+      const dir = aim.sub(origin).normalize();
       ctx.combat.fire(origin, dir, weapon, ctx.flight.quaternion);
       ctx.autoCooldowns.set(key, 1 / weapon.rate);
     }
@@ -404,6 +456,10 @@ function loop(ctx: GameContext, hud: Hud): void {
     ctx.ship.group.position.copy(ctx.flight.position);
     ctx.ship.group.quaternion.copy(ctx.flight.quaternion);
     ctx.ship.update(dt, ctx.flight.throttle, ctx.flight.boost, ctx.flight.brake > 0.05 || ctx.flight.isReversing);
+
+    // 引擎尾迹：从主喷口持续喷出粒子
+    ctx.trail.current?.update(dt, 0.2 + ctx.flight.throttle * 0.9 + ctx.flight.boost * 1.8);
+
     ctx.flight.updateCamera(dt);
     ctx.ship.group.visible = true;
     if (ctx.ship.model) ctx.ship.model.visible = ctx.flight.cameraMode !== 'first';
@@ -452,6 +508,7 @@ function setupHud(
   const prompt = $('hud-prompt');
   const coords = $('hud-coords');
   const modeLabel = $('hud-mode');
+  const shipLabel = $('hud-ship');
   const fpsLabel = $('hud-fps');
   const throttleBar = $('hud-throttle-bar');
   const assistLabel = $('hud-assist');
@@ -662,6 +719,7 @@ function setupHud(
   });
 
   const openBody = (body: CelestialBody): void => {
+    console.log('[openBody]', body.id);
     panelOpen = true;
     panel.classList.add('is-open');
     if (document.pointerLockElement) document.exitPointerLock();
@@ -685,10 +743,41 @@ function setupHud(
       const def = body.station;
       panelTitle.textContent = def.title;
       panelSub.textContent = def.subtitle;
+      const picker = `
+        <section class="ship-picker">
+          <div class="ship-picker-head"><span>舰船整备</span><small>空间站 · 免费</small></div>
+          <div class="ship-grid">
+            ${SHIPS.map(
+              (item) => `
+              <button type="button" class="ship-card ${item.id === ctx.spec.current.id ? 'is-current' : ''}" data-ship="${item.id}">
+                <span class="ship-card-code">${item.code}</span>
+                <span class="ship-card-name">${item.name}</span>
+                <span class="ship-card-meta">T${item.tier} · ${item.length} m · ${item.role}</span>
+              </button>`,
+            ).join('')}
+          </div>
+        </section>`;
+      panelBody.innerHTML = `${picker}<div id="station-slot"></div>`;
+      panelBody.querySelectorAll<HTMLButtonElement>('[data-ship]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const id = button.dataset.ship ?? '';
+          void ctx.switchShip(id).then((ok) => {
+            if (!ok) {
+              toast('换装失败：模型加载错误');
+              return;
+            }
+            toast(`已换装 ${getShip(id).name}`);
+            panelBody.querySelectorAll<HTMLElement>('.ship-card').forEach((card) => {
+              card.classList.toggle('is-current', card.dataset.ship === ctx.spec.current.id);
+            });
+          });
+        });
+      });
+      const slot = panelBody.querySelector('#station-slot') as HTMLElement;
       if (def.to === '#board') {
-        void renderBoard(panelBody);
+        void renderBoard(slot);
       } else {
-        panelBody.innerHTML = `
+        slot.innerHTML = `
           <p class="panel-desc">${def.description}</p>
           <div class="panel-frame">
             <iframe src="${withBase(def.to)}" title="${def.title}" loading="lazy"></iframe>
@@ -885,6 +974,7 @@ function setupHud(
     }
 
     cockpitSpeed.textContent = Math.round(speed).toString();
+    shipLabel.textContent = `${ctx.spec.current.code} · T${ctx.spec.current.tier}`;
 
     // B 充能环 / Shift 次级加速
     const chargeRatio = Math.min(1, ctx.flight.charge / 3);

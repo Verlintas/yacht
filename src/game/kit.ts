@@ -124,7 +124,8 @@ export function mergeStatic(root: THREE.Object3D): THREE.Group {
   root.updateMatrixWorld(true);
   root.traverse((obj) => {
     if (obj instanceof THREE.Mesh && !Array.isArray(obj.material)) {
-      const geometry = obj.geometry.clone();
+      const base = obj.geometry.index ? obj.geometry.toNonIndexed() : obj.geometry.clone();
+      const geometry = base;
       geometry.applyMatrix4(obj.matrixWorld);
       // 合并要求属性一致，去掉多余属性
       for (const name of Object.keys(geometry.attributes)) {

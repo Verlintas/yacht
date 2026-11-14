@@ -71,6 +71,10 @@ export class FlightController {
     window.addEventListener('blur', () => this.keys.clear());
   }
 
+  addShake(amount: number): void {
+    this.shake = Math.min(1.6, this.shake + amount);
+  }
+
   get speed(): number {
     return this.velocity.length();
   }

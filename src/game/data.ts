@@ -62,7 +62,12 @@ export interface StationDef {
   subtitle: string;
   description: string;
   to: string;
+  /** 绕哪颗行星运行 */
+  parent: string;
+  /** 造船厂：额外干船坞与舾装龙门架 */
+  yard?: boolean;
   radius: number;
+  /** 相对母行星的轨道半径 */
   orbit: number;
   phase: number;
   inclination: number;
@@ -127,7 +132,7 @@ export function buildSystem(input: {
     const surface = lang.surfaces[seed % lang.surfaces.length];
     const ratio = Math.log10(project.loc + 1) / Math.log10(maxLoc + 1);
 
-    const radius = 3400 + ratio * 4600 + rand() * 900;
+    const radius = 9000 + ratio * 12000 + rand() * 2000;
     const orbit = 95000 + index * 52000 + rand() * 9000;
 
     return {
@@ -161,6 +166,9 @@ export function buildSystem(input: {
     };
   });
 
+  const parentOf = (index: number): string => planets[index % planets.length].id;
+  const orbitOf = (index: number): number => planets[index % planets.length].radius * 2.4 + 4200;
+
   const stations: StationDef[] = [
     {
       id: 'station-weather',
@@ -169,8 +177,9 @@ export function buildSystem(input: {
       subtitle: '五处泊位',
       description: '实时天况、空气质量、海况与未来几天预报。',
       to: '/berths/',
-      radius: 3200,
-      orbit: 78000,
+      parent: parentOf(0),
+      radius: 1100,
+      orbit: orbitOf(0),
       phase: Math.PI * 0.35,
       inclination: 0.03,
       spin: 0.1,
@@ -183,8 +192,9 @@ export function buildSystem(input: {
       subtitle: `${input.counts.wiki} 条资料`,
       description: '百科、阅读路径、标签与全文搜索。',
       to: '/wiki/',
-      radius: 3800,
-      orbit: 210000,
+      parent: parentOf(1),
+      radius: 1200,
+      orbit: orbitOf(1),
       phase: Math.PI * 1.15,
       inclination: -0.05,
       spin: -0.08,
@@ -197,8 +207,9 @@ export function buildSystem(input: {
       subtitle: '公共频道',
       description: '在这里留下航迹。',
       to: '#board',
-      radius: 3000,
-      orbit: 420000,
+      parent: parentOf(2),
+      radius: 1000,
+      orbit: orbitOf(2),
       phase: Math.PI * 1.72,
       inclination: 0.07,
       spin: 0.14,
@@ -211,12 +222,29 @@ export function buildSystem(input: {
       subtitle: '船坞',
       description: '项目清单、工程指标与体量统计。',
       to: '/projects/',
-      radius: 3600,
-      orbit: 120000,
+      parent: parentOf(3),
+      radius: 1350,
+      orbit: orbitOf(3),
       phase: Math.PI * 0.92,
       inclination: 0.02,
       spin: 0.07,
       accent: 0x8cc2f0,
+    },
+    {
+      id: 'station-yard',
+      kind: 'station',
+      title: '造船厂',
+      subtitle: '干船坞 · 舾装码头',
+      description: '舰体建造、改装与大修。',
+      to: '/projects/',
+      parent: parentOf(4),
+      radius: 1600,
+      orbit: orbitOf(4) + 2600,
+      phase: Math.PI * 0.4,
+      inclination: -0.03,
+      spin: 0.05,
+      accent: 0xffc46b,
+      yard: true,
     },
   ];
 

@@ -141,7 +141,7 @@ export const PLANET_FRAG = /* glsl */ `
     float diffuse = max(ndl, 0.0);
     float wrap = 0.5 + 0.5 * ndl;
 
-    vec3 color = albedo * (0.05 + diffuse * 1.1);
+    vec3 color = albedo * (0.012 + diffuse * 1.18);
 
     // 海面高光
     vec3 H = normalize(L + V);
@@ -149,7 +149,7 @@ export const PLANET_FRAG = /* glsl */ `
     color += uHigh * spec * 0.28;
 
     // 云
-    color = mix(color, vec3(0.86, 0.92, 1.0) * (0.1 + day * 0.95), cloud * 0.85);
+    color = mix(color, vec3(0.86, 0.92, 1.0) * (0.015 + day * 0.98), cloud * 0.85);
 
     // 城市灯光
     float cityNoise = fbm(n * 26.0 + seed);
@@ -158,10 +158,10 @@ export const PLANET_FRAG = /* glsl */ `
 
     // 大气边缘
     float fres = pow(1.0 - max(dot(N, V), 0.0), 3.2);
-    color += mix(uMid, uHigh, 0.5) * fres * uAtmo * (0.25 + wrap * 0.75) * 0.35;
+    color += mix(uMid, uHigh, 0.5) * fres * uAtmo * (0.02 + wrap * 0.98) * 0.28;
 
     // 暗面
-    color *= mix(0.82, 1.0, day);
+    color *= mix(0.32, 1.0, day);
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -193,9 +193,9 @@ export const ATMO_FRAG = /* glsl */ `
     vec3 L = normalize(uLight);
 
     float fres = pow(1.0 - abs(dot(N, V)), uPower);
-    float lit = smoothstep(-0.45, 0.5, dot(normalize(-N), L));
+    float lit = smoothstep(-0.18, 0.32, dot(normalize(-N), L));
 
-    gl_FragColor = vec4(uColor, 1.0) * fres * lit * 0.42;
+    gl_FragColor = vec4(uColor, 1.0) * fres * lit * 0.3;
   }
 `;
 

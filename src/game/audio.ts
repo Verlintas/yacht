@@ -142,6 +142,48 @@ export class EngineAudio {
     this.rumbleGain.gain.setTargetAtTime(0.2 + power * 0.16 + boost * 0.1, t, 0.4);
   }
 
+  /** 爆炸：宽带噪声 + 低频冲击 */
+  explosion(power = 1): void {
+    if (!this.ctx || !this.master) {
+      this.start();
+      if (!this.ctx || !this.master) return;
+    }
+    const ctx = this.ctx;
+    const t = ctx.currentTime;
+    const duration = 1.5;
+    const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * duration), ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < data.length; i += 1) {
+      const white = Math.random() * 2 - 1;
+      last = last * 0.84 + white * 0.16;
+      const env = Math.pow(1 - i / data.length, 2.4);
+      data[i] = last * env;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(1200, t);
+    lp.frequency.exponentialRampToValueAtTime(220, t + 1.1);
+    const gain = ctx.createGain();
+    gain.gain.value = Math.min(1.2, 0.9 * power);
+    src.connect(lp).connect(gain).connect(this.master);
+    src.start(t);
+    src.stop(t + duration);
+
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(64, t);
+    osc.frequency.exponentialRampToValueAtTime(26, t + 0.7);
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(Math.min(0.7, 0.5 * power), t);
+    og.gain.exponentialRampToValueAtTime(0.001, t + 0.95);
+    osc.connect(og).connect(this.master);
+    osc.start(t);
+    osc.stop(t + 1);
+  }
+
   suspend(): void {
     void this.ctx?.suspend();
   }
