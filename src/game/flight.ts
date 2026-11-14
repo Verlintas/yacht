@@ -230,7 +230,8 @@ export class FlightController {
 
     // 前向 / 反推：反推只有 45% 推力
     if (forwardInput > 0 || autoWarp) {
-      const accel = this.spec.accel + this.boost * this.spec.accel * 36;
+      const warpAccel = Math.max(this.spec.accel * 4, (this.spec.boostSpeed - this.spec.maxSpeed) * 4);
+      const accel = this.spec.accel + this.boost * warpAccel;
       const thrust = forwardInput > 0 ? forwardInput : 1;
       this.velocity.addScaledVector(forward, accel * thrust * dt);
     } else if (forwardInput < 0) {
@@ -337,18 +338,14 @@ export class FlightController {
       const L = this.spec.length ?? 25;
       const back = L * 1.25 + 8;
       const height = L * 0.26 + 2.5;
-      // 低速保留跟随惯性，高速提高跟随率，避免跃迁时相机被甩开
-      const speed = this.velocity.length();
-      const follow = 6 + Math.min(60, speed / 600);
-      const lead = this.velocity.clone().multiplyScalar(1 / follow);
-      const desired = this.position
-        .clone()
-        .add(lead)
-        .addScaledVector(forward, -back)
-        .addScaledVector(up, height);
-      if (this.smoothedOffset.lengthSq() === 0) this.smoothedOffset.copy(desired);
-      this.smoothedOffset.lerp(desired, 1 - Math.exp(-follow * dt));
-      this.camera.position.copy(this.smoothedOffset);
+      // 相机偏移固定在舰体局部坐标里：高速不会因世界坐标跟随滞后而被甩到前面
+      const desiredLocal = new THREE.Vector3(0, height, back);
+      if (this.smoothedOffset.lengthSq() === 0) this.smoothedOffset.copy(desiredLocal);
+      this.smoothedOffset.lerp(desiredLocal, 1 - Math.exp(-8 * dt));
+      this.camera.position
+        .copy(this.smoothedOffset)
+        .applyQuaternion(this.quaternion)
+        .add(this.position);
       this.camera.up.copy(up).lerp(new THREE.Vector3(0, 1, 0), 0.12).normalize();
       this.camera.lookAt(this.position.clone().addScaledVector(forward, L * 0.7 + 6));
 
@@ -358,7 +355,7 @@ export class FlightController {
       }
 
       const fovComfort = THREE.MathUtils.clamp(L / 1200, 0.25, 1);
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62 + this.boost * (4 + 8 * fovComfort) + Math.min(4, speed / 7000), Math.min(1, dt * 4));
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62 + this.boost * (4 + 8 * fovComfort) + Math.min(4, this.velocity.length() / 7000), Math.min(1, dt * 4));
       this.camera.updateProjectionMatrix();
     }
   }

@@ -204,7 +204,7 @@ const RAW: Raw[] = [
   },
   {
     id: 'bomber', name: 'SF 轰炸机 CR', code: 'CR-3', role: '重型轰炸机', class: 'heavy', tier: 4, model: 'bomber.glb', length: 180, exhaust: 0x4fd8ff, sensorRange: 32000,
-    speed: [620, 30000, 460, 0.72], hull: [9000, 3000, 40, 700],
+    speed: [620, 35000, 460, 0.72], hull: [9000, 3000, 40, 700],
     cockpits: [[0.0, 10.1, -26.0]],
     nozzles: [
       ['N1', 10.1, -4.7, 40.0], ['N2', -10.0, -4.8, 40.0],
@@ -216,7 +216,7 @@ const RAW: Raw[] = [
   },
   {
     id: 'freighter', name: '货船 MB', code: 'MB-4', role: '货船', class: 'large', tier: 5, model: 'freighter.glb', length: 520, exhaust: 0x4fd8ff, sensorRange: 50000,
-    speed: [440, 26000, 300, 0.45], hull: [26000, 9000, 18, 1200],
+    speed: [440, 32000, 300, 0.45], hull: [26000, 9000, 18, 1200],
     cockpits: [[-24.0, 2.1, -125.1]],
     nozzles: [
       ['N1', 75.1, -26.2, 105.6], ['N2', -72.2, -26.6, 105.3],
@@ -228,7 +228,7 @@ const RAW: Raw[] = [
   },
   {
     id: 'commander', name: 'Commander 指挥舰', code: 'CG-7', role: '指挥舰', class: 'flagship', tier: 7, model: 'commander.glb', length: 2400, exhaust: 0xbfe0ff, sensorRange: 120000,
-    speed: [380, 24000, 260, 0.55], hull: [82000, 48000, 95, 2600],
+    speed: [380, 30000, 260, 0.55], hull: [82000, 48000, 95, 2600],
     cockpits: [[0.7, 44.1, -161.0]],
     nozzles: [
       ['N1', -0.5, 18.5, 230.4],
@@ -243,7 +243,7 @@ const RAW: Raw[] = [
   },
   {
     id: 'battleship', name: 'SF 战列舰', code: 'BB-6', role: '战列舰', class: 'capital', tier: 6, model: 'battleship.glb', length: 2000, exhaust: 0xff4a3a, sensorRange: 100000,
-    speed: [280, 20000, 180, 0.34], hull: [320000, 120000, 80, 5000],
+    speed: [280, 28000, 180, 0.34], hull: [320000, 120000, 80, 5000],
     cockpits: [[-1.0, 131.3, -170.2]],
     nozzles: [
       ['N1', 192.4, 81.0, 597.3], ['N2', -188.2, 81.2, 597.3],
@@ -283,7 +283,7 @@ export const SHIPS: ShipSpec[] = RAW.map((raw) => {
     exhaust: raw.exhaust,
     sensorRange: raw.sensorRange,
     chargeTime: Math.max(3, Math.min(10, 3 + (7 * Math.log10(raw.length / 25)) / Math.log10(50))),
-    warpCombo: raw.length > 2000,
+    warpCombo: raw.length > 3000,
     cockpits: raw.cockpits.map(([x, y, z]) => scaled(x, y, z)),
     maxSpeed: raw.speed[0],
     boostSpeed: raw.speed[1],

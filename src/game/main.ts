@@ -166,6 +166,11 @@ export async function startGame(system: SystemData): Promise<void> {
   const flight = new FlightController(camera);
   flight.attach(canvas);
   canvas.addEventListener('pointerdown', () => audio.start(), { once: true });
+  canvas.addEventListener('pointerdown', (event) => {
+    if (event.button === 0) weapons.firing = true;
+  });
+  window.addEventListener('pointerup', () => { weapons.firing = false; });
+  window.addEventListener('blur', () => { weapons.firing = false; });
 
   // 优先用 Blender 导出的高模舰，失败则回退到程序化几何
   try {

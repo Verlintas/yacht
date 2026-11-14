@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import {
   ATMO_FRAG,
   ATMO_VERT,
-  NEBULA_FRAG,
   PLANET_FRAG,
   PLANET_VERT,
   RING_FRAG,
@@ -156,31 +155,48 @@ export function createWorld(
   stars.frustumCulled = false;
   scene.add(stars);
 
-  /* ── 星云 ─────────────────────────────────── */
-  const nebula = new THREE.Mesh(
-    new THREE.SphereGeometry(8_000_000, 48, 32),
-    new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 } },
-      vertexShader: /* glsl */ `
-        #include <common>
-        #include <logdepthbuf_pars_vertex>
-        varying vec3 vWorld;
-        void main() {
-          vec4 world = modelMatrix * vec4(position, 1.0);
-          vWorld = world.xyz;
-          gl_Position = projectionMatrix * viewMatrix * world;
-          #include <logdepthbuf_vertex>
-        }
-      `,
-      fragmentShader: NEBULA_FRAG,
-      side: THREE.BackSide,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      transparent: true,
-    }),
-  );
-  nebula.frustumCulled = false;
-  scene.add(nebula);
+  /* ── 星云背景 ─────────────────────────────── */
+  // 用等距柱状贴图做背景，避免大球壳在高速运动时与深度/裁剪产生黑块闪烁
+  {
+    const w = 2048;
+    const h = 1024;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d')!;
+    const bg = ctx.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, '#04070d');
+    bg.addColorStop(0.35, '#05060c');
+    bg.addColorStop(0.7, '#03050a');
+    bg.addColorStop(1, '#020409');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+
+    const palette = [
+      ['rgba(70, 38, 95, 0.22)', 'rgba(20, 8, 35, 0)'],
+      ['rgba(30, 70, 80, 0.18)', 'rgba(4, 18, 24, 0)'],
+      ['rgba(45, 35, 90, 0.16)', 'rgba(10, 8, 30, 0)'],
+      ['rgba(90, 55, 50, 0.11)', 'rgba(25, 10, 8, 0)'],
+    ];
+    for (let i = 0; i < 80; i += 1) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      const r = 60 + Math.random() * 360;
+      const colors = palette[Math.floor(Math.random() * palette.length)];
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, colors[0]);
+      g.addColorStop(1, colors[1]);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    scene.background = texture;
+    scene.backgroundIntensity = 0.9;
+  }
 
   /* ── 恒星 ─────────────────────────────────── */
   const sunGroup = new THREE.Group();
@@ -415,7 +431,6 @@ export function createWorld(
 
   const update = (dt: number, elapsed: number, camera: THREE.Camera) => {
     sunMaterial.uniforms.uTime.value = elapsed;
-    (nebula.material as THREE.ShaderMaterial).uniforms.uTime.value = elapsed;
     starMaterial.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
 
     const simDays = SIM_DAYS + (elapsed * TIME_SCALE) / 86_400;
