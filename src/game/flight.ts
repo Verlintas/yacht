@@ -317,8 +317,8 @@ export class FlightController {
         shipParent.add(this.camera);
       }
       const L = this.spec.length ?? 25;
-      const back = L * 1.25 + 8;
-      const height = L * 0.26 + 2.5;
+      const back = L * 0.72 + 55;
+      const height = L * 0.2 + 6;
       // 直接跟随，避免高速跃迁时相机被速度前馈甩到舰体前面
       const desired = this.position
         .clone()
