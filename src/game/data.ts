@@ -132,8 +132,8 @@ export function buildSystem(input: {
     const surface = lang.surfaces[seed % lang.surfaces.length];
     const ratio = Math.log10(project.loc + 1) / Math.log10(maxLoc + 1);
 
-    const radius = 9000 + ratio * 12000 + rand() * 2000;
-    const orbit = 95000 + index * 52000 + rand() * 9000;
+    const radius = 18000 + ratio * 24000 + rand() * 4000;
+    const orbit = 280000 + index * 140000 + rand() * 25000;
 
     return {
       id: project.id,

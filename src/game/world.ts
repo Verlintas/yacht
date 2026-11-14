@@ -14,6 +14,8 @@ import { greebles, mergeStatic, panel, truss } from './kit';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const RING_VERT = /* glsl */ `
+  #include <common>
+  #include <logdepthbuf_pars_vertex>
   varying vec2 vUv;
   varying vec3 vWorld;
   void main() {
@@ -21,6 +23,7 @@ const RING_VERT = /* glsl */ `
     vec4 world = modelMatrix * vec4(position, 1.0);
     vWorld = world.xyz;
     gl_Position = projectionMatrix * viewMatrix * world;
+    #include <logdepthbuf_vertex>
   }
 `;
 
@@ -74,7 +77,7 @@ export function createWorld(
   const sunPosition = new THREE.Vector3(0, 0, 0);
   const bodies: CelestialBody[] = [];
   const hangars: Array<{ group: THREE.Group; depth: number; width: number; height: number }> = [];
-  const sunRadius = 9000;
+  const sunRadius = 22000;
 
   /* ── 星空 ─────────────────────────────────── */
   const starCount = 16000;
@@ -117,6 +120,8 @@ export function createWorld(
   const starMaterial = new THREE.ShaderMaterial({
     uniforms: { uPixelRatio: { value: 1 } },
     vertexShader: /* glsl */ `
+      #include <common>
+      #include <logdepthbuf_pars_vertex>
       attribute float size;
       varying vec3 vColor;
       uniform float uPixelRatio;
@@ -125,11 +130,15 @@ export function createWorld(
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
         gl_PointSize = size * uPixelRatio / max(-mv.z, 1.0) * 30.0;
         gl_Position = projectionMatrix * mv;
+        #include <logdepthbuf_vertex>
       }
     `,
     fragmentShader: /* glsl */ `
+      #include <common>
+      #include <logdepthbuf_pars_fragment>
       varying vec3 vColor;
       void main() {
+        #include <logdepthbuf_fragment>
         vec2 d = gl_PointCoord - 0.5;
         float r = length(d);
         float core = smoothstep(0.5, 0.0, r);
@@ -153,11 +162,14 @@ export function createWorld(
     new THREE.ShaderMaterial({
       uniforms: { uTime: { value: 0 } },
       vertexShader: /* glsl */ `
+        #include <common>
+        #include <logdepthbuf_pars_vertex>
         varying vec3 vWorld;
         void main() {
           vec4 world = modelMatrix * vec4(position, 1.0);
           vWorld = world.xyz;
           gl_Position = projectionMatrix * viewMatrix * world;
+          #include <logdepthbuf_vertex>
         }
       `,
       fragmentShader: NEBULA_FRAG,
@@ -295,7 +307,7 @@ export function createWorld(
       fragmentShader: PLANET_FRAG,
     });
 
-    const planet = new THREE.Mesh(new THREE.SphereGeometry(def.radius, 120, 80), material);
+    const planet = new THREE.Mesh(new THREE.SphereGeometry(def.radius, 96, 64), material);
     planet.rotation.z = def.axialTilt;
     bodyGroup.add(planet);
 

@@ -109,6 +109,7 @@ export class DamageVisuals {
   };
   private time = 0;
   private bubbleVisible = false;
+  private enabled = true;
   private capital: boolean;
   private breakTimer = 0;
   private bubbleBaseScale = new THREE.Vector3(1, 1, 1);
@@ -303,12 +304,23 @@ export class DamageVisuals {
     this.hitFlash = Math.max(this.hitFlash, 0.55);
   }
 
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+    if (!enabled) {
+      this.bubble.visible = false;
+      for (const puff of this.smoke) puff.sprite.visible = false;
+      for (const fire of this.fires) fire.sprite.visible = false;
+      for (const hit of this.hits) hit.sprite.visible = false;
+    }
+  }
+
   setBubbleVisible(visible: boolean): void {
     this.bubbleVisible = visible;
     this.bubble.visible = visible;
   }
 
   update(dt: number, hullRatio: number, shieldRatio: number, parts?: DamageParts): void {
+    if (!this.enabled) return;
     this.time += dt;
     const hullDamage = THREE.MathUtils.clamp(1 - hullRatio, 0, 1);
     const shieldDamage = THREE.MathUtils.clamp(1 - shieldRatio, 0, 1);

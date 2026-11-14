@@ -20,7 +20,9 @@ export class FlightController {
   private orbitPitch = 0.25;
   private orbitDistance = 60;
   private keys = new Set<string>();
+  private freeDragging = false;
   private shake = 0;
+  private smoothedOffset = new THREE.Vector3();
   private readonly tmp = new THREE.Vector3();
   private readonly tmpQ = new THREE.Quaternion();
   private readonly forward = new THREE.Vector3();
@@ -40,7 +42,13 @@ export class FlightController {
 
   attach(dom: HTMLElement): void {
     dom.addEventListener('pointerdown', () => {
+      if (this.cameraMode === 'free' && document.pointerLockElement !== dom) this.freeDragging = true;
       if (document.pointerLockElement !== dom) void dom.requestPointerLock();
+    });
+    dom.addEventListener('pointermove', (event) => {
+      if (!this.freeDragging || this.cameraMode !== 'free') return;
+      this.orbitYaw -= event.movementX * 0.0026;
+      this.orbitPitch = THREE.MathUtils.clamp(this.orbitPitch - event.movementY * 0.0022, -1.25, 1.25);
     });
 
     document.addEventListener('pointerlockchange', () => {
@@ -88,7 +96,11 @@ export class FlightController {
       this.keys.delete(event.code);
     });
 
-    window.addEventListener('blur', () => this.keys.clear());
+    window.addEventListener('blur', () => {
+      this.keys.clear();
+      this.freeDragging = false;
+    });
+    window.addEventListener('pointerup', () => { this.freeDragging = false; });
   }
 
   addShake(amount: number): void {
@@ -109,7 +121,10 @@ export class FlightController {
 
   /** 第一人称 → 第三人称 → 自由视角 → 第一人称 */
   cycleCamera(): void {
-    if (this.cameraMode === 'first') this.cameraMode = 'third';
+    if (this.cameraMode === 'first') {
+      this.smoothedOffset.set(0, 0, 0);
+      this.cameraMode = 'third';
+    }
     else if (this.cameraMode === 'third') {
       this.camera.getWorldPosition(this.tmp);
       const offset = this.tmp.clone().sub(this.position);
@@ -125,6 +140,7 @@ export class FlightController {
       }
       this.cameraMode = 'free';
     } else {
+      this.smoothedOffset.set(0, 0, 0);
       this.cameraMode = 'first';
     }
   }
@@ -260,7 +276,7 @@ export class FlightController {
 
     this.shake = THREE.MathUtils.lerp(
       this.shake,
-      this.boost * 0.7 + this.throttle * 0.1,
+      this.boost * 0.85 + this.throttle * 0.08,
       Math.min(1, dt * 4),
     );
   }
@@ -282,7 +298,7 @@ export class FlightController {
         if (this.camera.parent !== this.shipRef) this.shipRef.add(this.camera);
         this.camera.position.copy(this.cockpitOffset);
         this.camera.quaternion.identity();
-        this.camera.fov = 78;
+        this.camera.fov = 78 + this.boost * 6;
         this.camera.updateProjectionMatrix();
       }
     } else if (this.cameraMode === 'free') {
@@ -317,14 +333,20 @@ export class FlightController {
         shipParent.add(this.camera);
       }
       const L = this.spec.length ?? 25;
-      const back = L * 0.72 + 55;
-      const height = L * 0.2 + 6;
-      // 直接跟随，避免高速跃迁时相机被速度前馈甩到舰体前面
+      const back = L * 1.25 + 8;
+      const height = L * 0.26 + 2.5;
+      // 低速保留跟随惯性，高速提高跟随率，避免跃迁时相机被甩开
+      const speed = this.velocity.length();
+      const follow = 6 + Math.min(60, speed / 600);
+      const lead = this.velocity.clone().multiplyScalar(1 / follow);
       const desired = this.position
         .clone()
+        .add(lead)
         .addScaledVector(forward, -back)
         .addScaledVector(up, height);
-      this.camera.position.copy(desired);
+      if (this.smoothedOffset.lengthSq() === 0) this.smoothedOffset.copy(desired);
+      this.smoothedOffset.lerp(desired, 1 - Math.exp(-follow * dt));
+      this.camera.position.copy(this.smoothedOffset);
       this.camera.up.copy(up).lerp(new THREE.Vector3(0, 1, 0), 0.12).normalize();
       this.camera.lookAt(this.position.clone().addScaledVector(forward, L * 0.7 + 6));
 
@@ -333,7 +355,7 @@ export class FlightController {
         this.camera.position.y += (Math.random() - 0.5) * this.shake * 0.3;
       }
 
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62 + this.boost * 8, Math.min(1, dt * 4));
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62 + this.boost * 12 + Math.min(4, speed / 7000), Math.min(1, dt * 4));
       this.camera.updateProjectionMatrix();
     }
   }

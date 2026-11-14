@@ -42,7 +42,9 @@ export const NOISE = /* glsl */ `
   }
 `;
 
-export const PLANET_VERT = /* glsl */ `
+export const PLANET_VERT = /* glsl */ `#include <common>
+  #include <logdepthbuf_pars_vertex>
+
   uniform float uSeed;
   uniform float uAmp;
   uniform float uTime;
@@ -80,11 +82,15 @@ export const PLANET_VERT = /* glsl */ `
     vWorld = world.xyz;
     vNormalW = normalize(mat3(modelMatrix) * bumped);
     gl_Position = projectionMatrix * viewMatrix * world;
+    #include <logdepthbuf_vertex>
   }
 `;
 
 export const PLANET_FRAG = /* glsl */ `
   precision highp float;
+  #include <common>
+  #include <logdepthbuf_pars_fragment>
+
 
   uniform vec3 uDeep;
   uniform vec3 uMid;
@@ -108,6 +114,7 @@ export const PLANET_FRAG = /* glsl */ `
   ${NOISE}
 
   void main() {
+    #include <logdepthbuf_fragment>
     vec3 n = normalize(vLocal);
     float seed = uSeed * 7.31;
 
@@ -167,7 +174,9 @@ export const PLANET_FRAG = /* glsl */ `
   }
 `;
 
-export const ATMO_VERT = /* glsl */ `
+export const ATMO_VERT = /* glsl */ `#include <common>
+  #include <logdepthbuf_pars_vertex>
+
   varying vec3 vNormal;
   varying vec3 vWorld;
   void main() {
@@ -175,11 +184,15 @@ export const ATMO_VERT = /* glsl */ `
     vec4 world = modelMatrix * vec4(position, 1.0);
     vWorld = world.xyz;
     gl_Position = projectionMatrix * viewMatrix * world;
+    #include <logdepthbuf_vertex>
   }
 `;
 
 export const ATMO_FRAG = /* glsl */ `
   precision highp float;
+  #include <common>
+  #include <logdepthbuf_pars_fragment>
+
   uniform vec3 uColor;
   uniform vec3 uLight;
   uniform vec3 uCamera;
@@ -188,6 +201,7 @@ export const ATMO_FRAG = /* glsl */ `
   varying vec3 vWorld;
 
   void main() {
+    #include <logdepthbuf_fragment>
     vec3 N = normalize(vNormal);
     vec3 V = normalize(uCamera - vWorld);
     vec3 L = normalize(uLight);
@@ -201,6 +215,9 @@ export const ATMO_FRAG = /* glsl */ `
 
 export const RING_FRAG = /* glsl */ `
   precision highp float;
+  #include <common>
+  #include <logdepthbuf_pars_fragment>
+
   uniform vec3 uColorA;
   uniform vec3 uColorB;
   uniform float uSeed;
@@ -210,6 +227,7 @@ export const RING_FRAG = /* glsl */ `
   ${NOISE}
 
   void main() {
+    #include <logdepthbuf_fragment>
     float r = vUv.x;
     float bands = vnoise(vec3(r * 34.0 + uSeed, uSeed, 0.0));
     float fine = vnoise(vec3(r * 180.0 + uSeed * 2.0, 0.0, 0.0));
@@ -226,6 +244,9 @@ export const RING_FRAG = /* glsl */ `
 
 export const SUN_FRAG = /* glsl */ `
   precision highp float;
+  #include <common>
+  #include <logdepthbuf_pars_fragment>
+
   uniform float uTime;
   varying vec3 vLocal;
   varying vec3 vWorld;
@@ -234,6 +255,7 @@ export const SUN_FRAG = /* glsl */ `
   ${NOISE}
 
   void main() {
+    #include <logdepthbuf_fragment>
     vec3 n = normalize(vLocal);
     float t = uTime * 0.045;
     float a = fbm(n * 4.0 + vec3(t, 0.0, t * 0.7));
@@ -256,12 +278,16 @@ export const SUN_FRAG = /* glsl */ `
 
 export const NEBULA_FRAG = /* glsl */ `
   precision highp float;
+  #include <common>
+  #include <logdepthbuf_pars_fragment>
+
   uniform float uTime;
   varying vec3 vWorld;
 
   ${NOISE}
 
   void main() {
+    #include <logdepthbuf_fragment>
     vec3 dir = normalize(vWorld);
     float n1 = fbm(dir * 2.2 + 4.0);
     float n2 = fbm(dir * 5.5 - 2.0);

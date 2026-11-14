@@ -59,7 +59,7 @@ export class SpeedLines {
     const speedFactor = THREE.MathUtils.clamp((speed - 700) / 2200, 0, 1);
     const target = Math.min(1, boost * 1.25 + speedFactor * 0.5);
     this.intensity += (target - this.intensity) * Math.min(1, dt * 4);
-    this.material.opacity = this.intensity * 0.72;
+    this.material.opacity = this.intensity * 0.82;
     this.object.visible = this.intensity > 0.015;
     if (!this.object.visible) return;
 

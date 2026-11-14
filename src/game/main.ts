@@ -82,7 +82,7 @@ function fireSelectedWeapons(ctx: GameContext): void {
   if (!ctx.weapons.firing || !ctx.player.alive) return;
   const spec = ctx.spec.current;
   const selected = ctx.weapons.selected;
-  const firedTypes = new Set<WeaponType>();
+  const firedTypes = new Map<WeaponType, number>();
   let shake = 0;
 
   for (const weapon of spec.weapons) {
@@ -95,11 +95,11 @@ function fireSelectedWeapons(ctx: GameContext): void {
     const origin = local.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
     ctx.combat.fire(origin, ctx.flight.forwardVector, weapon, ctx.flight.quaternion);
     ctx.weapons.cooldowns.set(key, 1 / Math.max(0.05, weapon.rate));
-    firedTypes.add(weapon.type);
+    firedTypes.set(weapon.type, Math.max(firedTypes.get(weapon.type) ?? 0, Math.min(1.1, 0.25 + weapon.damage / 120)));
     shake = Math.max(shake, FIRE_SHAKE[weapon.type]);
   }
 
-  for (const type of firedTypes) ctx.audio.weapon(type, 0.9);
+  for (const [type, volume] of firedTypes) ctx.audio.weapon(type, volume);
   if (shake > 0) ctx.flight.addShake(shake);
 }
 
@@ -122,8 +122,9 @@ export async function startGame(system: SystemData): Promise<void> {
     antialias: true,
     powerPreference: 'high-performance',
     alpha: false,
+    logarithmicDepthBuffer: true,
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.06;
@@ -301,7 +302,7 @@ export async function startGame(system: SystemData): Promise<void> {
     },
     onImpact: (type, position, owner) => {
       const distance = position.distanceTo(flight.position);
-      const volume = THREE.MathUtils.clamp(1 - distance / 5200, 0.04, 1);
+      const volume = THREE.MathUtils.clamp(1 - distance / 5200, 0.04, 1) * (owner === 'player' ? 0.35 : 1);
       audio.impact(type, volume);
       if (owner === 'npc') {
         flight.addShake(IMPACT_SHAKE[type] * THREE.MathUtils.clamp(1 - distance / 3000, 0, 1));
@@ -436,14 +437,36 @@ interface Hud {
 
 function loop(ctx: GameContext, hud: Hud): void {
   const clock = new THREE.Clock();
+  const maxPixelRatio = Math.min(window.devicePixelRatio, 1.5);
+  let pixelRatio = ctx.renderer.getPixelRatio();
   const fade = document.getElementById('fade') as HTMLElement;
   const heat = document.getElementById('heat-warning') as HTMLElement;
   const motionBlur = ctx.motionBlur;
   let elapsed = 0;
 
+  let perfAccum = 0;
+  let perfFrames = 0;
   const tick = (): void => {
     const dt = Math.min(clock.getDelta(), 0.05);
     elapsed += dt;
+    perfAccum += dt;
+    perfFrames += 1;
+    if (perfAccum > 2) {
+      const fps = perfFrames / perfAccum;
+      if (fps < 46 && pixelRatio > 0.8) {
+        pixelRatio = Math.max(0.8, pixelRatio - 0.15);
+        ctx.renderer.setPixelRatio(pixelRatio);
+        ctx.composer.setPixelRatio?.(pixelRatio);
+        ctx.composer.setSize(window.innerWidth, window.innerHeight);
+      } else if (fps > 58 && pixelRatio < maxPixelRatio) {
+        pixelRatio = Math.min(maxPixelRatio, pixelRatio + 0.1);
+        ctx.renderer.setPixelRatio(pixelRatio);
+        ctx.composer.setPixelRatio?.(pixelRatio);
+        ctx.composer.setSize(window.innerWidth, window.innerHeight);
+      }
+      perfAccum = 0;
+      perfFrames = 0;
+    }
     const prevPosition = ctx.flight.position.clone();
 
     ctx.flight.update(dt);
@@ -488,7 +511,7 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     // 动态模糊：速度越快越明显，加速时再叠一点
     const speedNorm = Math.min(1, ctx.flight.speed / 9000);
-    motionBlur.uniforms.uStrength.value = speedNorm * 0.14 + ctx.flight.boost * 0.1;
+    motionBlur.uniforms.uStrength.value = speedNorm * 0.18 + ctx.flight.boost * 0.18;
 
     ctx.combat.update(dt, ctx.flight.position, ctx.flight.velocity, ctx.flight.quaternion, ctx.camera);
 
@@ -508,7 +531,7 @@ function loop(ctx: GameContext, hud: Hud): void {
       const aim = ctx.combat.leadPoint(origin, target.position, target.velocity, weapon.speed);
       const dir = aim.sub(origin).normalize();
       ctx.combat.fire(origin, dir, weapon, ctx.flight.quaternion);
-      ctx.audio.weapon(weapon.type, 0.4);
+      ctx.audio.weapon(weapon.type, Math.min(0.34, 0.07 + weapon.damage / 1100));
       ctx.autoCooldowns.set(key, 1 / weapon.rate);
     }
 
@@ -677,7 +700,7 @@ function setupHud(
     const h = mapCanvas.height;
     const cx = w / 2;
     const cy = h / 2;
-    const range = 1200000;
+    const range = 1500000;
 
     c.clearRect(0, 0, w, h);
     c.fillStyle = '#04080d';
@@ -685,6 +708,18 @@ function setupHud(
 
     const forward = ctx.flight.forwardVector;
     const yaw = Math.atan2(forward.x, forward.z);
+    const sunRel = ctx.flight.position.clone().multiplyScalar(-1);
+    const sunDist = sunRel.length();
+    if (sunDist < range) {
+      const sunAngle = Math.atan2(sunRel.x, sunRel.z) - yaw;
+      const sunRadius = (sunDist / range) * (Math.min(w, h) / 2 - 14);
+      const sunX = cx - Math.sin(sunAngle) * sunRadius;
+      const sunY = cy - Math.cos(sunAngle) * sunRadius;
+      c.fillStyle = 'rgba(255,200,120,0.9)';
+      c.beginPath();
+      c.arc(sunX, sunY, 5, 0, Math.PI * 2);
+      c.fill();
+    }
 
     c.strokeStyle = 'rgba(120,180,200,0.16)';
     c.lineWidth = 1;
@@ -693,12 +728,6 @@ function setupHud(
       c.arc(cx, cy, (Math.min(w, h) / 2 - 10) * r, 0, Math.PI * 2);
       c.stroke();
     }
-
-    // 太阳
-    c.fillStyle = 'rgba(255,200,120,0.9)';
-    c.beginPath();
-    c.arc(cx, cy, 5, 0, Math.PI * 2);
-    c.fill();
 
     for (const body of ctx.world.bodies) {
       const rel = body.position.clone().sub(ctx.flight.position);
@@ -759,13 +788,27 @@ function setupHud(
       }
     }
 
-    // 本舰
-    c.fillStyle = '#e9eff3';
+    // 本舰：固定在中心，外圈 + 十字 + 空心箭头，避免被附近天体盖住
+    c.strokeStyle = 'rgba(89,224,200,0.65)';
+    c.lineWidth = 1.4;
     c.beginPath();
-    c.moveTo(cx, cy - 7);
-    c.lineTo(cx - 4.5, cy + 5);
-    c.lineTo(cx + 4.5, cy + 5);
+    c.arc(cx, cy, 13, 0, Math.PI * 2);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(cx - 20, cy); c.lineTo(cx - 9, cy);
+    c.moveTo(cx + 9, cy); c.lineTo(cx + 20, cy);
+    c.moveTo(cx, cy - 20); c.lineTo(cx, cy - 9);
+    c.moveTo(cx, cy + 9); c.lineTo(cx, cy + 20);
+    c.stroke();
+    c.fillStyle = '#bff8ed';
+    c.strokeStyle = '#061012';
+    c.lineWidth = 2.2;
+    c.beginPath();
+    c.moveTo(cx, cy - 8);
+    c.lineTo(cx - 5, cy + 5);
+    c.lineTo(cx + 5, cy + 5);
     c.closePath();
+    c.stroke();
     c.fill();
   };
 
@@ -1370,13 +1413,14 @@ function setupHud(
 
     // 雷达
     drawRadar();
+    if (radarLabel) radarLabel.textContent = `${Math.round(Math.max(50000, ctx.spec.current.sensorRange * 2) / 1000)} km`;
   };
 
   const radar = $('radar') as unknown as HTMLCanvasElement;
+  const radarLabel = document.querySelector('.hud-radar-label') as HTMLElement | null;
   const rctx = radar.getContext('2d')!;
-  const radarRange = 1200000;
-
   const drawRadar = (): void => {
+    const radarRange = Math.max(50000, ctx.spec.current.sensorRange * 2);
     const size = radar.width;
     const half = size / 2;
     rctx.clearRect(0, 0, size, size);
@@ -1440,7 +1484,18 @@ function setupHud(
       rctx.fill();
     }
 
-    rctx.fillStyle = 'rgba(233, 239, 243, 0.95)';
+    rctx.strokeStyle = 'rgba(89, 224, 200, 0.65)';
+    rctx.lineWidth = 1.2;
+    rctx.beginPath();
+    rctx.arc(half, half, 9, 0, Math.PI * 2);
+    rctx.stroke();
+    rctx.beginPath();
+    rctx.moveTo(half - 13, half); rctx.lineTo(half - 8, half);
+    rctx.moveTo(half + 8, half); rctx.lineTo(half + 13, half);
+    rctx.moveTo(half, half - 13); rctx.lineTo(half, half - 8);
+    rctx.moveTo(half, half + 8); rctx.lineTo(half, half + 13);
+    rctx.stroke();
+    rctx.fillStyle = 'rgba(191, 248, 237, 0.98)';
     rctx.beginPath();
     rctx.moveTo(half, half - 5);
     rctx.lineTo(half - 3.4, half + 4);

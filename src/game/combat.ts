@@ -1008,6 +1008,8 @@ export class Combat {
     const distance = toTarget.length();
     if (distance > 0.001) toTarget.multiplyScalar(1 / distance);
 
+    const distToPlayer = npc.group.position.distanceTo(playerPos);
+    npc.group.visible = distToPlayer < 180000;
     const fleet = this.fleets.find((item) => item.id === npc.fleetId);
     const travel = fleet ? fleet.cruise : 2200;
     const combatSpeed = Math.min(npc.spec.maxSpeed * 1.6, 5200);
@@ -1029,16 +1031,17 @@ export class Combat {
     if (this.time - npc.lastHit > 3) {
       npc.shield = Math.min(npc.maxShield, npc.shield + npc.shieldRegen * dt);
     }
+    npc.damage.setEnabled(distToPlayer < 30000);
     npc.damage.update(dt, npc.hp / npc.maxHp, npc.shield / npc.maxShield);
 
     // 引擎粒子尾焰（舰体局部坐标）
     const thrust = Math.min(1, npc.velocity.length() / 2600);
-    npc.trail.update(dt, 0.2 + thrust * 1.4);
+    npc.trail.object.visible = distToPlayer < 35000;
+    if (npc.trail.object.visible) npc.trail.update(dt, 0.2 + thrust * 1.4);
 
     // 开火：必须把舰首对准预测点，不能 360° 侧射
     npc.cooldown -= dt;
     const weapon = npc.weapon;
-    const distToPlayer = npc.group.position.distanceTo(playerPos);
     const range = Math.min(weapon.range, 7000);
     if (npc.hostile && npc.cooldown <= 0 && distToPlayer < range) {
       const aim = this.leadPoint(npc.group.position, playerPos, playerVelocity, weapon.speed);
@@ -1069,6 +1072,7 @@ export class Combat {
   }
 
   private beginNpcDeath(npc: Npc): void {
+    npc.damage.setEnabled(true);
     const spec = npc.spec;
     const events: DeathEvent[] = [];
     const isCapital = spec.tier >= 5;
