@@ -4,6 +4,7 @@
  * 命名约定（来自标注）：
  *   武器前缀：su 鱼雷 / le 激光 / ca 机枪 / K 轨道炮 / P 等离子 / io 离子炮
  *   强度后缀：- 削弱 / -- 更削弱 / + 增强 / ++ 更强 / +++ 超强 / A 定制级
+ *   A 不是固定倍率：按单舰体量（全长 + 舰级）综合评定，见 customGrade。
  *   附带 Auto = 自动炮：只攻击「已经攻击过我方」的目标，不主动开火
  *   喷口后缀：S 副推进器 / F 反推进器 / A 定制级
  *
@@ -54,6 +55,8 @@ export interface ShipSpec {
   hull: number;
   shield: number;
   shieldRegen: number;
+  /** A 定制级武器的单舰评定倍率 */
+  customGrade: number;
   parts: { engine: number; weapon: number; cockpit: number };
   nozzles: NozzleMount[];
   weapons: WeaponMount[];
@@ -76,6 +79,7 @@ const MOD: Record<string, number> = {
 function parseWeapon(
   tag: string,
   pos: [number, number, number],
+  customGrade: number,
 ): WeaponMount {
   const code = tag.replace(/^W\d+/, '');
   const turret = /Auto/i.test(code);
@@ -92,7 +96,7 @@ function parseWeapon(
     prefix === 'su' ? 'torpedo' : prefix === 'le' ? 'laser' : prefix === 'ca' ? 'cannon' : prefix === 'K' ? 'railgun' : prefix === 'io' ? 'ion' : 'plasma';
 
   const base = BASE[type];
-  const scale = MOD[mod] ?? 1;
+  const scale = mod === 'A' ? customGrade : MOD[mod] ?? 1;
 
   return {
     id: tag,
@@ -247,8 +251,11 @@ export const SHIPS: ShipSpec[] = RAW.map((raw) => ({
     weapon: Math.round(raw.hull[3] * 0.9),
     cockpit: Math.round(raw.hull[3] * 0.7),
   },
+  customGrade: 2.2 + 0.75 * Math.cbrt(raw.length / 25) + 0.1 * Math.max(0, raw.tier - 2),
   nozzles: raw.nozzles.map(([tag, x, y, z]) => parseNozzle(tag, [x, y, z], raw.length)),
-  weapons: raw.weapons.map(([tag, x, y, z]) => parseWeapon(tag, [x, y, z])),
+  weapons: raw.weapons.map(([tag, x, y, z]) =>
+    parseWeapon(tag, [x, y, z], 2.2 + 0.75 * Math.cbrt(raw.length / 25) + 0.1 * Math.max(0, raw.tier - 2)),
+  ),
 }));
 
 export function getShip(id: string): ShipSpec {
