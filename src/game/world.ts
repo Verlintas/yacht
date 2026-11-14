@@ -99,7 +99,7 @@ export function createWorld(
     const u = rand() * 2 - 1;
     const theta = rand() * Math.PI * 2;
     const r = Math.sqrt(1 - u * u);
-    const distance = 900000 + rand() * 400000;
+    const distance = 4000000 + rand() * 2000000;
     positions[i * 3] = Math.cos(theta) * r * distance;
     positions[i * 3 + 1] = u * distance;
     positions[i * 3 + 2] = Math.sin(theta) * r * distance;
@@ -158,7 +158,7 @@ export function createWorld(
 
   /* ── 星云 ─────────────────────────────────── */
   const nebula = new THREE.Mesh(
-    new THREE.SphereGeometry(1_600_000, 48, 32),
+    new THREE.SphereGeometry(8_000_000, 48, 32),
     new THREE.ShaderMaterial({
       uniforms: { uTime: { value: 0 } },
       vertexShader: /* glsl */ `
@@ -190,7 +190,22 @@ export function createWorld(
     fragmentShader: SUN_FRAG,
   });
   const sun = new THREE.Mesh(new THREE.SphereGeometry(sunRadius, 64, 48), sunMaterial);
+  sun.frustumCulled = false;
   sunGroup.add(sun);
+
+  // 稳定亮核：即使极端角度下网格被深度裁剪，也不会出现「太阳突然没光」
+  const core = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: glowTexture('rgba(255,255,255,1)', 'rgba(255,210,140,0.5)'),
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      depthTest: false,
+      transparent: true,
+      opacity: 0.55,
+    }),
+  );
+  core.scale.setScalar(sunRadius * 1.15);
+  sunGroup.add(core);
 
   const glow = new THREE.Sprite(
     new THREE.SpriteMaterial({
@@ -384,10 +399,6 @@ export function createWorld(
     bodyGroup.add(built.group);
     hangars.push(...built.hangars);
 
-    const curve = new THREE.EllipseCurve(0, 0, def.orbit, def.orbit, 0, Math.PI * 2);
-    const points = curve.getPoints(320).map((p) => new THREE.Vector3(p.x, p.y, 0));
-    orbitGroup.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points), orbitMaterial));
-
     bodies.push({
       id: def.id,
       type: 'station',
@@ -443,13 +454,15 @@ export function createWorld(
         amat.uniforms.uCamera.value.copy(camera.position);
       } else if (body.type === 'station' && body.station) {
         const def = body.station;
+        const parent = bodies.find((item) => item.id === def.parent && item.planet);
+        const base = parent ? parent.position : tmpSun.set(0, 0, 0);
         const period = 6000 + def.orbit * 0.02;
         const angle = def.phase + (simDays / period) * Math.PI * 2;
         tmpPos.set(
           Math.cos(angle) * def.orbit,
           Math.sin(angle) * def.orbit * Math.sin(def.inclination),
           Math.sin(angle) * def.orbit,
-        );
+        ).add(base);
         body.position.copy(tmpPos);
         body.object.position.copy(tmpPos);
         body.object.rotation.y = elapsed * def.spin * 0.15;

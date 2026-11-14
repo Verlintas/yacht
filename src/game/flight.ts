@@ -21,6 +21,7 @@ export class FlightController {
   private orbitDistance = 60;
   private keys = new Set<string>();
   private freeDragging = false;
+  private mouseHeld = false;
   private shake = 0;
   private smoothedOffset = new THREE.Vector3();
   private readonly tmp = new THREE.Vector3();
@@ -42,6 +43,7 @@ export class FlightController {
 
   attach(dom: HTMLElement): void {
     dom.addEventListener('pointerdown', () => {
+      this.mouseHeld = true;
       if (this.cameraMode === 'free' && document.pointerLockElement !== dom) this.freeDragging = true;
       if (document.pointerLockElement !== dom) void dom.requestPointerLock();
     });
@@ -56,7 +58,7 @@ export class FlightController {
     });
 
     document.addEventListener('mousemove', (event) => {
-      if (document.pointerLockElement !== dom) return;
+      if (document.pointerLockElement !== dom && !this.mouseHeld) return;
       if (this.cameraMode === 'free') {
         this.orbitYaw -= event.movementX * 0.0026;
         this.orbitPitch = THREE.MathUtils.clamp(
@@ -99,8 +101,12 @@ export class FlightController {
     window.addEventListener('blur', () => {
       this.keys.clear();
       this.freeDragging = false;
+      this.mouseHeld = false;
     });
-    window.addEventListener('pointerup', () => { this.freeDragging = false; });
+    window.addEventListener('pointerup', () => {
+      this.freeDragging = false;
+      this.mouseHeld = false;
+    });
   }
 
   addShake(amount: number): void {
@@ -126,18 +132,13 @@ export class FlightController {
       this.cameraMode = 'third';
     }
     else if (this.cameraMode === 'third') {
-      this.camera.getWorldPosition(this.tmp);
-      const offset = this.tmp.clone().sub(this.position);
       const L = this.spec.length ?? 25;
-      if (offset.length() > L * 0.8) {
-        this.orbitDistance = THREE.MathUtils.clamp(offset.length(), L * 1.2 + 8, L * 12 + 6000);
-        this.orbitYaw = Math.atan2(offset.x, offset.z);
-        this.orbitPitch = THREE.MathUtils.clamp(Math.asin(offset.y / offset.length()), -1.25, 1.25);
-      } else {
-        this.orbitDistance = L * 3 + 40;
-        this.orbitYaw = Math.PI;
-        this.orbitPitch = 0.28;
-      }
+      const forward = this.forwardVector;
+      const offset = forward.clone().multiplyScalar(-(L * 3 + 40));
+      offset.y += L * 1.2 + 15;
+      this.orbitDistance = offset.length();
+      this.orbitYaw = Math.atan2(offset.x, offset.z);
+      this.orbitPitch = THREE.MathUtils.clamp(Math.asin(offset.y / offset.length()), -1.25, 1.25);
       this.cameraMode = 'free';
     } else {
       this.smoothedOffset.set(0, 0, 0);
@@ -276,7 +277,7 @@ export class FlightController {
 
     this.shake = THREE.MathUtils.lerp(
       this.shake,
-      this.boost * 0.85 + this.throttle * 0.08,
+      this.boost * (0.25 + 0.6 * THREE.MathUtils.clamp((this.spec.length ?? 25) / 1200, 0.25, 1)) + this.throttle * 0.08,
       Math.min(1, dt * 4),
     );
   }
@@ -298,7 +299,8 @@ export class FlightController {
         if (this.camera.parent !== this.shipRef) this.shipRef.add(this.camera);
         this.camera.position.copy(this.cockpitOffset);
         this.camera.quaternion.identity();
-        this.camera.fov = 78 + this.boost * 6;
+        const fovComfort = THREE.MathUtils.clamp((this.spec.length ?? 25) / 1200, 0.25, 1);
+        this.camera.fov = 78 + this.boost * (3 + 6 * fovComfort);
         this.camera.updateProjectionMatrix();
       }
     } else if (this.cameraMode === 'free') {
@@ -355,7 +357,8 @@ export class FlightController {
         this.camera.position.y += (Math.random() - 0.5) * this.shake * 0.3;
       }
 
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62 + this.boost * 12 + Math.min(4, speed / 7000), Math.min(1, dt * 4));
+      const fovComfort = THREE.MathUtils.clamp(L / 1200, 0.25, 1);
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62 + this.boost * (4 + 8 * fovComfort) + Math.min(4, speed / 7000), Math.min(1, dt * 4));
       this.camera.updateProjectionMatrix();
     }
   }

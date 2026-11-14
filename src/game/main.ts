@@ -132,7 +132,7 @@ export async function startGame(system: SystemData): Promise<void> {
 
   const scene = new THREE.Scene();
 
-  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 2_200_000);
+  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 12_000_000);
   // 高速时的屏幕空间流线
   const speedLines = new SpeedLines(camera);
   // 挂在相机上的补光，避免飞船暗面全黑
@@ -400,6 +400,16 @@ export async function startGame(system: SystemData): Promise<void> {
   };
 
   ctx.switchShip = switchShip;
+
+  // 数字键选择武器组（主键盘 + 小键盘）
+  window.addEventListener('keydown', (event) => {
+    const match = /^(?:Digit|Numpad)([0-9])$/.exec(event.code);
+    if (!match) return;
+    const types = manualWeaponTypes(ctx.spec.current);
+    const index = Number(match[1]);
+    if (index === 0) ctx.weapons.selected = 'all';
+    else if (types[index - 1]) ctx.weapons.selected = types[index - 1];
+  });
   // 开局舰队：敌对舰队会扫描并主动上门，中立舰队全图游荡
   const fleetPlan: Array<{ faction: 'hostile' | 'neutral'; angle: number; distance: number }> = [
     { faction: 'hostile', angle: 0.5, distance: 95000 },
@@ -510,8 +520,9 @@ function loop(ctx: GameContext, hud: Hud): void {
     }
 
     // 动态模糊：速度越快越明显，加速时再叠一点
+    const comfort = THREE.MathUtils.clamp(ctx.spec.current.length / 1200, 0.25, 1);
     const speedNorm = Math.min(1, ctx.flight.speed / 9000);
-    motionBlur.uniforms.uStrength.value = speedNorm * 0.18 + ctx.flight.boost * 0.18;
+    motionBlur.uniforms.uStrength.value = (speedNorm * 0.18 + ctx.flight.boost * 0.18) * (0.4 + 0.6 * comfort);
 
     ctx.combat.update(dt, ctx.flight.position, ctx.flight.velocity, ctx.flight.quaternion, ctx.camera);
 
@@ -569,7 +580,7 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     hud.update(dt);
     ctx.audio.update(ctx.flight.speed, ctx.flight.throttle, ctx.flight.boost);
-    ctx.speedLines.update(dt, ctx.flight.boost, ctx.flight.speed);
+    ctx.speedLines.update(dt, ctx.flight.boost * (0.4 + 0.6 * comfort), ctx.flight.speed * (0.45 + 0.55 * comfort));
     ctx.composer.render();
     requestAnimationFrame(tick);
   };
@@ -700,7 +711,7 @@ function setupHud(
     const h = mapCanvas.height;
     const cx = w / 2;
     const cy = h / 2;
-    const range = 1500000;
+    const range = 3_000_000;
 
     c.clearRect(0, 0, w, h);
     c.fillStyle = '#04080d';

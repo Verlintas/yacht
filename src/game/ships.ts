@@ -264,37 +264,45 @@ const RAW: Raw[] = [
   },
 ];
 
-export const SHIPS: ShipSpec[] = RAW.map((raw) => ({
-  id: raw.id,
-  name: raw.name,
-  code: raw.code,
-  role: raw.role,
-  class: raw.class,
-  tier: raw.tier,
-  model: raw.model,
-  length: raw.length,
-  exhaust: raw.exhaust,
-  sensorRange: raw.sensorRange,
-  chargeTime: Math.max(3, Math.min(10, 3 + (7 * Math.log10(raw.length / 25)) / Math.log10(50))),
-  warpCombo: raw.length > 2000,
-  cockpits: raw.cockpits,
-  maxSpeed: raw.speed[0],
-  boostSpeed: raw.speed[1],
-  accel: raw.speed[2],
-  turnRate: raw.speed[3],
-  hull: raw.hull[0],
-  shield: raw.hull[1],
-  shieldRegen: raw.hull[2],
-  parts: {
-    engine: Math.round(raw.hull[3]),
-    weapon: Math.round(raw.hull[3] * 0.9),
-    cockpit: Math.round(raw.hull[3] * 0.7),
-  },
-  nozzles: raw.nozzles.map(([tag, x, y, z]) => parseNozzle(tag, [x, y, z], raw.length)),
-  weapons: raw.weapons.map(([tag, x, y, z]) =>
-    parseWeapon(tag, [x, y, z], raw.hull[0] + raw.hull[1]),
-  ),
-}));
+export const SHIPS: ShipSpec[] = RAW.map((raw) => {
+  const coordScale = raw.length / (ANNOTATION_LENGTH[raw.id] ?? raw.length);
+  const scaled = (x: number, y: number, z: number): [number, number, number] => [
+    x * coordScale,
+    y * coordScale,
+    z * coordScale,
+  ];
+  return {
+    id: raw.id,
+    name: raw.name,
+    code: raw.code,
+    role: raw.role,
+    class: raw.class,
+    tier: raw.tier,
+    model: raw.model,
+    length: raw.length,
+    exhaust: raw.exhaust,
+    sensorRange: raw.sensorRange,
+    chargeTime: Math.max(3, Math.min(10, 3 + (7 * Math.log10(raw.length / 25)) / Math.log10(50))),
+    warpCombo: raw.length > 2000,
+    cockpits: raw.cockpits.map(([x, y, z]) => scaled(x, y, z)),
+    maxSpeed: raw.speed[0],
+    boostSpeed: raw.speed[1],
+    accel: raw.speed[2],
+    turnRate: raw.speed[3],
+    hull: raw.hull[0],
+    shield: raw.hull[1],
+    shieldRegen: raw.hull[2],
+    parts: {
+      engine: Math.round(raw.hull[3]),
+      weapon: Math.round(raw.hull[3] * 0.9),
+      cockpit: Math.round(raw.hull[3] * 0.7),
+    },
+    nozzles: raw.nozzles.map(([tag, x, y, z]) => parseNozzle(tag, scaled(x, y, z), raw.length)),
+    weapons: raw.weapons.map(([tag, x, y, z]) =>
+      parseWeapon(tag, scaled(x, y, z), raw.hull[0] + raw.hull[1]),
+    ),
+  };
+});
 
 export function getShip(id: string): ShipSpec {
   return SHIPS.find((ship) => ship.id === id) ?? SHIPS[0];
