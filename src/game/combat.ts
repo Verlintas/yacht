@@ -144,7 +144,7 @@ export interface CombatEvents {
 }
 
 const MAX_PROJECTILES = 260;
-const SCAN_RANGE = 60000;
+const SCAN_RANGE = 35000;
 
 const ENEMY_FLAGSHIPS = ['freighter', 'commander', 'commander', 'battleship'] as const;
 const NEUTRAL_FLAGSHIPS = ['freighter', 'commander', 'freighter'] as const;
@@ -1363,7 +1363,7 @@ export class Combat {
   }
 
   /** 最近的可攻击目标（HUD 用） */
-  nearestNpc(position: THREE.Vector3): {
+  nearestNpc(position: THREE.Vector3, range = Infinity): {
     distance: number;
     hp: number;
     maxHp: number;
@@ -1377,7 +1377,7 @@ export class Combat {
     position: THREE.Vector3;
   } | null {
     let best: Npc | null = null;
-    let bestDist = Infinity;
+    let bestDist = range;
     for (const npc of this.npcs) {
       if (!npc.alive) continue;
       const d = npc.group.position.distanceTo(position);
@@ -1415,7 +1415,7 @@ export class Combat {
     let best: Npc | null = null;
     let bestDist = range;
     for (const npc of this.npcs) {
-      if (!npc.alive || !npc.hostile || npc.spec.tier < 5) continue;
+      if (!npc.alive || !npc.hostile || !npc.alerted || npc.spec.tier < 5) continue;
       const d = npc.group.position.distanceTo(position);
       if (d < bestDist) {
         bestDist = d;

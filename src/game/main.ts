@@ -737,7 +737,7 @@ function setupHud(
     for (const contact of ctx.combat.contacts) {
       const rel = contact.position.clone().sub(ctx.flight.position);
       const distance = rel.length();
-      if (distance > range) continue;
+      if (distance > range || distance > ctx.spec.current.sensorRange) continue;
 
       const angle = Math.atan2(rel.x, rel.z) - yaw;
       const radius = (distance / range) * (Math.min(w, h) / 2 - 14);
@@ -1235,7 +1235,8 @@ function setupHud(
     });
 
     // 敌机提示
-    const enemy = ctx.combat.nearestNpc(ctx.flight.position);
+    const sensorRange = ctx.spec.current.sensorRange;
+    const enemy = ctx.combat.nearestNpc(ctx.flight.position, sensorRange);
     if (enemy) {
       enemyBox.classList.add('is-on');
       enemyHp.style.width = `${Math.max(0, (enemy.hp / enemy.maxHp) * 100)}%`;
@@ -1247,7 +1248,7 @@ function setupHud(
     }
 
     // 顶部长舰 BOSS 血条
-    const capital = ctx.combat.nearestCapital(ctx.flight.position);
+    const capital = ctx.combat.nearestCapital(ctx.flight.position, Math.min(sensorRange, 30000));
     bossBar.classList.toggle('is-on', Boolean(capital));
     if (capital) {
       bossName.textContent = capital.name;
@@ -1282,7 +1283,7 @@ function setupHud(
     placeBearing(bearingEnemy, enemy ? enemy.position : null);
 
     // 敌方舰队情报
-    const intel = ctx.combat.getFleetIntel(ctx.flight.position);
+    const intel = ctx.combat.getFleetIntel(ctx.flight.position, sensorRange);
     fleetBox.classList.toggle('is-on', Boolean(intel));
     if (intel) {
       fleetStatus.textContent = intel.status;
@@ -1425,7 +1426,7 @@ function setupHud(
     for (const contact of ctx.combat.contacts) {
       const rel = contact.position.clone().sub(ctx.flight.position);
       const distance = rel.length();
-      if (distance > radarRange) continue;
+      if (distance > radarRange || distance > ctx.spec.current.sensorRange) continue;
 
       const angle = Math.atan2(rel.x, rel.z) - yaw;
       const radius = (distance / radarRange) * (half - 8);

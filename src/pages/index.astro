@@ -2560,4 +2560,50 @@ const systemData = {
   .map-row:hover { background: rgba(89, 224, 200, 0.06); }
   .map-row-sub, .map-row-dist { color: rgba(143, 232, 216, 0.55); }
   .map-close { border-color: rgba(89, 224, 200, 0.25); color: #7ff5e6; }
+
+  /* ── 重要信息上移/居中 ───────────────── */
+  #enemy-box { display: none; }
+  #fleet-box { top: 86px; }
+  #boss-bar { top: 154px; }
+
+  .hud-vitals {
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%);
+    width: min(520px, 42vw);
+    min-width: 360px;
+    padding: 9px 16px 10px;
+    border: 0;
+    border-top: 1px solid rgba(89, 224, 200, 0.28);
+    border-bottom: 1px solid rgba(89, 224, 200, 0.12);
+    background:
+      linear-gradient(180deg, rgba(6, 34, 34, 0.34), rgba(4, 14, 16, 0.18)),
+      repeating-linear-gradient(0deg, rgba(89, 224, 200, 0.03) 0 1px, transparent 1px 3px);
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+    box-shadow: 0 0 28px rgba(89, 224, 200, 0.06);
+    z-index: 4;
+  }
+
+  .hud-vitals .vital {
+    grid-template-columns: 46px 1fr 120px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+  }
+
+  .hud-vitals .vital-bar { height: 9px; }
+
+  .hud-coords {
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    transform: translateX(-50%);
+    font-size: 8px;
+    color: rgba(143, 232, 216, 0.4);
+    white-space: nowrap;
+  }
+
+  .vital-shield i:not(.vital-ghost) {
+    background: linear-gradient(90deg, #2f9d8d, #8ff0d8);
+    box-shadow: 0 0 9px rgba(143, 240, 216, 0.32);
+  }
 </style>
