@@ -133,7 +133,7 @@ export function buildSystem(input: {
     const ratio = Math.log10(project.loc + 1) / Math.log10(maxLoc + 1);
 
     const radius = 45000 + ratio * 70000 + rand() * 12000;
-    const orbit = 700000 + index * 350000 + rand() * 60000;
+    const orbit = 2500000 + index * 1200000 + rand() * 200000;
 
     return {
       id: project.id,

@@ -98,7 +98,7 @@ export function createWorld(
     const u = rand() * 2 - 1;
     const theta = rand() * Math.PI * 2;
     const r = Math.sqrt(1 - u * u);
-    const distance = 4000000 + rand() * 2000000;
+    const distance = 15000000 + rand() * 5000000;
     positions[i * 3] = Math.cos(theta) * r * distance;
     positions[i * 3 + 1] = u * distance;
     positions[i * 3 + 2] = Math.sin(theta) * r * distance;
@@ -285,13 +285,13 @@ export function createWorld(
   scene.environmentIntensity = 0.9;
   pmrem.dispose();
 
-  const sunKey = new THREE.DirectionalLight(0xfff0dd, 2.8);
+  const sunKey = new THREE.DirectionalLight(0xfff0dd, 3.4);
   sunKey.position.set(0, 0, 0);
   sunKey.target.position.set(0, 0, -1);
   scene.add(sunKey);
   scene.add(sunKey.target);
 
-  const ambient = new THREE.AmbientLight(0x2a3d5c, 1.7);
+  const ambient = new THREE.AmbientLight(0x2a3d5c, 0.5);
   scene.add(ambient);
 
   /* ── 行星 ─────────────────────────────────── */

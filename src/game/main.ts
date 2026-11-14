@@ -127,12 +127,12 @@ export async function startGame(system: SystemData): Promise<void> {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.06;
+  renderer.toneMappingExposure = 0.86;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
 
-  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 12_000_000);
+  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 50_000_000);
   // 高速时的屏幕空间流线
   const speedLines = new SpeedLines(camera);
   // 挂在相机上的补光，避免飞船暗面全黑
@@ -716,7 +716,7 @@ function setupHud(
     const h = mapCanvas.height;
     const cx = w / 2;
     const cy = h / 2;
-    const range = 3_000_000;
+    const range = 12_000_000;
 
     c.clearRect(0, 0, w, h);
     c.fillStyle = '#04080d';
