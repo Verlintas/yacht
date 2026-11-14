@@ -93,7 +93,7 @@ export async function startGame(system: SystemData): Promise<void> {
 
   // 优先用 Blender 导出的高模舰，失败则回退到程序化几何
   try {
-    const loaded = await loadShipModel(`${BASE}/models/thunderbolt.glb`);
+    const loaded = await loadShipModel(`${BASE}/models/thunderbolt.glb`, getShip("thunderbolt").length);
     scene.remove(ship.group);
     ship = loaded;
     scene.add(ship.group);
@@ -228,7 +228,7 @@ export async function startGame(system: SystemData): Promise<void> {
       accel: spec.accel,
       turnRate: spec.turnRate,
     });
-    ship.group.scale.setScalar(spec.scale / 0.66);
+    ship.group.scale.setScalar(1);
     playerState.hull = spec.hull;
     playerState.shield = spec.shield;
     playerState.parts = { ...spec.parts };
@@ -248,7 +248,7 @@ export async function startGame(system: SystemData): Promise<void> {
     fire.cooldown = 0.09;
     ctx.flight.forwardVector.copy(tmpForward);
     for (const weapon of shipSpec.weapons) {
-      const local = new THREE.Vector3(...weapon.pos).multiplyScalar(shipSpec.scale / 0.66);
+      const local = new THREE.Vector3(...weapon.pos);
       const origin = local.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
       ctx.combat.fire(origin, ctx.flight.forwardVector, weapon, ctx.flight.quaternion);
     }

@@ -41,8 +41,8 @@ export interface ShipSpec {
   code: string;
   /** GLB 路径（相对 site base） */
   model: string;
-  /** 模型缩放（让不同模型统一到「驾驶舱尺寸」基准） */
-  scale: number;
+  /** 舰体全长（米）——游戏内尺寸由这个决定，不是模型原始大小 */
+  length: number;
   /** 驾驶舱在模型局部坐标中的位置 */
   cockpit: [number, number, number];
 
@@ -110,7 +110,7 @@ export const SHIPS: ShipSpec[] = [
     code: 'A-30',
     role: '多用途战斗机',
     model: '/models/thunderbolt.glb',
-    scale: 0.66,
+    length: 25,
     cockpit: [0, 2.4, -4.4],
     maxSpeed: 4200,
     boostSpeed: 22000,
@@ -137,7 +137,7 @@ export const SHIPS: ShipSpec[] = [
     code: 'F-008',
     role: '轻型截击机',
     model: '/models/thunderbolt.glb',
-    scale: 0.55,
+    length: 22,
     cockpit: [0, 2.2, -4.8],
     maxSpeed: 5600,
     boostSpeed: 30000,
@@ -162,7 +162,7 @@ export const SHIPS: ShipSpec[] = [
     code: 'CG-3',
     role: '指挥舰',
     model: '/models/thunderbolt.glb',
-    scale: 1.05,
+    length: 620,
     cockpit: [0, 3.2, -6.2],
     maxSpeed: 2600,
     boostSpeed: 14000,
@@ -191,7 +191,7 @@ export const SHIPS: ShipSpec[] = [
     code: 'BB-3',
     role: '战列舰',
     model: '/models/thunderbolt.glb',
-    scale: 1.45,
+    length: 1250,
     cockpit: [0, 3.6, -8.0],
     maxSpeed: 1800,
     boostSpeed: 9000,
@@ -222,7 +222,7 @@ export const SHIPS: ShipSpec[] = [
     code: 'CR-2',
     role: '重型轰炸机',
     model: '/models/thunderbolt.glb',
-    scale: 1.1,
+    length: 120,
     cockpit: [0, 2.8, -5.4],
     maxSpeed: 3000,
     boostSpeed: 15000,
@@ -248,7 +248,7 @@ export const SHIPS: ShipSpec[] = [
     code: 'MB-16',
     role: '货船',
     model: '/models/thunderbolt.glb',
-    scale: 1.25,
+    length: 280,
     cockpit: [0, 3.0, -7.0],
     maxSpeed: 2100,
     boostSpeed: 11000,

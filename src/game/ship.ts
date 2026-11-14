@@ -331,7 +331,7 @@ export function createShip(): Ship {
 }
 
 /** 从 Blender 导出的 GLB 加载舰体，并补上引擎光。 */
-export async function loadShipModel(url: string): Promise<Ship> {
+export async function loadShipModel(url: string, targetLength = 25): Promise<Ship> {
   const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([
     import('three/examples/jsm/loaders/GLTFLoader.js'),
     import('three/examples/jsm/libs/meshopt_decoder.module.js'),
@@ -343,7 +343,14 @@ export async function loadShipModel(url: string): Promise<Ship> {
   const model = gltf.scene;
   // glTF 导出已经是 Y-up；机首在 +Z，绕 Y 转 180° 让它朝 -Z
   model.rotation.set(0, Math.PI, 0);
-  model.scale.setScalar(0.66);
+  model.scale.setScalar(1);
+  model.updateMatrixWorld(true);
+
+  // 先量出模型原始长度，再缩放到目标全长（米）
+  const rawBox = new THREE.Box3().setFromObject(model);
+  const rawSize = rawBox.getSize(new THREE.Vector3());
+  const rawLongest = Math.max(rawSize.x, rawSize.y, rawSize.z);
+  model.scale.setScalar(targetLength / rawLongest);
   model.updateMatrixWorld(true);
 
   // 收敛材质：关掉双面、压掉过强的自发光
