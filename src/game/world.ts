@@ -322,7 +322,7 @@ export function createWorld(
       fragmentShader: PLANET_FRAG,
     });
 
-    const planet = new THREE.Mesh(new THREE.SphereGeometry(def.radius, 96, 64), material);
+    const planet = new THREE.Mesh(new THREE.SphereGeometry(def.radius, 128, 80), material);
     planet.rotation.z = def.axialTilt;
     bodyGroup.add(planet);
 
