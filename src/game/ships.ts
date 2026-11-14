@@ -2,7 +2,7 @@
  * 舰船数据表 —— 由标注器输出直接转换。
  *
  * 命名约定（来自标注）：
- *   武器前缀：su 鱼雷 / le 激光 / ca 机枪 / K 轨道炮 / P 等离子
+ *   武器前缀：su 鱼雷 / le 激光 / ca 机枪 / K 轨道炮 / P 等离子 / io 离子炮
  *   强度后缀：- 削弱 / -- 更削弱 / + 增强 / ++ 更强 / +++ 超强 / A 定制级
  *   附带 Auto = 自动炮：只攻击「已经攻击过我方」的目标，不主动开火
  *   喷口后缀：S 副推进器 / F 反推进器 / A 定制级
@@ -10,7 +10,7 @@
  * 坐标：+X 右 / +Y 上 / -Z 机首，单位米。
  */
 
-export type WeaponType = 'laser' | 'cannon' | 'torpedo' | 'railgun' | 'plasma';
+export type WeaponType = 'laser' | 'cannon' | 'torpedo' | 'railgun' | 'plasma' | 'ion';
 
 export interface WeaponMount {
   id: string;
@@ -65,6 +65,7 @@ const BASE: Record<WeaponType, { damage: number; rate: number; speed: number; ra
   torpedo: { damage: 180, rate: 0.4,  speed: 900,  range: 8000, spread: 0.0100, color: 0xff7a5c },
   railgun: { damage: 320, rate: 0.18, speed: 9000, range: 9000, spread: 0.0005, color: 0xd8c8ff },
   plasma:  { damage: 120, rate: 0.8,  speed: 2200, range: 3200, spread: 0.0040, color: 0xb49cff },
+  ion:     { damage: 80,  rate: 1.4,  speed: 3600, range: 3400, spread: 0.0025, color: 0x9fd8ff },
 };
 
 const MOD: Record<string, number> = {
@@ -80,7 +81,7 @@ function parseWeapon(
   const turret = /Auto/i.test(code);
   const body = code.replace(/Auto/i, '');
 
-  const typeMatch = body.match(/^(su|le|ca|K|P)/);
+  const typeMatch = body.match(/^(su|le|ca|K|P|io)/);
   const prefix = typeMatch ? typeMatch[1] : 'le';
   const rest = body.slice(prefix.length);
 
@@ -88,7 +89,7 @@ function parseWeapon(
   const mod = modMatch ? modMatch[1] : '';
 
   const type: WeaponType =
-    prefix === 'su' ? 'torpedo' : prefix === 'le' ? 'laser' : prefix === 'ca' ? 'cannon' : prefix === 'K' ? 'railgun' : 'plasma';
+    prefix === 'su' ? 'torpedo' : prefix === 'le' ? 'laser' : prefix === 'ca' ? 'cannon' : prefix === 'K' ? 'railgun' : prefix === 'io' ? 'ion' : 'plasma';
 
   const base = BASE[type];
   const scale = MOD[mod] ?? 1;
@@ -137,83 +138,89 @@ const RAW: Raw[] = [
   {
     id: 'thunderbolt', name: 'A-30 雷霆', code: 'A-30', role: '多用途战斗机', class: 'light', tier: 2, model: 'thunderbolt.glb', length: 25,
     speed: [820, 2600, 700, 1.0], hull: [1200, 400, 22, 300],
-    cockpits: [[0, 2.0, -3.5]],
+    cockpits: [[0.0, 0.3, -9.9]],
     nozzles: [
-      ['N1', 2.6, 0.0, 8.2], ['N2', -2.6, 0.0, 8.2],
-      ['N3S', 7.4, 0.0, 4.2], ['N4S', -7.4, 0.0, 4.2],
+      ['N1', 3.3, -1.0, 7.6], ['N2', -3.3, -0.8, 8.2],
+      ['N3S', 2.6, 1.6, 6.1], ['N4S', -2.6, 1.7, 6.2],
       ['N1SF', 2.7, 1.7, -4.2], ['N2SF', -2.8, 1.7, -4.2],
     ],
     weapons: [
-      ['W1su-', 0.0, -2.5, -8.5],
-      ['W2su-', -9.5, 0.0, 2.5], ['W3su-', 9.5, 0.0, 2.5],
-      ['W4su--', -11.5, 0.5, 0.0], ['W5su--', 11.5, 0.5, 0.0],
+      ['W1ca-', -0.3, -3.5, -7.6],
+      ['W2su-', -9.0, -0.4, 0.9], ['W3su-', 9.1, -0.5, 0.9],
+      ['W4su--', -10.7, 1.4, 2.5], ['W5su--', 10.8, 1.3, 2.8],
     ],
   },
   {
     id: 'f008', name: 'SF-F008 短剑', code: 'F-008', role: '轻型截击机', class: 'light', tier: 2, model: 'f008.glb', length: 22,
     speed: [980, 3000, 900, 1.25], hull: [780, 620, 30, 220],
-    cockpits: [[0, 2.2, -5.5]],
+    cockpits: [[0.0, 0.7, -7.2]],
     nozzles: [
-      ['N1', 5.2, 0.0, 9.2], ['N2', -5.2, 0.0, 9.2],
-      ['N1SF', 3.7, 0.1, -7.5], ['N2SF', -3.8, 0.1, -7.5],
+      ['N1', 5.4, 0.6, 6.4], ['N2', -5.2, 0.5, 5.9],
+      ['N1SF', 3.6, 0.2, -5.2], ['N2SF', -3.9, 0.3, -5.1],
     ],
     weapons: [
-      ['W1su+', 2.2, 0.0, -4.5], ['W2su+', -2.2, 0.0, -4.5],
       ['W1ca+', -0.9, -2.2, -8.7], ['W2ca+', 1.0, -2.1, -8.8],
+      ['W1su+', 4.2, -1.5, -3.3], ['W2su+', -4.3, -1.5, -3.3],
     ],
   },
   {
     id: 'bomber', name: 'SF 轰炸机 CR', code: 'CR-3', role: '重型轰炸机', class: 'heavy', tier: 4, model: 'bomber.glb', length: 120,
     speed: [620, 1900, 460, 0.72], hull: [9000, 3000, 40, 700],
-    cockpits: [[0, 10.1, -26.0]],
+    cockpits: [[0.0, 10.1, -26.0]],
     nozzles: [
-      ['N1', 7.0, 0.0, 53.9], ['N2', -7.0, 0.0, 53.9],
-      ['N3S', 36.0, 0.0, 32.9], ['N4S', -36.0, 0.0, 32.9],
+      ['N1', 10.1, -4.7, 40.0], ['N2', -10.0, -4.8, 40.0],
+      ['N3S', 28.9, -1.7, 21.2], ['N4S', -29.1, -2.2, 20.9],
     ],
     weapons: [
-      ['W1P-', -36.0, 0.0, -10.1], ['W2P-', 36.0, 0.0, -10.1],
+      ['W1P-', -26.0, -9.0, -31.1], ['W2P-', 25.7, -9.1, -30.9],
     ],
   },
   {
     id: 'freighter', name: '货船 MB', code: 'MB-4', role: '货船', class: 'large', tier: 5, model: 'freighter.glb', length: 280,
     speed: [440, 1400, 300, 0.45], hull: [26000, 9000, 18, 1200],
-    cockpits: [[0, 26.0, -58.0]],
+    cockpits: [[-24.0, 2.1, -125.1]],
     nozzles: [
-      ['N1', 13.8, 4.3, 132.0], ['N2', -13.8, 4.3, 132.0],
-      ['N3S', 40.1, -5.8, 125.9], ['N4S', -40.1, -5.8, 125.9],
+      ['N1', 75.1, -26.2, 105.6], ['N2', -72.2, -26.6, 105.3],
+      ['N3S', 75.1, -26.1, -41.8], ['N4S', -72.8, -24.0, -45.5],
     ],
     weapons: [
-      ['W1ca-', 0.0, -8.0, -119.7],
+      ['W1ca-', -41.4, 16.3, -98.9],
     ],
   },
   {
     id: 'commander', name: 'Commander 指挥舰', code: 'CG-7', role: '指挥舰', class: 'flagship', tier: 7, model: 'commander.glb', length: 620,
-    speed: [380, 1200, 260, 0.55], hull: [82000, 32000, 55, 2600],
-    cockpits: [[0, 31.2, -93.6]],
+    speed: [380, 1200, 260, 0.55], hull: [82000, 48000, 95, 2600],
+    cockpits: [[0.7, 44.1, -161.0]],
     nozzles: [
-      ['N1', 0.0, 0.0, 297.7],
-      ['N2S', 36.6, 0.0, 278.7], ['N3S', -37.3, 0.0, 278.7],
+      ['N1', -0.5, 18.5, 230.4],
+      ['N2S', 5.6, 5.5, 230.4], ['N3S', -6.9, 6.4, 230.4],
     ],
     weapons: [
-      ['W1KA', -74.0, 0.0, -217.0], ['W2KA', 74.0, 0.0, -217.0],
-      ['W1P-Auto', -145.0, 25.0, -60.0], ['W2P-Auto', 145.0, 25.0, -60.0],
-      ['W3P-Auto', -145.0, 25.0, 60.0], ['W4P-Auto', 145.0, 25.0, 60.0],
-      ['W1ca-Auto', -110.0, 55.0, 0.0], ['W2ca-Auto', 110.0, 55.0, 0.0],
+      ['W1ca-Auto', -84.9, 28.5, 13.0], ['W2ca-Auto', 86.9, 31.3, 12.8],
+      ['W1KA', -27.4, 16.6, -310.0], ['W2KA', 25.2, 17.5, -310.0],
+      ['W1P-Auto', -111.1, 22.7, -137.4], ['W2P-Auto', 110.8, 23.0, -136.5],
+      ['W3P-Auto', -108.7, 2.0, 104.7], ['W4P-Auto', 105.8, 3.7, 104.1],
     ],
   },
   {
     id: 'battleship', name: 'SF 战列舰', code: 'BB-6', role: '战列舰', class: 'capital', tier: 6, model: 'battleship.glb', length: 1250,
     speed: [280, 900, 180, 0.34], hull: [320000, 120000, 80, 5000],
-    cockpits: [[0, 50.6, -125.8]],
+    cockpits: [[-1.0, 131.3, -170.2]],
     nozzles: [
-      ['N1', 62.9, 26.0, 561.9], ['N2', -61.5, 26.0, 561.9],
-      ['N3S', 276.2, 0.0, 374.6], ['N4S', -274.8, 0.0, 374.6],
+      ['N1', 192.4, 81.0, 597.3], ['N2', -188.2, 81.2, 597.3],
+      ['N5', 194.4, -79.8, 597.3], ['N6', -192.0, -78.1, 597.3],
+      ['N3S', 32.6, 121.1, 603.8], ['N4S', -29.4, 122.3, 603.8],
     ],
     weapons: [
-      ['W1P+++Auto', -311.7, 0.0, -125.8], ['W2P+++Auto', 311.7, 0.0, -125.8],
-      ['W3ca+++Auto', -374.6, 0.0, 61.5], ['W4ca+++Auto', 374.6, 0.0, 61.5],
-      ['W5su+++', -260.0, 20.0, 200.0], ['W6su+++', 260.0, 20.0, 200.0],
-      ['W7KA', 0.0, -80.0, -400.0],
+      ['W1P+++Auto', -170.1, -48.9, -210.3], ['W2P+++Auto', 155.0, -62.0, -203.1],
+      ['W3ca+++Auto', -50.9, 143.5, 78.8], ['W4ca+++Auto', 50.1, 148.3, 74.7],
+      ['W5su+++', -302.3, 2.8, 294.8], ['W6su+++', 305.4, 0.1, 290.5],
+      ['W7KA', -3.6, -136.6, -571.7],
+      ['W8ca-Auto', -52.9, 133.1, 139.8], ['W9ca-Auto', -45.5, 117.8, 199.9],
+      ['W10ca-Auto', -57.8, 129.2, 246.5], ['W11ca-Auto', 58.8, 125.3, 236.4],
+      ['W12ca-Auto', 58.4, 126.7, 191.1], ['W13ca-Auto', 58.5, 126.5, 131.6],
+      ['W14io+Auto', 105.8, -76.1, 72.8], ['W15io+Auto', -111.9, -75.5, 69.7],
+      ['W16io+Auto', -69.8, 31.1, -215.4], ['W17io+Auto', 67.6, 33.8, -220.6],
     ],
   },
 ];
