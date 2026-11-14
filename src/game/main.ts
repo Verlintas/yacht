@@ -24,6 +24,8 @@ interface GameContext {
   motionBlur: ShaderPass;
   combat: Combat;
   fire: { cooldown: number };
+  spec: { current: ShipSpec };
+  autoCooldowns: Map<string, number>;
 }
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -93,7 +95,7 @@ export async function startGame(system: SystemData): Promise<void> {
 
   // 优先用 Blender 导出的高模舰，失败则回退到程序化几何
   try {
-    const loaded = await loadShipModel(`${BASE}/models/thunderbolt.glb`, getShip("thunderbolt").length);
+    const loaded = await loadShipModel(`${BASE}/models/thunderbolt.glb`, getShip("thunderbolt").length, getShip("thunderbolt").nozzles);
     scene.remove(ship.group);
     ship = loaded;
     scene.add(ship.group);
@@ -101,7 +103,7 @@ export async function startGame(system: SystemData): Promise<void> {
     /* 保留程序化舰 */
   }
 
-  flight.setCockpitOffset(ship.cockpit);
+  flight.setCockpitOffset(new THREE.Vector3(...getShip("thunderbolt").cockpits[0]));
   flight.bindShip(ship.group);
 
   await step('装载飞船', 0.62);
@@ -157,6 +159,7 @@ export async function startGame(system: SystemData): Promise<void> {
   window.setTimeout(() => boot.remove(), 900);
 
   const fire = { cooldown: 0 };
+  const autoCooldowns = new Map<string, number>();
   let shipSpec: ShipSpec = getShip('thunderbolt');
   const specRef = { current: shipSpec };
   const playerState = {
@@ -187,7 +190,7 @@ export async function startGame(system: SystemData): Promise<void> {
     },
   });
 
-  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, combat, fire };
+  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, combat, fire, spec: specRef, autoCooldowns };
 
   const dock = world.bodies.find((body) => body.id === 'station-dock');
   if (dock) {
@@ -228,6 +231,7 @@ export async function startGame(system: SystemData): Promise<void> {
       boostSpeed: spec.boostSpeed,
       accel: spec.accel,
       turnRate: spec.turnRate,
+      length: spec.length,
     });
     ship.group.scale.setScalar(1);
     playerState.hull = spec.hull;
@@ -249,6 +253,7 @@ export async function startGame(system: SystemData): Promise<void> {
     fire.cooldown = 0.09;
     ctx.flight.forwardVector.copy(tmpForward);
     for (const weapon of shipSpec.weapons) {
+      if (weapon.turret) continue;
       const local = new THREE.Vector3(...weapon.pos);
       const origin = local.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
       ctx.combat.fire(origin, ctx.flight.forwardVector, weapon, ctx.flight.quaternion);
@@ -332,6 +337,24 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     ctx.fire.cooldown = Math.max(0, ctx.fire.cooldown - dt);
     ctx.combat.update(dt, ctx.flight.position, ctx.flight.quaternion);
+
+    // 自动炮：只打「已攻击我方」的目标
+    for (const weapon of ctx.spec.current.weapons) {
+      if (!weapon.turret) continue;
+      const key = `${ctx.spec.current.id}:${weapon.id}`;
+      const cd = ctx.autoCooldowns.get(key) ?? 0;
+      if (cd > 0) {
+        ctx.autoCooldowns.set(key, cd - dt);
+        continue;
+      }
+      const mount = new THREE.Vector3(...weapon.pos);
+      const origin = mount.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
+      const target = ctx.combat.nearestHostile(origin, weapon.range);
+      if (!target) continue;
+      const dir = target.position.clone().sub(origin).normalize();
+      ctx.combat.fire(origin, dir, weapon, ctx.flight.quaternion);
+      ctx.autoCooldowns.set(key, 1 / weapon.rate);
+    }
 
     // 引力吸附
     for (const body of ctx.world.bodies) {

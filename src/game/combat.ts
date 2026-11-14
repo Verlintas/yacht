@@ -18,6 +18,8 @@ interface Npc {
   cooldown: number;
   radius: number;
   alive: boolean;
+  /** 只有主动攻击过玩家的才算敌对，自动炮才打 */
+  hostile: boolean;
 }
 
 export interface CombatEvents {
@@ -85,6 +87,7 @@ export class Combat {
       cooldown: Math.random() * 1.5,
       radius: 14 * scale,
       alive: true,
+      hostile: false,
     });
   }
 
@@ -190,6 +193,7 @@ export class Combat {
       npc.cooldown -= dt;
       if (npc.cooldown <= 0 && distance < 2200) {
         npc.cooldown = 1.6 + Math.random() * 1.4;
+        npc.hostile = true;
         const mesh = this.acquire(0xff6a4a);
         mesh.position.copy(npc.group.position).addScaledVector(dir, npc.radius);
         mesh.scale.setScalar(1.2);
@@ -283,6 +287,21 @@ export class Combat {
       }
     }
     return best ? { distance: bestDist, hp: best.hp, maxHp: best.maxHp } : null;
+  }
+
+  /** 最近的一个「已攻击我方」的目标 */
+  nearestHostile(position: THREE.Vector3, range: number): { position: THREE.Vector3; distance: number } | null {
+    let best: Npc | null = null;
+    let bestDist = range;
+    for (const npc of this.npcs) {
+      if (!npc.alive || !npc.hostile) continue;
+      const d = npc.group.position.distanceTo(position);
+      if (d < bestDist) {
+        bestDist = d;
+        best = npc;
+      }
+    }
+    return best ? { position: best.group.position.clone(), distance: bestDist } : null;
   }
 
   get npcCount(): number {

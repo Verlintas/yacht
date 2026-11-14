@@ -331,7 +331,11 @@ export function createShip(): Ship {
 }
 
 /** 从 Blender 导出的 GLB 加载舰体，并补上引擎光。 */
-export async function loadShipModel(url: string, targetLength = 25): Promise<Ship> {
+export async function loadShipModel(
+  url: string,
+  targetLength = 25,
+  nozzles: Array<{ pos: [number, number, number]; size: number; role: string }> = [],
+): Promise<Ship> {
   const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([
     import('three/examples/jsm/loaders/GLTFLoader.js'),
     import('three/examples/jsm/libs/meshopt_decoder.module.js'),
@@ -394,17 +398,27 @@ export async function loadShipModel(url: string, targetLength = 25): Promise<Shi
   const engineCore: THREE.Mesh[] = [];
   const rear = size.z / 2;
 
-  for (const offset of [-size.x * 0.18, 0, size.x * 0.18]) {
+  // 按标注的喷口位置布置光晕；没有标注就用默认三点
+  const mounts = nozzles.length > 0
+    ? nozzles
+    : [
+        { pos: [-size.x * 0.18, 0, rear] as [number, number, number], size: size.z * 0.12, role: 'main' },
+        { pos: [0, 0, rear] as [number, number, number], size: size.z * 0.14, role: 'main' },
+        { pos: [size.x * 0.18, 0, rear] as [number, number, number], size: size.z * 0.12, role: 'main' },
+      ];
+
+  for (const mount of mounts) {
     const sprite = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: glowTexture,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         transparent: true,
+        opacity: mount.role === 'retro' ? 0.5 : 0.75,
       }),
     );
-    sprite.position.set(offset, 0, rear * 0.98);
-    sprite.scale.setScalar(size.z * 0.16);
+    sprite.position.set(mount.pos[0], mount.pos[1], mount.pos[2]);
+    sprite.scale.setScalar(Math.max(1.2, mount.size * 2.4));
     group.add(sprite);
     engineGlow.push(sprite);
   }

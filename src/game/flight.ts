@@ -25,7 +25,7 @@ export class FlightController {
   private readonly forward = new THREE.Vector3();
   private ready = false;
   private cockpitOffset = new THREE.Vector3(0, 2.2, -2.2);
-  private spec = { maxSpeed: 4200, boostSpeed: 52000, accel: 2600, turnRate: 1 };
+  private spec = { maxSpeed: 4200, boostSpeed: 52000, accel: 2600, turnRate: 1, length: 25 };
 
   constructor(private readonly camera: THREE.PerspectiveCamera) {
     this.camera.position.copy(this.position).add(new THREE.Vector3(0, 14, 42));
@@ -73,8 +73,8 @@ export class FlightController {
     return this.forward.copy(new THREE.Vector3(0, 0, -1)).applyQuaternion(this.quaternion);
   }
 
-  configure(spec: { maxSpeed: number; boostSpeed: number; accel: number; turnRate: number }): void {
-    this.spec = spec;
+  configure(spec: { maxSpeed: number; boostSpeed: number; accel: number; turnRate: number; length?: number }): void {
+    this.spec = { ...this.spec, ...spec };
   }
 
   setCockpitOffset(offset: THREE.Vector3): void {
@@ -190,15 +190,18 @@ export class FlightController {
       this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 74, Math.min(1, dt * 4));
       this.camera.updateProjectionMatrix();
     } else {
+      const L = this.spec.length ?? 25;
+      const back = L * 1.25 + 8;
+      const height = L * 0.26 + 2.5;
       const desired = this.position
         .clone()
-        .addScaledVector(forward, -34)
-        .addScaledVector(up, 7.2);
+        .addScaledVector(forward, -back)
+        .addScaledVector(up, height);
       if (this.smoothedOffset.lengthSq() === 0) this.smoothedOffset.copy(desired);
       this.smoothedOffset.lerp(desired, Math.min(1, dt * 5));
       this.camera.position.copy(this.smoothedOffset);
       this.camera.up.copy(up).lerp(new THREE.Vector3(0, 1, 0), 0.12).normalize();
-      this.camera.lookAt(this.position.clone().addScaledVector(forward, 30));
+      this.camera.lookAt(this.position.clone().addScaledVector(forward, L * 0.7 + 6));
 
       if (this.shake > 0.01) {
         this.camera.position.x += (Math.random() - 0.5) * this.shake * 0.3;

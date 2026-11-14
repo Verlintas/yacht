@@ -1,272 +1,237 @@
 /**
- * 舰船数据表 —— 所有可调参数集中在这里。
+ * 舰船数据表 —— 由标注器输出直接转换。
  *
- * 单位：速度 m/s，距离 m，伤害/结构值为无量纲点数。
- * 硬点坐标是「舰体局部坐标」：+X 右，+Y 上，-Z 前（机首方向）。
- * 模型缩放后，坐标原点在舰体几何中心。
+ * 命名约定（来自标注）：
+ *   武器前缀：su 鱼雷 / le 激光 / ca 机枪 / K 轨道炮 / P 等离子
+ *   强度后缀：- 削弱 / -- 更削弱 / + 增强 / ++ 更强 / +++ 超强 / A 定制级
+ *   附带 Auto = 自动炮：只攻击「已经攻击过我方」的目标，不主动开火
+ *   喷口后缀：S 副推进器 / F 反推进器 / A 定制级
+ *
+ * 坐标：+X 右 / +Y 上 / -Z 机首，单位米。
  */
 
-export type WeaponType = 'laser' | 'cannon' | 'missile';
+export type WeaponType = 'laser' | 'cannon' | 'torpedo' | 'railgun' | 'plasma';
 
 export interface WeaponMount {
   id: string;
   type: WeaponType;
-  /** 挂点位置 */
   pos: [number, number, number];
-  /** 射向（局部坐标，一般朝 -Z） */
-  dir?: [number, number, number];
   damage: number;
-  /** 每秒发数 */
   rate: number;
-  /** 弹速 */
   speed: number;
-  /** 射程（米）：弹丸飞到这个距离就消失 */
   range: number;
-  /** 散布（弧度） */
   spread: number;
-  /** 弹丸颜色 */
   color: number;
+  /** 自动炮塔：可独立瞄准 */
+  turret?: boolean;
 }
 
+export type NozzleRole = 'main' | 'secondary' | 'retro';
+
 export interface NozzleMount {
+  id: string;
   pos: [number, number, number];
-  /** 喷口大小倍率 */
+  role: NozzleRole;
   size: number;
 }
 
 export interface ShipSpec {
   id: string;
   name: string;
-  /** 英文名/舷号，HUD 显示 */
   code: string;
-  /** GLB 路径（相对 site base） */
-  model: string;
-  /** 舰体全长（米）——游戏内尺寸由这个决定，不是模型原始大小 */
+  role: string;
+  class: string;
   length: number;
-  /** 驾驶舱在模型局部坐标中的位置 */
-  cockpit: [number, number, number];
-
-  /* 飞行 */
+  cockpits: Array<[number, number, number]>;
   maxSpeed: number;
   boostSpeed: number;
   accel: number;
   turnRate: number;
-
-  /* 结构 */
   hull: number;
   shield: number;
   shieldRegen: number;
-  /** 部件耐久：被打坏会降性能 */
   parts: { engine: number; weapon: number; cockpit: number };
-
-  /* 硬点 */
   nozzles: NozzleMount[];
   weapons: WeaponMount[];
-
-  /** 一句话定位，HUD 用 */
-  role: string;
 }
 
-const laser = (id: string, pos: [number, number, number], damage = 18): WeaponMount => ({
-  id,
-  type: 'laser',
-  pos,
-  damage,
-  rate: 3.2,
-  speed: 5200,
-  range: 3500,
-  spread: 0.0016,
-  color: 0x6fe8ff,
-});
+const BASE: Record<WeaponType, { damage: number; rate: number; speed: number; range: number; spread: number; color: number }> = {
+  laser:   { damage: 14,  rate: 5.0,  speed: 6500, range: 3000, spread: 0.0010, color: 0x6fe8ff },
+  cannon:  { damage: 42,  rate: 2.2,  speed: 4000, range: 2800, spread: 0.0030, color: 0xffb066 },
+  torpedo: { damage: 180, rate: 0.4,  speed: 900,  range: 8000, spread: 0.0100, color: 0xff7a5c },
+  railgun: { damage: 320, rate: 0.18, speed: 9000, range: 9000, spread: 0.0005, color: 0xd8c8ff },
+  plasma:  { damage: 120, rate: 0.8,  speed: 2200, range: 3200, spread: 0.0040, color: 0xb49cff },
+};
 
-const cannon = (id: string, pos: [number, number, number], damage = 55): WeaponMount => ({
-  id,
-  type: 'cannon',
-  pos,
-  damage,
-  rate: 1.1,
-  speed: 3600,
-  range: 3000,
-  spread: 0.004,
-  color: 0xffb066,
-});
+const MOD: Record<string, number> = {
+  '': 1, '-': 0.7, '--': 0.5, '+': 1.3, '++': 1.6, '+++': 2.0, A: 2.5,
+};
 
-const missile = (id: string, pos: [number, number, number], damage = 220): WeaponMount => ({
-  id,
-  type: 'missile',
-  pos,
-  damage,
-  rate: 0.35,
-  speed: 1400,
-  range: 6000,
-  spread: 0.01,
-  color: 0xff7a5c,
-});
+/** 从标注标签解析武器：W1su- / W3K A / W2ca+++Auto */
+function parseWeapon(
+  tag: string,
+  pos: [number, number, number],
+): WeaponMount {
+  const code = tag.replace(/^W\d+/, '');
+  const turret = /Auto/i.test(code);
+  const body = code.replace(/Auto/i, '');
 
-export const SHIPS: ShipSpec[] = [
+  const typeMatch = body.match(/^(su|le|ca|K|P)/);
+  const prefix = typeMatch ? typeMatch[1] : 'le';
+  const rest = body.slice(prefix.length);
+
+  const modMatch = rest.match(/(---+|\+{1,3}|A|)$/);
+  const mod = modMatch ? modMatch[1] : '';
+
+  const type: WeaponType =
+    prefix === 'su' ? 'torpedo' : prefix === 'le' ? 'laser' : prefix === 'ca' ? 'cannon' : prefix === 'K' ? 'railgun' : 'plasma';
+
+  const base = BASE[type];
+  const scale = MOD[mod] ?? 1;
+
+  return {
+    id: tag,
+    type,
+    pos,
+    damage: Math.round(base.damage * scale),
+    rate: base.rate,
+    speed: base.speed,
+    range: base.range,
+    spread: base.spread,
+    color: base.color,
+    turret,
+  };
+}
+
+/** 从标注标签解析喷口：N1 / N2S / N1SF / N1A */
+function parseNozzle(tag: string, pos: [number, number, number], length: number): NozzleMount {
+  const code = tag.replace(/^N\d+/, '');
+  const role: NozzleRole = code.includes('F') ? 'retro' : code.includes('S') ? 'secondary' : 'main';
+  const size = role === 'main' ? Math.max(0.8, length * 0.012) : Math.max(0.4, length * 0.006);
+  return { id: tag, pos, role, size };
+}
+
+interface Raw {
+  id: string;
+  name: string;
+  code: string;
+  role: string;
+  class: string;
+  length: number;
+  speed: [number, number, number, number];
+  hull: [number, number, number, number];
+  cockpits: Array<[number, number, number]>;
+  nozzles: Array<[string, number, number, number]>;
+  weapons: Array<[string, number, number, number]>;
+}
+
+const RAW: Raw[] = [
   {
-    id: 'thunderbolt',
-    name: 'A-30 雷霆',
-    code: 'A-30',
-    role: '多用途战斗机',
-    model: '/models/thunderbolt.glb',
-    length: 25,
-    cockpit: [0, 2.4, -4.4],
-    maxSpeed: 4200,
-    boostSpeed: 22000,
-    accel: 2600,
-    turnRate: 1,
-    hull: 1200,
-    shield: 400,
-    shieldRegen: 22,
-    parts: { engine: 300, weapon: 240, cockpit: 180 },
+    id: 'thunderbolt', name: 'A-30 雷霆', code: 'A-30', role: '多用途战斗机', class: 'light', length: 25,
+    speed: [4200, 22000, 2600, 1.0], hull: [1200, 400, 22, 300],
+    cockpits: [[0, -0.1, -9.6]],
     nozzles: [
-      { pos: [0, 0, 7.2], size: 1.2 },
-      { pos: [-3.1, -0.1, 4.4], size: 1 },
-      { pos: [3.1, -0.1, 4.4], size: 1 },
+      ['N1', 3.6, -0.7, 8.2], ['N2', -3.7, -0.6, 8.1],
+      ['N1S', 2.8, 1.9, 5.9], ['N2S', -2.8, 1.9, 5.9],
+      ['N1SF', 2.7, 1.7, -4.2], ['N2SF', -2.8, 1.7, -4.2],
     ],
     weapons: [
-      laser('tb-l1', [-1.6, 0.4, -5.2]),
-      laser('tb-l2', [1.6, 0.4, -5.2]),
-      cannon('tb-c1', [0, -0.3, -7.6], 62),
+      ['W1su-', 9.1, -0.2, 3.4], ['W2su-', -9.0, -0.1, 3.5],
+      ['W1su--', 11.4, 1.6, 3.7], ['W2su--', -11.5, 1.5, 3.8],
     ],
   },
   {
-    id: 'f008',
-    name: 'SF-F008 短剑',
-    code: 'F-008',
-    role: '轻型截击机',
-    model: '/models/thunderbolt.glb',
-    length: 22,
-    cockpit: [0, 2.2, -4.8],
-    maxSpeed: 5600,
-    boostSpeed: 30000,
-    accel: 3400,
-    turnRate: 1.25,
-    hull: 780,
-    shield: 620,
-    shieldRegen: 30,
-    parts: { engine: 220, weapon: 200, cockpit: 140 },
+    id: 'f008', name: 'SF-F008 短剑', code: 'F-008', role: '轻型截击机', class: 'light', length: 22,
+    speed: [5600, 30000, 3400, 1.25], hull: [780, 620, 30, 220],
+    cockpits: [[-0.1, 0.4, -8.4]],
     nozzles: [
-      { pos: [-1.8, 0, 6.4], size: 0.9 },
-      { pos: [1.8, 0, 6.4], size: 0.9 },
+      ['N1', 5.2, 0.7, 9.1], ['N2', -5.2, 0.7, 8.9],
+      ['N1SF', 3.7, 0.1, -7.5], ['N2SF', -3.8, 0.1, -7.5],
     ],
     weapons: [
-      laser('f-l1', [-2.4, 0.2, -4.4]),
-      laser('f-l2', [2.4, 0.2, -4.4]),
+      ['W1su+', 4.8, -1.1, -1.4], ['W2su+', -4.8, -1.0, -1.4],
+      ['W1ca+', -0.9, -2.2, -8.7], ['W2ca+', 1.0, -2.1, -8.8],
     ],
   },
   {
-    id: 'commander',
-    name: 'Commander G003',
-    code: 'CG-3',
-    role: '指挥舰',
-    model: '/models/thunderbolt.glb',
-    length: 620,
-    cockpit: [0, 3.2, -6.2],
-    maxSpeed: 2600,
-    boostSpeed: 14000,
-    accel: 1500,
-    turnRate: 0.62,
-    hull: 4200,
-    shield: 1800,
-    shieldRegen: 40,
-    parts: { engine: 900, weapon: 800, cockpit: 600 },
+    id: 'bomber', name: 'SF 轰炸机 CR', code: 'CR-3', role: '重型轰炸机', class: 'heavy', length: 120,
+    speed: [3000, 15000, 1700, 0.72], hull: [9000, 3000, 40, 700],
+    cockpits: [[-0.2, 4.4, -28.2]],
     nozzles: [
-      { pos: [-4.2, -0.4, 6.0], size: 1.3 },
-      { pos: [4.2, -0.4, 6.0], size: 1.3 },
-      { pos: [-1.6, 0.6, 7.4], size: 1 },
-      { pos: [1.6, 0.6, 7.4], size: 1 },
+      ['N1', 11.8, -5.4, 39.6], ['N2', -11.4, -5.1, 39.9],
+      ['N1S', 34.3, -1.8, 18.9], ['N2S', -34.3, -1.1, 20.0],
     ],
     weapons: [
-      laser('cg-l1', [-3.4, 0.6, -6.0], 22),
-      laser('cg-l2', [3.4, 0.6, -6.0], 22),
-      cannon('cg-c1', [-1.2, -0.4, -8.2], 70),
-      cannon('cg-c2', [1.2, -0.4, -8.2], 70),
+      ['W1P-', -27.8, -10.2, -28.7], ['W2P-', 28.2, -10.2, -28.3],
     ],
   },
   {
-    id: 'battleship',
-    name: 'SF 战列舰 G003',
-    code: 'BB-3',
-    role: '战列舰',
-    model: '/models/thunderbolt.glb',
-    length: 1250,
-    cockpit: [0, 3.6, -8.0],
-    maxSpeed: 1800,
-    boostSpeed: 9000,
-    accel: 900,
-    turnRate: 0.34,
-    hull: 8200,
-    shield: 3200,
-    shieldRegen: 55,
-    parts: { engine: 1800, weapon: 1600, cockpit: 1200 },
+    id: 'freighter', name: '货船 MB', code: 'MB-4', role: '货船', class: 'large', length: 280,
+    speed: [2100, 11000, 1100, 0.45], hull: [26000, 9000, 18, 1200],
+    cockpits: [[-23.3, 0.0, -120.4], [22.5, 0.9, -121.2]],
     nozzles: [
-      { pos: [-6.0, -0.8, 8.0], size: 1.8 },
-      { pos: [6.0, -0.8, 8.0], size: 1.8 },
-      { pos: [-2.4, 0.4, 9.2], size: 1.4 },
-      { pos: [2.4, 0.4, 9.2], size: 1.4 },
+      ['N1', 108.1, -31.3, -42.4], ['N2', -107.2, -30.5, -41.6],
+      ['N3', 108.9, -30.5, 99.1], ['N4', -106.4, -29.6, 99.1],
     ],
     weapons: [
-      cannon('bb-c1', [-5.0, 0.8, -7.0], 95),
-      cannon('bb-c2', [5.0, 0.8, -7.0], 95),
-      cannon('bb-c3', [-2.0, -0.6, -9.0], 80),
-      cannon('bb-c4', [2.0, -0.6, -9.0], 80),
-      missile('bb-m1', [-3.0, 1.4, -3.0]),
-      missile('bb-m2', [3.0, 1.4, -3.0]),
+      ['W1ca-', 64.8, -6.8, -128.0], ['W2ca-', -64.8, -5.9, -128.0],
     ],
   },
   {
-    id: 'bomber',
-    name: 'SF 轰炸机 CR002',
-    code: 'CR-2',
-    role: '重型轰炸机',
-    model: '/models/thunderbolt.glb',
-    length: 120,
-    cockpit: [0, 2.8, -5.4],
-    maxSpeed: 3000,
-    boostSpeed: 15000,
-    accel: 1700,
-    turnRate: 0.72,
-    hull: 2600,
-    shield: 900,
-    shieldRegen: 26,
-    parts: { engine: 600, weapon: 700, cockpit: 420 },
+    id: 'commander', name: 'Commander 指挥舰', code: 'CG-7', role: '指挥舰', class: 'capital', length: 620,
+    speed: [2600, 14000, 1500, 0.55], hull: [82000, 32000, 55, 2600],
+    cockpits: [[16.0, 95.8, -148.3], [-17.8, 93.9, -148.3]],
     nozzles: [
-      { pos: [-2.6, -0.2, 7.0], size: 1.4 },
-      { pos: [2.6, -0.2, 7.0], size: 1.4 },
+      ['N1', 0.9, 13.2, 239.3],
     ],
     weapons: [
-      missile('cr-m1', [-4.0, 0, -2.0], 260),
-      missile('cr-m2', [4.0, 0, -2.0], 260),
-      cannon('cr-c1', [0, -0.8, -8.0], 85),
+      ['W1KA', -25.3, 37.6, -294.7], ['W2KA', -51.6, 37.6, -296.6],
+      ['W1P-Auto', -62.9, 35.7, -268.4], ['W2P-Auto', -126.7, 37.6, -270.3],
+      ['W3P-Auto', 209.3, 52.6, -131.4], ['W4P-Auto', -211.1, 54.5, -131.4],
+      ['W1ca-Auto', 183.0, 63.9, -5.7], ['W2ca-Auto', -183.0, 63.9, -5.7],
     ],
   },
   {
-    id: 'freighter',
-    name: '货船 MB016',
-    code: 'MB-16',
-    role: '货船',
-    model: '/models/thunderbolt.glb',
-    length: 280,
-    cockpit: [0, 3.0, -7.0],
-    maxSpeed: 2100,
-    boostSpeed: 11000,
-    accel: 1100,
-    turnRate: 0.45,
-    hull: 3400,
-    shield: 700,
-    shieldRegen: 18,
-    parts: { engine: 700, weapon: 400, cockpit: 500 },
+    id: 'battleship', name: 'SF 战列舰', code: 'BB-6', role: '战列舰', class: 'flagship', length: 1250,
+    speed: [1800, 9000, 900, 0.34], hull: [320000, 120000, 80, 5000],
+    cockpits: [[-1.9, 219.5, -162.8]],
     nozzles: [
-      { pos: [-4.6, -0.6, 7.6], size: 1.5 },
-      { pos: [4.6, -0.6, 7.6], size: 1.5 },
-      { pos: [-1.8, 0.4, 8.4], size: 1.1 },
-      { pos: [1.8, 0.4, 8.4], size: 1.1 },
+      ['N1', -183.5, 147.7, 594.0], ['N2', -323.5, 143.9, 590.2],
+      ['N3', 323.5, 143.9, 590.2], ['N4', 334.9, 143.9, 590.2],
+      ['N5', 54.9, 212.0, 582.6], ['N6', -54.9, 212.0, 578.8],
     ],
-    weapons: [laser('mb-l1', [0, 1.0, -3.0], 12)],
+    weapons: [
+      ['W1P-Auto', 285.7, -85.0, -198.7], ['W2P-Auto', -289.5, -85.0, -198.7],
+      ['W3su', -263.0, 13.3, 266.7], ['W4su', 278.1, 13.3, 262.9],
+      ['W5ca-Auto', 236.5, -81.3, -157.1], ['W6ca-Auto', -251.6, -81.3, -153.3],
+      ['W7KA', -1.9, -228.8, -561.9],
+    ],
   },
 ];
+
+export const SHIPS: ShipSpec[] = RAW.map((raw) => ({
+  id: raw.id,
+  name: raw.name,
+  code: raw.code,
+  role: raw.role,
+  class: raw.class,
+  length: raw.length,
+  cockpits: raw.cockpits,
+  maxSpeed: raw.speed[0],
+  boostSpeed: raw.speed[1],
+  accel: raw.speed[2],
+  turnRate: raw.speed[3],
+  hull: raw.hull[0],
+  shield: raw.hull[1],
+  shieldRegen: raw.hull[2],
+  parts: {
+    engine: Math.round(raw.hull[3]),
+    weapon: Math.round(raw.hull[3] * 0.9),
+    cockpit: Math.round(raw.hull[3] * 0.7),
+  },
+  nozzles: raw.nozzles.map(([tag, x, y, z]) => parseNozzle(tag, [x, y, z], raw.length)),
+  weapons: raw.weapons.map(([tag, x, y, z]) => parseWeapon(tag, [x, y, z])),
+}));
 
 export function getShip(id: string): ShipSpec {
   return SHIPS.find((ship) => ship.id === id) ?? SHIPS[0];
