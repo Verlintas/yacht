@@ -85,6 +85,22 @@ const systemData = {
             <em id="cockpit-dist">—</em>
           </div>
         </div>
+        <div class="cockpit-ladder" id="cockpit-ladder">
+          <i data-deg="-30" style="--deg:-30"><b>-30</b></i>
+          <i data-deg="-20" style="--deg:-20"><b>-20</b></i>
+          <i data-deg="-10" style="--deg:-10"><b>-10</b></i>
+          <i data-deg="0" style="--deg:0"><b>0</b></i>
+          <i data-deg="10" style="--deg:10"><b>10</b></i>
+          <i data-deg="20" style="--deg:20"><b>20</b></i>
+          <i data-deg="30" style="--deg:30"><b>30</b></i>
+        </div>
+        <div class="cockpit-crosshair">
+          <span class="ch-wing"></span>
+        </div>
+        <div class="cockpit-tape cockpit-tape-left">
+          <b id="tape-speed">0</b>
+          <span>m/s</span>
+        </div>
         <div class="cockpit-visor"></div>
       </div>
 
@@ -1003,6 +1019,108 @@ const systemData = {
     right: -6%;
     transform: skewY(23deg);
     background: linear-gradient(-115deg, rgba(2, 6, 10, 0.85) 0%, rgba(2, 6, 10, 0.25) 42%, transparent 60%);
+  }
+
+  .cockpit-ladder {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 420px;
+    height: 0;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .cockpit-ladder i {
+    position: absolute;
+    left: 50%;
+    width: 220px;
+    height: 1px;
+    margin-left: -110px;
+    background: linear-gradient(90deg, transparent, rgba(120, 230, 210, 0.55), transparent);
+    transform: translateY(calc(var(--deg) * 9px));
+  }
+
+  .cockpit-ladder i::before,
+  .cockpit-ladder i::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    width: 1px;
+    height: 5px;
+    background: rgba(120, 230, 210, 0.7);
+  }
+
+  .cockpit-ladder i::before { left: 0; }
+  .cockpit-ladder i::after { right: 0; }
+
+  .cockpit-ladder b {
+    position: absolute;
+    right: -42px;
+    top: -7px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: rgba(120, 230, 210, 0.65);
+  }
+
+  .cockpit-crosshair {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 56px;
+    height: 18px;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(120, 230, 210, 0.55);
+    border-radius: 3px;
+    box-shadow: 0 0 12px rgba(94, 200, 184, 0.25) inset;
+  }
+
+  .cockpit-crosshair::before,
+  .cockpit-crosshair::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 14px;
+    height: 1px;
+    background: rgba(120, 230, 210, 0.6);
+  }
+
+  .cockpit-crosshair::before { left: -18px; }
+  .cockpit-crosshair::after { right: -18px; }
+
+  .ch-wing {
+    position: absolute;
+    left: 50%;
+    bottom: -9px;
+    width: 9px;
+    height: 1px;
+    background: rgba(120, 230, 210, 0.6);
+    transform: translateX(-50%);
+  }
+
+  .cockpit-tape {
+    position: absolute;
+    left: clamp(24px, 7vw, 110px);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: var(--mono);
+    color: rgba(140, 240, 220, 0.85);
+    text-shadow: 0 0 10px rgba(94, 200, 184, 0.5);
+  }
+
+  .cockpit-tape b {
+    font-size: 26px;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cockpit-tape span {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    opacity: 0.6;
   }
 
   .cockpit-visor {

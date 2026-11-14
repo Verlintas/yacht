@@ -5,7 +5,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { attachHangarDoors, createWorld, type CelestialBody, type World } from './world';
-import { createShip, type Ship } from './ship';
+import { createShip, loadShipModel, type Ship } from './ship';
 import { FlightController } from './flight';
 import { EngineAudio } from './audio';
 import type { SystemData } from './data';
@@ -65,7 +65,7 @@ export async function startGame(system: SystemData): Promise<void> {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 8, 2_200_000);
   // 挂在相机上的补光，避免飞船暗面全黑
-  const fillLight = new THREE.PointLight(0xa8dcff, 5200, 900, 1.5);
+  const fillLight = new THREE.PointLight(0xa8dcff, 1100, 500, 1.6);
   fillLight.position.set(0, 6, 4);
   camera.add(fillLight);
   scene.add(camera);
@@ -79,13 +79,25 @@ export async function startGame(system: SystemData): Promise<void> {
   // Blender 导出的机库门（异步，不阻塞进场）
   void attachHangarDoors(world, `${BASE}/models/hangar_door.glb`);
 
-  const ship = createShip();
+  let ship = createShip();
   scene.add(ship.group);
 
   const audio = new EngineAudio();
   const flight = new FlightController(camera);
   flight.attach(canvas);
   canvas.addEventListener('pointerdown', () => audio.start(), { once: true });
+
+  // 优先用 Blender 导出的高模舰，失败则回退到程序化几何
+  try {
+    const loaded = await loadShipModel(`${BASE}/models/thunderbolt.glb`);
+    scene.remove(ship.group);
+    ship = loaded;
+    scene.add(ship.group);
+  } catch {
+    /* 保留程序化舰 */
+  }
+
+  flight.setCockpitOffset(ship.cockpit);
 
   await step('装载飞船', 0.62);
 
@@ -237,7 +249,7 @@ function loop(ctx: GameContext, hud: Hud): void {
     ctx.ship.group.quaternion.copy(ctx.flight.quaternion);
     ctx.ship.group.position.add(new THREE.Vector3(0, -2.2, 0));
     ctx.ship.update(dt, ctx.flight.throttle, ctx.flight.boost);
-    ctx.ship.group.visible = ctx.flight.cameraMode === 'third';
+    ctx.ship.group.visible = true;
 
     ctx.world.update(dt, elapsed, ctx.camera);
     for (const mixer of ctx.world.mixers) mixer.update(dt);
@@ -277,6 +289,8 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
   const cockpitSpeed = $('cockpit-speed');
   const cockpitTarget = $('cockpit-target');
   const cockpitDist = $('cockpit-dist');
+  const ladder = $('cockpit-ladder');
+  const tapeSpeed = $('tape-speed');
   const heat = $('heat-warning');
   const fade = $('fade');
 
@@ -649,6 +663,18 @@ function setupHud(ctx: GameContext, system: SystemData): Hud {
     }
 
     cockpitSpeed.textContent = Math.round(speed).toString();
+    tapeSpeed.textContent = Math.round(speed).toString();
+
+    // 俯仰梯与滚转
+    const forward = ctx.flight.forwardVector;
+    const pitch = Math.asin(THREE.MathUtils.clamp(forward.y, -1, 1));
+    const pitchDeg = (pitch * 180) / Math.PI;
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(ctx.flight.quaternion);
+    const upVec = new THREE.Vector3(0, 1, 0).applyQuaternion(ctx.flight.quaternion);
+    const roll = Math.atan2(right.y, upVec.y);
+    if (ladder) {
+      ladder.style.transform = `translate(-50%, -50%) translateY(${pitchDeg * 9}px) rotate(${(-roll * 180) / Math.PI}deg)`;
+    }
 
     // 恒星警告
     const sunDist = ctx.flight.position.length();

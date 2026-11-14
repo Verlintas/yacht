@@ -24,6 +24,7 @@ export class FlightController {
   private readonly tmpQ = new THREE.Quaternion();
   private readonly forward = new THREE.Vector3();
   private ready = false;
+  private cockpitOffset = new THREE.Vector3(0, 2.2, -2.2);
 
   constructor(private readonly camera: THREE.PerspectiveCamera) {
     this.camera.position.copy(this.position).add(new THREE.Vector3(0, 14, 42));
@@ -69,6 +70,10 @@ export class FlightController {
 
   get forwardVector(): THREE.Vector3 {
     return this.forward.copy(new THREE.Vector3(0, 0, -1)).applyQuaternion(this.quaternion);
+  }
+
+  setCockpitOffset(offset: THREE.Vector3): void {
+    this.cockpitOffset.copy(offset);
   }
 
   /** 外部（停靠动画）用：清空速度。 */

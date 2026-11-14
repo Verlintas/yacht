@@ -6,6 +6,8 @@ export interface Ship {
   group: THREE.Group;
   engineGlow: THREE.Sprite[];
   engineCore: THREE.Mesh[];
+  /** 驾驶舱在模型局部坐标里的位置（第一人称相机用） */
+  cockpit: THREE.Vector3;
   update: (dt: number, throttle: number, boost: number) => void;
 }
 
@@ -325,5 +327,86 @@ export function createShip(): Ship {
     }
   };
 
-  return { group, engineGlow, engineCore, update };
+  return { group, engineGlow, engineCore, cockpit: new THREE.Vector3(0, 2.2, -2.2), update };
+}
+
+/** 从 Blender 导出的 GLB 加载舰体，并补上引擎光。 */
+export async function loadShipModel(url: string): Promise<Ship> {
+  const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+  const gltf = await new GLTFLoader().loadAsync(url);
+
+  const model = gltf.scene;
+  // glTF 导出已经是 Y-up；机首在 +Z，绕 Y 转 180° 让它朝 -Z
+  model.rotation.set(0, Math.PI, 0);
+  model.scale.setScalar(0.66);
+  model.updateMatrixWorld(true);
+
+  // 收敛材质：关掉双面、压掉过强的自发光
+  model.traverse((obj) => {
+    if (!(obj instanceof THREE.Mesh)) return;
+    const material = obj.material as THREE.MeshStandardMaterial;
+    if (!material) return;
+    material.side = THREE.FrontSide;
+    if ('emissiveIntensity' in material) material.emissiveIntensity = 0.06;
+    if ('metalness' in material) material.metalness = Math.min(material.metalness ?? 1, 0.7);
+    if ('roughness' in material) material.roughness = Math.max(material.roughness ?? 0.5, 0.45);
+    material.envMapIntensity = 1.1;
+    obj.frustumCulled = true;
+  });
+
+  const box = new THREE.Box3().setFromObject(model);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  model.position.sub(center);
+
+  const group = new THREE.Group();
+  group.add(model);
+
+  // 自动补引擎光：放在包围盒尾端
+  const glowTexture = (() => {
+    const s = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = s;
+    canvas.height = s;
+    const ctx = canvas.getContext('2d')!;
+    const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+    g.addColorStop(0, 'rgba(235,255,252,1)');
+    g.addColorStop(0.24, 'rgba(89,224,200,0.7)');
+    g.addColorStop(1, 'rgba(8,40,50,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, s, s);
+    return new THREE.CanvasTexture(canvas);
+  })();
+
+  const engineGlow: THREE.Sprite[] = [];
+  const engineCore: THREE.Mesh[] = [];
+  const rear = size.z / 2;
+
+  for (const offset of [-size.x * 0.18, 0, size.x * 0.18]) {
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: glowTexture,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        transparent: true,
+      }),
+    );
+    sprite.position.set(offset, 0, rear * 0.98);
+    sprite.scale.setScalar(size.z * 0.16);
+    group.add(sprite);
+    engineGlow.push(sprite);
+  }
+
+  const update = (_dt: number, throttle: number, boost: number): void => {
+    const power = 0.25 + throttle * 1.5 + boost * 2.2;
+    for (const sprite of engineGlow) {
+      sprite.scale.setScalar(size.z * (0.1 + power * 0.12));
+      (sprite.material as THREE.SpriteMaterial).opacity = 0.3 + Math.min(power * 0.16, 0.5);
+    }
+  };
+
+  // 驾驶舱：机首在 -Z，取前段偏上的位置
+  const cockpit = new THREE.Vector3(0, size.y * 0.52, -size.z * 0.3);
+
+  return { group, engineGlow, engineCore, cockpit, update };
 }
