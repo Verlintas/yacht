@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { getShip, type ShipSpec, type WeaponMount } from './ships';
+import { getShip, type ShipSpec, type WeaponMount, type WeaponType } from './ships';
 import { LocalPlume } from './trails';
+import { DamageVisuals } from './damage';
 
 interface Projectile {
   mesh: THREE.Mesh;
@@ -11,7 +12,38 @@ interface Projectile {
   owner: 'player' | 'npc';
   color: THREE.Color;
   speed: number;
+  weaponType: WeaponType;
   homing?: () => THREE.Vector3 | null;
+}
+
+interface FlashFx {
+  sprite: THREE.Sprite;
+  age: number;
+  life: number;
+}
+
+interface DeathEvent {
+  at: number;
+  kind: 'engine' | 'weapon' | 'hull' | 'final';
+  color: number;
+  position: THREE.Vector3;
+  local?: THREE.Vector3;
+  size: number;
+}
+
+interface DeathSequence {
+  npc: Npc;
+  time: number;
+  duration: number;
+  events: DeathEvent[];
+  index: number;
+}
+
+interface ShockwaveFx {
+  sprite: THREE.Sprite;
+  age: number;
+  life: number;
+  size: number;
 }
 
 export type Faction = 'neutral' | 'hostile';
@@ -46,6 +78,7 @@ interface Npc {
   alerted: boolean;
   formation: THREE.Vector3;
   trail: LocalPlume;
+  damage: DamageVisuals;
 }
 
 interface ExplosionFx {
@@ -104,9 +137,10 @@ export interface FleetIntel {
 }
 
 export interface CombatEvents {
-  onPlayerDamage: (damage: number) => void;
+  onPlayerDamage: (damage: number, position?: THREE.Vector3) => void;
   onNpcKilled: (position: THREE.Vector3) => void;
   onExplosion?: (position: THREE.Vector3, size: number) => void;
+  onImpact?: (type: WeaponType, position: THREE.Vector3, owner: 'player' | 'npc') => void;
 }
 
 const MAX_PROJECTILES = 260;
@@ -136,6 +170,9 @@ export class Combat {
   private glowPool: THREE.Sprite[] = [];
   private explosions: ExplosionFx[] = [];
   private debris: Debris[] = [];
+  private flashes: FlashFx[] = [];
+  private deaths: DeathSequence[] = [];
+  private shockwaves: ShockwaveFx[] = [];
   private npcGeo: THREE.BufferGeometry;
   private npcSeq = 0;
   private fleetSeq = 0;
@@ -365,7 +402,6 @@ export class Combat {
     formation: THREE.Vector3,
   ): Npc {
     const template = this.templates.get(spec.id);
-    const tint = faction === 'hostile' ? 0xff6a4a : 0x6fc8d8;
     let group: THREE.Group;
 
     if (template) {
@@ -376,10 +412,6 @@ export class Combat {
         }
         if (obj instanceof THREE.Sprite) {
           if (obj.userData.role === 'retro') obj.visible = false;
-          if (obj.userData.engineGlow) {
-            obj.material = (obj.material as THREE.SpriteMaterial).clone();
-            (obj.material as THREE.SpriteMaterial).color.setHex(tint);
-          }
         }
       });
     } else {
@@ -418,8 +450,9 @@ export class Combat {
       group,
       mainNozzles.length > 0 ? mainNozzles : spec.nozzles.slice(0, 2),
       spec.length,
-      tint,
+      spec.exhaust,
     );
+    const damage = new DamageVisuals(group, spec.length, spec);
 
     const fallbackWeapon: WeaponMount = {
       id: 'fallback',
@@ -463,6 +496,7 @@ export class Combat {
       alerted: false,
       formation,
       trail,
+      damage,
     };
     this.npcs.push(npc);
     return npc;
@@ -504,6 +538,7 @@ export class Combat {
       weapon.color,
       weapon.type === 'cannon' ? 1.5 : weapon.type === 'torpedo' ? 2.4 : 1,
       'player',
+      weapon.type,
       torpedoTarget ? () => torpedoTarget.group.position : undefined,
     );
   }
@@ -540,19 +575,24 @@ export class Combat {
     color: number,
     scale: number,
     owner: 'player' | 'npc',
+    weaponType: WeaponType,
     homing?: () => THREE.Vector3 | null,
   ): void {
     const dir = direction.clone().normalize();
     const mesh = this.acquire(color);
     mesh.position.copy(origin);
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
-    const trailLength = 26 + 10 * scale;
-    const trailWidth = 0.7 + 0.55 * scale;
-    mesh.scale.set(trailWidth, trailWidth, trailLength);
+    const rail = weaponType === 'railgun';
+    const trailLength = rail ? 260 : 26 + 10 * scale;
+    const trailWidth = rail ? 1.15 : 0.7 + 0.55 * scale;
+    mesh.scale.set(trailWidth, trailWidth, rail ? trailLength * 0.5 : trailLength);
 
     const glow = this.acquireGlow(color);
     glow.position.copy(origin);
-    glow.scale.setScalar(2.2 + 2.2 * scale);
+    glow.scale.setScalar(rail ? 12 : 2.2 + 2.2 * scale);
+
+    // 炮口焰：轨道炮尤其明显
+    this.spawnFlash(origin, rail ? 0xffffff : color, rail ? 46 : 3 + 2 * scale, rail ? 0.22 : 0.08);
 
     this.projectiles.push({
       mesh,
@@ -563,6 +603,7 @@ export class Combat {
       owner,
       color: new THREE.Color(color),
       speed,
+      weaponType,
       homing,
     });
   }
@@ -655,15 +696,19 @@ export class Combat {
             npc.shield -= absorbed;
             npc.hp -= p.damage - absorbed;
             npc.lastHit = this.time;
+            if (absorbed > 0 && npc.shield <= 0) npc.damage.shieldBreak();
+            const localHit = p.mesh.position.clone().sub(npc.group.position).applyQuaternion(npc.group.quaternion.clone().invert());
+            if (absorbed > 0) npc.damage.shieldHit(localHit);
+            else npc.damage.hullHit(localHit);
             this.angerFleet(npc);
-            this.burst(p.mesh.position, p.color, 14);
+            this.burst(p.mesh.position, p.color, p.weaponType === 'railgun' ? 42 : 14);
+            this.events.onImpact?.(p.weaponType, p.mesh.position.clone(), 'player');
+            if (p.weaponType === 'railgun') {
+              this.spawnFlash(p.mesh.position, 0xffffff, 34, 0.2);
+            }
             if (npc.hp <= 0) {
               npc.alive = false;
-              const at = npc.group.position.clone();
-              this.explodeAt(at, npc.spec.length, npc.spec.tier);
-              npc.trail.dispose();
-              this.scene.remove(npc.group);
-              this.events.onNpcKilled(at);
+              this.beginNpcDeath(npc);
             }
             dead = true;
             break;
@@ -671,8 +716,10 @@ export class Combat {
         }
       } else if (!dead && p.owner === 'npc') {
         if (this.segmentHit(playerPos, prev, p.mesh.position, 18)) {
-          this.events.onPlayerDamage(p.damage);
-          this.burst(p.mesh.position, p.color, 10);
+          this.events.onPlayerDamage(p.damage, p.mesh.position.clone());
+          this.events.onImpact?.(p.weaponType, p.mesh.position.clone(), 'npc');
+          this.burst(p.mesh.position, p.color, p.weaponType === 'railgun' ? 30 : 10);
+          if (p.weaponType === 'railgun') this.spawnFlash(p.mesh.position, 0xffffff, 26, 0.18);
           dead = true;
         }
       }
@@ -689,6 +736,71 @@ export class Combat {
     for (const npc of this.npcs) {
       if (!npc.alive || npc.fleetId !== -1) continue;
       this.updateNpc(npc, dt, playerPos, playerPos, playerVelocity, 0.9);
+    }
+
+    // 舰船解体序列：引擎→武器→船体→燃料大爆炸
+    for (let i = this.deaths.length - 1; i >= 0; i -= 1) {
+      const death = this.deaths[i];
+      death.time += dt;
+      death.npc.group.position.addScaledVector(death.npc.velocity, dt);
+      death.npc.group.rotateZ(dt * 0.03);
+      death.npc.trail.update(dt, 0.2);
+      death.npc.damage.update(dt, 0, 0);
+
+      while (death.index < death.events.length && death.events[death.index].at <= death.time) {
+        const event = death.events[death.index];
+        death.index += 1;
+        const world = event.local
+          ? event.local.clone().applyQuaternion(death.npc.group.quaternion).add(death.npc.group.position)
+          : death.npc.group.position.clone();
+        if (event.kind === 'final') {
+          this.explodeAt(world, death.npc.spec.length, death.npc.spec.tier);
+          this.spawnShockwave(world, death.npc.spec.length * 0.9);
+          for (let k = 0; k < 3; k += 1) {
+            const offset = new THREE.Vector3(
+              (Math.random() - 0.5) * death.npc.spec.length * 0.35,
+              (Math.random() - 0.5) * death.npc.spec.length * 0.12,
+              (Math.random() - 0.5) * death.npc.spec.length * 0.35,
+            );
+            this.spawnDebris(world.clone().add(offset), death.npc.spec.length * 0.9, death.npc.spec.tier);
+          }
+          death.npc.trail.dispose();
+          death.npc.damage.dispose();
+          this.scene.remove(death.npc.group);
+          this.events.onNpcKilled(world);
+          this.deaths.splice(i, 1);
+          break;
+        }
+        this.spawnFireball(world, event.size, new THREE.Color(event.color), 0.7, false);
+        this.burst(world, new THREE.Color(0xffb066), event.kind === 'hull' ? 8 : 14);
+        this.events.onExplosion?.(world, event.size);
+      }
+    }
+
+    // 冲击波
+    for (let i = this.shockwaves.length - 1; i >= 0; i -= 1) {
+      const wave = this.shockwaves[i];
+      wave.age += dt;
+      const k = Math.min(1, wave.age / wave.life);
+      wave.sprite.scale.setScalar(wave.size * (0.3 + k * 2.8));
+      (wave.sprite.material as THREE.SpriteMaterial).opacity = 0.5 * Math.pow(1 - k, 1.6);
+      if (wave.age >= wave.life) {
+        this.scene.remove(wave.sprite);
+        this.shockwaves.splice(i, 1);
+      }
+    }
+
+    // 炮口焰
+    for (let i = this.flashes.length - 1; i >= 0; i -= 1) {
+      const fx = this.flashes[i];
+      fx.age += dt;
+      const k = Math.min(1, fx.age / fx.life);
+      (fx.sprite.material as THREE.SpriteMaterial).opacity = Math.max(0, 1 - k);
+      fx.sprite.scale.multiplyScalar(1 + dt * 5);
+      if (fx.age >= fx.life) {
+        this.scene.remove(fx.sprite);
+        this.flashes.splice(i, 1);
+      }
     }
 
     // 爆炸与残骸
@@ -917,6 +1029,7 @@ export class Combat {
     if (this.time - npc.lastHit > 3) {
       npc.shield = Math.min(npc.maxShield, npc.shield + npc.shieldRegen * dt);
     }
+    npc.damage.update(dt, npc.hp / npc.maxHp, npc.shield / npc.maxShield);
 
     // 引擎粒子尾焰（舰体局部坐标）
     const thrust = Math.min(1, npc.velocity.length() / 2600);
@@ -946,6 +1059,7 @@ export class Combat {
           weapon.color,
           weapon.type === 'cannon' ? 1.4 : weapon.type === 'torpedo' ? 2.2 : 1,
           'npc',
+          weapon.type,
           homing,
         );
       } else {
@@ -954,16 +1068,126 @@ export class Combat {
     }
   }
 
+  private beginNpcDeath(npc: Npc): void {
+    const spec = npc.spec;
+    const events: DeathEvent[] = [];
+    const isCapital = spec.tier >= 5;
+    const duration = isCapital
+      ? Math.min(18, 4 + spec.length / 180)
+      : 1.3 + spec.tier * 0.3;
+
+    let t = isCapital ? 0.25 : 0.1;
+    const engines = spec.nozzles.filter((nozzle) => nozzle.role !== 'retro');
+    for (const nozzle of engines) {
+      events.push({
+        at: t,
+        kind: 'engine',
+        position: new THREE.Vector3(...nozzle.pos),
+        local: new THREE.Vector3(...nozzle.pos),
+        color: spec.exhaust,
+        size: Math.max(10, spec.length * 0.025 + nozzle.size * 2.4),
+      });
+      t += isCapital ? 0.26 + Math.random() * 0.12 : 0.15;
+    }
+
+    t += isCapital ? 0.3 : 0.12;
+    for (const weapon of spec.weapons) {
+      events.push({
+        at: t,
+        kind: 'weapon',
+        position: new THREE.Vector3(...weapon.pos),
+        local: new THREE.Vector3(...weapon.pos),
+        color: weapon.color,
+        size: Math.max(8, spec.length * 0.02),
+      });
+      t += isCapital ? 0.14 + Math.random() * 0.08 : 0.1;
+    }
+
+    const hullStart = Math.max(t, isCapital ? 1.5 : 0.55);
+    const hullEnd = duration - (isCapital ? 1.5 : 0.35);
+    for (let at = hullStart; at < hullEnd; at += isCapital ? 0.34 : 0.22) {
+      events.push({
+        at,
+        kind: 'hull',
+        position: new THREE.Vector3(
+          (Math.random() - 0.5) * spec.length * 0.5,
+          (Math.random() - 0.5) * spec.length * 0.12,
+          (Math.random() - 0.5) * spec.length * 0.7,
+        ),
+        local: new THREE.Vector3(
+          (Math.random() - 0.5) * spec.length * 0.5,
+          (Math.random() - 0.5) * spec.length * 0.12,
+          (Math.random() - 0.5) * spec.length * 0.7,
+        ),
+        color: 0xff9a4a,
+        size: Math.max(6, spec.length * 0.014 + Math.random() * spec.length * 0.012),
+      });
+    }
+
+    events.push({ at: duration, kind: 'final', color: 0xfff2c8, position: new THREE.Vector3(), size: spec.length });
+    events.sort((a, b) => a.at - b.at);
+    this.deaths.push({ npc, time: 0, duration, events, index: 0 });
+  }
+
+  private spawnShockwave(position: THREE.Vector3, size: number): void {
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: this.ringTexture,
+        color: 0xffe0b0,
+        transparent: true,
+        opacity: 0.55,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    );
+    sprite.position.copy(position);
+    sprite.scale.setScalar(size * 0.35);
+    this.scene.add(sprite);
+    this.shockwaves.push({ sprite, age: 0, life: 1.6, size });
+  }
+
+  /** 玩家舰体解体时的局部爆炸 */
+  burstAt(position: THREE.Vector3, size: number): void {
+    this.spawnFireball(position, size, new THREE.Color(0xffb066), 0.8, false);
+    this.burst(position, new THREE.Color(0xffb066), 12);
+    this.events.onExplosion?.(position, size);
+  }
+
+  /** 玩家舰体终末大爆炸 + 冲击波 */
+  finaleAt(position: THREE.Vector3, length: number, tier: number): void {
+    this.explodeAt(position, length, tier);
+    this.spawnShockwave(position, length * 0.9);
+    this.spawnShockwave(position, length * 1.45);
+    this.spawnFlash(position, 0xfff5dd, Math.max(30, length * 0.35), 0.35);
+  }
+
   /** 在指定位置制造爆炸；length 决定火球/残骸尺度 */
   explodeAt(position: THREE.Vector3, length = 25, tier = 2): void {
-    const size = Math.max(8, length * 0.42);
+    const size = Math.max(8, length * (tier >= 5 ? 0.55 : 0.42));
     this.events.onExplosion?.(position, size);
     this.spawnFireball(position, size, new THREE.Color(0xffb066), 2.2);
     this.burst(position, new THREE.Color(0xffb066), Math.min(90, 22 + tier * 8));
     this.spawnDebris(position, length, tier);
   }
 
-  private spawnFireball(position: THREE.Vector3, size: number, color: THREE.Color, life: number): void {
+  private spawnFlash(position: THREE.Vector3, color: number, size: number, life: number): void {
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: this.glowTexture,
+        color,
+        transparent: true,
+        opacity: 0.95,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    );
+    sprite.position.copy(position);
+    sprite.scale.setScalar(size);
+    this.scene.add(sprite);
+    this.flashes.push({ sprite, age: 0, life });
+  }
+
+  private spawnFireball(position: THREE.Vector3, size: number, color: THREE.Color, life: number, allowSecondary = true): void {
     const core = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: this.fireTexture,
@@ -1035,7 +1259,7 @@ export class Combat {
       light,
       tier: Math.max(0, Math.round(size / 120)),
       secondaryTimer: 0.2,
-      secondaryCount: size > 120 ? 4 : size > 45 ? 2 : 0,
+      secondaryCount: allowSecondary ? (size > 120 ? 4 : size > 45 ? 2 : 0) : 0,
       color,
     });
   }
@@ -1139,7 +1363,19 @@ export class Combat {
   }
 
   /** 最近的可攻击目标（HUD 用） */
-  nearestNpc(position: THREE.Vector3): { distance: number; hp: number; maxHp: number } | null {
+  nearestNpc(position: THREE.Vector3): {
+    distance: number;
+    hp: number;
+    maxHp: number;
+    hull: number;
+    maxHull: number;
+    shield: number;
+    maxShield: number;
+    tier: number;
+    name: string;
+    code: string;
+    position: THREE.Vector3;
+  } | null {
     let best: Npc | null = null;
     let bestDist = Infinity;
     for (const npc of this.npcs) {
@@ -1150,7 +1386,52 @@ export class Combat {
         best = npc;
       }
     }
-    return best ? { distance: bestDist, hp: best.hp + best.shield, maxHp: best.maxHp + best.maxShield } : null;
+    return best ? {
+      distance: bestDist,
+      hp: best.hp + best.shield,
+      maxHp: best.maxHp + best.maxShield,
+      hull: best.hp,
+      maxHull: best.maxHp,
+      shield: best.shield,
+      maxShield: best.maxShield,
+      tier: best.spec.tier,
+      name: best.spec.name,
+      code: best.spec.code,
+      position: best.group.position,
+    } : null;
+  }
+
+  /** 最近的主力舰（用于 BOSS 血条） */
+  nearestCapital(position: THREE.Vector3, range = 120000): {
+    distance: number;
+    hull: number;
+    maxHull: number;
+    shield: number;
+    maxShield: number;
+    tier: number;
+    name: string;
+    code: string;
+  } | null {
+    let best: Npc | null = null;
+    let bestDist = range;
+    for (const npc of this.npcs) {
+      if (!npc.alive || !npc.hostile || npc.spec.tier < 5) continue;
+      const d = npc.group.position.distanceTo(position);
+      if (d < bestDist) {
+        bestDist = d;
+        best = npc;
+      }
+    }
+    return best ? {
+      distance: bestDist,
+      hull: best.hp,
+      maxHull: best.maxHp,
+      shield: best.shield,
+      maxShield: best.maxShield,
+      tier: best.spec.tier,
+      name: best.spec.name,
+      code: best.spec.code,
+    } : null;
   }
 
   /** 最近的一个「已攻击我方」的目标 */

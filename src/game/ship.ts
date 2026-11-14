@@ -347,6 +347,7 @@ export async function loadShipModel(
   targetLength = 25,
   nozzles: Array<{ pos: [number, number, number]; size: number; role: string }> = [],
   cockpitPos?: [number, number, number],
+  exhaustColor = 0x8fe8ff,
 ): Promise<Ship> {
   const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([
     import('three/examples/jsm/loaders/GLTFLoader.js'),
@@ -357,6 +358,7 @@ export async function loadShipModel(
   const gltf = await loader.loadAsync(url);
 
   const model = gltf.scene;
+  model.userData.shipHull = true;
   // glTF 导出已经是 Y-up；机首在 +Z，绕 Y 转 180° 让它朝 -Z
   model.rotation.set(0, Math.PI, 0);
   model.scale.setScalar(1);
@@ -448,9 +450,9 @@ export async function loadShipModel(
     canvas.height = s;
     const ctx = canvas.getContext('2d')!;
     const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
-    g.addColorStop(0, 'rgba(235,255,252,1)');
-    g.addColorStop(0.24, 'rgba(89,224,200,0.7)');
-    g.addColorStop(1, 'rgba(8,40,50,0)');
+    g.addColorStop(0, 'rgba(255,255,255,1)');
+    g.addColorStop(0.24, 'rgba(255,255,255,0.7)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, s, s);
     return new THREE.CanvasTexture(canvas);
@@ -473,6 +475,7 @@ export async function loadShipModel(
     const sprite = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: glowTexture,
+        color: new THREE.Color(exhaustColor),
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         transparent: true,

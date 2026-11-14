@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export type CameraMode = 'third' | 'first';
+export type CameraMode = 'third' | 'first' | 'free';
 
 export class FlightController {
   readonly position = new THREE.Vector3(0, 260, 1600);
@@ -13,9 +13,12 @@ export class FlightController {
   assist = true;
   cameraMode: CameraMode = 'third';
 
-  private yaw = 0;
-  private pitch = 0;
-  private roll = 0;
+  private target = new THREE.Quaternion();
+  private mouseYaw = 0;
+  private mousePitch = 0;
+  private orbitYaw = Math.PI;
+  private orbitPitch = 0.25;
+  private orbitDistance = 60;
   private keys = new Set<string>();
   private shake = 0;
   private smoothedOffset = new THREE.Vector3();
@@ -25,7 +28,7 @@ export class FlightController {
   private readonly forward = new THREE.Vector3();
   private ready = false;
   private cockpitOffset = new THREE.Vector3(0, 2.2, -2.2);
-  private spec = { maxSpeed: 4200, boostSpeed: 52000, accel: 2600, turnRate: 1, length: 25 };
+  private spec = { maxSpeed: 4200, boostSpeed: 52000, accel: 2600, turnRate: 1, length: 25, chargeTime: 3, warpCombo: false };
   charge = 0;
   /** none / shift（次级加速） / charged（B 充满） */
   boostMode: 'none' | 'shift' | 'charged' = 'none';
@@ -48,15 +51,34 @@ export class FlightController {
 
     document.addEventListener('mousemove', (event) => {
       if (document.pointerLockElement !== dom) return;
+      if (this.cameraMode === 'free') {
+        this.orbitYaw -= event.movementX * 0.0026;
+        this.orbitPitch = THREE.MathUtils.clamp(
+          this.orbitPitch - event.movementY * 0.0022,
+          -1.25,
+          1.25,
+        );
+        return;
+      }
       const sensitivity = 0.0019;
-      this.yaw -= event.movementX * sensitivity;
-      this.pitch -= event.movementY * sensitivity;
-      this.pitch = Math.max(-Math.PI / 2 + 0.08, Math.min(Math.PI / 2 - 0.08, this.pitch));
+      this.mouseYaw -= event.movementX * sensitivity;
+      this.mousePitch -= event.movementY * sensitivity;
     });
+
+    dom.addEventListener('wheel', (event) => {
+      if (this.cameraMode !== 'free') return;
+      event.preventDefault();
+      const L = this.spec.length ?? 25;
+      this.orbitDistance = THREE.MathUtils.clamp(
+        this.orbitDistance * Math.exp(event.deltaY * 0.0012),
+        L * 1.2 + 8,
+        L * 12 + 6000,
+      );
+    }, { passive: false });
 
     window.addEventListener('keydown', (event) => {
       if (event.code === 'KeyV') {
-        this.cameraMode = this.cameraMode === 'third' ? 'first' : 'third';
+        this.cycleCamera();
       }
       if (event.code === 'KeyZ') {
         this.assist = !this.assist;
@@ -75,6 +97,40 @@ export class FlightController {
     this.shake = Math.min(1.6, this.shake + amount);
   }
 
+  /** 从当前朝向设置目标姿态（停靠/传送后使用） */
+  setLookDirection(direction: THREE.Vector3): void {
+    const dir = direction.clone().normalize();
+    const m = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), dir, new THREE.Vector3(0, 1, 0));
+    const q = new THREE.Quaternion().setFromRotationMatrix(m);
+    this.target.copy(q);
+    this.quaternion.copy(q);
+    this.mouseYaw = 0;
+    this.mousePitch = 0;
+    this.ready = true;
+  }
+
+  /** 第一人称 → 第三人称 → 自由视角 → 第一人称 */
+  cycleCamera(): void {
+    if (this.cameraMode === 'first') this.cameraMode = 'third';
+    else if (this.cameraMode === 'third') {
+      this.camera.getWorldPosition(this.tmp);
+      const offset = this.tmp.clone().sub(this.position);
+      const L = this.spec.length ?? 25;
+      if (offset.length() > L * 0.8) {
+        this.orbitDistance = THREE.MathUtils.clamp(offset.length(), L * 1.2 + 8, L * 12 + 6000);
+        this.orbitYaw = Math.atan2(offset.x, offset.z);
+        this.orbitPitch = THREE.MathUtils.clamp(Math.asin(offset.y / offset.length()), -1.25, 1.25);
+      } else {
+        this.orbitDistance = L * 3 + 40;
+        this.orbitYaw = Math.PI;
+        this.orbitPitch = 0.28;
+      }
+      this.cameraMode = 'free';
+    } else {
+      this.cameraMode = 'first';
+    }
+  }
+
   get speed(): number {
     return this.velocity.length();
   }
@@ -83,7 +139,7 @@ export class FlightController {
     return this.forward.copy(new THREE.Vector3(0, 0, -1)).applyQuaternion(this.quaternion);
   }
 
-  configure(spec: { maxSpeed: number; boostSpeed: number; accel: number; turnRate: number; length?: number }): void {
+  configure(spec: { maxSpeed: number; boostSpeed: number; accel: number; turnRate: number; length?: number; chargeTime?: number; warpCombo?: boolean }): void {
     this.spec = { ...this.spec, ...spec };
   }
 
@@ -99,23 +155,29 @@ export class FlightController {
   update(dt: number): void {
     const has = (code: string) => this.keys.has(code);
 
-    /* ── 姿态 ── */
-    const attitude = new THREE.Quaternion().setFromEuler(
-      new THREE.Euler(this.pitch, this.yaw, 0, 'YXZ'),
-    );
+    /* ── 姿态：鼠标偏航/俯仰作用在舰体局部轴上，滚转后不会反 ── */
+    if (Math.abs(this.mouseYaw) > 1e-7 || Math.abs(this.mousePitch) > 1e-7) {
+      this.tmpQ.setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.mouseYaw);
+      this.target.multiply(this.tmpQ);
+      this.tmpQ.setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.mousePitch);
+      this.target.multiply(this.tmpQ);
+      this.target.normalize();
+      this.mouseYaw = 0;
+      this.mousePitch = 0;
+    }
 
     const rollRate = (has('KeyQ') ? 1 : 0) - (has('KeyE') ? 1 : 0);
-    // 太空没有「自动回正」：滚转是累积的
-    this.roll += rollRate * 2.2 * dt;
-    this.roll = Math.max(-Math.PI, Math.min(Math.PI, this.roll));
-    this.tmpQ.setFromAxisAngle(new THREE.Vector3(0, 0, 1), this.roll);
-    attitude.multiply(this.tmpQ);
+    if (rollRate !== 0) {
+      this.tmpQ.setFromAxisAngle(new THREE.Vector3(0, 0, 1), rollRate * 2.2 * dt);
+      this.target.multiply(this.tmpQ);
+      this.target.normalize();
+    }
 
     if (!this.ready) {
-      this.quaternion.copy(attitude);
+      this.quaternion.copy(this.target);
       this.ready = true;
     } else {
-      this.quaternion.slerp(attitude, Math.min(1, dt * 8 * this.spec.turnRate));
+      this.quaternion.slerp(this.target, Math.min(1, dt * 9 * this.spec.turnRate));
     }
 
     /* ── 推进 ── */
@@ -123,17 +185,19 @@ export class FlightController {
     const braking = has('KeyX') || has('Space');
 
     // B：按住充能 3 秒后进入全速推进
-    const charging = has('KeyB');
+    const charging = this.spec.warpCombo
+      ? has('KeyG') && has('KeyH') && has('KeyB')
+      : has('KeyB');
     if (charging) {
-      this.charge = Math.min(3, this.charge + dt);
+      this.charge = Math.min(this.spec.chargeTime, this.charge + dt);
     } else {
       this.charge = 0;
     }
-    const charged = charging && this.charge >= 3;
+    const charged = charging && this.charge >= this.spec.chargeTime;
 
     // Shift：次级加速，约 55% 的推进档位，比 B 慢但比基础速度快
     const shifting = (has('ShiftLeft') || has('ShiftRight')) && forwardInput >= 0 && !braking;
-    const targetBoost = charged ? 1 : shifting ? 0.55 : 0;
+    const targetBoost = charged ? 1 : shifting ? 0.12 : 0;
     this.boostMode = charged ? 'charged' : shifting ? 'shift' : 'none';
 
     this.throttle = THREE.MathUtils.lerp(
@@ -221,6 +285,31 @@ export class FlightController {
         this.camera.fov = 78;
         this.camera.updateProjectionMatrix();
       }
+    } else if (this.cameraMode === 'free') {
+      const shipParent = this.shipRef?.parent ?? null;
+      if (shipParent && this.camera.parent !== shipParent) {
+        if (this.camera.parent) this.camera.parent.remove(this.camera);
+        shipParent.add(this.camera);
+      }
+      const L = this.spec.length ?? 25;
+      const min = L * 1.2 + 8;
+      const max = L * 12 + 6000;
+      this.orbitDistance = THREE.MathUtils.clamp(this.orbitDistance || L * 3 + 40, min, max);
+      const cp = Math.cos(this.orbitPitch);
+      const offset = new THREE.Vector3(
+        Math.sin(this.orbitYaw) * cp,
+        Math.sin(this.orbitPitch),
+        Math.cos(this.orbitYaw) * cp,
+      ).multiplyScalar(this.orbitDistance);
+      this.camera.position.copy(this.position).add(offset);
+      this.camera.up.set(0, 1, 0);
+      this.camera.lookAt(this.position);
+      if (this.shake > 0.01) {
+        this.camera.position.x += (Math.random() - 0.5) * this.shake * 0.3;
+        this.camera.position.y += (Math.random() - 0.5) * this.shake * 0.3;
+      }
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62, Math.min(1, dt * 4));
+      this.camera.updateProjectionMatrix();
     } else {
       const shipParent = this.shipRef?.parent ?? null;
       if (shipParent && this.camera.parent !== shipParent) {

@@ -10,9 +10,23 @@ import { FlightController } from './flight';
 import { EngineAudio } from './audio';
 import { SpeedLines } from './speedlines';
 import { LocalPlume } from './trails';
+import { DamageVisuals } from './damage';
 import { Combat } from './combat';
-import { SHIPS, getShip, type ShipSpec } from './ships';
+import { SHIPS, getShip, manualWeaponTypes, WEAPON_LABELS, type ShipSpec, type WeaponType } from './ships';
 import type { SystemData } from './data';
+
+interface WeaponState {
+  selected: WeaponType | 'all';
+  cooldowns: Map<string, number>;
+  firing: boolean;
+}
+
+const FIRE_SHAKE: Record<WeaponType, number> = {
+  laser: 0.02, cannon: 0.07, torpedo: 0.14, railgun: 0.6, plasma: 0.16, ion: 0.05,
+};
+const IMPACT_SHAKE: Record<WeaponType, number> = {
+  laser: 0.04, cannon: 0.12, torpedo: 0.4, railgun: 0.75, plasma: 0.24, ion: 0.08,
+};
 
 interface GameContext {
   renderer: THREE.WebGLRenderer;
@@ -25,11 +39,13 @@ interface GameContext {
   audio: EngineAudio;
   motionBlur: ShaderPass;
   combat: Combat;
-  fire: { cooldown: number };
+  weapons: WeaponState;
+  player: { alive: boolean };
   spec: { current: ShipSpec };
   autoCooldowns: Map<string, number>;
   speedLines: SpeedLines;
   trail: { current: LocalPlume | null };
+  damage: { current: DamageVisuals | null };
   switchShip: (id: string) => Promise<boolean>;
 }
 
@@ -45,6 +61,46 @@ function formatNumber(value: number): string {
 function distanceLabel(value: number): string {
   if (value > 1000) return `${(value / 1000).toFixed(2)} km`;
   return `${Math.round(value)} m`;
+}
+
+function closestPointOnSegment(point: THREE.Vector3, a: THREE.Vector3, b: THREE.Vector3): THREE.Vector3 {
+  const ab = b.clone().sub(a);
+  const lengthSq = ab.lengthSq();
+  const t = lengthSq > 1e-8 ? THREE.MathUtils.clamp(point.clone().sub(a).dot(ab) / lengthSq, 0, 1) : 0;
+  return a.clone().addScaledVector(ab, t);
+}
+
+function updateWeaponCooldowns(ctx: GameContext, dt: number): void {
+  for (const [key, value] of ctx.weapons.cooldowns) {
+    const next = value - dt;
+    if (next <= 0) ctx.weapons.cooldowns.delete(key);
+    else ctx.weapons.cooldowns.set(key, next);
+  }
+}
+
+function fireSelectedWeapons(ctx: GameContext): void {
+  if (!ctx.weapons.firing || !ctx.player.alive) return;
+  const spec = ctx.spec.current;
+  const selected = ctx.weapons.selected;
+  const firedTypes = new Set<WeaponType>();
+  let shake = 0;
+
+  for (const weapon of spec.weapons) {
+    if (weapon.turret) continue;
+    if (selected !== 'all' && weapon.type !== selected) continue;
+    const key = `${spec.id}:${weapon.id}`;
+    if ((ctx.weapons.cooldowns.get(key) ?? 0) > 0) continue;
+
+    const local = new THREE.Vector3(...weapon.pos);
+    const origin = local.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
+    ctx.combat.fire(origin, ctx.flight.forwardVector, weapon, ctx.flight.quaternion);
+    ctx.weapons.cooldowns.set(key, 1 / Math.max(0.05, weapon.rate));
+    firedTypes.add(weapon.type);
+    shake = Math.max(shake, FIRE_SHAKE[weapon.type]);
+  }
+
+  for (const type of firedTypes) ctx.audio.weapon(type, 0.9);
+  if (shake > 0) ctx.flight.addShake(shake);
 }
 
 export async function startGame(system: SystemData): Promise<void> {
@@ -102,6 +158,7 @@ export async function startGame(system: SystemData): Promise<void> {
 
   let ship = createShip();
   const trailRef: { current: LocalPlume | null } = { current: null };
+  const damageRef: { current: DamageVisuals | null } = { current: null };
   scene.add(ship.group);
 
   const audio = new EngineAudio();
@@ -116,6 +173,7 @@ export async function startGame(system: SystemData): Promise<void> {
       getShip("thunderbolt").length,
       getShip("thunderbolt").nozzles,
       getShip("thunderbolt").cockpits[0],
+      getShip("thunderbolt").exhaust,
     );
     scene.remove(ship.group);
     ship = loaded;
@@ -140,6 +198,7 @@ export async function startGame(system: SystemData): Promise<void> {
         spec.length,
         spec.nozzles,
         spec.cockpits[0],
+        spec.exhaust,
       );
       npcTemplates.set(id, { group: template.group, spec });
     }),
@@ -195,7 +254,7 @@ export async function startGame(system: SystemData): Promise<void> {
   boot.classList.add('is-done');
   window.setTimeout(() => boot.remove(), 900);
 
-  const fire = { cooldown: 0 };
+  const weapons: WeaponState = { selected: 'all', cooldowns: new Map(), firing: false };
   const autoCooldowns = new Map<string, number>();
   let shipSpec: ShipSpec = getShip('thunderbolt');
   const specRef = { current: shipSpec };
@@ -207,9 +266,16 @@ export async function startGame(system: SystemData): Promise<void> {
   };
 
   const combat = new Combat(scene, {
-    onPlayerDamage: (damage: number) => {
+    onPlayerDamage: (damage: number, position?: THREE.Vector3) => {
       if (!playerState.alive) return;
       const absorbed = Math.min(playerState.shield, damage);
+      if (position) {
+        const local = position.clone().sub(flight.position).applyQuaternion(flight.quaternion.clone().invert());
+        if (absorbed > 0) damageRef.current?.shieldHit(local);
+        else damageRef.current?.hullHit(local);
+      }
+      if (absorbed > 0 && playerState.shield - absorbed <= 0) damageRef.current?.shieldBreak();
+      if (specRef.current.tier < 5) hud?.hit();
       playerState.shield -= absorbed;
       const rest = damage - absorbed;
       if (rest > 0) {
@@ -223,18 +289,28 @@ export async function startGame(system: SystemData): Promise<void> {
       }
     },
     onNpcKilled: () => {
-      audio.explosion(0.8);
-      hud?.toast('敌机击毁');
+      hud?.toast('敌舰击毁');
     },
     onExplosion: (position, size) => {
       const distance = position.distanceTo(flight.position);
       const force = Math.max(0, 1 - distance / 5200) * Math.min(1.4, size / 90);
       flight.addShake(force);
+      const volume = THREE.MathUtils.clamp(1 - distance / 7000, 0.05, 1) * THREE.MathUtils.clamp(size / 180, 0.15, 1);
+      audio.explosion(volume);
+      hud?.explosionFlash(THREE.MathUtils.clamp((size / 260) * (1 - distance / 9000), 0, 0.8));
+    },
+    onImpact: (type, position, owner) => {
+      const distance = position.distanceTo(flight.position);
+      const volume = THREE.MathUtils.clamp(1 - distance / 5200, 0.04, 1);
+      audio.impact(type, volume);
+      if (owner === 'npc') {
+        flight.addShake(IMPACT_SHAKE[type] * THREE.MathUtils.clamp(1 - distance / 3000, 0, 1));
+      }
     },
   });
 
   combat.setTemplates(npcTemplates);
-  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, combat, fire, spec: specRef, autoCooldowns, speedLines, trail: trailRef, switchShip: async () => false };
+  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, combat, weapons, player: playerState, spec: specRef, autoCooldowns, speedLines, trail: trailRef, damage: damageRef, switchShip: async () => false };
 
   const dock = world.bodies.find((body) => body.id === 'station-dock');
   if (dock) {
@@ -246,8 +322,7 @@ export async function startGame(system: SystemData): Promise<void> {
       .addScaledVector(tangent, 42000)
       .add(new THREE.Vector3(0, 12000, 0));
     const look = dock.position.clone().sub(flight.position).normalize();
-    (flight as unknown as { yaw: number }).yaw = Math.atan2(-look.x, -look.z);
-    (flight as unknown as { pitch: number }).pitch = -Math.asin(look.y);
+    flight.setLookDirection(look);
     camera.position.copy(flight.position).addScaledVector(look, -34).add(new THREE.Vector3(0, 12, 0));
   }
 
@@ -260,8 +335,7 @@ export async function startGame(system: SystemData): Promise<void> {
       const dir = new THREE.Vector3(0.4, 0.28, 1).normalize();
       ctx.flight.position.copy(body.position).addScaledVector(dir, dist);
       const look = body.position.clone().sub(ctx.flight.position).normalize();
-      (ctx.flight as unknown as { yaw: number }).yaw = Math.atan2(-look.x, -look.z);
-      (ctx.flight as unknown as { pitch: number }).pitch = -Math.asin(look.y);
+      ctx.flight.setLookDirection(look);
       ctx.flight.halt();
       ctx.camera.position.copy(ctx.flight.position).addScaledVector(look, -34).add(new THREE.Vector3(0, 10, 0));
     }
@@ -272,7 +346,9 @@ export async function startGame(system: SystemData): Promise<void> {
     if (ship.group) {
       const mainNozzles = spec.nozzles.filter((nozzle) => nozzle.role === 'main');
       const nozzles = mainNozzles.length > 0 ? mainNozzles : spec.nozzles.slice(0, 2);
-      trailRef.current = new LocalPlume(ship.group, nozzles, spec.length, 0x8fe8ff);
+      trailRef.current = new LocalPlume(ship.group, nozzles, spec.length, spec.exhaust);
+      damageRef.current?.dispose();
+      damageRef.current = new DamageVisuals(ship.group, spec.length, spec);
     }
     shipSpec = spec;
     specRef.current = spec;
@@ -282,17 +358,21 @@ export async function startGame(system: SystemData): Promise<void> {
       accel: spec.accel,
       turnRate: spec.turnRate,
       length: spec.length,
+      chargeTime: spec.chargeTime,
+      warpCombo: spec.warpCombo,
     });
     ship.group.scale.setScalar(1);
     playerState.hull = spec.hull;
     playerState.shield = spec.shield;
     playerState.parts = { ...spec.parts };
     playerState.alive = true;
+    weapons.cooldowns.clear();
+    weapons.selected = 'all';
+    weapons.firing = false;
   };
   applyShip(shipSpec);
 
   const switchShip = async (id: string): Promise<boolean> => {
-    console.log('[switchShip]', id, new Error().stack);
     if (!id || id === shipSpec.id) return true;
     const spec = getShip(id);
     try {
@@ -301,6 +381,7 @@ export async function startGame(system: SystemData): Promise<void> {
         spec.length,
         spec.nozzles,
         spec.cockpits[0],
+        spec.exhaust,
       );
       scene.remove(ship.group);
       ship = loaded;
@@ -318,26 +399,6 @@ export async function startGame(system: SystemData): Promise<void> {
   };
 
   ctx.switchShip = switchShip;
-
-  canvas.addEventListener('mousedown', (event) => {
-    if (event.button !== 0) return;
-    fireWeapons();
-  });
-
-  const tmpForward = new THREE.Vector3();
-
-  const fireWeapons = (): void => {
-    if (fire.cooldown > 0 || !playerState.alive) return;
-    fire.cooldown = 0.09;
-    ctx.flight.forwardVector.copy(tmpForward);
-    for (const weapon of shipSpec.weapons) {
-      if (weapon.turret) continue;
-      const local = new THREE.Vector3(...weapon.pos);
-      const origin = local.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
-      ctx.combat.fire(origin, ctx.flight.forwardVector, weapon, ctx.flight.quaternion);
-    }
-  };
-
   // 开局舰队：敌对舰队会扫描并主动上门，中立舰队全图游荡
   const fleetPlan: Array<{ faction: 'hostile' | 'neutral'; angle: number; distance: number }> = [
     { faction: 'hostile', angle: 0.5, distance: 95000 },
@@ -369,6 +430,8 @@ interface Hud {
   update: (dt: number) => void;
   openById: (id: string) => void;
   toast: (message: string) => void;
+  hit: () => void;
+  explosionFlash: (strength: number) => void;
 }
 
 function loop(ctx: GameContext, hud: Hud): void {
@@ -381,16 +444,20 @@ function loop(ctx: GameContext, hud: Hud): void {
   const tick = (): void => {
     const dt = Math.min(clock.getDelta(), 0.05);
     elapsed += dt;
+    const prevPosition = ctx.flight.position.clone();
 
     ctx.flight.update(dt);
+    updateWeaponCooldowns(ctx, dt);
+    fireSelectedWeapons(ctx);
 
     // 实体碰撞：撞上天体就被推开并卸掉法向速度
     for (const body of ctx.world.bodies) {
       const min = body.radius * (body.type === 'station' ? 0.34 : 1.03);
-      const delta = ctx.flight.position.clone().sub(body.position);
+      const closest = closestPointOnSegment(body.position, prevPosition, ctx.flight.position);
+      const delta = closest.clone().sub(body.position);
       const distance = delta.length();
-      if (distance < min && distance > 0.001) {
-        const normal = delta.normalize();
+      if (distance < min) {
+        const normal = distance > 0.001 ? delta.normalize() : ctx.flight.position.clone().sub(body.position).normalize();
         ctx.flight.position.copy(body.position).addScaledVector(normal, min);
         const vn = ctx.flight.velocity.dot(normal);
         if (vn < 0) ctx.flight.velocity.addScaledVector(normal, -vn * 1.8);
@@ -423,7 +490,6 @@ function loop(ctx: GameContext, hud: Hud): void {
     const speedNorm = Math.min(1, ctx.flight.speed / 9000);
     motionBlur.uniforms.uStrength.value = speedNorm * 0.14 + ctx.flight.boost * 0.1;
 
-    ctx.fire.cooldown = Math.max(0, ctx.fire.cooldown - dt);
     ctx.combat.update(dt, ctx.flight.position, ctx.flight.velocity, ctx.flight.quaternion, ctx.camera);
 
     // 自动炮：只打「已攻击我方」的目标
@@ -442,6 +508,7 @@ function loop(ctx: GameContext, hud: Hud): void {
       const aim = ctx.combat.leadPoint(origin, target.position, target.velocity, weapon.speed);
       const dir = aim.sub(origin).normalize();
       ctx.combat.fire(origin, dir, weapon, ctx.flight.quaternion);
+      ctx.audio.weapon(weapon.type, 0.4);
       ctx.autoCooldowns.set(key, 1 / weapon.rate);
     }
 
@@ -461,7 +528,6 @@ function loop(ctx: GameContext, hud: Hud): void {
     ctx.trail.current?.update(dt, 0.2 + ctx.flight.throttle * 0.9 + ctx.flight.boost * 1.8);
 
     ctx.flight.updateCamera(dt);
-    ctx.ship.group.visible = true;
     if (ctx.ship.model) ctx.ship.model.visible = ctx.flight.cameraMode !== 'first';
     if (ctx.ship.cockpitGroup) ctx.ship.cockpitGroup.visible = ctx.flight.cameraMode === 'first';
 
@@ -537,7 +603,27 @@ function setupHud(
   const boostUi = $('boost-ui');
   const boostRing = $('boost-ring');
   const boostLabel = $('boost-label');
+  const boostKey = $('boost-key');
+  const boostSub = $('boost-sub');
+  const hudRoot = $('hud');
   const helpPanel = $('help-panel');
+  const weaponList = $('weapon-list');
+  const hullGhost = $('hull-ghost');
+  const shieldGhost = $('shield-ghost');
+  const hullVital = $('hull-vital');
+  const shieldVital = $('shield-vital');
+  const bearingHeading = $('bearing-heading');
+  const bearingTarget = $('bearing-target');
+  const bearingEnemy = $('bearing-enemy');
+  const bossBar = $('boss-bar');
+  const bossName = $('boss-name');
+  const bossLevel = $('boss-level');
+  const bossShieldFill = $('boss-shield-fill');
+  const bossHullFill = $('boss-hull-fill');
+  const bossHpText = $('boss-hp-text');
+  const bossDist = $('boss-dist');
+  const hitAlert = $('hit-alert');
+  const impactFlash = $('impact-flash');
   const ladder = $('cockpit-ladder');
   const tapeSpeed = $('tape-speed');
   const heat = $('heat-warning');
@@ -550,6 +636,10 @@ function setupHud(
   let panelOpen = false;
   let docking: { body: CelestialBody; t: number; from: THREE.Vector3; to: THREE.Vector3; landing: boolean } | null = null;
   let toastTimer = 0;
+  let playerDeath: { time: number; duration: number; next: number; index: number; anchors: THREE.Vector3[] } | null = null;
+  let respawning = false;
+  let weaponSignature = '';
+  const weaponRows = new Map<string, { row: HTMLButtonElement; fill: HTMLElement | null }>();
 
   const toast = (message: string): void => {
     const el = $('toast');
@@ -557,6 +647,22 @@ function setupHud(
     el.classList.add('is-on');
     window.clearTimeout(toastTimer);
     toastTimer = window.setTimeout(() => el.classList.remove('is-on'), 2400);
+  };
+
+  const showHit = (): void => {
+    hitAlert.classList.remove('is-on');
+    void hitAlert.offsetWidth;
+    hitAlert.classList.add('is-on');
+  };
+
+  const showExplosionFlash = (strength: number): void => {
+    const value = THREE.MathUtils.clamp(strength, 0, 0.85);
+    impactFlash.style.transition = 'none';
+    impactFlash.style.opacity = String(value);
+    requestAnimationFrame(() => {
+      impactFlash.style.transition = 'opacity 0.4s ease-out';
+      impactFlash.style.opacity = '0';
+    });
   };
 
   /* ── 星图 ── */
@@ -692,8 +798,13 @@ function setupHud(
   };
 
   const toggleMap = (): void => {
-    map.classList.toggle('is-open');
-    if (map.classList.contains('is-open')) renderMap();
+    const open = !map.classList.contains('is-open');
+    map.classList.toggle('is-open', open);
+    hudRoot.classList.toggle('is-map-open', open);
+    if (open) {
+      renderMap();
+      if (document.pointerLockElement) document.exitPointerLock();
+    }
   };
 
   $('map-toggle')?.addEventListener('click', toggleMap);
@@ -718,9 +829,84 @@ function setupHud(
     if (event.target === panel) closePanel();
   });
 
+
+  const rebuildWeaponPanel = (): void => {
+    const spec = ctx.spec.current;
+    const types = manualWeaponTypes(spec);
+    const autoCount = spec.weapons.filter((weapon) => weapon.turret).length;
+    const signature = `${spec.id}:${types.join(',')}:${autoCount}`;
+    if (signature === weaponSignature) return;
+    weaponSignature = signature;
+    weaponRows.clear();
+    weaponList.innerHTML = '';
+
+    if (ctx.weapons.selected !== 'all' && !types.includes(ctx.weapons.selected)) {
+      ctx.weapons.selected = types.length > 1 ? 'all' : (types[0] ?? 'all');
+    }
+
+    const addRow = (
+      key: string,
+      type: string,
+      label: string,
+      count: number,
+      auto = false,
+    ): void => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = `weapon-row${auto ? ' is-auto' : ''}`;
+      row.dataset.weaponType = type;
+      row.innerHTML = `
+        <span class="weapon-key">${key}</span>
+        <span class="weapon-name">${label}</span>
+        <span class="weapon-count">${count}</span>
+        <span class="weapon-bar"><i></i></span>
+      `;
+      row.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (auto) return;
+        ctx.weapons.selected = type === 'all' ? 'all' : (type as WeaponType);
+        updateWeaponPanel();
+      });
+      weaponList.append(row);
+      const fill = row.querySelector('.weapon-bar i') as HTMLElement | null;
+      weaponRows.set(type, { row, fill });
+    };
+
+    if (types.length > 1) {
+      addRow('0', 'all', '全部', spec.weapons.filter((weapon) => !weapon.turret).length);
+    }
+    types.forEach((type, index) => {
+      const count = spec.weapons.filter((weapon) => !weapon.turret && weapon.type === type).length;
+      addRow(String(index + 1), type, WEAPON_LABELS[type], count);
+    });
+    if (autoCount > 0) addRow('A', 'auto', '自动炮', autoCount, true);
+  };
+
+  const updateWeaponPanel = (): void => {
+    rebuildWeaponPanel();
+    const spec = ctx.spec.current;
+
+    for (const [type, entry] of weaponRows) {
+      const selected = type === ctx.weapons.selected;
+      entry.row.classList.toggle('is-on', selected);
+      if (type === 'auto' || !entry.fill) continue;
+
+      const weapons = spec.weapons.filter((weapon) =>
+        !weapon.turret && (type === 'all' || weapon.type === type),
+      );
+      let readiness = 0;
+      for (const weapon of weapons) {
+        const key = `${spec.id}:${weapon.id}`;
+        const cd = ctx.weapons.cooldowns.get(key) ?? 0;
+        const max = 1 / Math.max(0.05, weapon.rate);
+        readiness = Math.max(readiness, 1 - Math.min(1, cd / max));
+      }
+      entry.fill.style.width = `${Math.round(readiness * 100)}%`;
+    }
+  };
+
   const openBody = (body: CelestialBody): void => {
-    console.log('[openBody]', body.id);
-    panelOpen = true;
+      panelOpen = true;
     panel.classList.add('is-open');
     if (document.pointerLockElement) document.exitPointerLock();
 
@@ -878,8 +1064,13 @@ function setupHud(
         startDock(nearest);
       }
     }
-    if (event.code === 'KeyH') {
+    if (event.code === 'F1') {
+      event.preventDefault();
       helpPanel.classList.toggle('is-open');
+      return;
+    }
+    if (event.code === 'Escape' && helpPanel.classList.contains('is-open')) {
+      helpPanel.classList.remove('is-open');
       return;
     }
     if (event.code === 'Escape') {
@@ -921,7 +1112,7 @@ function setupHud(
     assistLabel.classList.toggle('is-off', !ctx.flight.assist);
 
     coords.textContent = `X ${Math.round(ctx.flight.position.x)}  Y ${Math.round(ctx.flight.position.y)}  Z ${Math.round(ctx.flight.position.z)}`;
-    modeLabel.textContent = ctx.flight.cameraMode === 'third' ? '第三人称' : '第一人称';
+    modeLabel.textContent = ctx.flight.cameraMode === 'first' ? '第一人称' : ctx.flight.cameraMode === 'free' ? '自由视角' : '第三人称';
     cockpit.classList.toggle('is-on', ctx.flight.cameraMode === 'first');
 
     // 最近天体
@@ -948,6 +1139,8 @@ function setupHud(
     } else {
       prompt.classList.remove('is-on');
     }
+
+    updateWeaponPanel();
 
     // 目标
     if (target) {
@@ -976,32 +1169,70 @@ function setupHud(
     cockpitSpeed.textContent = Math.round(speed).toString();
     shipLabel.textContent = `${ctx.spec.current.code} · T${ctx.spec.current.tier}`;
 
-    // B 充能环 / Shift 次级加速
-    const chargeRatio = Math.min(1, ctx.flight.charge / 3);
-    const circ = 2 * Math.PI * 30;
+    // 跃迁充能环 / Shift 次级加速
+    const chargeTime = Math.max(0.1, ctx.spec.current.chargeTime);
+    const chargeRatio = Math.min(1, ctx.flight.charge / chargeTime);
+    const circ = 2 * Math.PI * 46;
     const shifting = ctx.flight.boostMode === 'shift';
     const charged = ctx.flight.boostMode === 'charged';
+    const warping = ctx.flight.boost > 0.4;
+    const remaining = Math.max(0, chargeTime - ctx.flight.charge);
+
     if (shifting) {
-      boostRing.style.strokeDashoffset = String(circ * (1 - 0.55 * Math.max(ctx.flight.boost, 0.2)));
-      boostLabel.textContent = 'SHIFT';
+      boostRing.style.strokeDashoffset = String(circ * (1 - 0.12 * Math.max(ctx.flight.boost, 0.2)));
+    } else if (charged || warping) {
+      boostRing.style.strokeDashoffset = '0';
     } else {
       boostRing.style.strokeDashoffset = String(circ * (1 - chargeRatio));
-      boostLabel.textContent = chargeRatio >= 1 ? '就绪' : `${Math.round(chargeRatio * 100)}%`;
     }
-    boostUi.classList.toggle('is-on', chargeRatio > 0.01 || ctx.flight.boost > 0.05);
+
+    boostKey.textContent = ctx.spec.current.warpCombo ? 'G+H+B' : 'B';
+    if (warping) {
+      boostLabel.textContent = '跃迁中';
+      boostSub.textContent = `${Math.round(speed)} m/s`;
+    } else if (shifting) {
+      boostLabel.textContent = 'SHIFT';
+      boostSub.textContent = '次级加速';
+    } else if (charged) {
+      boostLabel.textContent = '跃迁就绪';
+      boostSub.textContent = '全速释放';
+    } else if (chargeRatio > 0.01) {
+      boostLabel.textContent = `${Math.round(chargeRatio * 100)}%`;
+      boostSub.textContent = `${remaining.toFixed(1)} s`;
+    } else {
+      boostLabel.textContent = '待机';
+      boostSub.textContent = ctx.spec.current.warpCombo ? 'G+H+B 充能' : '按住 B 充能';
+    }
+
+    boostUi.classList.toggle('is-on', chargeRatio > 0.01 || ctx.flight.boost > 0.05 || shifting);
     boostUi.classList.toggle('is-ready', charged);
     boostUi.classList.toggle('is-shift', shifting);
+    boostUi.classList.toggle('is-charging', chargeRatio > 0.01 && !charged);
+    boostUi.classList.toggle('is-warping', warping);
+    hudRoot.classList.toggle('is-warp-ready', charged);
+    hudRoot.classList.toggle('is-warping', warping);
 
     // 结构值
     const hullRatio = Math.max(0, playerState.hull / specRef.current.hull);
     const shieldRatio = Math.max(0, playerState.shield / specRef.current.shield);
     hullFill.style.width = `${hullRatio * 100}%`;
+    shieldFill.style.width = `${shieldRatio * 100}%`;
+    hullGhost.style.width = `${hullRatio * 100}%`;
+    shieldGhost.style.width = `${shieldRatio * 100}%`;
+    hullVital.classList.toggle('is-critical', hullRatio < 0.3);
+    shieldVital.classList.toggle('is-critical', shieldRatio < 0.18);
     dashHull.style.width = `${hullRatio * 100}%`;
     dashShield.style.width = `${shieldRatio * 100}%`;
     dashThrottle.style.width = `${Math.round(ctx.flight.throttle * 100)}%`;
-    shieldFill.style.width = `${shieldRatio * 100}%`;
     hullText.textContent = `${Math.max(0, Math.round(playerState.hull))} / ${specRef.current.hull}`;
     shieldText.textContent = `${Math.max(0, Math.round(playerState.shield))} / ${specRef.current.shield}`;
+
+    ctx.damage.current?.setBubbleVisible(playerState.alive && ctx.flight.cameraMode !== 'first');
+    ctx.damage.current?.update(dt, hullRatio, shieldRatio, {
+      engine: playerState.parts.engine / Math.max(1, specRef.current.parts.engine),
+      weapon: playerState.parts.weapon / Math.max(1, specRef.current.parts.weapon),
+      cockpit: playerState.parts.cockpit / Math.max(1, specRef.current.parts.cockpit),
+    });
 
     // 敌机提示
     const enemy = ctx.combat.nearestNpc(ctx.flight.position);
@@ -1014,6 +1245,41 @@ function setupHud(
       enemyBox.classList.remove('is-on');
       enemyCount.textContent = '';
     }
+
+    // 顶部长舰 BOSS 血条
+    const capital = ctx.combat.nearestCapital(ctx.flight.position);
+    bossBar.classList.toggle('is-on', Boolean(capital));
+    if (capital) {
+      bossName.textContent = capital.name;
+      bossLevel.textContent = `T${capital.tier} · ${capital.code}`;
+      bossHullFill.style.width = `${Math.max(0, (capital.hull / capital.maxHull) * 100)}%`;
+      bossShieldFill.style.width = `${Math.max(0, (capital.shield / capital.maxShield) * 100)}%`;
+      bossHpText.textContent = `${Math.round(capital.hull)} / ${capital.maxHull}`;
+      bossDist.textContent = distanceLabel(capital.distance);
+    }
+
+    // 顶部航向/威胁带
+    const bearingForward = ctx.flight.forwardVector;
+    const bearingYaw = Math.atan2(bearingForward.x, bearingForward.z);
+    bearingHeading.textContent = `${String(Math.round(((bearingYaw * 180) / Math.PI + 360) % 360)).padStart(3, '0')}°`;
+    const placeBearing = (el: HTMLElement, world: THREE.Vector3 | null): void => {
+      if (!world) {
+        el.style.opacity = '0';
+        return;
+      }
+      const rel = world.clone().sub(ctx.flight.position);
+      const distance = rel.length();
+      if (distance < 1) {
+        el.style.opacity = '0';
+        return;
+      }
+      const angle = Math.atan2(rel.x, rel.z) - bearingYaw;
+      const pct = THREE.MathUtils.clamp(50 + (angle / Math.PI) * 50, 3, 97);
+      el.style.left = `${pct}%`;
+      el.style.opacity = '1';
+    };
+    placeBearing(bearingTarget, target ? target.position : null);
+    placeBearing(bearingEnemy, enemy ? enemy.position : null);
 
     // 敌方舰队情报
     const intel = ctx.combat.getFleetIntel(ctx.flight.position);
@@ -1032,14 +1298,57 @@ function setupHud(
       playerState.shield = Math.min(specRef.current.shield, playerState.shield + specRef.current.shieldRegen * dt);
     }
 
-    if (!playerState.alive) {
-      playerState.alive = true;
-      playerState.hull = specRef.current.hull;
-      playerState.shield = specRef.current.shield;
-      const dock = ctx.world.bodies.find((b) => b.id === 'station-dock');
-      if (dock) ctx.flight.position.copy(dock.position).add(new THREE.Vector3(4200, 2200, 9000));
+    if (!playerState.alive && !playerDeath && !respawning) {
+      const spec = ctx.spec.current;
+      const duration = spec.tier >= 5 ? Math.min(18, 4 + spec.length / 180) : 1.6;
+      const anchors = [
+        ...spec.nozzles.filter((nozzle) => nozzle.role !== 'retro').map((nozzle) => new THREE.Vector3(...nozzle.pos)),
+        ...spec.weapons.map((weapon) => new THREE.Vector3(...weapon.pos)),
+        new THREE.Vector3(...(spec.cockpits[0] ?? [0, 0, 0])),
+      ];
+      playerDeath = { time: 0, duration, next: 0.15, index: 0, anchors };
       ctx.flight.halt();
-      toast('舰体损毁 · 已在母港重生');
+      ctx.flight.throttle = 0;
+      ctx.damage.current?.setBubbleVisible(false);
+      toast('舰体解体 · 逃生程序启动');
+    }
+
+    if (playerDeath) {
+      playerDeath.time += dt;
+      ctx.flight.velocity.set(0, 0, 0);
+      ctx.flight.throttle = 0;
+      const spec = ctx.spec.current;
+      while (
+        playerDeath.time >= playerDeath.next &&
+        playerDeath.next < playerDeath.duration - 1 &&
+        playerDeath.anchors.length > 0
+      ) {
+        const anchor = playerDeath.anchors[playerDeath.index % playerDeath.anchors.length];
+        const world = anchor.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
+        ctx.combat.burstAt(world, Math.max(10, spec.length * 0.02));
+        playerDeath.index += 1;
+        playerDeath.next += 0.38;
+      }
+      if (playerDeath.time >= playerDeath.duration) {
+        ctx.combat.finaleAt(ctx.flight.position.clone(), spec.length, spec.tier);
+        ctx.ship.group.visible = false;
+        playerDeath = null;
+        respawning = true;
+        window.setTimeout(() => {
+          const dock = ctx.world.bodies.find((body) => body.id === 'station-dock');
+          if (dock) ctx.flight.position.copy(dock.position).add(new THREE.Vector3(4200, 2200, 9000));
+          ctx.flight.halt();
+          ctx.flight.throttle = 0;
+          playerState.hull = ctx.spec.current.hull;
+          playerState.shield = ctx.spec.current.shield;
+          playerState.parts = { ...ctx.spec.current.parts };
+          playerState.alive = true;
+          respawning = false;
+          ctx.ship.group.visible = true;
+          ctx.damage.current?.setBubbleVisible(playerState.alive && ctx.flight.cameraMode !== 'first');
+          toast('舰体损毁 · 已在母港重新装配');
+        }, 1100);
+      }
     }
     tapeSpeed.textContent = Math.round(speed).toString();
 
@@ -1142,6 +1451,8 @@ function setupHud(
   return {
     update,
     toast,
+    hit: showHit,
+    explosionFlash: showExplosionFlash,
     openById: (id: string) => {
       const body = ctx.world.bodies.find((item) => item.id === id);
       if (body) openBody(body);

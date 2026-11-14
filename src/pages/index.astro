@@ -72,6 +72,32 @@ const systemData = {
         </div>
       </div>
 
+      <div id="bearing-strip">
+        <div class="bearing-axis"></div>
+        <div class="bearing-center"></div>
+        <div class="bearing-heading" id="bearing-heading">000°</div>
+        <div class="bearing-arrow bearing-target" id="bearing-target">◆</div>
+        <div class="bearing-arrow bearing-enemy" id="bearing-enemy">▲</div>
+      </div>
+
+      <div id="boss-bar">
+        <div class="boss-head">
+          <span id="boss-name">—</span>
+          <small id="boss-level">CAPITAL</small>
+        </div>
+        <div class="boss-track">
+          <i id="boss-shield-fill"></i>
+          <i id="boss-hull-fill"></i>
+        </div>
+        <div class="boss-meta">
+          <span id="boss-hp-text">—</span>
+          <span id="boss-dist">—</span>
+        </div>
+      </div>
+
+      <div id="hit-alert">⚠ 遭受攻击</div>
+      <div id="impact-flash"></div>
+
       <div id="cockpit" aria-hidden="true">
         <div class="cockpit-canopy"></div>
         <div class="cockpit-hud">
@@ -128,18 +154,23 @@ const systemData = {
       <div id="hud-prompt"></div>
 
       <div id="boost-ui">
-        <svg viewBox="0 0 72 72" aria-hidden="true">
-          <circle class="boost-track" cx="36" cy="36" r="30" />
-          <circle class="boost-fill" id="boost-ring" cx="36" cy="36" r="30" />
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="boost-outer" cx="60" cy="60" r="56" />
+          <circle class="boost-ticks" cx="60" cy="60" r="52" />
+          <circle class="boost-track" cx="60" cy="60" r="46" />
+          <circle class="boost-fill" id="boost-ring" cx="60" cy="60" r="46" />
         </svg>
         <div class="boost-text">
-          <b>B</b>
-          <span id="boost-label">充能</span>
+          <small id="boost-key">B</small>
+          <b id="boost-label">待机</b>
+          <span id="boost-sub">跃迁充能</span>
         </div>
       </div>
 
+      <div id="warp-overlay"></div>
+
       <div id="help-hint">
-        <kbd>H</kbd> 操作说明
+        <kbd>F1</kbd> 操作说明
       </div>
 
       <div id="help-panel">
@@ -152,12 +183,12 @@ const systemData = {
             <section>
               <h3>飞行</h3>
               <dl>
-                <dt>鼠标</dt><dd>转向（点画面锁定指针）</dd>
+                <dt>鼠标</dt><dd>转向；自由视角时环绕相机</dd>
                 <dt>W / S</dt><dd>前进 / 反推</dd>
                 <dt>A / D</dt><dd>左右侧移</dd>
                 <dt>R / C</dt><dd>上升 / 下降</dd>
                 <dt>Q / E</dt><dd>滚转（不会自动回正）</dd>
-                <dt>B（按住 3 秒）</dt><dd>充能后全速推进</dd>
+                <dt>B</dt><dd>按住充能；大型舰为 G+H+B，充满后跃迁</dd>
                 <dt>Shift</dt><dd>次级加速（弱于 B 充能）</dd>
                 <dt>X / Space</dt><dd>刹车</dd>
                 <dt>Z</dt><dd>飞行辅助开关</dd>
@@ -166,30 +197,31 @@ const systemData = {
             <section>
               <h3>战斗与交互</h3>
               <dl>
-                <dt>鼠标左键</dt><dd>开火</dd>
+                <dt>鼠标左键</dt><dd>按住持续开火</dd>
+                <dt>1–9 / 0</dt><dd>切换武器组 / 全部武器</dd>
                 <dt>F</dt><dd>停靠 / 进入 / 关闭面板</dd>
                 <dt>M</dt><dd>雷达与目标</dd>
-                <dt>V</dt><dd>第一 / 第三人称</dd>
+                <dt>V</dt><dd>第一 / 第三 / 自由视角（鼠标环绕、滚轮缩放）</dd>
                 <dt>Esc</dt><dd>关闭面板</dd>
-                <dt>H</dt><dd>打开 / 关闭本说明</dd>
+                <dt>F1</dt><dd>打开 / 关闭本说明</dd>
               </dl>
             </section>
           </div>
           <p class="help-note">
-            自动炮（Auto）只攻击已经向我方开火的目标，并带弹道预测。鱼雷会追踪准星附近的飞船。空间站可以免费换船。
+            自动炮（Auto）只攻击已经向我方开火的目标，并带弹道预测。鱼雷会追踪准星附近的飞船。每门武器独立冷却。空间站可以免费换船。
           </p>
         </div>
       </div>
 
       <div class="hud-vitals">
-        <div class="vital">
+        <div class="vital" id="hull-vital">
           <span>结构</span>
-          <div class="vital-bar"><i id="hull-fill"></i></div>
+          <div class="vital-bar"><i class="vital-ghost" id="hull-ghost"></i><i id="hull-fill"></i></div>
           <b id="hull-text">—</b>
         </div>
-        <div class="vital">
+        <div class="vital" id="shield-vital">
           <span>护盾</span>
-          <div class="vital-bar vital-shield"><i id="shield-fill"></i></div>
+          <div class="vital-bar vital-shield"><i class="vital-ghost" id="shield-ghost"></i><i id="shield-fill"></i></div>
           <b id="shield-text">—</b>
         </div>
       </div>
@@ -211,6 +243,14 @@ const systemData = {
           <span id="fleet-comp"></span>
           <span id="fleet-dist">—</span>
         </div>
+      </div>
+
+      <div id="weapon-panel">
+        <div class="weapon-head">
+          <span>武器</span>
+          <small>1–9 切换 · 0 全部 · 按住左键</small>
+        </div>
+        <div id="weapon-list"></div>
       </div>
 
       <div class="hud-bottom">
@@ -1599,17 +1639,386 @@ const systemData = {
     color: rgba(255, 180, 160, 0.72);
   }
 
-  /* ── 充能环 ─────────────────────────── */
+  /* ── 武器选择 ───────────────────────── */
+  #weapon-panel {
+    position: absolute;
+    right: 26px;
+    bottom: 158px;
+    width: 248px;
+    padding: 8px 10px 9px;
+    border: 1px solid rgba(89, 224, 200, 0.18);
+    background: rgba(4, 10, 15, 0.68);
+    backdrop-filter: blur(4px);
+    font-family: var(--mono);
+    pointer-events: auto;
+  }
+
+  .weapon-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 5px;
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(120, 200, 200, 0.65);
+  }
+
+  .weapon-head small {
+    font-size: 7px;
+    letter-spacing: 0.06em;
+    color: rgba(140, 170, 180, 0.55);
+  }
+
+  .weapon-row {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    grid-template-rows: auto 2px;
+    gap: 2px 7px;
+    width: 100%;
+    padding: 4px 5px 4px 3px;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: transparent;
+    color: #93a9b4;
+    text-align: left;
+    font: inherit;
+    font-size: 10px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+  }
+
+  .weapon-row:last-child { border-bottom: 0; }
+
+  .weapon-row:hover {
+    background: rgba(89, 224, 200, 0.06);
+    color: #d8f5f0;
+  }
+
+  .weapon-row.is-on {
+    color: #eafffb;
+    background: rgba(89, 224, 200, 0.09);
+    box-shadow: inset 2px 0 0 rgba(89, 224, 200, 0.9);
+  }
+
+  .weapon-key {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    font-size: 8px;
+    color: #c9a55c;
+  }
+
+  .weapon-row.is-on .weapon-key {
+    border-color: rgba(89, 224, 200, 0.6);
+    color: #59e0c8;
+  }
+
+  .weapon-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+  }
+
+  .weapon-count {
+    font-size: 8px;
+    color: rgba(150, 180, 190, 0.6);
+  }
+
+  .weapon-bar {
+    grid-column: 1 / 4;
+    display: block;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
+
+  .weapon-bar i {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(89, 224, 200, 0.55), #59e0c8);
+    transition: width 0.08s linear;
+  }
+
+  .weapon-row.is-auto {
+    color: rgba(150, 180, 190, 0.48);
+    cursor: default;
+  }
+
+  .weapon-row.is-auto .weapon-bar { display: none; }
+
+  .weapon-row.is-auto .weapon-key {
+    border-color: rgba(255, 255, 255, 0.08);
+    color: rgba(150, 180, 190, 0.45);
+  }
+
+  /* ── 航向/威胁带 ─────────────────────── */
+  #bearing-strip {
+    position: absolute;
+    top: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(460px, 46vw);
+    height: 30px;
+    z-index: 3;
+    border-bottom: 1px solid rgba(89, 224, 200, 0.24);
+    font-family: var(--mono);
+    color: #59e0c8;
+    pointer-events: none;
+  }
+
+  .bearing-axis {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 14px;
+    height: 14px;
+    background: repeating-linear-gradient(90deg, rgba(89, 224, 200, 0.38) 0 1px, transparent 1px 30px);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    opacity: 0.7;
+  }
+
+  .bearing-center {
+    position: absolute;
+    left: 50%;
+    top: 3px;
+    width: 1px;
+    height: 24px;
+    background: #9ff0dc;
+    box-shadow: 0 0 8px rgba(89, 224, 200, 0.8);
+  }
+
+  .bearing-heading {
+    position: absolute;
+    left: 50%;
+    top: 1px;
+    transform: translateX(-50%);
+    font-size: 7px;
+    letter-spacing: 0.12em;
+    color: rgba(159, 240, 220, 0.75);
+    background: rgba(4, 12, 15, 0.7);
+    padding: 0 4px;
+  }
+
+  .bearing-arrow {
+    position: absolute;
+    top: 2px;
+    transform: translateX(-50%);
+    font-size: 10px;
+    line-height: 1;
+    transition: left 0.16s linear, opacity 0.2s;
+    text-shadow: 0 0 8px currentColor;
+  }
+
+  .bearing-target { color: #59e0c8; }
+  .bearing-enemy { color: #ff5a42; }
+
+  /* ── BOSS 血条 ───────────────────────── */
+  #boss-bar {
+    position: absolute;
+    top: 238px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(560px, 56vw);
+    padding: 8px 14px 9px;
+    border: 1px solid rgba(255, 70, 52, 0.48);
+    background:
+      linear-gradient(180deg, rgba(42, 6, 4, 0.78), rgba(12, 3, 3, 0.62)),
+      repeating-linear-gradient(0deg, rgba(255, 90, 70, 0.04) 0 1px, transparent 1px 3px);
+    box-shadow: 0 0 26px rgba(255, 46, 30, 0.12), inset 0 0 24px rgba(255, 60, 40, 0.05);
+    font-family: var(--mono);
+    color: #ffb2a2;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s, visibility 0.25s;
+  }
+
+  #boss-bar.is-on { opacity: 1; visibility: visible; }
+
+  .boss-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 5px;
+  }
+
+  #boss-name {
+    font-family: var(--serif);
+    font-size: 16px;
+    color: #ffe6df;
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 12px rgba(255, 80, 60, 0.4);
+  }
+
+  #boss-level {
+    font-size: 8px;
+    letter-spacing: 0.22em;
+    color: #ff7a64;
+  }
+
+  .boss-track {
+    position: relative;
+    height: 9px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 90, 70, 0.2);
+    overflow: hidden;
+  }
+
+  .boss-track i {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    transition: width 0.22s ease;
+  }
+
+  #boss-hull-fill {
+    background: linear-gradient(90deg, #7d120c, #ff4a32 60%, #ff9a7a);
+    box-shadow: 0 0 14px rgba(255, 60, 40, 0.6);
+  }
+
+  #boss-shield-fill {
+    background: linear-gradient(90deg, rgba(60, 150, 180, 0.4), rgba(159, 232, 255, 0.75));
+    box-shadow: 0 0 10px rgba(120, 220, 255, 0.35);
+    opacity: 0.75;
+  }
+
+  .boss-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    color: rgba(255, 150, 130, 0.65);
+  }
+
+  /* ── 受击提示 / 爆炸闪光 ─────────────── */
+  #hit-alert {
+    position: absolute;
+    left: 50%;
+    top: 54%;
+    z-index: 5;
+    transform: translate(-50%, -50%);
+    padding: 5px 16px;
+    border: 1px solid rgba(255, 70, 52, 0.75);
+    background: rgba(40, 4, 2, 0.7);
+    color: #ff9a82;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #hit-alert.is-on { animation: hitAlert 0.75s ease-out; }
+
+  @keyframes hitAlert {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+    15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    75% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  #impact-flash {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    background:
+      radial-gradient(65% 55% at 50% 50%, rgba(255, 250, 235, 0.75), rgba(255, 140, 60, 0.22) 42%, transparent 72%);
+    mix-blend-mode: screen;
+    transition: opacity 0.4s ease-out;
+  }
+
+  /* ── 更大、更长的结构/护盾条 ─────────── */
+  .hud-vitals {
+    min-width: 300px;
+    bottom: 138px;
+    gap: 8px;
+    color: #8fe8d8;
+  }
+
+  .vital {
+    grid-template-columns: 38px 1fr 112px;
+    gap: 9px;
+    font-size: 9.5px;
+    color: rgba(143, 232, 216, 0.7);
+  }
+
+  .vital-bar {
+    position: relative;
+    height: 8px;
+    border: 1px solid rgba(89, 224, 200, 0.16);
+    background: rgba(0, 0, 0, 0.42);
+    overflow: hidden;
+  }
+
+  .vital-bar i {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+  }
+
+  .vital-ghost {
+    z-index: 0;
+    background: rgba(255, 80, 58, 0.55);
+    transition: width 0.85s ease 0.12s;
+  }
+
+  .vital-bar i:not(.vital-ghost) {
+    z-index: 1;
+    background: linear-gradient(90deg, #2f9d8d, #59e0c8);
+    box-shadow: 0 0 9px rgba(89, 224, 200, 0.35);
+    transition: width 0.18s ease;
+  }
+
+  .vital-shield i:not(.vital-ghost) {
+    background: linear-gradient(90deg, #2f7f9a, #9fe8ff);
+    box-shadow: 0 0 9px rgba(120, 220, 255, 0.3);
+  }
+
+  .vital.is-critical .vital-bar i:not(.vital-ghost) {
+    background: linear-gradient(90deg, #8f1a12, #ff5a42);
+    animation: vitalPulse 0.7s ease-in-out infinite;
+  }
+
+  .vital.is-critical b { color: #ff8a72; }
+
+  @keyframes vitalPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  /* 武器面板移到右上 */
+  #weapon-panel {
+    top: 96px;
+    bottom: auto;
+  }
+
+  @media (max-width: 760px) {
+    #weapon-panel, #bearing-strip, #boss-bar { display: none; }
+  }
+
+  /* ── 跃迁充能环 ─────────────────────── */
   #boost-ui {
     position: absolute;
     left: 50%;
-    bottom: 148px;
+    bottom: 132px;
     transform: translateX(-50%);
-    width: 72px;
-    height: 72px;
+    width: 118px;
+    height: 118px;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: opacity 0.22s;
   }
 
   #boost-ui.is-on { opacity: 1; }
@@ -1617,29 +2026,57 @@ const systemData = {
   #boost-ui svg {
     width: 100%;
     height: 100%;
-    transform: rotate(-90deg);
+    overflow: visible;
+  }
+
+  .boost-outer {
+    fill: none;
+    stroke: rgba(120, 220, 220, 0.12);
+    stroke-width: 1;
+    stroke-dasharray: 2 6;
+  }
+
+  .boost-ticks {
+    fill: none;
+    stroke: rgba(140, 230, 225, 0.28);
+    stroke-width: 3;
+    stroke-dasharray: 1 9;
+    transform-origin: 60px 60px;
   }
 
   .boost-track {
     fill: none;
-    stroke: rgba(255, 255, 255, 0.12);
-    stroke-width: 4;
+    stroke: rgba(255, 255, 255, 0.09);
+    stroke-width: 3;
   }
 
   .boost-fill {
     fill: none;
     stroke: #59e0c8;
-    stroke-width: 4;
+    stroke-width: 3;
     stroke-linecap: round;
-    stroke-dasharray: 188.5;
-    stroke-dashoffset: 188.5;
+    stroke-dasharray: 289.03;
+    stroke-dashoffset: 289.03;
+    transform: rotate(-90deg);
+    transform-origin: 60px 60px;
     transition: stroke-dashoffset 0.08s linear, stroke 0.2s;
+    filter: drop-shadow(0 0 5px rgba(89, 224, 200, 0.55));
+  }
+
+  #boost-ui.is-charging .boost-ticks {
+    animation: warpTicks 5.5s linear infinite;
+    stroke: rgba(140, 240, 230, 0.5);
   }
 
   #boost-ui.is-ready .boost-fill {
     stroke: #ffd98a;
-    filter: drop-shadow(0 0 8px rgba(255, 217, 138, 0.8));
+    filter: drop-shadow(0 0 12px rgba(255, 217, 138, 0.95));
     animation: boostPulse 0.7s ease-in-out infinite;
+  }
+
+  #boost-ui.is-ready .boost-ticks {
+    stroke: rgba(255, 217, 138, 0.75);
+    animation: warpTicks 2.2s linear infinite;
   }
 
   #boost-ui.is-shift .boost-fill {
@@ -1647,8 +2084,19 @@ const systemData = {
     filter: drop-shadow(0 0 6px rgba(127, 212, 255, 0.65));
   }
 
-  #boost-ui.is-shift .boost-text b { color: #7fd4ff; }
-  #boost-ui.is-shift .boost-text { font-size: 8px; letter-spacing: 0.06em; }
+  #boost-ui.is-warping .boost-outer {
+    stroke: rgba(255, 240, 200, 0.6);
+    animation: warpPulse 0.35s ease-in-out infinite;
+  }
+
+  @keyframes warpTicks {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes warpPulse {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 0.9; }
+  }
 
   @keyframes boostPulse {
     0%, 100% { opacity: 1; }
@@ -1663,13 +2111,53 @@ const systemData = {
     gap: 1px;
     text-align: center;
     font-family: var(--mono);
-    font-size: 9px;
     letter-spacing: 0.12em;
     color: var(--text-faint);
+    pointer-events: none;
   }
 
-  .boost-text b { font-size: 15px; color: var(--text); font-weight: 400; }
+  .boost-text small {
+    font-size: 7px;
+    letter-spacing: 0.14em;
+    color: rgba(160, 220, 215, 0.7);
+  }
+
+  .boost-text b {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: 0.08em;
+  }
+
+  .boost-text span {
+    font-size: 7px;
+    color: rgba(150, 180, 190, 0.6);
+  }
+
   #boost-ui.is-ready .boost-text b { color: #ffd98a; }
+  #boost-ui.is-ready .boost-text small { color: #ffd98a; }
+  #boost-ui.is-shift .boost-text b { color: #7fd4ff; }
+  #boost-ui.is-shift .boost-text { font-size: 8px; letter-spacing: 0.06em; }
+
+  #warp-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    background:
+      radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(89, 224, 200, 0.1) 100%),
+      linear-gradient(180deg, rgba(89, 224, 200, 0.05), transparent 18%, transparent 82%, rgba(89, 224, 200, 0.05));
+    transition: opacity 0.35s;
+  }
+
+  #hud.is-warp-ready #warp-overlay { opacity: 0.6; }
+  #hud.is-warping #warp-overlay {
+    opacity: 1;
+    background:
+      radial-gradient(100% 80% at 50% 50%, transparent 45%, rgba(255, 217, 138, 0.14) 100%),
+      linear-gradient(180deg, rgba(255, 240, 200, 0.07), transparent 20%, transparent 80%, rgba(255, 240, 200, 0.07));
+  }
 
   /* ── 帮助 ───────────────────────────── */
   #help-hint {
@@ -1843,4 +2331,233 @@ const systemData = {
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: #04080d;
   }
+
+  /* ── 全息化：去实心框、去白字 ───────── */
+  #boss-bar {
+    background:
+      linear-gradient(90deg, transparent, rgba(255, 54, 34, 0.13) 10%, rgba(255, 54, 34, 0.06) 90%, transparent),
+      repeating-linear-gradient(0deg, rgba(255, 80, 60, 0.05) 0 1px, transparent 1px 3px);
+    border: 0;
+    border-top: 1px solid rgba(255, 80, 60, 0.26);
+    border-bottom: 1px solid rgba(255, 80, 60, 0.16);
+    box-shadow: none;
+    clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  }
+
+  #boss-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    color: #ff6a52;
+    text-shadow: 0 0 14px rgba(255, 60, 40, 0.7);
+  }
+
+  #boss-level,
+  .boss-meta {
+    color: rgba(255, 120, 100, 0.65);
+  }
+
+  .boss-track {
+    border-color: rgba(255, 80, 60, 0.18);
+    background: rgba(255, 80, 60, 0.04);
+  }
+
+  #weapon-panel {
+    background:
+      linear-gradient(180deg, rgba(10, 46, 46, 0.26), rgba(4, 12, 14, 0.08)),
+      repeating-linear-gradient(0deg, rgba(89, 224, 200, 0.035) 0 1px, transparent 1px 3px);
+    border: 0;
+    border-top: 1px solid rgba(89, 224, 200, 0.34);
+    border-left: 1px solid rgba(89, 224, 200, 0.12);
+    box-shadow: 0 0 18px rgba(89, 224, 200, 0.05);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+    color: #7ff5e6;
+  }
+
+  .weapon-head { color: rgba(89, 224, 200, 0.62); }
+  .weapon-head small { color: rgba(143, 232, 216, 0.45); }
+  .weapon-row { color: rgba(143, 232, 216, 0.82); }
+  .weapon-name { color: #9ff0dc; }
+  .weapon-count { color: rgba(143, 232, 216, 0.5); }
+  .weapon-key { border-color: rgba(89, 224, 200, 0.18); color: rgba(159, 240, 220, 0.75); }
+  .weapon-row.is-on .weapon-key { color: #59e0c8; }
+  .weapon-row.is-auto { color: rgba(143, 232, 216, 0.38); }
+
+  #enemy-box {
+    background: linear-gradient(180deg, rgba(60, 10, 6, 0.26), rgba(12, 3, 3, 0.08));
+    border: 0;
+    border-top: 1px solid rgba(255, 80, 60, 0.28);
+    border-bottom: 1px solid rgba(255, 80, 60, 0.12);
+    box-shadow: 0 0 14px rgba(255, 60, 40, 0.05);
+  }
+
+  #fleet-box {
+    background:
+      linear-gradient(90deg, transparent, rgba(255, 54, 34, 0.1) 12%, rgba(255, 54, 34, 0.04) 88%, transparent),
+      repeating-linear-gradient(0deg, rgba(255, 80, 60, 0.04) 0 1px, transparent 1px 3px);
+    border: 0;
+    border-left: 1px solid rgba(255, 80, 60, 0.28);
+    border-right: 1px solid rgba(255, 80, 60, 0.12);
+    box-shadow: none;
+  }
+
+  #fleet-name {
+    color: #ff8a72;
+    font-family: var(--mono);
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 10px rgba(255, 70, 50, 0.5);
+  }
+
+  .hud-target strong,
+  #hud-target {
+    color: #9ff0dc;
+    text-shadow: 0 0 10px rgba(89, 224, 200, 0.25);
+  }
+
+  .hud-target-dist,
+  .hud-label {
+    color: rgba(143, 232, 216, 0.55);
+  }
+
+  .hud-vitals .vital b {
+    color: #9ff0dc;
+  }
+
+  #hud-mode,
+  #hud-fps {
+    color: rgba(143, 232, 216, 0.55);
+  }
+
+  /* ── 空间站面板也全息化 ─────────────── */
+  #panel {
+    background: rgba(2, 10, 12, 0.52);
+    backdrop-filter: blur(8px);
+  }
+
+  .panel-inner {
+    border: 0;
+    border-top: 1px solid rgba(89, 224, 200, 0.32);
+    border-left: 1px solid rgba(89, 224, 200, 0.12);
+    background:
+      linear-gradient(180deg, rgba(6, 32, 34, 0.72), rgba(3, 10, 12, 0.5)),
+      repeating-linear-gradient(0deg, rgba(89, 224, 200, 0.035) 0 1px, transparent 1px 3px);
+    box-shadow: 0 0 30px rgba(89, 224, 200, 0.06);
+    clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+    backdrop-filter: blur(10px);
+  }
+
+  .panel-head { border-bottom: 1px solid rgba(89, 224, 200, 0.16); }
+
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 22px;
+    letter-spacing: 0.12em;
+    color: #9ff0dc;
+    text-shadow: 0 0 18px rgba(89, 224, 200, 0.45);
+  }
+
+  .panel-sub,
+  .panel-desc,
+  .panel-stats span {
+    color: rgba(143, 232, 216, 0.58);
+  }
+
+  .panel-stats b { color: #bff8ed; }
+
+  .panel-stats div { border-top-color: rgba(89, 224, 200, 0.12); }
+
+  .panel-head button {
+    border-color: rgba(89, 224, 200, 0.2);
+    color: rgba(143, 232, 216, 0.7);
+    background: transparent;
+  }
+
+  .panel-action {
+    border-color: rgba(89, 224, 200, 0.35);
+    color: #7ff5e6;
+  }
+
+  .panel-action:hover { background: rgba(89, 224, 200, 0.08); }
+
+  .ship-card {
+    border-color: rgba(89, 224, 200, 0.12);
+    background: rgba(8, 32, 34, 0.22);
+  }
+
+  .ship-card:hover {
+    border-color: rgba(89, 224, 200, 0.45);
+    background: rgba(89, 224, 200, 0.06);
+  }
+
+  .ship-card.is-current {
+    border-color: rgba(89, 224, 200, 0.65);
+    background: rgba(89, 224, 200, 0.08);
+  }
+
+  .ship-card-code { color: #59e0c8; }
+  .ship-card-name { color: #bff8ed; }
+  .ship-card-meta { color: rgba(143, 232, 216, 0.5); }
+
+  .panel-frame { border-color: rgba(89, 224, 200, 0.12); }
+
+  #hud.is-map-open #bearing-strip,
+  #hud.is-map-open #boss-bar,
+  #hud.is-map-open #weapon-panel,
+  #hud.is-map-open #enemy-box,
+  #hud.is-map-open #fleet-box,
+  #hud.is-map-open .hud-bottom,
+  #hud.is-map-open .hud-vitals,
+  #hud.is-map-open .hud-meta,
+  #hud.is-map-open #boost-ui,
+  #hud.is-map-open #help-hint {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .map-head::after {
+    content: 'M / ESC 关闭';
+    position: absolute;
+    right: 54px;
+    top: 18px;
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    color: rgba(143, 232, 216, 0.45);
+  }
+
+  .map-head { position: relative; }
+
+  #boss-shield-fill {
+    height: 2px;
+    top: 0;
+    z-index: 2;
+  }
+
+  #boss-hull-fill { z-index: 1; }
+
+  .map-inner {
+    border: 1px solid rgba(89, 224, 200, 0.22);
+    background:
+      linear-gradient(180deg, rgba(4, 22, 24, 0.88), rgba(2, 8, 10, 0.72)),
+      repeating-linear-gradient(0deg, rgba(89, 224, 200, 0.035) 0 1px, transparent 1px 3px);
+    box-shadow: 0 0 40px rgba(89, 224, 200, 0.06);
+    clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+  }
+
+  .map-eyebrow,
+  .map-head h2,
+  .map-row-title { color: #9ff0dc; }
+
+  .map-head h2 { font-family: var(--mono); letter-spacing: 0.12em; }
+
+  .map-row {
+    border-bottom-color: rgba(89, 224, 200, 0.12);
+    color: rgba(143, 232, 216, 0.7);
+  }
+
+  .map-row:hover { background: rgba(89, 224, 200, 0.06); }
+  .map-row-sub, .map-row-dist { color: rgba(143, 232, 216, 0.55); }
+  .map-close { border-color: rgba(89, 224, 200, 0.25); color: #7ff5e6; }
 </style>
