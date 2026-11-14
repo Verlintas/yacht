@@ -1,0 +1,285 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const projectEntries = await getCollection('projects');
+void projectEntries;
+
+const ships = [
+  { id: 'A_30_Thunderbolt008', label: 'A-30 雷霆', length: 25 },
+  { id: 'SF_Fighter_F008', label: 'SF-F008 短剑', length: 22 },
+  { id: 'SF_Bomber_CR002', label: 'CR 轰炸机', length: 120 },
+  { id: 'Freighter_MB016', label: 'MB 货船', length: 280 },
+  { id: 'Commander_SpaceShip_G003', label: 'Commander 指挥舰', length: 620 },
+  { id: 'SF_Battleship_G003', label: 'SF 战列舰', length: 1250 },
+];
+---
+
+<Base title="舰船标注器 · Verlintas 的小窝" panic={false}>
+  <style is:global>
+    .marker-root { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+    .marker-stage { position: relative; border: 1px solid var(--border); background: #0a0f14; }
+    .marker-stage canvas { display: block; width: 100%; height: auto; cursor: crosshair; }
+    .marker-side { display: flex; flex-direction: column; gap: 12px; }
+    .marker-ships { display: flex; flex-wrap: wrap; gap: 6px; }
+    .marker-ships button, .marker-types button, .marker-actions button {
+      padding: 5px 10px; border: 1px solid var(--border); background: var(--surface);
+      color: var(--text-dim); font: inherit; font-size: 12px; cursor: pointer; border-radius: 3px;
+    }
+    .marker-ships button.is-on, .marker-types button.is-on {
+      border-color: var(--brass); color: var(--brass); background: var(--brass-soft);
+    }
+    .marker-types button[data-kind="weapon"].is-on { border-color: #ff3c48; color: #ff6a72; background: rgba(255,60,72,.12); }
+    .marker-types button[data-kind="nozzle"].is-on { border-color: #468cff; color: #7fb0ff; background: rgba(70,140,255,.12); }
+    .marker-types button[data-kind="cockpit"].is-on { border-color: #3cebdc; color: #7ff5ea; background: rgba(60,235,220,.12); }
+    .marker-list { max-height: 46vh; overflow: auto; border-top: 1px solid var(--border); }
+    .marker-row {
+      display: grid; grid-template-columns: 1fr auto; gap: 4px 10px;
+      padding: 7px 2px; border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 11px;
+    }
+    .marker-row b { color: var(--text); font-weight: 400; }
+    .marker-row span { color: var(--text-faint); }
+    .marker-row button { border: 0; background: none; color: var(--bad); cursor: pointer; font-size: 12px; }
+    .marker-out { width: 100%; min-height: 150px; font-family: var(--mono); font-size: 11px;
+      background: var(--surface-2); color: var(--text); border: 1px solid var(--border); padding: 8px; }
+    .marker-hint { font-size: 11px; color: var(--text-faint); line-height: 1.7; }
+  </style>
+
+  <p class="eyebrow">工具 · 本地</p>
+  <h1 class="page-title">舰船标注器</h1>
+  <p class="page-sub">选一艘船，选标记类型，在图上点。TOP 给 X/Z，FRONT 或 LEFT 给 Y，坐标自动合并。</p>
+
+  <div class="marker-root" style="margin-top:18px">
+    <div class="marker-stage">
+      <canvas id="stage" width="2048" height="2048"></canvas>
+    </div>
+
+    <aside class="marker-side">
+      <div>
+        <p class="readout-label">舰船</p>
+        <div class="marker-ships" id="shipButtons">
+          {ships.map((ship) => (
+            <button type="button" data-ship={ship.id} data-length={ship.length}>
+              {ship.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p class="readout-label">标记类型</p>
+        <div class="marker-types" id="typeButtons">
+          <button type="button" data-kind="weapon" class="is-on">武器</button>
+          <button type="button" data-kind="nozzle">喷口</button>
+          <button type="button" data-kind="cockpit">座舱</button>
+        </div>
+      </div>
+
+      <div>
+        <p class="readout-label">编号</p>
+        <input id="labelInput" class="marker-out" style="min-height:0;height:32px" value="W1" />
+      </div>
+
+      <div>
+        <p class="readout-label">已标 <span id="markerCount">0</span></p>
+        <div class="marker-list" id="markerList"></div>
+      </div>
+
+      <div class="marker-actions" style="display:flex;gap:8px">
+        <button type="button" id="copyBtn">复制结果</button>
+        <button type="button" id="clearBtn">清空</button>
+      </div>
+
+      <textarea class="marker-out" id="output" readonly></textarea>
+
+      <p class="marker-hint">
+        点 TOP 图取 (X, Z)；点 FRONT 或 LEFT 取 (Y)。同一编号会合并成一个点。
+        右键点图撤销最近一个。
+      </p>
+    </aside>
+  </div>
+
+  <script>
+    const ships = {
+      A_30_Thunderbolt008: 25,
+      SF_Fighter_F008: 22,
+      SF_Bomber_CR002: 120,
+      Freighter_MB016: 280,
+      Commander_SpaceShip_G003: 620,
+      SF_Battleship_G003: 1250,
+    };
+
+    const canvas = document.getElementById('stage') as HTMLCanvasElement;
+    const ctx = canvas.getContext('2d')!;
+    const list = document.getElementById('markerList')!;
+    const out = document.getElementById('output') as HTMLTextAreaElement;
+    const countEl = document.getElementById('markerCount')!;
+    const labelInput = document.getElementById('labelInput') as HTMLInputElement;
+
+    let shipId = 'A_30_Thunderbolt008';
+    let kind: 'weapon' | 'nozzle' | 'cockpit' = 'weapon';
+    let img = new Image();
+
+    interface Point {
+      id: number;
+      tag: string;
+      kind: string;
+      view: string;
+      x?: number;
+      y?: number;
+      z?: number;
+    }
+
+    let points: Point[] = [];
+    let nextId = 1;
+
+    const CELLS: Record<string, [number, number]> = {
+      front: [0, 0],
+      top: [1024, 0],
+      left: [0, 1024],
+      back: [1024, 1024],
+    };
+
+    const mPerPx = (): number => (ships[shipId as keyof typeof ships] * 1.12) / 1024;
+
+    const loadImage = (): void => {
+      img = new Image();
+      img.onload = () => draw();
+      img.src = `/yacht/ship-sheets/${shipId}_render.png`;
+    };
+
+    const draw = (): void => {
+      ctx.clearRect(0, 0, 2048, 2048);
+      if (img.complete) ctx.drawImage(img, 0, 0, 2048, 2048);
+
+      ctx.strokeStyle = 'rgba(120,180,200,0.25)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(1024, 0); ctx.lineTo(1024, 2048);
+      ctx.moveTo(0, 1024); ctx.lineTo(2048, 1024);
+      ctx.stroke();
+
+      for (const p of points) {
+        const [ox, oy] = CELLS[p.view];
+        const m = mPerPx();
+        let u = 512, v = 512;
+        if (p.view === 'top') { u = 512 + (p.x ?? 0) / m; v = 512 + (p.z ?? 0) / m; }
+        else if (p.view === 'front') { u = 512 + (p.x ?? 0) / m; v = 512 - (p.y ?? 0) / m; }
+        else if (p.view === 'left') { u = 512 - (p.z ?? 0) / m; v = 512 - (p.y ?? 0) / m; }
+        else { u = 512 - (p.x ?? 0) / m; v = 512 - (p.y ?? 0) / m; }
+
+        const color = p.kind === 'weapon' ? '#ff3c48' : p.kind === 'nozzle' ? '#468cff' : '#3cebdc';
+        ctx.beginPath();
+        ctx.arc(ox + u, oy + v, 8, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = '22px ui-monospace, monospace';
+        ctx.fillText(p.tag, ox + u + 12, oy + v - 10);
+      }
+    };
+
+    const renderList = (): void => {
+      list.innerHTML = '';
+      countEl.textContent = String(points.length);
+      for (const p of points) {
+        const row = document.createElement('div');
+        row.className = 'marker-row';
+        const parts = [] as string[];
+        if (p.x !== undefined) parts.push(`x ${p.x.toFixed(1)}`);
+        if (p.y !== undefined) parts.push(`y ${p.y.toFixed(1)}`);
+        if (p.z !== undefined) parts.push(`z ${p.z.toFixed(1)}`);
+        row.innerHTML = `<b>${p.tag}</b><button type="button">×</button><span>${p.view}</span><span>${parts.join('  ')}</span>`;
+        row.querySelector('button')!.addEventListener('click', () => {
+          points = points.filter((q) => q.id !== p.id);
+          draw(); renderList(); emit();
+        });
+        list.append(row);
+      }
+    };
+
+    const emit = (): void => {
+      const merged = new Map<string, { kind: string; x?: number; y?: number; z?: number }>();
+      for (const p of points) {
+        const e = merged.get(p.tag) ?? { kind: p.kind };
+        if (p.x !== undefined) e.x = p.x;
+        if (p.y !== undefined) e.y = p.y;
+        if (p.z !== undefined) e.z = p.z;
+        if (p.kind) e.kind = p.kind;
+        merged.set(p.tag, e);
+      }
+      const lines: string[] = [];
+      for (const [tag, v] of merged) {
+        lines.push(`${tag}: { kind: ${v.kind}, x: ${(v.x ?? 0).toFixed(1)}, y: ${(v.y ?? 0).toFixed(1)}, z: ${(v.z ?? 0).toFixed(1)} }`);
+      }
+      out.value = lines.join('\n');
+    };
+
+    canvas.addEventListener('click', (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const px = ((event.clientX - rect.left) / rect.width) * 2048;
+      const py = ((event.clientY - rect.top) / rect.height) * 2048;
+
+      let view = '';
+      for (const [name, [ox, oy]] of Object.entries(CELLS)) {
+        if (px >= ox && px < ox + 1024 && py >= oy && py < oy + 1024) view = name;
+      }
+      if (!view) return;
+
+      const u = px - CELLS[view][0];
+      const v = py - CELLS[view][1];
+      const m = mPerPx();
+      const point: Point = { id: nextId++, tag: labelInput.value || 'X', kind, view };
+
+      if (view === 'top') { point.x = (u - 512) * m; point.z = (v - 512) * m; }
+      else if (view === 'front') { point.x = (u - 512) * m; point.y = (512 - v) * m; }
+      else if (view === 'left') { point.z = -(u - 512) * m; point.y = (512 - v) * m; }
+      else { point.x = -(u - 512) * m; point.y = (512 - v) * m; }
+
+      points.push(point);
+      draw(); renderList(); emit();
+    });
+
+    canvas.addEventListener('contextmenu', (event) => {
+      event.preventDefault();
+      points.pop();
+      draw(); renderList(); emit();
+    });
+
+    document.querySelectorAll<HTMLButtonElement>('[data-ship]').forEach((button) => {
+      button.addEventListener('click', () => {
+        shipId = button.dataset.ship!;
+        document.querySelectorAll('[data-ship]').forEach((b) => b.classList.remove('is-on'));
+        button.classList.add('is-on');
+        points = [];
+        loadImage(); renderList(); emit();
+      });
+    });
+
+    document.querySelectorAll<HTMLButtonElement>('[data-kind]').forEach((button) => {
+      button.addEventListener('click', () => {
+        kind = button.dataset.kind as typeof kind;
+        document.querySelectorAll('[data-kind]').forEach((b) => b.classList.remove('is-on'));
+        button.classList.add('is-on');
+        const prefix = kind === 'weapon' ? 'W' : kind === 'nozzle' ? 'N' : 'C';
+        const count = points.filter((p) => p.kind === kind).length + 1;
+        labelInput.value = `${prefix}${count}`;
+      });
+    });
+
+    document.getElementById('copyBtn')?.addEventListener('click', () => {
+      void navigator.clipboard.writeText(out.value);
+    });
+
+    document.getElementById('clearBtn')?.addEventListener('click', () => {
+      points = [];
+      draw(); renderList(); emit();
+    });
+
+    document.querySelector('[data-ship="A_30_Thunderbolt008"]')?.classList.add('is-on');
+    loadImage();
+  </script>
+</Base>

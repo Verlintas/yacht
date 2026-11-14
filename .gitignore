@@ -7,3 +7,6 @@ dist/
 .env.*
 !.env.example
 LOCAL-*.md
+
+# 本地标注用，不进仓库
+public/ship-sheets/
