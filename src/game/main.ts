@@ -8,6 +8,7 @@ import { attachHangarDoors, createWorld, type CelestialBody, type World } from '
 import { createShip, loadShipModel, type Ship } from './ship';
 import { FlightController } from './flight';
 import { EngineAudio } from './audio';
+import { SpeedLines } from './speedlines';
 import { Combat } from './combat';
 import { SHIPS, getShip, type ShipSpec } from './ships';
 import type { SystemData } from './data';
@@ -26,6 +27,7 @@ interface GameContext {
   fire: { cooldown: number };
   spec: { current: ShipSpec };
   autoCooldowns: Map<string, number>;
+  speedLines: SpeedLines;
 }
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -69,7 +71,9 @@ export async function startGame(system: SystemData): Promise<void> {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 8, 2_200_000);
+  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 2_200_000);
+  // 高速时的屏幕空间流线
+  const speedLines = new SpeedLines(camera);
   // 挂在相机上的补光，避免飞船暗面全黑
   const fillLight = new THREE.PointLight(0xa8dcff, 1100, 500, 1.6);
   fillLight.position.set(0, 6, 4);
@@ -95,7 +99,12 @@ export async function startGame(system: SystemData): Promise<void> {
 
   // 优先用 Blender 导出的高模舰，失败则回退到程序化几何
   try {
-    const loaded = await loadShipModel(`${BASE}/models/thunderbolt.glb`, getShip("thunderbolt").length, getShip("thunderbolt").nozzles);
+    const loaded = await loadShipModel(
+      `${BASE}/models/thunderbolt.glb`,
+      getShip("thunderbolt").length,
+      getShip("thunderbolt").nozzles,
+      getShip("thunderbolt").cockpits[0],
+    );
     scene.remove(ship.group);
     ship = loaded;
     scene.add(ship.group);
@@ -103,10 +112,27 @@ export async function startGame(system: SystemData): Promise<void> {
     /* 保留程序化舰 */
   }
 
-  flight.setCockpitOffset(new THREE.Vector3(...getShip("thunderbolt").cockpits[0]));
+  flight.setCockpitOffset(new THREE.Vector3(...getShip("thunderbolt").cockpits[0]).add(new THREE.Vector3(0, 0.1, 0.2)));
   flight.bindShip(ship.group);
 
   await step('装载飞船', 0.62);
+
+  // NPC 模板：全部先按各自的舰长缩放好，战斗时直接 clone
+  const npcTemplates = new Map<string, { group: THREE.Group; spec: ShipSpec }>();
+  npcTemplates.set('thunderbolt', { group: ship.group, spec: getShip('thunderbolt') });
+  await step('集结舰队', 0.7);
+  await Promise.all(
+    ['f008', 'bomber', 'freighter', 'commander', 'battleship'].map(async (id) => {
+      const spec = getShip(id);
+      const template = await loadShipModel(
+        `${BASE}/models/thunderbolt.glb`,
+        spec.length,
+        spec.nozzles,
+        spec.cockpits[0],
+      );
+      npcTemplates.set(id, { group: template.group, spec });
+    }),
+  );
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
@@ -190,7 +216,8 @@ export async function startGame(system: SystemData): Promise<void> {
     },
   });
 
-  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, combat, fire, spec: specRef, autoCooldowns };
+  combat.setTemplates(npcTemplates);
+  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, combat, fire, spec: specRef, autoCooldowns, speedLines };
 
   const dock = world.bodies.find((body) => body.id === 'station-dock');
   if (dock) {
@@ -260,11 +287,21 @@ export async function startGame(system: SystemData): Promise<void> {
     }
   };
 
-  // 开局布置几架敌机
-  for (let i = 0; i < 3; i += 1) {
-    const angle = (i / 3) * Math.PI * 2;
-    const offset = new THREE.Vector3(Math.cos(angle) * 14000, 2500, Math.sin(angle) * 14000);
-    ctx.combat.spawnNpc(ctx.flight.position.clone().add(offset), 1);
+  // 开局舰队：敌对舰队会扫描并主动上门，中立舰队全图游荡
+  const fleetPlan: Array<{ faction: 'hostile' | 'neutral'; angle: number; distance: number }> = [
+    { faction: 'hostile', angle: 0.5, distance: 95000 },
+    { faction: 'neutral', angle: 1.9, distance: 32000 },
+    { faction: 'hostile', angle: 3.4, distance: 150000 },
+    { faction: 'neutral', angle: 4.7, distance: 58000 },
+    { faction: 'neutral', angle: 5.7, distance: 92000 },
+  ];
+  for (const plan of fleetPlan) {
+    const offset = new THREE.Vector3(
+      Math.cos(plan.angle) * plan.distance,
+      (Math.random() - 0.5) * 12000,
+      Math.sin(plan.angle) * plan.distance,
+    );
+    ctx.combat.spawnFleet(plan.faction, ctx.flight.position.clone().add(offset));
   }
 
   const hud = setupHud(ctx, system, playerState, specRef);
@@ -366,9 +403,11 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     ctx.ship.group.position.copy(ctx.flight.position);
     ctx.ship.group.quaternion.copy(ctx.flight.quaternion);
-    ctx.ship.update(dt, ctx.flight.throttle, ctx.flight.boost);
+    ctx.ship.update(dt, ctx.flight.throttle, ctx.flight.boost, ctx.flight.brake > 0.05 || ctx.flight.isReversing);
     ctx.flight.updateCamera(dt);
     ctx.ship.group.visible = true;
+    if (ctx.ship.model) ctx.ship.model.visible = ctx.flight.cameraMode !== 'first';
+    if (ctx.ship.cockpitGroup) ctx.ship.cockpitGroup.visible = ctx.flight.cameraMode === 'first';
 
     ctx.world.update(dt, elapsed, ctx.camera);
     for (const mixer of ctx.world.mixers) mixer.update(dt);
@@ -385,6 +424,7 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     hud.update(dt);
     ctx.audio.update(ctx.flight.speed, ctx.flight.throttle, ctx.flight.boost);
+    ctx.speedLines.update(dt, ctx.flight.boost, ctx.flight.speed);
     ctx.composer.render();
     requestAnimationFrame(tick);
   };
@@ -428,9 +468,19 @@ function setupHud(
   const enemyHp = $('enemy-hp');
   const enemyDist = $('enemy-dist');
   const enemyCount = $('enemy-count');
+  const fleetBox = $('fleet-box');
+  const fleetStatus = $('fleet-status');
+  const fleetName = $('fleet-name');
+  const fleetCount = $('fleet-count');
+  const fleetDist = $('fleet-dist');
+  const fleetComp = $('fleet-comp');
   const dashHull = $('dash-hull');
   const dashShield = $('dash-shield');
   const dashThrottle = $('dash-throttle');
+  const boostUi = $('boost-ui');
+  const boostRing = $('boost-ring');
+  const boostLabel = $('boost-label');
+  const helpPanel = $('help-panel');
   const ladder = $('cockpit-ladder');
   const tapeSpeed = $('tape-speed');
   const heat = $('heat-warning');
@@ -494,7 +544,7 @@ function setupHud(
 
       const angle = Math.atan2(rel.x, rel.z) - yaw;
       const radius = (distance / range) * (Math.min(w, h) / 2 - 14);
-      const x = cx + Math.sin(angle) * radius;
+      const x = cx - Math.sin(angle) * radius;
       const y = cy - Math.cos(angle) * radius;
 
       const isStation = body.type === 'station';
@@ -516,6 +566,32 @@ function setupHud(
         c.lineTo(x, y);
         c.strokeStyle = 'rgba(255,255,255,0.25)';
         c.lineWidth = 1;
+        c.stroke();
+      }
+    }
+
+    // 附近飞船（敌红 / 中立灰蓝）
+    for (const contact of ctx.combat.contacts) {
+      const rel = contact.position.clone().sub(ctx.flight.position);
+      const distance = rel.length();
+      if (distance > range) continue;
+
+      const angle = Math.atan2(rel.x, rel.z) - yaw;
+      const radius = (distance / range) * (Math.min(w, h) / 2 - 14);
+      const x = cx - Math.sin(angle) * radius;
+      const y = cy - Math.cos(angle) * radius;
+      const big = contact.radius > 120;
+
+      c.fillStyle = contact.hostile ? 'rgba(255, 106, 84, 0.95)' : 'rgba(150, 192, 208, 0.78)';
+      c.beginPath();
+      c.arc(x, y, big ? 3.4 : 2.2, 0, Math.PI * 2);
+      c.fill();
+
+      if (contact.hostile) {
+        c.strokeStyle = 'rgba(255, 106, 84, 0.5)';
+        c.lineWidth = 1;
+        c.beginPath();
+        c.arc(x, y, big ? 6 : 4.2, 0, Math.PI * 2);
         c.stroke();
       }
     }
@@ -713,6 +789,10 @@ function setupHud(
         startDock(nearest);
       }
     }
+    if (event.code === 'KeyH') {
+      helpPanel.classList.toggle('is-open');
+      return;
+    }
     if (event.code === 'Escape') {
       if (map.classList.contains('is-open')) map.classList.remove('is-open');
       else closePanel();
@@ -806,6 +886,22 @@ function setupHud(
 
     cockpitSpeed.textContent = Math.round(speed).toString();
 
+    // B 充能环 / Shift 次级加速
+    const chargeRatio = Math.min(1, ctx.flight.charge / 3);
+    const circ = 2 * Math.PI * 30;
+    const shifting = ctx.flight.boostMode === 'shift';
+    const charged = ctx.flight.boostMode === 'charged';
+    if (shifting) {
+      boostRing.style.strokeDashoffset = String(circ * (1 - 0.55 * Math.max(ctx.flight.boost, 0.2)));
+      boostLabel.textContent = 'SHIFT';
+    } else {
+      boostRing.style.strokeDashoffset = String(circ * (1 - chargeRatio));
+      boostLabel.textContent = chargeRatio >= 1 ? '就绪' : `${Math.round(chargeRatio * 100)}%`;
+    }
+    boostUi.classList.toggle('is-on', chargeRatio > 0.01 || ctx.flight.boost > 0.05);
+    boostUi.classList.toggle('is-ready', charged);
+    boostUi.classList.toggle('is-shift', shifting);
+
     // 结构值
     const hullRatio = Math.max(0, playerState.hull / specRef.current.hull);
     const shieldRatio = Math.max(0, playerState.shield / specRef.current.shield);
@@ -827,6 +923,18 @@ function setupHud(
     } else {
       enemyBox.classList.remove('is-on');
       enemyCount.textContent = '';
+    }
+
+    // 敌方舰队情报
+    const intel = ctx.combat.getFleetIntel(ctx.flight.position);
+    fleetBox.classList.toggle('is-on', Boolean(intel));
+    if (intel) {
+      fleetStatus.textContent = intel.status;
+      fleetStatus.dataset.status = intel.status;
+      fleetName.textContent = `${intel.flagship} · ${intel.code}`;
+      fleetCount.textContent = `护卫 ${intel.escorts}`;
+      fleetComp.textContent = intel.status === '超主力' ? `T4+ ${intel.heavyEscorts}` : `T${intel.tier}`;
+      fleetDist.textContent = distanceLabel(intel.distance);
     }
 
     // 护盾再生
@@ -897,7 +1005,7 @@ function setupHud(
 
       const angle = Math.atan2(rel.x, rel.z) - yaw;
       const radius = (distance / radarRange) * (half - 8);
-      const x = half + Math.sin(angle) * radius;
+      const x = half - Math.sin(angle) * radius;
       const y = half - Math.cos(angle) * radius;
 
       const isStation = body.type === 'station';
@@ -912,6 +1020,24 @@ function setupHud(
         rctx.arc(x, y, 5.5, 0, Math.PI * 2);
         rctx.stroke();
       }
+    }
+
+    // 附近飞船
+    for (const contact of ctx.combat.contacts) {
+      const rel = contact.position.clone().sub(ctx.flight.position);
+      const distance = rel.length();
+      if (distance > radarRange) continue;
+
+      const angle = Math.atan2(rel.x, rel.z) - yaw;
+      const radius = (distance / radarRange) * (half - 8);
+      const x = half - Math.sin(angle) * radius;
+      const y = half - Math.cos(angle) * radius;
+      const big = contact.radius > 120;
+
+      rctx.fillStyle = contact.hostile ? 'rgba(255, 106, 84, 0.95)' : 'rgba(150, 192, 208, 0.8)';
+      rctx.beginPath();
+      rctx.arc(x, y, big ? 2.8 : 1.8, 0, Math.PI * 2);
+      rctx.fill();
     }
 
     rctx.fillStyle = 'rgba(233, 239, 243, 0.95)';

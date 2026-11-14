@@ -26,6 +26,12 @@ export class FlightController {
   private ready = false;
   private cockpitOffset = new THREE.Vector3(0, 2.2, -2.2);
   private spec = { maxSpeed: 4200, boostSpeed: 52000, accel: 2600, turnRate: 1, length: 25 };
+  charge = 0;
+  /** none / shift（次级加速） / charged（B 充满） */
+  boostMode: 'none' | 'shift' | 'charged' = 'none';
+  get isReversing(): boolean {
+    return this.keys.has('KeyS') || this.keys.has('ArrowDown');
+  }
 
   constructor(private readonly camera: THREE.PerspectiveCamera) {
     this.camera.position.copy(this.position).add(new THREE.Vector3(0, 14, 42));
@@ -95,7 +101,9 @@ export class FlightController {
     );
 
     const rollRate = (has('KeyQ') ? 1 : 0) - (has('KeyE') ? 1 : 0);
-    this.roll = THREE.MathUtils.lerp(this.roll, rollRate * 2.2, Math.min(1, dt * 6));
+    // 太空没有「自动回正」：滚转是累积的
+    this.roll += rollRate * 2.2 * dt;
+    this.roll = Math.max(-Math.PI, Math.min(Math.PI, this.roll));
     this.tmpQ.setFromAxisAngle(new THREE.Vector3(0, 0, 1), this.roll);
     attitude.multiply(this.tmpQ);
 
@@ -108,11 +116,28 @@ export class FlightController {
 
     /* ── 推进 ── */
     const forwardInput = (has('KeyW') || has('ArrowUp') ? 1 : 0) - (has('KeyS') || has('ArrowDown') ? 1 : 0);
-    const boosting = (has('ShiftLeft') || has('ShiftRight')) && forwardInput > 0;
     const braking = has('KeyX') || has('Space');
 
-    this.throttle = THREE.MathUtils.lerp(this.throttle, Math.max(0, forwardInput), Math.min(1, dt * 4));
-    this.boost = THREE.MathUtils.lerp(this.boost, boosting ? 1 : 0, Math.min(1, dt * 3));
+    // B：按住充能 3 秒后进入全速推进
+    const charging = has('KeyB');
+    if (charging) {
+      this.charge = Math.min(3, this.charge + dt);
+    } else {
+      this.charge = 0;
+    }
+    const charged = charging && this.charge >= 3;
+
+    // Shift：次级加速，约 55% 的推进档位，比 B 慢但比基础速度快
+    const shifting = (has('ShiftLeft') || has('ShiftRight')) && forwardInput >= 0 && !braking;
+    const targetBoost = charged ? 1 : shifting ? 0.55 : 0;
+    this.boostMode = charged ? 'charged' : shifting ? 'shift' : 'none';
+
+    this.throttle = THREE.MathUtils.lerp(
+      this.throttle,
+      Math.max(0, forwardInput, shifting ? 0.55 : 0),
+      Math.min(1, dt * 4),
+    );
+    this.boost = THREE.MathUtils.lerp(this.boost, targetBoost, Math.min(1, dt * 1.5));
     this.brake = THREE.MathUtils.lerp(this.brake, braking ? 1 : 0, Math.min(1, dt * 6));
 
     const forward = this.forwardVector;
@@ -126,6 +151,10 @@ export class FlightController {
     } else if (forwardInput < 0) {
       // forwardInput 是负数，乘上去才是真正的反推
       this.velocity.addScaledVector(forward, 1500 * forwardInput * dt);
+    } else if (shifting) {
+      // 只按 Shift 也能推进，但比 W 弱
+      const accel = (this.spec.accel + this.boost * this.spec.accel * 16) * 0.55;
+      this.velocity.addScaledVector(forward, accel * dt);
     }
 
     // 侧移
@@ -133,7 +162,7 @@ export class FlightController {
     if (strafe !== 0) this.velocity.addScaledVector(right, strafe * 1800 * dt);
 
     // 垂直
-    const lift = (has('KeyR') ? 1 : 0) - (has('KeyF') ? 1 : 0);
+    const lift = (has('KeyR') ? 1 : 0) - (has('KeyC') ? 1 : 0);
     if (lift !== 0) this.velocity.addScaledVector(up, lift * 1800 * dt);
 
     /* ── 阻尼：assist 开时像有推进器的飞行器，关时接近纯惯性 ── */
@@ -180,21 +209,28 @@ export class FlightController {
     const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.quaternion);
 
     if (this.cameraMode === 'first') {
-      const eye = this.position
-        .clone()
-        .addScaledVector(up, 1.9)
-        .addScaledVector(forward, 1.2);
-      this.camera.position.lerp(eye, Math.min(1, dt * 16));
-      this.camera.up.copy(up);
-      this.camera.lookAt(eye.clone().addScaledVector(forward, 40));
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 74, Math.min(1, dt * 4));
-      this.camera.updateProjectionMatrix();
+      if (this.shipRef) {
+        // 直接把相机挂到舰体上：物理怎么动都不可能漂移
+        if (this.camera.parent !== this.shipRef) this.shipRef.add(this.camera);
+        this.camera.position.copy(this.cockpitOffset);
+        this.camera.quaternion.identity();
+        this.camera.fov = 78;
+        this.camera.updateProjectionMatrix();
+      }
     } else {
+      const shipParent = this.shipRef?.parent ?? null;
+      if (shipParent && this.camera.parent !== shipParent) {
+        if (this.camera.parent) this.camera.parent.remove(this.camera);
+        shipParent.add(this.camera);
+      }
       const L = this.spec.length ?? 25;
       const back = L * 1.25 + 8;
       const height = L * 0.26 + 2.5;
+      // 速度前馈：抵消平滑跟随造成的滞后，高速时舰体不会被甩出画面
+      const lead = this.velocity.clone().multiplyScalar(1 / 5);
       const desired = this.position
         .clone()
+        .add(lead)
         .addScaledVector(forward, -back)
         .addScaledVector(up, height);
       if (this.smoothedOffset.lengthSq() === 0) this.smoothedOffset.copy(desired);

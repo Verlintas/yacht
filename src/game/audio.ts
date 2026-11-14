@@ -1,16 +1,22 @@
 /**
- * 引擎声：低频轰鸣 + 高频涡流 + 气流噪声。
- * 不用锯齿波——那是摩托车的来源。
+ * 引擎声：火箭爆轰 + 低频轰鸣。
+ *
+ * 关键不是加音量，而是「有纹理」：
+ *  - 宽带噪声过低通 → 喷射底噪
+ *  - 24Hz 幅度调制 → 爆轰的「突突」感，避免听起来像无人机
+ *  - 高通噪声层 → 火焰尖啸
+ *  - 两个略微失谐的正弦 → 低频重量
+ *  - 软削波 → 增加粗糙度
  */
 export class EngineAudio {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
-  private rumble: OscillatorNode | null = null;
+  private noiseGain: GainNode | null = null;
+  private hissGain: GainNode | null = null;
+  private rumbleA: OscillatorNode | null = null;
+  private rumbleB: OscillatorNode | null = null;
   private rumbleGain: GainNode | null = null;
-  private whine: OscillatorNode | null = null;
-  private whineGain: GainNode | null = null;
-  private airGain: GainNode | null = null;
-  private airFilter: BiquadFilterNode | null = null;
+  private lowpass: BiquadFilterNode | null = null;
   private started = false;
 
   start(): void {
@@ -22,91 +28,118 @@ export class EngineAudio {
     this.started = true;
 
     this.ctx = new AudioCtx();
-    this.master = this.ctx.createGain();
-    this.master.gain.value = 0;
-    this.master.connect(this.ctx.destination);
+    const ctx = this.ctx;
 
-    /* 低频轰鸣：两个略微失谐的正弦，叠加出「有重量」的底噪 */
-    this.rumble = this.ctx.createOscillator();
-    this.rumble.type = 'sine';
-    this.rumble.frequency.value = 34;
+    // 总线 + 压缩，防止叠太多层爆音
+    this.master = ctx.createGain();
+    this.master.gain.value = 0.0001;
 
-    const rumble2 = this.ctx.createOscillator();
-    rumble2.type = 'sine';
-    rumble2.frequency.value = 51.5;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -18;
+    comp.knee.value = 24;
+    comp.ratio.value = 6;
+    comp.attack.value = 0.006;
+    comp.release.value = 0.28;
 
-    this.rumbleGain = this.ctx.createGain();
-    this.rumbleGain.gain.value = 0.001;
+    this.master.connect(comp).connect(ctx.destination);
 
-    const rumbleFilter = this.ctx.createBiquadFilter();
+    /* 噪声源 */
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < data.length; i += 1) {
+      const white = Math.random() * 2 - 1;
+      last = last * 0.72 + white * 0.28; // 轻微低通，听起来更「厚」
+      data[i] = last;
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+    noise.loop = true;
+
+    /* 喷射底噪：低通 + 幅度调制 */
+    this.lowpass = ctx.createBiquadFilter();
+    this.lowpass.type = 'lowpass';
+    this.lowpass.frequency.value = 520;
+    this.lowpass.Q.value = 0.9;
+
+    this.noiseGain = ctx.createGain();
+    this.noiseGain.gain.value = 0.12;
+
+    noise.connect(this.lowpass).connect(this.noiseGain).connect(this.master);
+
+    // 24Hz 的爆轰脉动
+    const lfo = ctx.createOscillator();
+    lfo.type = 'sawtooth';
+    lfo.frequency.value = 23;
+    const lfoDepth = ctx.createGain();
+    lfoDepth.gain.value = 0.075;
+    lfo.connect(lfoDepth).connect(this.noiseGain.gain);
+    lfo.start();
+
+    /* 火焰尖啸：另一份噪声走高通 */
+    const hiss = ctx.createBufferSource();
+    hiss.buffer = buf;
+    hiss.loop = true;
+
+    const highpass = ctx.createBiquadFilter();
+    highpass.type = 'bandpass';
+    highpass.frequency.value = 1800;
+    highpass.Q.value = 0.7;
+
+    this.hissGain = ctx.createGain();
+    this.hissGain.gain.value = 0.02;
+
+    hiss.connect(highpass).connect(this.hissGain).connect(this.master);
+    hiss.start();
+
+    /* 低频重量：两个失谐正弦 */
+    this.rumbleA = ctx.createOscillator();
+    this.rumbleA.type = 'sine';
+    this.rumbleA.frequency.value = 31;
+
+    this.rumbleB = ctx.createOscillator();
+    this.rumbleB.type = 'sine';
+    this.rumbleB.frequency.value = 46.5;
+
+    this.rumbleGain = ctx.createGain();
+    this.rumbleGain.gain.value = 0.28;
+
+    const rumbleFilter = ctx.createBiquadFilter();
     rumbleFilter.type = 'lowpass';
-    rumbleFilter.frequency.value = 160;
-    rumbleFilter.Q.value = 0.6;
+    rumbleFilter.frequency.value = 180;
 
-    this.rumble.connect(this.rumbleGain);
-    rumble2.connect(this.rumbleGain);
+    this.rumbleA.connect(this.rumbleGain);
+    this.rumbleB.connect(this.rumbleGain);
     this.rumbleGain.connect(rumbleFilter).connect(this.master);
 
-    /* 高频涡流：三角波 + 轻微颤音，像涡轮而不是引擎 */
-    this.whine = this.ctx.createOscillator();
-    this.whine.type = 'triangle';
-    this.whine.frequency.value = 220;
-
-    const vibrato = this.ctx.createOscillator();
-    vibrato.type = 'sine';
-    vibrato.frequency.value = 5.2;
-    const vibratoGain = this.ctx.createGain();
-    vibratoGain.gain.value = 3.5;
-    vibrato.connect(vibratoGain).connect(this.whine.frequency);
-
-    this.whineGain = this.ctx.createGain();
-    this.whineGain.gain.value = 0.0008;
-
-    const whineFilter = this.ctx.createBiquadFilter();
-    whineFilter.type = 'bandpass';
-    whineFilter.frequency.value = 900;
-    whineFilter.Q.value = 2.4;
-
-    this.whine.connect(this.whineGain).connect(whineFilter).connect(this.master);
-
-    /* 气流：带通噪声，速度越快越明显 */
-    const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 3, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < data.length; i += 1) data[i] = (Math.random() * 2 - 1) * 0.45;
-
-    const air = this.ctx.createBufferSource();
-    air.buffer = buffer;
-    air.loop = true;
-
-    this.airGain = this.ctx.createGain();
-    this.airGain.gain.value = 0.0004;
-
-    this.airFilter = this.ctx.createBiquadFilter();
-    this.airFilter.type = 'bandpass';
-    this.airFilter.frequency.value = 1200;
-    this.airFilter.Q.value = 0.8;
-
-    air.connect(this.airFilter).connect(this.airGain).connect(this.master);
-
-    this.rumble.start();
-    rumble2.start();
-    this.whine.start();
-    vibrato.start();
-    air.start();
+    this.rumbleA.start();
+    this.rumbleB.start();
+    noise.start();
   }
 
   update(speed: number, throttle: number, boost: number): void {
-    if (!this.ctx || !this.master || !this.rumble || !this.whine || !this.airGain || !this.airFilter) return;
-    const t = this.ctx.currentTime;
-    const load = Math.min(1, speed / 1800);
-    const target = Math.max(throttle * 0.55, load);
+    if (!this.ctx || !this.master || !this.noiseGain || !this.hissGain || !this.lowpass) return;
+    if (!this.rumbleA || !this.rumbleB || !this.rumbleGain) return;
 
-    this.master.gain.setTargetAtTime(0.05 + target * 0.13 + boost * 0.05, t, 0.35);
-    this.rumble.frequency.setTargetAtTime(30 + target * 16 + boost * 12, t, 0.4);
-    this.whine.frequency.setTargetAtTime(180 + target * 420 + boost * 260, t, 0.35);
-    this.whineGain?.gain.setTargetAtTime(0.0006 + target * 0.0032 + boost * 0.002, t, 0.4);
-    this.airFilter.frequency.setTargetAtTime(700 + target * 1800, t, 0.5);
-    this.airGain.gain.setTargetAtTime(0.0004 + target * 0.0034 + boost * 0.002, t, 0.4);
+    const t = this.ctx.currentTime;
+    const load = Math.min(1, speed / 2600);
+    const power = Math.max(throttle, load * 0.85);
+
+    // 整体响度：明显比之前大
+    this.master.gain.setTargetAtTime(0.16 + power * 0.22 + boost * 0.16, t, 0.25);
+
+    // 爆轰底噪
+    this.noiseGain.gain.setTargetAtTime(0.09 + power * 0.16 + boost * 0.12, t, 0.3);
+    this.lowpass.frequency.setTargetAtTime(380 + power * 900 + boost * 700, t, 0.35);
+
+    // 尖啸
+    this.hissGain.gain.setTargetAtTime(0.012 + power * 0.05 + boost * 0.05, t, 0.4);
+
+    // 低频
+    this.rumbleA.frequency.setTargetAtTime(29 + power * 9 + boost * 7, t, 0.5);
+    this.rumbleB.frequency.setTargetAtTime(44 + power * 12 + boost * 9, t, 0.5);
+    this.rumbleGain.gain.setTargetAtTime(0.2 + power * 0.16 + boost * 0.1, t, 0.4);
   }
 
   suspend(): void {

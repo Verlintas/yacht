@@ -126,6 +126,60 @@ const systemData = {
 
       <div id="hud-prompt"></div>
 
+      <div id="boost-ui">
+        <svg viewBox="0 0 72 72" aria-hidden="true">
+          <circle class="boost-track" cx="36" cy="36" r="30" />
+          <circle class="boost-fill" id="boost-ring" cx="36" cy="36" r="30" />
+        </svg>
+        <div class="boost-text">
+          <b>B</b>
+          <span id="boost-label">充能</span>
+        </div>
+      </div>
+
+      <div id="help-hint">
+        <kbd>H</kbd> 操作说明
+      </div>
+
+      <div id="help-panel">
+        <div class="help-inner">
+          <header class="help-head">
+            <h2>操作</h2>
+            <button type="button" id="help-close" aria-label="关闭">×</button>
+          </header>
+          <div class="help-grid">
+            <section>
+              <h3>飞行</h3>
+              <dl>
+                <dt>鼠标</dt><dd>转向（点画面锁定指针）</dd>
+                <dt>W / S</dt><dd>前进 / 反推</dd>
+                <dt>A / D</dt><dd>左右侧移</dd>
+                <dt>R / C</dt><dd>上升 / 下降</dd>
+                <dt>Q / E</dt><dd>滚转（不会自动回正）</dd>
+                <dt>B（按住 3 秒）</dt><dd>充能后全速推进</dd>
+                <dt>Shift</dt><dd>次级加速（弱于 B 充能）</dd>
+                <dt>X / Space</dt><dd>刹车</dd>
+                <dt>Z</dt><dd>飞行辅助开关</dd>
+              </dl>
+            </section>
+            <section>
+              <h3>战斗与交互</h3>
+              <dl>
+                <dt>鼠标左键</dt><dd>开火</dd>
+                <dt>F</dt><dd>停靠 / 进入 / 关闭面板</dd>
+                <dt>M</dt><dd>雷达与目标</dd>
+                <dt>V</dt><dd>第一 / 第三人称</dd>
+                <dt>Esc</dt><dd>关闭面板</dd>
+                <dt>H</dt><dd>打开 / 关闭本说明</dd>
+              </dl>
+            </section>
+          </div>
+          <p class="help-note">
+            自动炮（Auto）只攻击已经向我方开火的目标。空间站可以免费换船。
+          </p>
+        </div>
+      </div>
+
       <div class="hud-vitals">
         <div class="vital">
           <span>结构</span>
@@ -143,6 +197,19 @@ const systemData = {
         <span id="enemy-count"></span>
         <div class="enemy-bar"><i id="enemy-hp"></i></div>
         <span id="enemy-dist"></span>
+      </div>
+
+      <div id="fleet-box">
+        <div class="fleet-head">
+          <span>敌方舰队</span>
+          <b id="fleet-status">主力</b>
+        </div>
+        <div class="fleet-name" id="fleet-name">—</div>
+        <div class="fleet-meta">
+          <span id="fleet-count">护卫 0</span>
+          <span id="fleet-comp"></span>
+          <span id="fleet-dist">—</span>
+        </div>
       </div>
 
       <div class="hud-bottom">
@@ -995,6 +1062,12 @@ const systemData = {
 <script>
   const map = document.getElementById('map');
   const mapClose = document.getElementById('map-close');
+  const helpPanelEl = document.getElementById('help-panel');
+  document.getElementById('help-close')?.addEventListener('click', () => helpPanelEl?.classList.remove('is-open'));
+  helpPanelEl?.addEventListener('click', (event) => {
+    if (event.target === helpPanelEl) helpPanelEl.classList.remove('is-open');
+  });
+
   const panel = document.getElementById('panel');
   mapClose?.addEventListener('click', () => map?.classList.remove('is-open'));
   map?.addEventListener('click', (event) => {
@@ -1382,7 +1455,244 @@ const systemData = {
     transition: width 0.1s linear;
   }
 
-  /* ── 恒星警告 ───────────────────────── */
+  /* ── 敌方舰队情报 ───────────────────── */
+  #fleet-box {
+    position: absolute;
+    left: 50%;
+    top: 152px;
+    transform: translateX(-50%);
+    min-width: 260px;
+    padding: 9px 14px 10px;
+    border: 1px solid rgba(255, 106, 74, 0.3);
+    background: rgba(20, 6, 4, 0.55);
+    font-family: var(--mono);
+    color: #ffc8ba;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+  }
+
+  #fleet-box.is-on { opacity: 1; visibility: visible; }
+
+  .fleet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    font-size: 8.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 160, 140, 0.8);
+  }
+
+  #fleet-status {
+    padding: 1px 6px;
+    border: 1px solid rgba(255, 106, 74, 0.45);
+    color: #ffd0c4;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+  }
+
+  #fleet-status[data-status="准主力"] {
+    border-color: rgba(255, 158, 92, 0.7);
+    color: #ffbe8a;
+  }
+
+  #fleet-status[data-status="超主力"] {
+    border-color: rgba(255, 90, 74, 0.9);
+    color: #ff7a64;
+    box-shadow: 0 0 10px rgba(255, 90, 74, 0.28);
+  }
+
+  .fleet-name {
+    margin-top: 5px;
+    font-family: var(--serif);
+    font-size: 16px;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .fleet-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 4px;
+    font-size: 8.5px;
+    letter-spacing: 0.1em;
+    color: rgba(255, 180, 160, 0.72);
+  }
+
+  /* ── 充能环 ─────────────────────────── */
+  #boost-ui {
+    position: absolute;
+    left: 50%;
+    bottom: 148px;
+    transform: translateX(-50%);
+    width: 72px;
+    height: 72px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  #boost-ui.is-on { opacity: 1; }
+
+  #boost-ui svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .boost-track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.12);
+    stroke-width: 4;
+  }
+
+  .boost-fill {
+    fill: none;
+    stroke: #59e0c8;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 188.5;
+    stroke-dashoffset: 188.5;
+    transition: stroke-dashoffset 0.08s linear, stroke 0.2s;
+  }
+
+  #boost-ui.is-ready .boost-fill {
+    stroke: #ffd98a;
+    filter: drop-shadow(0 0 8px rgba(255, 217, 138, 0.8));
+    animation: boostPulse 0.7s ease-in-out infinite;
+  }
+
+  #boost-ui.is-shift .boost-fill {
+    stroke: #7fd4ff;
+    filter: drop-shadow(0 0 6px rgba(127, 212, 255, 0.65));
+  }
+
+  #boost-ui.is-shift .boost-text b { color: #7fd4ff; }
+  #boost-ui.is-shift .boost-text { font-size: 8px; letter-spacing: 0.06em; }
+
+  @keyframes boostPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+
+  .boost-text {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    gap: 1px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
+  }
+
+  .boost-text b { font-size: 15px; color: var(--text); font-weight: 400; }
+  #boost-ui.is-ready .boost-text b { color: #ffd98a; }
+
+  /* ── 帮助 ───────────────────────────── */
+  #help-hint {
+    position: absolute;
+    left: 26px;
+    bottom: 104px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    color: var(--text-faint);
+    pointer-events: none;
+  }
+
+  #help-hint kbd, .help-note kbd {
+    padding: 1px 5px;
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 9px;
+  }
+
+  #help-panel {
+    position: absolute;
+    inset: 0;
+    z-index: 36;
+    display: grid;
+    place-items: center;
+    background: rgba(2, 5, 9, 0.82);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.22s, visibility 0.22s;
+  }
+
+  #help-panel.is-open { opacity: 1; visibility: visible; }
+
+  .help-inner {
+    width: min(760px, 90vw);
+    border: 1px solid var(--border-strong);
+    background: rgba(6, 12, 18, 0.96);
+    padding: 22px 26px 20px;
+  }
+
+  .help-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .help-head h2 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 500;
+  }
+
+  .help-head button {
+    width: 28px; height: 28px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .help-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 30px; }
+
+  .help-grid h3 {
+    margin: 0 0 8px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .help-grid dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 108px 1fr;
+    gap: 6px 12px;
+    font-size: 12.5px;
+  }
+
+  .help-grid dt {
+    font-family: var(--mono);
+    color: var(--brass);
+    font-size: 11px;
+  }
+
+  .help-grid dd { margin: 0; color: var(--text-dim); }
+
+  .help-note {
+    margin: 16px 0 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 11.5px;
+    color: var(--text-faint);
+  }
   #heat-warning {
     position: absolute;
     top: 76px;

@@ -8,7 +8,10 @@ export interface Ship {
   engineCore: THREE.Mesh[];
   /** 驾驶舱在模型局部坐标里的位置（第一人称相机用） */
   cockpit: THREE.Vector3;
-  update: (dt: number, throttle: number, boost: number) => void;
+  cockpitGroup?: THREE.Group;
+  /** 舰体模型：第一人称时隐藏，避免船体挡住视野 */
+  model?: THREE.Object3D;
+  update: (dt: number, throttle: number, boost: number, retro?: boolean) => void;
 }
 
 export function createShip(): Ship {
@@ -316,9 +319,17 @@ export function createShip(): Ship {
 
   group.scale.setScalar(0.9);
 
-  const update = (_dt: number, throttle: number, boost: number): void => {
+  const update = (_dt: number, throttle: number, boost: number, retro = false): void => {
     const power = 0.25 + throttle * 1.5 + boost * 2.2;
     for (const sprite of engineGlow) {
+      const role = sprite.userData.role as string | undefined;
+      if (role === 'retro') {
+        // 反推喷口只在倒车 / 急刹时点亮
+        sprite.visible = retro;
+        (sprite.material as THREE.SpriteMaterial).opacity = retro ? 0.55 : 0;
+        continue;
+      }
+      sprite.visible = true;
       sprite.scale.setScalar(0.8 + power * 0.62);
       (sprite.material as THREE.SpriteMaterial).opacity = 0.3 + Math.min(power * 0.16, 0.5);
     }
@@ -335,6 +346,7 @@ export async function loadShipModel(
   url: string,
   targetLength = 25,
   nozzles: Array<{ pos: [number, number, number]; size: number; role: string }> = [],
+  cockpitPos?: [number, number, number],
 ): Promise<Ship> {
   const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([
     import('three/examples/jsm/loaders/GLTFLoader.js'),
@@ -378,6 +390,56 @@ export async function loadShipModel(
   const group = new THREE.Group();
   group.add(model);
 
+  // 3D 座舱框：第一人称时提供真实的边缘视差
+  const cockpit = new THREE.Vector3(...(cockpitPos ?? [0, size.y * 0.22, -size.z * 0.24]));
+  // 用 Basic 材质，避免被机舱补光灯洗白
+  const frameMat = new THREE.MeshBasicMaterial({ color: 0x05090c });
+  const rimMat = new THREE.MeshBasicMaterial({ color: 0x1b514b });
+
+  const cockpitGroup = new THREE.Group();
+  cockpitGroup.position.copy(cockpit).add(new THREE.Vector3(0, 0, -1.0));
+  // 座舱框按人眼尺度固定在 1.2 米级，不随舰长缩放
+  const f = 1.2;
+
+  // 上缘：接近满屏宽，但很薄
+  const topBar = new THREE.Mesh(new THREE.BoxGeometry(f * 4.2, f * 0.09, f * 0.3), frameMat);
+  topBar.position.set(0, f * 1.05, -f * 0.55);
+  cockpitGroup.add(topBar);
+
+  // 左右立柱：贴近屏幕边缘
+  for (const side of [-1, 1]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(f * 0.1, f * 1.8, f * 0.3), frameMat);
+    post.position.set(side * f * 2.1, f * 0.1, -f * 0.5);
+    post.rotation.z = side * 0.06;
+    cockpitGroup.add(post);
+
+    // 内侧的一条暗色舱框灯
+    const edge = new THREE.Mesh(new THREE.BoxGeometry(f * 0.008, f * 1.62, f * 0.02), rimMat);
+    edge.position.set(side * f * 2.045, f * 0.1, -f * 0.36);
+    edge.rotation.z = side * 0.06;
+    cockpitGroup.add(edge);
+  }
+
+  // 顶框下沿的灯带：让座舱框在黑暗里也能看清
+  const topEdge = new THREE.Mesh(new THREE.BoxGeometry(f * 4.1, f * 0.008, f * 0.02), rimMat);
+  topEdge.position.set(0, f * 1.0, -f * 0.4);
+  cockpitGroup.add(topEdge);
+
+  // 仪表台：压到屏幕下缘的一条窄檐
+  const dash = new THREE.Mesh(new THREE.BoxGeometry(f * 3.0, f * 0.09, f * 0.7), frameMat);
+  dash.position.set(0, -f * 1.4, -f * 1.0);
+  cockpitGroup.add(dash);
+
+  // 仪表灯：三小段，避免 bloom 糊成一片
+  for (const offset of [-f * 0.34, 0, f * 0.34]) {
+    const indicator = new THREE.Mesh(new THREE.BoxGeometry(f * 0.22, f * 0.01, f * 0.12), rimMat);
+    indicator.position.set(offset, -f * 1.26, -f * 1.25);
+    cockpitGroup.add(indicator);
+  }
+
+  cockpitGroup.visible = false;
+  group.add(cockpitGroup);
+
   // 自动补引擎光：放在包围盒尾端
   const glowTexture = (() => {
     const s = 128;
@@ -419,6 +481,7 @@ export async function loadShipModel(
     );
     sprite.position.set(mount.pos[0], mount.pos[1], mount.pos[2]);
     sprite.scale.setScalar(Math.max(1.2, mount.size * 2.4));
+    sprite.userData.role = mount.role;
     group.add(sprite);
     engineGlow.push(sprite);
   }
@@ -431,8 +494,5 @@ export async function loadShipModel(
     }
   };
 
-  // 驾驶舱：机首在 -Z，取前段偏上的位置
-  const cockpit = new THREE.Vector3(0, size.y * 0.52, -size.z * 0.3);
-
-  return { group, engineGlow, engineCore, cockpit, update };
+  return { group, engineGlow, engineCore, cockpit, cockpitGroup, model, update };
 }

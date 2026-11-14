@@ -41,6 +41,8 @@ export interface ShipSpec {
   code: string;
   role: string;
   class: string;
+  /** 舰级：按舰桥/驾驶舱尺寸分级，T5+ 主力，T6+ 准主力，T7+ 超主力 */
+  tier: number;
   length: number;
   cockpits: Array<[number, number, number]>;
   maxSpeed: number;
@@ -117,6 +119,8 @@ interface Raw {
   code: string;
   role: string;
   class: string;
+  /** 舰级：按舰桥/驾驶舱尺寸分级，T5+ 主力，T6+ 准主力，T7+ 超主力 */
+  tier: number;
   length: number;
   speed: [number, number, number, number];
   hull: [number, number, number, number];
@@ -127,8 +131,8 @@ interface Raw {
 
 const RAW: Raw[] = [
   {
-    id: 'thunderbolt', name: 'A-30 雷霆', code: 'A-30', role: '多用途战斗机', class: 'light', length: 25,
-    speed: [4200, 22000, 2600, 1.0], hull: [1200, 400, 22, 300],
+    id: 'thunderbolt', name: 'A-30 雷霆', code: 'A-30', role: '多用途战斗机', class: 'light', tier: 2, length: 25,
+    speed: [820, 2600, 700, 1.0], hull: [1200, 400, 22, 300],
     cockpits: [[0, -0.1, -9.6]],
     nozzles: [
       ['N1', 3.6, -0.7, 8.2], ['N2', -3.7, -0.6, 8.1],
@@ -141,8 +145,8 @@ const RAW: Raw[] = [
     ],
   },
   {
-    id: 'f008', name: 'SF-F008 短剑', code: 'F-008', role: '轻型截击机', class: 'light', length: 22,
-    speed: [5600, 30000, 3400, 1.25], hull: [780, 620, 30, 220],
+    id: 'f008', name: 'SF-F008 短剑', code: 'F-008', role: '轻型截击机', class: 'light', tier: 2, length: 22,
+    speed: [980, 3000, 900, 1.25], hull: [780, 620, 30, 220],
     cockpits: [[-0.1, 0.4, -8.4]],
     nozzles: [
       ['N1', 5.2, 0.7, 9.1], ['N2', -5.2, 0.7, 8.9],
@@ -154,8 +158,8 @@ const RAW: Raw[] = [
     ],
   },
   {
-    id: 'bomber', name: 'SF 轰炸机 CR', code: 'CR-3', role: '重型轰炸机', class: 'heavy', length: 120,
-    speed: [3000, 15000, 1700, 0.72], hull: [9000, 3000, 40, 700],
+    id: 'bomber', name: 'SF 轰炸机 CR', code: 'CR-3', role: '重型轰炸机', class: 'heavy', tier: 4, length: 120,
+    speed: [620, 1900, 460, 0.72], hull: [9000, 3000, 40, 700],
     cockpits: [[-0.2, 4.4, -28.2]],
     nozzles: [
       ['N1', 11.8, -5.4, 39.6], ['N2', -11.4, -5.1, 39.9],
@@ -166,8 +170,8 @@ const RAW: Raw[] = [
     ],
   },
   {
-    id: 'freighter', name: '货船 MB', code: 'MB-4', role: '货船', class: 'large', length: 280,
-    speed: [2100, 11000, 1100, 0.45], hull: [26000, 9000, 18, 1200],
+    id: 'freighter', name: '货船 MB', code: 'MB-4', role: '货船', class: 'large', tier: 5, length: 280,
+    speed: [440, 1400, 300, 0.45], hull: [26000, 9000, 18, 1200],
     cockpits: [[-23.3, 0.0, -120.4], [22.5, 0.9, -121.2]],
     nozzles: [
       ['N1', 108.1, -31.3, -42.4], ['N2', -107.2, -30.5, -41.6],
@@ -178,8 +182,8 @@ const RAW: Raw[] = [
     ],
   },
   {
-    id: 'commander', name: 'Commander 指挥舰', code: 'CG-7', role: '指挥舰', class: 'capital', length: 620,
-    speed: [2600, 14000, 1500, 0.55], hull: [82000, 32000, 55, 2600],
+    id: 'commander', name: 'Commander 指挥舰', code: 'CG-7', role: '指挥舰', class: 'capital', tier: 6, length: 620,
+    speed: [380, 1200, 260, 0.55], hull: [82000, 32000, 55, 2600],
     cockpits: [[16.0, 95.8, -148.3], [-17.8, 93.9, -148.3]],
     nozzles: [
       ['N1', 0.9, 13.2, 239.3],
@@ -192,8 +196,8 @@ const RAW: Raw[] = [
     ],
   },
   {
-    id: 'battleship', name: 'SF 战列舰', code: 'BB-6', role: '战列舰', class: 'flagship', length: 1250,
-    speed: [1800, 9000, 900, 0.34], hull: [320000, 120000, 80, 5000],
+    id: 'battleship', name: 'SF 战列舰', code: 'BB-6', role: '战列舰', class: 'flagship', tier: 7, length: 1250,
+    speed: [280, 900, 180, 0.34], hull: [320000, 120000, 80, 5000],
     cockpits: [[-1.9, 219.5, -162.8]],
     nozzles: [
       ['N1', -183.5, 147.7, 594.0], ['N2', -323.5, 143.9, 590.2],
@@ -215,6 +219,7 @@ export const SHIPS: ShipSpec[] = RAW.map((raw) => ({
   code: raw.code,
   role: raw.role,
   class: raw.class,
+  tier: raw.tier,
   length: raw.length,
   cockpits: raw.cockpits,
   maxSpeed: raw.speed[0],
