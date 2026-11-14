@@ -332,8 +332,13 @@ export function createShip(): Ship {
 
 /** 从 Blender 导出的 GLB 加载舰体，并补上引擎光。 */
 export async function loadShipModel(url: string): Promise<Ship> {
-  const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
-  const gltf = await new GLTFLoader().loadAsync(url);
+  const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([
+    import('three/examples/jsm/loaders/GLTFLoader.js'),
+    import('three/examples/jsm/libs/meshopt_decoder.module.js'),
+  ]);
+  await MeshoptDecoder.ready;
+  const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+  const gltf = await loader.loadAsync(url);
 
   const model = gltf.scene;
   // glTF 导出已经是 Y-up；机首在 +Z，绕 Y 转 180° 让它朝 -Z
