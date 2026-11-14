@@ -20,6 +20,8 @@ export interface WeaponMount {
   rate: number;
   /** 弹速 */
   speed: number;
+  /** 射程（米）：弹丸飞到这个距离就消失 */
+  range: number;
   /** 散布（弧度） */
   spread: number;
   /** 弹丸颜色 */
@@ -72,6 +74,7 @@ const laser = (id: string, pos: [number, number, number], damage = 18): WeaponMo
   damage,
   rate: 3.2,
   speed: 5200,
+  range: 3500,
   spread: 0.0016,
   color: 0x6fe8ff,
 });
@@ -83,6 +86,7 @@ const cannon = (id: string, pos: [number, number, number], damage = 55): WeaponM
   damage,
   rate: 1.1,
   speed: 3600,
+  range: 3000,
   spread: 0.004,
   color: 0xffb066,
 });
@@ -94,6 +98,7 @@ const missile = (id: string, pos: [number, number, number], damage = 220): Weapo
   damage,
   rate: 0.35,
   speed: 1400,
+  range: 6000,
   spread: 0.01,
   color: 0xff7a5c,
 });

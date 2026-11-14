@@ -111,7 +111,7 @@ export class Combat {
       mesh,
       velocity: dir.multiplyScalar(weapon.speed),
       damage: weapon.damage,
-      life: 3.2,
+      life: weapon.range / weapon.speed,
       owner: 'player',
       color: new THREE.Color(weapon.color),
     });
