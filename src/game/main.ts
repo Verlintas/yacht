@@ -404,6 +404,9 @@ function setupHud(
   const enemyHp = $('enemy-hp');
   const enemyDist = $('enemy-dist');
   const enemyCount = $('enemy-count');
+  const dashHull = $('dash-hull');
+  const dashShield = $('dash-shield');
+  const dashThrottle = $('dash-throttle');
   const ladder = $('cockpit-ladder');
   const tapeSpeed = $('tape-speed');
   const heat = $('heat-warning');
@@ -783,6 +786,9 @@ function setupHud(
     const hullRatio = Math.max(0, playerState.hull / specRef.current.hull);
     const shieldRatio = Math.max(0, playerState.shield / specRef.current.shield);
     hullFill.style.width = `${hullRatio * 100}%`;
+    dashHull.style.width = `${hullRatio * 100}%`;
+    dashShield.style.width = `${shieldRatio * 100}%`;
+    dashThrottle.style.width = `${Math.round(ctx.flight.throttle * 100)}%`;
     shieldFill.style.width = `${shieldRatio * 100}%`;
     hullText.textContent = `${Math.max(0, Math.round(playerState.hull))} / ${specRef.current.hull}`;
     shieldText.textContent = `${Math.max(0, Math.round(playerState.shield))} / ${specRef.current.shield}`;

@@ -124,7 +124,8 @@ export class FlightController {
       const accel = this.spec.accel + this.boost * this.spec.accel * 16;
       this.velocity.addScaledVector(forward, accel * forwardInput * dt);
     } else if (forwardInput < 0) {
-      this.velocity.addScaledVector(forward, 1500 * dt);
+      // forwardInput 是负数，乘上去才是真正的反推
+      this.velocity.addScaledVector(forward, 1500 * forwardInput * dt);
     }
 
     // 侧移
