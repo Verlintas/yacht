@@ -102,6 +102,7 @@ export async function startGame(system: SystemData): Promise<void> {
   }
 
   flight.setCockpitOffset(ship.cockpit);
+  flight.bindShip(ship.group);
 
   await step('装载飞船', 0.62);
 
@@ -342,8 +343,8 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     ctx.ship.group.position.copy(ctx.flight.position);
     ctx.ship.group.quaternion.copy(ctx.flight.quaternion);
-    ctx.ship.group.position.add(new THREE.Vector3(0, -2.2, 0));
     ctx.ship.update(dt, ctx.flight.throttle, ctx.flight.boost);
+    ctx.flight.updateCamera(dt);
     ctx.ship.group.visible = true;
 
     ctx.world.update(dt, elapsed, ctx.camera);

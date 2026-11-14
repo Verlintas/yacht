@@ -166,10 +166,16 @@ export class FlightController {
       this.boost * 0.7 + this.throttle * 0.1,
       Math.min(1, dt * 4),
     );
-    this.updateCamera(dt);
   }
 
-  private updateCamera(dt: number): void {
+  private shipRef: THREE.Object3D | null = null;
+
+  /** 绑定舰体：第一人称直接从舰体世界矩阵取位置，物理再抖也不会甩开 */
+  bindShip(ship: THREE.Object3D): void {
+    this.shipRef = ship;
+  }
+
+  updateCamera(dt: number): void {
     const forward = this.forwardVector;
     const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.quaternion);
 
