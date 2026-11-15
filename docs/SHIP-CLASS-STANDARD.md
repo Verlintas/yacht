@@ -8,12 +8,12 @@
 
 | Tier | Label | Typical length | Bridge / role | Typical examples |
 |---|---|---:|---|---|
-| **T1** | 微型 | 5–20 m | 单人舱/无人 | 微型无人机、侦察探针 |
-| **T2** | 轻型 | 20–60 m | 单人战斗机座舱 | A-30 25 m、F-008 22 m、DK6 35 m、HS3 25 m（NPC drone） |
-| **T3** | 中型 | 30–150 m | 小型多人员舰桥 | PH3 80 m、VA3 90 m（NPC）、SH3 28 m（interceptor exception） |
-| **T4** | 重型 | 80–400 m | 中型舰桥/炮艇 | CR 180 m、GL4 90 m |
-| **T5** | 大型 | 400–1,500 m | 驱逐/轻巡/武装货船 | MB 520 m、F24 600 m（NPC）、TM5 1,200 m |
-| **T6** | 主力 | 1,500–2,800 m | 战列舰/重巡/航母舰桥 | BB6 2,000 m、TG6 1,600 m |
+| **T1** | 微型 | 8–15 m | 单人舱/无人 | 微型无人机、侦察探针 |
+| **T2** | 轻型 | 18–60 m | 单人战斗机座舱 | A-30 25 m、F-008 22 m、DK6 35 m、HS3 25 m（NPC drone） |
+| **T3** | 中型 | 45–150 m | 小型多人员舰桥 | PH3 80 m、VA3 90 m（NPC）、SH3 28 m（interceptor exception） |
+| **T4** | 重型 | 90–400 m | 中型舰桥/炮艇 | CR 180 m、GL4 90 m |
+| **T5** | 大型 | 250–1,500 m | 驱逐/轻巡/武装货船 | MB 520 m、F24 600 m（NPC）、TM5 1,200 m |
+| **T6** | 主力 | 1,500–2,500 m | 战列舰/重巡/航母舰桥 | BB6 2,000 m、TG6 1,600 m |
 | **T7** | 旗舰 | 2,400–4,000 m | 旗舰/战巡舰桥 | CG7 2,400 m、RH7 3,000 m |
 | **T8** | 母舰 | 3,000–6,000 m | 母舰/航母指挥核心 | OS8 3,000 m（NPC carrier） |
 | **T9** | 无畏 | 5,000–7,500 m | 无畏舰桥/舰队指挥 | 暂无现役玩家舰 |
@@ -21,7 +21,7 @@
 | **T11** | 贡献 | 15,000–25,000 m | 战役级支援/母舰 | 暂无现役玩家舰 |
 | **T12** | 未定 | 30,000 m+ | 等级保留 | **当前没有任何舰船达到 T12** |
 
-Overlaps are intentional. A 3,000 m carrier can be T8 because of hangar/bridge capacity; a 90 m drone transport stays T3 despite being short.
+Overlaps are intentional. T1–T5 keep the old 2× ladder; T6+ re-anchor around BB6 2,000 m / CG7 2,400 m and T10 8,000 m. A 3,000 m carrier can be T8 because of hangar/bridge capacity; a 90 m drone transport stays T3 despite being short; SH3 28 m is a T3 interceptor exception.
 
 ## Existing ships
 

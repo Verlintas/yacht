@@ -422,7 +422,8 @@ export async function loadShipModel(
     if (!(obj instanceof THREE.Mesh)) return;
     const material = obj.material as THREE.MeshStandardMaterial;
     if (!material) return;
-    material.side = THREE.FrontSide;
+    // 部分候选舰是镜像/单面网格；双面渲染避免一侧整块消失
+    material.side = THREE.DoubleSide;
     if ('emissiveIntensity' in material) material.emissiveIntensity = 0.06;
     if ('metalness' in material) material.metalness = Math.min(material.metalness ?? 1, 0.7);
     if ('roughness' in material) material.roughness = Math.max(material.roughness ?? 0.5, 0.45);

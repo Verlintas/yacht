@@ -895,7 +895,8 @@ export function initHardpointEditor(): void {
 
   function tuneMaterial(material: THREE.Material): void {
     if (material instanceof THREE.MeshStandardMaterial) {
-      material.side = THREE.FrontSide;
+      // 候选舰存在镜像/单面面板；双面渲染避免从一侧看整块消失
+      material.side = THREE.DoubleSide;
       material.metalness = Math.min(material.metalness, 0.55);
       material.roughness = Math.max(material.roughness, 0.35);
       material.emissiveIntensity = Math.min(material.emissiveIntensity, 0.75);
@@ -932,7 +933,8 @@ export function initHardpointEditor(): void {
       if (token !== loadToken) return;
 
       const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-      const gltf = await loader.loadAsync(withBase(`models/${ship.model}`));
+      const modelUrl = withBase(`models/${ship.model}`);
+      const gltf = await loader.loadAsync(`${modelUrl}?v=20261116`);
       if (token !== loadToken) {
         disposeObject(gltf.scene);
         return;
