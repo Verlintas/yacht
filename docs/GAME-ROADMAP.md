@@ -93,7 +93,7 @@
 - CPU 使用 `float64` 绝对坐标；地表用 region ENU；tile 用局部 `float32`。
 - 碰撞用 heightfield 双线性采样 + pad 平面；`three-mesh-bvh` 只用于建筑/岩石/道具/舰船。
 - 深度优先 reverse-Z，保留 logarithmic depth fallback；CSM 3 × 2048，maxFar 5 km。
-- 工具链优先 **World Machine Professional + Blender 5.2 LTS + Python**；Gaea 需要原生 Windows PC。
+- 工具链**免费优先**：Blender 5.3 + Python/NumPy + FastNoise/Fastscape + Geometry Nodes；World Machine 不再作为默认，只有在免费线遇到明确质量瓶颈时才考虑。
 
 估算：IAC 垂直切片 **8–11 周**；含植被/城市 polish **11–15 周**；六组织母星 6–9 个月内容 + 2–3 个月工程。
 
@@ -259,7 +259,7 @@ M1 具体交付：
 1. **玩家视角**：第三人称默认，V 切第一人称。
 2. **小船起降**：assist 默认，autoland 可选；手动 landing Phase 2。
 3. **城市切片**：600×600 m、S pad、1 个可进入商店、3 个 NPC；不先做 1 km 全城。
-4. **地形工具链**：优先 World Machine Professional + Blender；预算不允许时用 Blender + Python 免费线。
+4. **地形工具链**：确定走 **Blender + Python 免费线**，不购买 World Machine；后续只在质量不足时评估免费替代（Houdini Apprentice 等）。
 5. **T12 正式名称**：仍未定；等级保留，无现役舰。
 6. **候选舰接入顺序**：DK6 → F2-5 → PH3 → SH3，先接入垂直切片需要的 1 艘。
 7. **资产许可**：Kitbash3D 本地镜像不能直接进 public repo；优先正版/CC0/自建 kit。
