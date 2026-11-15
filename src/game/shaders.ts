@@ -132,9 +132,9 @@ export const PLANET_FRAG = /* glsl */ `
   void main() {
     #include <logdepthbuf_fragment>
     vec3 n = normalize(vLocal);
-    vec3 N = normalize(vNormalW);
-    vec3 L = normalize(uLight);
-    vec3 V = normalize(uCamera - vWorld);
+    vec3 N = normalize(vNormalW + vec3(1e-5));
+    vec3 L = normalize(uLight + vec3(1e-5));
+    vec3 V = normalize(uCamera - vWorld + vec3(1e-5));
     float seed = uSeed * 17.13;
 
     float ndl = dot(N, L);
@@ -249,7 +249,10 @@ export const PLANET_FRAG = /* glsl */ `
     // 云影
     color *= 1.0 - cloud * 0.16 * day;
 
-    vec3 H = normalize(L + V);
+    // 太阳与视线完全反向时 L+V 会退化为零向量；必须保护，否则会产生 NaN 并污染 bloom
+    vec3 hVec = L + V;
+    float hLen = length(hVec);
+    vec3 H = hLen > 1e-4 ? hVec / hLen : N;
     float spec = pow(max(dot(N, H), 0.0), 86.0) * specMask * (1.0 - cloud);
     color += uHigh * spec * 0.46;
 
@@ -320,7 +323,7 @@ export const SKY_FRAG = /* glsl */ `
 
   void main() {
     #include <logdepthbuf_fragment>
-    vec3 viewDir = normalize(vWorld - uCamera);
+    vec3 viewDir = normalize(vWorld - uCamera + vec3(1e-5));
 
     // 相对当地地平线的仰角：0 为地平线，1 为天顶
     float altitude = dot(viewDir, uUp);
@@ -379,9 +382,9 @@ export const ATMO_FRAG = /* glsl */ `
 
   void main() {
     #include <logdepthbuf_fragment>
-    vec3 N = normalize(vNormal);
-    vec3 V = normalize(uCamera - vWorld);
-    vec3 L = normalize(uLight);
+    vec3 N = normalize(vNormal + vec3(1e-5));
+    vec3 V = normalize(uCamera - vWorld + vec3(1e-5));
+    vec3 L = normalize(uLight + vec3(1e-5));
 
     float fres = pow(1.0 - abs(dot(N, V)), uPower);
     float lit = smoothstep(-0.18, 0.32, dot(normalize(-N), L));
@@ -448,7 +451,10 @@ export const SUN_FRAG = /* glsl */ `
     vec3 color = mix(edge, mid, smoothstep(0.25, 0.6, heat));
     color = mix(color, core, smoothstep(0.55, 0.9, heat));
 
-    float rim = pow(1.0 - abs(dot(normalize(vNormalW), normalize(cameraPosition - vWorld))), 2.2);
+    vec3 sunView = cameraPosition - vWorld;
+    float sunViewLen = length(sunView);
+    vec3 sunV = sunViewLen > 1e-4 ? sunView / sunViewLen : vec3(0.0, 0.0, 1.0);
+    float rim = pow(1.0 - abs(dot(normalize(vNormalW + vec3(1e-5)), sunV)), 2.2);
     color += mid * rim * 0.9;
 
     gl_FragColor = vec4(color * 2.4, 1.0);

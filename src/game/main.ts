@@ -285,6 +285,31 @@ export async function startGame(system: SystemData): Promise<void> {
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
+
+  // HDR 安全钳制：太阳/镜面高光偶尔会产生 NaN/Inf，bloom 会把一个坏像素扩散成整块黑屏
+  const hdrClamp = new ShaderPass({
+    uniforms: { tDiffuse: { value: null } },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D tDiffuse;
+      varying vec2 vUv;
+      void main() {
+        vec3 c = texture2D(tDiffuse, vUv).rgb;
+        bool invalid = c.r != c.r || c.g != c.g || c.b != c.b ||
+          abs(c.r) > 10000.0 || abs(c.g) > 10000.0 || abs(c.b) > 10000.0;
+        if (invalid) c = vec3(0.0);
+        gl_FragColor = vec4(clamp(c, vec3(0.0), vec3(16.0)), 1.0);
+      }
+    `,
+  });
+  composer.addPass(hdrClamp);
+
   const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.34, 0.55, 0.86);
   composer.addPass(bloom);
 
@@ -760,12 +785,8 @@ function loop(ctx: GameContext, hud: Hud): void {
       entryFlash = 0;
     }
 
-    // 低空局部地形：只覆盖飞船附近，提供真实材质/起伏/阴影
-    if (atmoPlanet) {
-      surfacePatch.update(atmoPlanet, ctx.flight.position, ctx.spec.current.length, atmoAltitude);
-    } else {
-      surfacePatch.group.visible = false;
-    }
+    // 低空地形占位面暂时禁用：有限平面会产生可见直角边缘/黑块，等 authored terrain 接入后再启用
+    surfacePatch.group.visible = false;
 
     // 低空接触阴影：只在真正贴近地面时显示，避免大舰在几十公里高空铺一块黑色平面
     const contactShadowRange = Math.min(3000, Math.max(300, ctx.spec.current.length * 0.4));
