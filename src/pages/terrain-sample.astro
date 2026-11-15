@@ -4,8 +4,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 ---
 
 <Base
-  title="Anvil Landing · 地形样本 · Verlintas 的小窝"
-  description="1 km × 1 km authored terrain tile with a 420 × 260 m port apron and a 60 × 60 m TLOF. Three.js scale sample."
+  title="Anvil Landing · 港区地形 v2 · Verlintas 的小窝"
+  description="Anvil Landing v2: an authored Blender/Kitbash3D port district on a 1 km coastal terrain tile with a 60 × 60 m TLOF, real-time Three.js preview, and reference renders."
   panic={false}
 >
   <style is:global>
@@ -76,8 +76,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     .terrain-title-panel {
       top: clamp(16px, 3vh, 28px);
       left: var(--terrain-gutter);
-      max-width: min(405px, calc(100vw - 40px));
-      padding: 16px 18px 14px;
+      max-width: min(370px, calc(100vw - 40px));
+      padding: 13px 15px 12px;
       border-left: 2px solid var(--terrain-warm);
     }
 
@@ -93,7 +93,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     .terrain-title-panel h1 {
       margin: 0;
       font-family: var(--serif);
-      font-size: clamp(26px, 3.2vw, 37px);
+      font-size: clamp(24px, 2.6vw, 30px);
       font-weight: 500;
       line-height: 1.08;
       letter-spacing: -0.01em;
@@ -113,8 +113,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       padding-top: 9px;
       border-top: 1px solid rgba(255, 255, 255, 0.11);
       font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.06em;
+      font-size: 9px;
+      letter-spacing: 0.04em;
       color: var(--terrain-panel-faint);
       font-variant-numeric: tabular-nums;
     }
@@ -122,8 +122,8 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     .terrain-scale-panel {
       top: clamp(16px, 3vh, 28px);
       right: var(--terrain-gutter);
-      width: 258px;
-      padding: 13px 15px 12px;
+      width: 230px;
+      padding: 11px 13px 10px;
     }
 
     .terrain-scale-list {
@@ -149,7 +149,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     .terrain-scale-list dt {
       margin: 0;
       font-family: var(--mono);
-      font-size: 12px;
+      font-size: 10.5px;
       font-variant-numeric: tabular-nums;
       color: #f0dfb4;
       white-space: nowrap;
@@ -158,7 +158,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
     .terrain-scale-list dd {
       margin: 0;
       color: var(--terrain-panel-dim);
-      font-size: 10.5px;
+      font-size: 9.5px;
       white-space: nowrap;
     }
 
@@ -586,6 +586,83 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         width: 100%;
       }
     }
+
+    .terrain-compare-block,
+    .terrain-gallery-block {
+      margin: 34px 0 0;
+    }
+
+    .terrain-compare-head {
+      max-width: 760px;
+      margin-bottom: 16px;
+    }
+
+    .terrain-compare-head h2 {
+      margin: 0 0 8px;
+      font-family: var(--serif);
+      font-size: clamp(22px, 2.4vw, 30px);
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .terrain-compare-head p:not(.terrain-eyebrow) {
+      margin: 0;
+      color: var(--text-dim);
+      font-size: 13.5px;
+      line-height: 1.7;
+    }
+
+    .terrain-compare,
+    .terrain-gallery {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .terrain-gallery {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .terrain-compare figure,
+    .terrain-gallery figure {
+      margin: 0;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .terrain-compare img,
+    .terrain-gallery img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background: #0a1115;
+    }
+
+    .terrain-compare figcaption,
+    .terrain-gallery figcaption {
+      padding: 9px 11px;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 9px;
+      line-height: 1.45;
+      letter-spacing: 0.04em;
+      color: var(--text-dim);
+    }
+
+    @media (max-width: 900px) {
+      .terrain-gallery {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .terrain-compare {
+        grid-template-columns: 1fr;
+      }
+    }
+
   </style>
 
   <section class="terrain-sample">
@@ -600,20 +677,21 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       <div class="walk-crosshair" id="walk-crosshair" hidden aria-hidden="true"></div>
 
       <div class="terrain-panel terrain-title-panel">
-        <p class="terrain-eyebrow">Authored terrain · sample 01</p>
+        <p class="terrain-eyebrow">Authored terrain · Kitbash3D pass</p>
         <h1>Anvil Landing</h1>
-        <p class="terrain-sub">1 km 级港区地形瓦片 · A-30 起降验证场</p>
-        <p class="terrain-stats" id="terrain-stats">正在读取地表数据…</p>
+        <p class="terrain-sub">1 km 海岸高地 · 420 × 260 m 港区 · A-30 验证场</p>
+        <p class="terrain-stats" id="terrain-stats">正在读取 1025² 高程与港区 GLB…</p>
       </div>
 
       <aside class="terrain-panel terrain-scale-panel" aria-label="样本尺度">
         <p class="terrain-eyebrow">真实尺度 / Scale</p>
         <dl class="terrain-scale-list">
-          <div><dt>1 km</dt><dd>地形瓦片</dd></div>
+          <div><dt>1 km</dt><dd>地形瓦片 · 1025² R16</dd></div>
           <div><dt>420 × 260 m</dt><dd>港区平台</dd></div>
           <div><dt>60 × 60 m</dt><dd>TLOF 起降坪</dd></div>
-          <div><dt>1.8 m</dt><dd>玩家胶囊</dd></div>
+          <div><dt>1.8 m</dt><dd>控制器角色</dd></div>
           <div><dt>25 m</dt><dd>A-30 舰体</dd></div>
+          <div><dt>12 · 550</dt><dd>K039 模块 · 植被</dd></div>
         </dl>
         <div class="terrain-legend" aria-hidden="true">
           <span id="terrain-min-height">17 m</span>
@@ -632,7 +710,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
         <div class="terrain-buttons">
           <button type="button" data-terrain-preset="port" class="is-active">港区</button>
           <button type="button" data-terrain-preset="pad">起降坪</button>
-          <button type="button" data-terrain-preset="tile">整块瓦片</button>
+          <button type="button" data-terrain-preset="vista">海岸</button>
           <button type="button" id="walk-toggle" aria-pressed="false">步行 V</button>
           <button type="button" id="label-toggle" aria-pressed="true">标签 L</button>
         </div>
@@ -642,13 +720,14 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
       </div>
 
       <p class="terrain-note">
-        SEED 20261116 · R16 HEIGHTFIELD 257²<br />
-        离线生成，运行时只解码二进制高程
+        SEED 20261116 · R16 1025² → 513² NEAR MESH<br />
+        BLENDER 5.3 EEVEE · KITBASH3D K039 · POLY HAVEN CC0 SKY<br />
+        REFERENCE RENDERS IN docs/ · REAL-TIME PREVIEW v2
       </p>
 
       <div class="terrain-loading" id="terrain-loading">
         <div class="terrain-loading-inner">
-          <span>LOADING ANVIL LANDING</span>
+          <span data-loading-label>LOADING ANVIL LANDING</span>
           <span class="terrain-loading-bar"><i></i></span>
         </div>
       </div>
@@ -657,34 +736,82 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 
     <div class="terrain-explainer">
       <article class="terrain-card">
-        <h2>01 · 离线地形</h2>
+        <h2>01 · Blender / Kitbash3D</h2>
         <p>
-          固定种子的 FBM + ridged noise、液滴侵蚀、峡谷雕刻与平台压平，全部在提交的 Python
-          脚本里完成。浏览器只加载 132 KB 的 R16 高程与 meta.json。
+          港区不再用程序化方块拼。航站楼、机库、塔台、雷达、燃料罐、龙门吊与集装箱来自
+          本地购买的 Kitbash3D K039 Sci-Fi Industrial 套件，在 Blender 中重新布景、
+          统一 PBR 材质，并加入 A-30 与两人姿态角色。实时版由这套场景导出、减面并压缩为
+          17.6 MB GLB。
+        </p>
+        <code>Blender -b --python tools/blender/build_scene.py</code>
+      </article>
+
+      <article class="terrain-card">
+        <h2>02 · 1 km 地形</h2>
+        <p>
+          1025 × 1025 R16 高程（1 m 采样）由固定种子的 FBM + ridged noise、液滴侵蚀、
+          峡谷与海岸雕刻组成。运行时只解码二进制高程，并用 splat / AO / normal 贴图在
+          513 × 513 近景网格上混合草地、泥土、岩石与沙地。
         </p>
         <code>python3 tools/terrain/generate_sample.py</code>
       </article>
 
       <article class="terrain-card">
-        <h2>02 · 尺度样本</h2>
+        <h2>03 · 操作与质量</h2>
         <p>
-          1.8 m 玩家胶囊、25 m A-30、30 × 18 m 航站楼、12 m 商店亭、420 × 260 m
-          港区与 60 × 60 m TLOF 在同一坐标系里，所有尺寸都可在地面采样中走一遍。
-        </p>
-      </article>
-
-      <article class="terrain-card">
-        <h2>03 · 操作</h2>
-        <p>
-          左键拖动旋转，滚轮缩放，右键平移；按 <kbd>V</kbd> 进入第一人称步行（WASD +
-          鼠标视角，Shift 加速），按 <kbd>L</kbd> 切换世界标签，按 <kbd>R</kbd> 回到港区视角。
-          地形采样来自同一份 257 × 257 高程数据。
+          左键拖动旋转，滚轮缩放，右键平移；<kbd>V</kbd> 步行（WASD + 鼠标，Shift 加速），
+          <kbd>L</kbd> 世界标签，<kbd>R</kbd> 回到港区。参考截图由 Blender EEVEE
+          1920 × 1080 / 128 samples 渲染；实时版是 Three.js 预览，角色使用轻量 1.8 m
+          替身，完整角色见下方参考图。
         </p>
         <p style="margin-top:9px">
-          <a href={`${base}/`}>← 返回夜航</a>
+          <a href="#reference">参考渲染 →</a> · <a href={`${base}/`}>← 返回夜航</a>
         </p>
       </article>
     </div>
+
+    <section class="terrain-compare-block" aria-label="Before and after">
+      <div class="terrain-compare-head">
+        <p class="terrain-eyebrow">Quality pass · before / after</p>
+        <h2>从原型 blockout 到可玩的港区</h2>
+        <p>
+          旧版是 257² 高程、顶点色地形和程序化方块。v2 用 Blender 中的 Kitbash3D
+          建筑、PBR 材质、HDRI 日落与长阴影重做港区；地形升级为 1025² R16，并导出
+          splat / AO / normal 地图。实时预览保留了尺度、镜头与操作，参考渲染展示质量目标。
+        </p>
+      </div>
+      <div class="terrain-compare">
+        <figure>
+          <img src={`${base}/renders/before.jpg`} alt="旧版 257² 顶点色地形 blockout" loading="lazy" />
+          <figcaption>before · 257² heightfield · vertex colours · box terminal</figcaption>
+        </figure>
+        <figure>
+          <img src={`${base}/renders/anvil-port-wide.jpg`} alt="v2 Blender EEVEE 港区广角渲染" loading="lazy" />
+          <figcaption>after · Blender EEVEE · Kitbash3D K039 · 420 × 260 m apron</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="terrain-gallery-block" id="reference" aria-label="Reference renders">
+      <div class="terrain-compare-head">
+        <p class="terrain-eyebrow">Reference renders · Blender EEVEE</p>
+        <h2>质量目标：三张 1080p 场景图</h2>
+      </div>
+      <div class="terrain-gallery">
+        <figure>
+          <img src={`${base}/renders/anvil-pad-close.jpg`} alt="A-30 停泊在 TLOF，角色与保障车辆" loading="lazy" />
+          <figcaption>pad close · A-30 · controller · fuel truck</figcaption>
+        </figure>
+        <figure>
+          <img src={`${base}/renders/anvil-terrain-vista.jpg`} alt="从海岸望向港区的地形远景" loading="lazy" />
+          <figcaption>terrain vista · coast · ridge · 1025² heightfield</figcaption>
+        </figure>
+        <figure>
+          <img src={`${base}/renders/anvil-port-wide.jpg`} alt="港区广角，航站楼、机库与起降坪" loading="lazy" />
+          <figcaption>port wide · terminal · hangar · fuel farm</figcaption>
+        </figure>
+      </div>
+    </section>
   </section>
 
   <script>

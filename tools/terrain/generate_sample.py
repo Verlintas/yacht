@@ -1,22 +1,27 @@
 #!/usr/bin/env python3
-"""Generate the deterministic Anvil Landing terrain sample.
+"""Generate the deterministic Anvil Landing heightfield and terrain maps.
 
-The tile is 1 km x 1 km, sampled on a 257 x 257 grid (3.90625 m spacing).
-It is authored offline: FBM + ridged noise, hydraulic erosion, canyon carving,
-mild smoothing, and a fully flattened 420 x 260 m port apron with a
-60 x 60 m TLOF at the centre.
+This is the offline authoring step for the port sample. The 1025 x 1025 grid
+is 1 km across with 1 m spacing. It is composed from deterministic gradient
+noise, a coastal island mask, a north/east mountain arc, a diagonal canyon and
+a flattened 420 x 260 m port apron. A droplet erosion pass is then applied and
+the apron is re-flattened.
 
-Outputs (default: public/terrain-sample/):
-  heights.r16  257*257 little-endian uint16 heightfield
-  meta.json    decoder metadata and feature dimensions
-
-The runtime never generates terrain noise; it only decodes this file.
+Outputs (default public/terrain-sample/):
+  heights.r16    1025*1025 little-endian uint16 heightfield (200 m full scale)
+  normal.png     1024*1024 tangent-space normal map (OpenGL convention)
+  ao.png         1024*1024 horizon-based ambient occlusion
+  splat.png      1024*1024 RGBA weights: grass, dirt, rock, sand
+  shore.png      512*512 water depth/foam mask for the coast shader
+  meta.json      decode metadata, statistics, feature dimensions
+  preview.png    optional hillshade / diagnostics (with --preview)
 
 Usage:
   python3 tools/terrain/generate_sample.py
   python3 tools/terrain/generate_sample.py --out /tmp/terrain --preview /tmp/hm.png
+  python3 tools/terrain/generate_sample.py --droplets 80000
 
-Requires: Python 3.10+, numpy. Pillow is only needed for --preview.
+Requires: Python 3.10+, numpy, Pillow.
 """
 
 from __future__ import annotations
@@ -29,51 +34,53 @@ from pathlib import Path
 
 import numpy as np
 
-# ---------------------------------------------------------------------------
-# Authored constants
-# ---------------------------------------------------------------------------
-
 SEED = 20261116
-GRID_SIZE = 257
-TILE_SIZE_M = 1000.0
+GRID_SIZE = 1025
+TILE_SIZE_M = 1024.0
 SPACING_M = TILE_SIZE_M / (GRID_SIZE - 1)
-
-HEIGHT_SCALE_M = 200.0  # uint16 0..65535 -> 0..200 m
-PAD_ELEVATION_M = 54.0
+HEIGHT_SCALE_M = 256.0
+PAD_ELEVATION_M = 28.0
 APRON_WIDTH_M = 420.0
 APRON_DEPTH_M = 260.0
 PAD_SIZE_M = 60.0
+SEA_LEVEL = 0.0
 
-# Canyon centreline, west/north-west to south-east. Kept clear of the apron.
-CANYON_PATH = np.array(
-    [
-        (-540.0, -450.0),
-        (-430.0, -280.0),
-        (-395.0, -120.0),
-        (-370.0, 60.0),
-        (-320.0, 240.0),
-        (-230.0, 420.0),
-        (-120.0, 540.0),
-    ],
-    dtype=np.float64,
-)
-
-# Ridge crest, roughly north-south on the western side of the tile.
+# A mountain arc that wraps the north and east of the port. The port itself
+# sits on the low coastal shelf in the middle of the tile.
 RIDGE_PATH = np.array(
     [
-        (-400.0, -540.0),
-        (-370.0, -330.0),
-        (-405.0, -120.0),
-        (-365.0, 90.0),
-        (-400.0, 300.0),
-        (-350.0, 540.0),
+        (350.0, -470.0),
+        (385.0, -300.0),
+        (415.0, -110.0),
+        (430.0, 80.0),
+        (415.0, 260.0),
+        (380.0, 430.0),
     ],
     dtype=np.float64,
 )
+
+# A diagonal canyon drains the ridge into a bay on the south-west coast.
+CANYON_PATH = np.array(
+    [
+        (330.0, -260.0),
+        (230.0, -205.0),
+        (90.0, -180.0),
+        (-70.0, -170.0),
+        (-210.0, -140.0),
+        (-295.0, -30.0),
+        (-335.0, 120.0),
+        (-355.0, 260.0),
+        (-370.0, 400.0),
+    ],
+    dtype=np.float64,
+)
+
+BAY_CENTER = (-405.0, 390.0)
+BAY_RADIUS = 205.0
 
 
 # ---------------------------------------------------------------------------
-# Deterministic noise
+# Noise helpers
 # ---------------------------------------------------------------------------
 
 
@@ -83,10 +90,7 @@ def smoothstep(edge0: float, edge1: float, x: np.ndarray) -> np.ndarray:
 
 
 def gradient_noise(u: np.ndarray, v: np.ndarray, res: int, seed: int) -> np.ndarray:
-    """Periodic 2D gradient noise in roughly [-1, 1].
-
-    A periodic lattice keeps the 1 km tile edge-safe if it is ever repeated.
-    """
+    """Periodic 2D gradient noise in roughly [-1, 1]."""
     rng = np.random.default_rng(seed)
     angles = rng.random((res, res)) * math.tau
     gx = np.cos(angles)
@@ -115,7 +119,14 @@ def gradient_noise(u: np.ndarray, v: np.ndarray, res: int, seed: int) -> np.ndar
     return (nx0 + fade_y * (nx1 - nx0)) * math.sqrt(2.0)
 
 
-def fbm(u: np.ndarray, v: np.ndarray, *, seed: int, octaves: int = 6, base: int = 4) -> np.ndarray:
+def fbm(
+    u: np.ndarray,
+    v: np.ndarray,
+    *,
+    seed: int,
+    octaves: int = 6,
+    base: int = 4,
+) -> np.ndarray:
     total = np.zeros_like(u)
     amp = 1.0
     norm = 0.0
@@ -128,7 +139,14 @@ def fbm(u: np.ndarray, v: np.ndarray, *, seed: int, octaves: int = 6, base: int 
     return total / norm
 
 
-def ridged(u: np.ndarray, v: np.ndarray, *, seed: int, octaves: int = 5, base: int = 4) -> np.ndarray:
+def ridged(
+    u: np.ndarray,
+    v: np.ndarray,
+    *,
+    seed: int,
+    octaves: int = 5,
+    base: int = 4,
+) -> np.ndarray:
     total = np.zeros_like(u)
     amp = 1.0
     norm = 0.0
@@ -140,11 +158,6 @@ def ridged(u: np.ndarray, v: np.ndarray, *, seed: int, octaves: int = 5, base: i
         amp *= 0.52
         res *= 2
     return total / norm
-
-
-# ---------------------------------------------------------------------------
-# Shape helpers
-# ---------------------------------------------------------------------------
 
 
 def distance_to_polyline(x: np.ndarray, z: np.ndarray, points: np.ndarray) -> np.ndarray:
@@ -162,7 +175,6 @@ def distance_to_polyline(x: np.ndarray, z: np.ndarray, points: np.ndarray) -> np
 
 
 def rounded_rect_distance(x: np.ndarray, z: np.ndarray, half_w: float, half_d: float) -> np.ndarray:
-    """Signed distance to an axis-aligned rectangle (negative inside)."""
     dx = np.abs(x) - half_w
     dz = np.abs(z) - half_d
     outside = np.hypot(np.maximum(dx, 0.0), np.maximum(dz, 0.0))
@@ -175,74 +187,99 @@ def rounded_rect_distance(x: np.ndarray, z: np.ndarray, half_w: float, half_d: f
 # ---------------------------------------------------------------------------
 
 
+def island_radius(x: np.ndarray, z: np.ndarray, u: np.ndarray, v: np.ndarray) -> np.ndarray:
+    """Rounded-square island radius in normalized units, with a noisy coast."""
+    r = ((np.abs(x) / (TILE_SIZE_M * 0.5)) ** 6 + (np.abs(z) / (TILE_SIZE_M * 0.5)) ** 6) ** (1.0 / 6.0)
+    coast_warp = fbm(u, v, seed=SEED + 91, octaves=4, base=4) * 0.055
+    coast_warp += fbm(u, v, seed=SEED + 97, octaves=3, base=12) * 0.018
+    return r + coast_warp
+
+
 def build_natural_height(x: np.ndarray, z: np.ndarray) -> np.ndarray:
     u = x / TILE_SIZE_M + 0.5
     v = z / TILE_SIZE_M + 0.5
 
-    # Domain warp keeps the broad shapes from looking like a value-noise grid.
-    warp_x = fbm(u, v, seed=SEED + 101, octaves=3, base=3) * 0.055
-    warp_z = fbm(u, v, seed=SEED + 211, octaves=3, base=3) * 0.055
+    warp_x = fbm(u, v, seed=SEED + 101, octaves=3, base=3) * 0.045
+    warp_z = fbm(u, v, seed=SEED + 211, octaves=3, base=3) * 0.045
     uw = u + warp_x
     vw = v + warp_z
 
     broad = fbm(uw, vw, seed=SEED + 307, octaves=7, base=3)
-    detail = fbm(uw, vw, seed=SEED + 401, octaves=5, base=8)
+    detail = fbm(uw, vw, seed=SEED + 401, octaves=6, base=10)
 
-    # Rolling base plateau, roughly 40-60 m around the port.
-    height = 45.0 + broad * 20.0 + detail * 4.5
+    # Coastal bench around the port, low and rolling.
+    height = 24.0 + broad * 13.0 + detail * 3.4
 
-    # Broad high plateau in the east; its western edge is a readable scarp.
-    scarp_x = 272.0 + 30.0 * np.sin(z / 155.0 + 0.7) + 13.0 * np.sin(z / 54.0)
-    plateau_mask = smoothstep(0.0, 38.0, x - scarp_x)
-    plateau_top = 100.0 + broad * 8.0 + fbm(uw + 3.1, vw, seed=SEED + 503, octaves=5, base=8) * 5.5
-    height = height + plateau_mask * (plateau_top - height)
-
-    # Rugged north-south ridge on the west side.
+    # Mountain arc across the north and east. This is the backdrop behind the
+    # terminal when the camera looks north from the apron.
     ridge_dist = distance_to_polyline(x, z, RIDGE_PATH)
-    ridge_crest = np.exp(-((ridge_dist / 74.0) ** 2))
-    ridge_texture = ridged(uw, vw, seed=SEED + 601, octaves=6, base=8)
-    height += ridge_crest * (70.0 + ridge_texture * 58.0)
+    crest = np.exp(-((ridge_dist / 118.0) ** 2))
+    ridge_texture = ridged(uw, vw, seed=SEED + 601, octaves=6, base=6)
+    peak_mod = fbm(uw, vw, seed=SEED + 607, octaves=3, base=5) * 14.0
+    height += crest * (38.0 + ridge_texture * 62.0 + peak_mod)
 
-    # Canyon: flatten a narrow floor, then climb steep walls.
+    # A low foothill shelf on the east, softened into the coastal plain.
+    foothill = smoothstep(240.0, 380.0, x) * smoothstep(-300.0, -120.0, z) * (1.0 - smoothstep(300.0, 390.0, z))
+    height += foothill * (18.0 + ridged(uw, vw, seed=SEED + 611, octaves=4, base=7) * 18.0)
+
+    # Canyon incision: a low floor with steep walls.
     canyon_dist = distance_to_polyline(x, z, CANYON_PATH)
-    canyon_mask = 1.0 - smoothstep(14.0, 90.0, canyon_dist)
+    canyon_mask = 1.0 - smoothstep(18.0, 102.0, canyon_dist)
     canyon_floor = (
-        15.0
-        + fbm(uw + 7.3, vw - 2.8, seed=SEED + 701, octaves=4, base=7) * 5.0
-        + ridged(uw, vw, seed=SEED + 709, octaves=3, base=6) * 3.0
+        6.0
+        + fbm(uw + 7.3, vw - 2.8, seed=SEED + 701, octaves=4, base=7) * 4.0
+        + ridged(uw, vw, seed=SEED + 709, octaves=3, base=9) * 2.5
     )
     height = height * (1.0 - canyon_mask) + canyon_floor * canyon_mask
 
-    return height
+    # Island mask: everything outside the authored coastline is sea floor.
+    radius = island_radius(x, z, u, v)
+    land = 1.0 - smoothstep(0.79, 0.985, radius)
+    height = SEA_LEVEL + (height - SEA_LEVEL) * land
+
+    # Beach terrace: a soft, sandy shelf right at the waterline.
+    beach = smoothstep(0.80, 0.875, radius) * (1.0 - smoothstep(0.925, 1.0, radius))
+    beach_height = 1.1 + fbm(uw, vw, seed=SEED + 803, octaves=3, base=18) * 0.7
+    height = height * (1.0 - beach * 0.78) + beach_height * (beach * 0.78)
+
+    # Drowned bay at the south-west corner. Applied after the beach so the
+    # inlet stays below sea level and reads as water, not a dry flat.
+    bay_dist = np.hypot(x - BAY_CENTER[0], z - BAY_CENTER[1])
+    bay_mask = 1.0 - smoothstep(BAY_RADIUS * 0.38, BAY_RADIUS, bay_dist)
+    height = height * (1.0 - bay_mask) + (-3.5) * bay_mask
+
+    # A very low shoulder around the apron; the port reads as carved into
+    # the coastal shelf without becoming a crater.
+    apron_d = rounded_rect_distance(x, z, APRON_WIDTH_M / 2.0, APRON_DEPTH_M / 2.0)
+    terrace = smoothstep(12.0, 70.0, apron_d)
+    height += terrace * 2.2
+
+    return height, radius
 
 
 def hydraulic_erosion(
     height: np.ndarray,
     *,
-    droplets: int = 14000,
-    max_life: int = 38,
+    droplets: int = 60000,
+    max_life: int = 34,
     seed: int = 17,
 ) -> np.ndarray:
-    """Small deterministic droplet erosion pass.
-
-    This is intentionally simple but produces gullies on the ridge and soft
-    alluvial fans at its base. It runs once offline, never in the browser.
-    """
+    """Deterministic droplet erosion; run once offline, never in the browser."""
     rng = np.random.default_rng(seed)
     h = height.copy()
     n = h.shape[0]
 
-    inertia = 0.06
-    capacity_factor = 3.4
-    min_capacity = 0.0004
-    erode_speed = 0.28
-    deposit_speed = 0.34
-    evaporate = 0.012
-    gravity = 7.0
+    inertia = 0.055
+    capacity_factor = 3.2
+    min_capacity = 0.00035
+    erode_speed = 0.24
+    deposit_speed = 0.32
+    evaporate = 0.011
+    gravity = 6.5
 
-    for _ in range(droplets):
-        px = float(rng.uniform(2.0, n - 3.0))
-        py = float(rng.uniform(2.0, n - 3.0))
+    for drop in range(droplets):
+        px = float(rng.uniform(3.0, n - 4.0))
+        py = float(rng.uniform(3.0, n - 4.0))
         dx = 0.0
         dy = 0.0
         speed = 1.0
@@ -334,8 +371,7 @@ def hydraulic_erosion(
     return h
 
 
-def box_blur(a: np.ndarray, passes: int = 2) -> np.ndarray:
-    """Small separable box blur, edge clamped. Softens single-cell erosion pits."""
+def box_blur(a: np.ndarray, passes: int = 1) -> np.ndarray:
     out = a.copy()
     for _ in range(passes):
         padded = np.pad(out, 1, mode="edge")
@@ -350,42 +386,133 @@ def box_blur(a: np.ndarray, passes: int = 2) -> np.ndarray:
 
 
 def flatten_apron(height: np.ndarray, x: np.ndarray, z: np.ndarray) -> np.ndarray:
-    """Flatten the full 420 x 260 m apron, blending into terrain outside it."""
     d = rounded_rect_distance(x, z, APRON_WIDTH_M / 2.0, APRON_DEPTH_M / 2.0)
-    mask = 1.0 - smoothstep(0.0, 42.0, d)
-    return height * (1.0 - mask) + PAD_ELEVATION_M * mask
+    mask = 1.0 - smoothstep(0.0, 46.0, d)
+    # A shallow service shelf continues 18 m around the apron before the
+    # natural terrain takes over.
+    shelf = 1.0 - smoothstep(0.0, 18.0, d)
+    flattened = height * (1.0 - mask) + PAD_ELEVATION_M * mask
+    flattened = flattened * (1.0 - shelf) + (PAD_ELEVATION_M - 0.4) * shelf
+    return flattened
 
 
 # ---------------------------------------------------------------------------
-# Preview (optional, development aid)
+# Derived maps
 # ---------------------------------------------------------------------------
+
+
+def compute_normal_map(height: np.ndarray, size: int = 1024) -> np.ndarray:
+    h = height[:size, :size]
+    dx = (np.roll(h, -1, axis=1) - np.roll(h, 1, axis=1)) * 0.5 / SPACING_M
+    dz = (np.roll(h, -1, axis=0) - np.roll(h, 1, axis=0)) * 0.5 / SPACING_M
+    # OpenGL tangent-space normal: +X = east, +Y = north (v), +Z = up.
+    nx = -dx
+    ny = -dz
+    nz = np.ones_like(dx)
+    length = np.sqrt(nx * nx + ny * ny + nz * nz)
+    nx /= length
+    ny /= length
+    nz /= length
+    rgb = np.stack([nx * 0.5 + 0.5, ny * 0.5 + 0.5, nz * 0.5 + 0.5], axis=-1)
+    return np.clip(rgb * 255.0 + 0.5, 0, 255).astype(np.uint8)
+
+
+def compute_ao(height: np.ndarray, size: int = 1024) -> np.ndarray:
+    h = height[:size, :size]
+    directions = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]
+    distances = [2, 4, 8, 16, 32, 64]
+    occlusion = np.zeros_like(h, dtype=np.float32)
+    for dx, dz in directions:
+        norm = math.hypot(dx, dz)
+        dx /= norm
+        dz /= norm
+        for d in distances:
+            shift_x = int(round(dx * d))
+            shift_z = int(round(dz * d))
+            shifted = np.roll(np.roll(h, -shift_z, axis=0), -shift_x, axis=1)
+            horizon = np.maximum(0.0, (shifted - h) / max(d, 1.0))
+            occlusion = np.maximum(occlusion, horizon)
+    # Convert maximum horizon slope to a soft sky-visibility term.
+    ao = 1.0 - np.clip(occlusion * 1.35, 0.0, 1.0) * 0.72
+    # Slight cavity darkening from local curvature.
+    blur = box_blur(h, passes=4)
+    cavity = np.clip((blur - h) * 0.22, 0.0, 0.35)
+    ao = np.clip(ao - cavity, 0.18, 1.0)
+    return np.clip(ao * 255.0 + 0.5, 0, 255).astype(np.uint8)
+
+
+def compute_splat(
+    height: np.ndarray,
+    radius: np.ndarray,
+    x: np.ndarray,
+    z: np.ndarray,
+    size: int = 1024,
+) -> np.ndarray:
+    h = height[:size, :size]
+    r = radius[:size, :size]
+    xx = x[:size, :size]
+    zz = z[:size, :size]
+    dx = (np.roll(h, -1, axis=1) - np.roll(h, 1, axis=1)) * 0.5 / SPACING_M
+    dz = (np.roll(h, -1, axis=0) - np.roll(h, 1, axis=0)) * 0.5 / SPACING_M
+    slope = np.hypot(dx, dz)
+
+    u = xx / TILE_SIZE_M + 0.5
+    v = zz / TILE_SIZE_M + 0.5
+    patch = fbm(u, v, seed=SEED + 901, octaves=5, base=9) * 0.5 + 0.5
+    micro = fbm(u, v, seed=SEED + 907, octaves=6, base=24) * 0.5 + 0.5
+
+    rock = smoothstep(0.42, 1.15, slope + (patch - 0.5) * 0.22)
+    rock = np.maximum(rock, smoothstep(105.0, 155.0, h) * 0.75)
+    sand = smoothstep(0.845, 0.92, r) * (1.0 - smoothstep(0.965, 1.0, r))
+    sand = np.maximum(sand, smoothstep(6.0, 0.5, h) * 0.75)
+    sand = np.clip(sand * (0.8 + micro * 0.4), 0.0, 1.0)
+
+    grass = (1.0 - rock) * (1.0 - sand) * smoothstep(2.5, 9.0, h) * (0.35 + patch * 0.9)
+    grass = np.clip(grass, 0.0, 1.0)
+    dirt = (1.0 - rock) * (1.0 - sand) * (1.0 - grass) * 0.9 + (1.0 - sand) * smoothstep(0.15, 0.45, slope) * 0.35
+    dirt = np.clip(dirt, 0.0, 1.0)
+
+    # The apron itself is handled by the port geometry, but keep the natural
+    # surface around it sane: dry dirt/gravel shoulder.
+    total = grass + dirt + rock + sand + 1e-5
+    rgba = np.stack([grass / total, dirt / total, rock / total, sand / total], axis=-1)
+    return np.clip(rgba * 255.0 + 0.5, 0, 255).astype(np.uint8)
+
+
+def compute_shore(height: np.ndarray, size: int = 512) -> np.ndarray:
+    step = max(1, (height.shape[0] - 1) // size)
+    h = height[::step, ::step][:size, :size]
+    depth = np.clip(-h / 14.0, 0.0, 1.0)
+    foam = np.clip(1.0 - np.abs(h - 0.8) / 2.2, 0.0, 1.0)
+    foam *= (h > -2.5).astype(np.float32)
+    # Break the foam line up with a little noise.
+    yy, xx = np.mgrid[0 : h.shape[0], 0 : h.shape[1]]
+    n = np.sin(xx * 0.11 + yy * 0.037) * np.sin(yy * 0.09 - xx * 0.021) * 0.18
+    foam = np.clip(foam + n * foam, 0.0, 1.0)
+    rgba = np.stack([depth, foam, np.clip(depth * 2.0, 0, 1), np.ones_like(depth)], axis=-1)
+    return np.clip(rgba * 255.0 + 0.5, 0, 255).astype(np.uint8)
 
 
 def write_preview(path: Path, height: np.ndarray, meta: dict) -> None:
-    from PIL import Image, ImageDraw  # imported lazily: not needed for exports
+    from PIL import Image, ImageDraw
 
     gy, gx = np.gradient(height, SPACING_M)
     slope = np.hypot(gx, gy)
-    shade = np.clip(0.72 - gx * 0.55 - gy * 0.38, 0.18, 1.0)
-
-    lo = np.array([80, 96, 70], dtype=np.float32)
-    mid = np.array([126, 132, 102], dtype=np.float32)
-    hi = np.array([172, 168, 148], dtype=np.float32)
-    snow = np.array([226, 230, 226], dtype=np.float32)
-    rock = np.array([98, 96, 88], dtype=np.float32)
-    water = np.array([54, 91, 103], dtype=np.float32)
-
-    t = np.clip((height - 5.0) / 145.0, 0.0, 1.0)[..., None]
-    rgb = lo * (1.0 - t) + mid * t
-    rgb = rgb + (hi - rgb) * np.clip((t - 0.55) / 0.45, 0.0, 1.0)
-    rock_mix = np.clip((slope - 0.55) / 0.85, 0.0, 1.0)[..., None]
+    shade = np.clip(0.7 - gx * 0.55 - gy * 0.38, 0.16, 1.0)
+    t = np.clip((height - 2.0) / 190.0, 0.0, 1.0)[..., None]
+    low = np.array([86, 100, 74], dtype=np.float32)
+    mid = np.array([125, 129, 101], dtype=np.float32)
+    high = np.array([176, 170, 151], dtype=np.float32)
+    rock = np.array([95, 94, 88], dtype=np.float32)
+    water = np.array([47, 83, 96], dtype=np.float32)
+    rgb = low * (1.0 - t) + mid * t
+    rgb = rgb + (high - rgb) * np.clip((t - 0.55) / 0.45, 0.0, 1.0)
+    rock_mix = np.clip((slope - 0.5) / 0.9, 0.0, 1.0)[..., None]
     rgb = rgb * (1.0 - rock_mix) + rock * rock_mix
-    snow_mix = np.clip((height - 132.0) / 22.0, 0.0, 1.0)[..., None]
-    rgb = rgb * (1.0 - snow_mix) + snow * snow_mix
+    snow = np.clip((height - 170.0) / 24.0, 0.0, 1.0)[..., None]
+    rgb = rgb * (1.0 - snow) + np.array([226, 230, 226], dtype=np.float32) * snow
     rgb = rgb * shade[..., None]
-
-    # A hint of water in the deepest canyon bottom.
-    wet = np.clip((18.5 - height) / 3.0, 0.0, 1.0)[..., None]
+    wet = np.clip((1.5 - height) / 3.0, 0.0, 1.0)[..., None]
     rgb = rgb * (1.0 - wet) + water * wet
 
     img = Image.fromarray(np.clip(rgb, 0, 255).astype(np.uint8), "RGB")
@@ -397,13 +524,15 @@ def write_preview(path: Path, height: np.ndarray, meta: dict) -> None:
     draw.rectangle((ax0, az0, ax1, az1), outline=(240, 190, 90), width=2)
     px0 = int((-PAD_SIZE_M / 2 + TILE_SIZE_M / 2) / SPACING_M)
     px1 = int((PAD_SIZE_M / 2 + TILE_SIZE_M / 2) / SPACING_M)
-    draw.rectangle((px0, az0 + (az1 - az0) // 2 - (px1 - px0) // 2,
-                    px1, az0 + (az1 - az0) // 2 + (px1 - px0) // 2),
-                   outline=(255, 255, 255), width=1)
-    draw.rectangle((px0, az0 + (az1 - az0) // 2 - (px1 - px0) // 2,
-                    px1, az0 + (az1 - az0) // 2 + (px1 - px0) // 2),
-                   outline=(10, 20, 24), width=1)
-    draw.text((8, 8), f"Anvil Landing 257x257  min {meta['elevation']['min_m']:.1f} m  max {meta['elevation']['max_m']:.1f} m", fill=(245, 245, 240))
+    pz0 = int((-PAD_SIZE_M / 2 + TILE_SIZE_M / 2) / SPACING_M)
+    pz1 = int((PAD_SIZE_M / 2 + TILE_SIZE_M / 2) / SPACING_M)
+    draw.rectangle((px0, pz0, px1, pz1), outline=(255, 255, 255), width=2)
+    draw.text(
+        (8, 8),
+        f"Anvil Landing 1025x1025  {meta['elevation']['min_m']:.1f}-{meta['elevation']['max_m']:.1f} m  "
+        f"pad {meta['apron']['elevation_m']:.1f} m",
+        fill=(245, 245, 240),
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path)
 
@@ -419,38 +548,39 @@ def main() -> None:
         "--out",
         type=Path,
         default=Path(__file__).resolve().parents[2] / "public" / "terrain-sample",
-        help="output directory for heights.r16 and meta.json",
+        help="output directory for terrain data",
     )
     parser.add_argument("--preview", type=Path, default=None, help="optional hillshade PNG")
-    parser.add_argument("--droplets", type=int, default=14000, help="hydraulic erosion droplets")
+    parser.add_argument("--droplets", type=int, default=60000, help="hydraulic erosion droplets")
+    parser.add_argument("--no-erosion", action="store_true", help="skip erosion for fast iteration")
     args = parser.parse_args()
 
     coords = np.linspace(-TILE_SIZE_M / 2.0, TILE_SIZE_M / 2.0, GRID_SIZE)
     x, z = np.meshgrid(coords, coords, indexing="xy")  # rows: z, columns: x
 
     print(f"seed {SEED}: composing {GRID_SIZE}x{GRID_SIZE} heightfield ...")
-    height = build_natural_height(x, z)
+    height, radius = build_natural_height(x, z)
 
-    print(f"eroding ({args.droplets} droplets) ...")
-    height = hydraulic_erosion(height, droplets=args.droplets)
-    height = box_blur(height, passes=2)
+    if not args.no_erosion:
+        print(f"eroding ({args.droplets:,} droplets) ...")
+        height = hydraulic_erosion(height, droplets=args.droplets)
+        height = box_blur(height, passes=1)
+    else:
+        print("skipping erosion")
 
-    # Re-carve the canyon floor after erosion so it stays a readable feature.
+    # Re-carve the canyon floor so it stays readable after erosion.
     canyon_dist = distance_to_polyline(x, z, CANYON_PATH)
-    canyon_mask = 1.0 - smoothstep(14.0, 90.0, canyon_dist)
-    canyon_floor = (
-        15.0
-        + fbm(x / TILE_SIZE_M + 0.5, z / TILE_SIZE_M + 0.5, seed=SEED + 811, octaves=4, base=7) * 4.0
-    )
+    canyon_mask = 1.0 - smoothstep(16.0, 95.0, canyon_dist)
+    canyon_floor = 5.5 + fbm(
+        x / TILE_SIZE_M + 0.5, z / TILE_SIZE_M + 0.5, seed=SEED + 811, octaves=4, base=7
+    ) * 3.5
     height = height * (1.0 - canyon_mask) + canyon_floor * canyon_mask
 
     print("flattening 420x260 m apron and 60x60 m TLOF ...")
     height = flatten_apron(height, x, z)
+    height = np.clip(height, 0.0, 190.0)
 
-    # Keep the authored tile within the R16 budget and remove accidental spikes.
-    height = np.clip(height, 0.0, HEIGHT_SCALE_M)
-
-    # Pad must be exactly flat after any numeric pass.
+    # Pad must be exactly flat after every numeric pass.
     apron_mask = rounded_rect_distance(x, z, APRON_WIDTH_M / 2.0, APRON_DEPTH_M / 2.0) <= 0.0
     height[apron_mask] = PAD_ELEVATION_M
 
@@ -458,7 +588,6 @@ def main() -> None:
     raw = r16.tobytes(order="C")
     checksum = hashlib.sha256(raw).hexdigest()
 
-    # Sampled feature elevations, for the README / overlay / sanity checks.
     def at(px: float, pz: float) -> float:
         col = int(round((px + TILE_SIZE_M / 2.0) / SPACING_M))
         row = int(round((pz + TILE_SIZE_M / 2.0) / SPACING_M))
@@ -466,20 +595,13 @@ def main() -> None:
         row = min(max(row, 0), GRID_SIZE - 1)
         return float(height[row, col])
 
-    ridge_peak = float(np.max(height[:, : GRID_SIZE // 2]))
-    canyon_floor_sample = at(-370.0, 60.0)
-    pad_sample = at(0.0, 0.0)
-
+    ridge_peak = float(np.max(height))
     meta = {
-        "name": "Anvil Landing terrain sample",
+        "name": "Anvil Landing authored terrain sample",
         "generator": "tools/terrain/generate_sample.py",
         "seed": SEED,
-        "license": "procedural sample, generated in-repo (no third-party assets)",
-        "grid": {
-            "width": GRID_SIZE,
-            "height": GRID_SIZE,
-            "spacing_m": SPACING_M,
-        },
+        "license": "procedural project-owned heightfield (no third-party terrain assets)",
+        "grid": {"width": GRID_SIZE, "height": GRID_SIZE, "spacing_m": SPACING_M},
         "tile_size_m": TILE_SIZE_M,
         "heightmap": {
             "file": "heights.r16",
@@ -492,12 +614,20 @@ def main() -> None:
             "decode": "height_m = value / 65535 * height_scale_m",
             "sha256": checksum,
         },
+        "maps": {
+            "normal": "normal.png",
+            "ao": "ao.png",
+            "splat": "splat.png",
+            "splat_channels": ["grass", "dirt", "rock", "sand"],
+            "shore": "shore.png",
+            "shore_channels": ["depth", "foam", "shallow", "unused"],
+        },
         "elevation": {
             "min_m": round(float(np.min(height)), 2),
             "max_m": round(float(np.max(height)), 2),
             "ridge_peak_m": round(ridge_peak, 2),
-            "canyon_floor_m": round(canyon_floor_sample, 2),
-            "pad_m": round(pad_sample, 2),
+            "canyon_floor_m": round(at(-335.0, 120.0), 2),
+            "pad_m": round(at(0.0, 0.0), 2),
         },
         "apron": {
             "center_m": [0.0, 0.0],
@@ -512,24 +642,30 @@ def main() -> None:
             "markings": ["H", "touchdown circle", "border", "corner brackets"],
         },
         "features": {
-            "ridge": "west side, roughly north-south, cut by the canyon",
-            "plateau": "eastern scarp plateau",
-            "canyon": "diagonal gorge west/south-west of the apron",
+            "ridge": "north/east mountain arc, cut by the canyon",
+            "plateau": "eastern scarp shelf",
+            "canyon": "diagonal gorge west/north-west of the apron",
+            "coast": "south-west bay + sandy south coast",
         },
     }
 
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "heights.r16").write_bytes(raw)
+    print("computing normal / AO / splat / shore maps ...")
+    from PIL import Image
+
+    Image.fromarray(compute_normal_map(height), "RGB").save(args.out / "normal.png")
+    Image.fromarray(compute_ao(height), "L").save(args.out / "ao.png")
+    Image.fromarray(compute_splat(height, radius, x, z), "RGBA").save(args.out / "splat.png")
+    Image.fromarray(compute_shore(height), "RGBA").save(args.out / "shore.png")
     (args.out / "meta.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
 
     print(f"wrote {args.out / 'heights.r16'} ({len(raw):,} bytes, sha256 {checksum[:16]}...)")
-    print(f"wrote {args.out / 'meta.json'}")
     print(
         "elevation: "
         f"{meta['elevation']['min_m']:.1f}-{meta['elevation']['max_m']:.1f} m, "
         f"pad {meta['elevation']['pad_m']:.1f} m, "
-        f"ridge {meta['elevation']['ridge_peak_m']:.1f} m, "
-        f"canyon floor {meta['elevation']['canyon_floor_m']:.1f} m"
+        f"ridge {meta['elevation']['ridge_peak_m']:.1f} m"
     )
 
     if args.preview:

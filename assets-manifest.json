@@ -1,0 +1,116 @@
+{
+  "sample": "Anvil Landing — port terrain sample v2",
+  "generated": "2026-11-16",
+  "policy": "Local, owner-provided purchased assets. No Kitbash3D mirrors, no Mixamo raw files, no unclear-license downloads. Source FBX/BLEND files are not committed; only optimized real-time derivatives and rendered reference images are committed.",
+  "used_assets": [
+    {
+      "id": "kitbash3d-k039-sci-fi-industrial",
+      "name": "Kitbash3D Sci-Fi Industrial (K039)",
+      "type": "3D building kit + PBR textures",
+      "owner": "Project owner / purchased",
+      "license": "Kitbash3D commercial license, owned by the project owner. Private sample use.",
+      "local_source": "/Users/apple/Documents/3D Models/Kitbash 3D建筑系列/K039科幻工业建筑3d模型Kitbash3D-Sci-Fi Industrial/FBX格式.zip",
+      "extracted_source": "/tmp/kb3d_fbx/asset_1.fbx (359 meshes, ~4.99M source triangles); textures /tmp/kb3d_tex/Textures/",
+      "used_for": "12 placed building modules (BldgLG_I, J, D, G, H; BldgMD_A/C/D/E/F; BldgSM_C/J), port greebles and materials",
+      "committed_derivative": "public/terrain-sample/models/anvil-port.glb (decimated, Meshopt + WebP)",
+      "source_committed": false
+    },
+    {
+      "id": "modelshop-greebles-posed-characters",
+      "name": "Modelshop Greebles — Characters Posed 2K",
+      "type": "posed high-quality sci-fi humanoids",
+      "owner": "Project owner / purchased",
+      "license": "Modelshop Greebles character pack, owned by the project owner. Private sample use.",
+      "local_source": "/Users/apple/Documents/3D Models/ 科幻战舰虚幻ue零件blender宇宙飞船3d载具c4d模型fbx太空站jama/Blender/ModelshopGreebles_CHARACTERS_POSED_2K_Blender.zip",
+      "extracted_source": "/tmp/ms_char/ModelshopGreebles_CHARACTERS_POSED_2K.blend",
+      "used_for": "poses 12_Idle4_Crossedhands and 10_Idle2_Radio in the Blender reference renders; the real-time preview uses a lightweight 1.8 m procedural controller stand-in",
+      "source_committed": false
+    },
+    {
+      "id": "a30-thunderbolt",
+      "name": "A-30 Thunderbolt",
+      "type": "project ship GLB",
+      "owner": "Project owned",
+      "license": "Project-owned asset",
+      "local_source": "public/models/thunderbolt.glb (copied from the main repo public/models/thunderbolt.glb)",
+      "used_for": "The 25 m A-30 on the 60 m TLOF; baked into anvil-port.glb at the authored transform",
+      "source_committed": true
+    },
+    {
+      "id": "polyhaven-kloppenheim-06-puresky",
+      "name": "Kloppenheim 06 (Pure Sky) HDRI",
+      "type": "CC0 HDRI",
+      "license": "CC0",
+      "url": "https://polyhaven.com/a/kloppenheim_06_puresky",
+      "downloaded": "/tmp/terrain-assets/sky_4k.hdr (Blender) and public/terrain-sample/sky.hdr (2K real-time)",
+      "used_for": "sunset sky and environment lighting",
+      "committed_derivative": "public/terrain-sample/sky.hdr (2K HDR, 4 MB)"
+    },
+    {
+      "id": "ambientcg-grass004",
+      "name": "Grass 004",
+      "type": "CC0 PBR material",
+      "license": "CC0",
+      "url": "https://ambientcg.com/view?id=Grass004",
+      "used_for": "terrain splat layer 1 / Blender terrain shader"
+    },
+    {
+      "id": "ambientcg-ground054",
+      "name": "Ground 054",
+      "type": "CC0 PBR material",
+      "license": "CC0",
+      "url": "https://ambientcg.com/view?id=Ground054",
+      "used_for": "terrain splat layer 2 / Blender terrain shader"
+    },
+    {
+      "id": "ambientcg-rock030",
+      "name": "Rock 030",
+      "type": "CC0 PBR material",
+      "license": "CC0",
+      "url": "https://ambientcg.com/view?id=Rock030",
+      "used_for": "terrain splat layer 3 / cliff material"
+    },
+    {
+      "id": "ambientcg-ground080",
+      "name": "Ground 080 (sand)",
+      "type": "CC0 PBR material",
+      "license": "CC0",
+      "url": "https://ambientcg.com/view?id=Ground080",
+      "used_for": "terrain splat layer 4 / beach sand"
+    },
+    {
+      "id": "ambientcg-concrete034",
+      "name": "Concrete 034",
+      "type": "CC0 PBR material",
+      "license": "CC0",
+      "url": "https://ambientcg.com/view?id=Concrete034",
+      "used_for": "apron/pad detail texture and normal detail"
+    },
+    {
+      "id": "ambientcg-asphalt031",
+      "name": "Asphalt 031",
+      "type": "CC0 PBR material",
+      "license": "CC0",
+      "url": "https://ambientcg.com/view?id=Asphalt031",
+      "used_for": "apron/PAD base and roughness source"
+    },
+    {
+      "id": "procedural-port-and-terrain",
+      "name": "Anvil Landing terrain, apron/TLOF markings, props, vegetation and sign textures",
+      "type": "project-owned generated content",
+      "license": "Project-owned / generated for this sample",
+      "used_for": "1025² R16 heightfield + normal/AO/splat/shore maps, painted apron/pad textures, gantry, tanks, containers, lights, procedural conifers/shrubs, signage"
+    }
+  ],
+  "tools": [
+    { "name": "Blender", "version": "5.3", "license": "GPL-3.0-or-later", "used_for": "scene assembly and EEVEE reference renders" },
+    { "name": "Three.js", "version": "0.187", "license": "MIT", "used_for": "real-time preview" },
+    { "name": "Astro", "version": "7.3", "license": "MIT", "used_for": "site/page build" },
+    { "name": "gltf-transform", "version": "4.5.1", "license": "MIT", "used_for": "Meshopt + WebP optimization of the exported port GLB" }
+  ],
+  "notes": [
+    "Arial Bold is a system font used only to rasterize the apron/pad/sign glyphs into project-owned textures; no font file is distributed.",
+    "Source Kitbash3D FBX and Modelshop Greebles BLEND/ZIP files are not committed. The committed anvil-port.glb is a derivative for this private sample.",
+    "The reference renders were produced from the owned source packs; the public GLB uses 1K building textures and 2K port-surface textures."
+  ]
+}
