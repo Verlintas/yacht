@@ -22,8 +22,8 @@ export interface ProjectInput {
 
 export type Surface = 'ocean' | 'desert' | 'ice' | 'gas' | 'lava' | 'verdigris' | 'barren';
 
-/** 大气层厚度：战列舰满血 Shift 约 784 m/s × 300 s ≈ 235 km，取 240 km */
-export const ATMOSPHERE_HEIGHT = 240_000;
+/** 大气层厚度：100 km 左右（接近卡门线），大船 Shift 仍需数分钟穿出 */
+export const ATMOSPHERE_HEIGHT = 100_000;
 
 export interface PlanetDef {
   id: string;

@@ -374,7 +374,8 @@ export function createWorld(
     bodyGroup.add(planet);
 
     const atmosphere = new THREE.Mesh(
-      new THREE.SphereGeometry(def.radius * 1.02, 64, 48),
+      // 视觉大气层固定在约 55 km 厚，不再按行星半径百分比放大
+      new THREE.SphereGeometry(def.radius + def.atmosphereHeight * 0.55, 64, 48),
       new THREE.ShaderMaterial({
         uniforms: {
           uColor: { value: new THREE.Color(def.palette[2]) },
