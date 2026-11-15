@@ -93,7 +93,9 @@
 - CPU 使用 `float64` 绝对坐标；地表用 region ENU；tile 用局部 `float32`。
 - 碰撞用 heightfield 双线性采样 + pad 平面；`three-mesh-bvh` 只用于建筑/岩石/道具/舰船。
 - 深度优先 reverse-Z，保留 logarithmic depth fallback；CSM 3 × 2048，maxFar 5 km。
-- 工具链**免费优先**：Blender 5.3 + Python/NumPy + FastNoise/Fastscape + Geometry Nodes；World Machine 不再作为默认，只有在免费线遇到明确质量瓶颈时才考虑。
+- 工具链**$0、macOS 原生**：Python 3.12/3.13 + `pyfastnoiselite` + `fastscapelib` + Blender 5.3 headless + Pillow/OpenEXR + KTX-Software。
+- 许可证坑：World Machine Basic / Houdini Apprentice / Gaea Community / Terragen Free 都只能 non-commercial，不适合可再分发的开源资产链；TerreSculptor 2.0 可商用但 Windows-only。
+- 质量预期：舰船/飞行视角约为 World Machine 的 75–85%；1–10 m 近景、沉积扇、悬垂/洞穴需要额外的 Blender 手工/贴图补强。
 
 估算：IAC 垂直切片 **8–11 周**；含植被/城市 polish **11–15 周**；六组织母星 6–9 个月内容 + 2–3 个月工程。
 
@@ -241,6 +243,9 @@ M1 具体交付：
 - `12-city-implementation.md`
 - `13-player-character-implementation.md`
 - `14-ship-takeoff-landing-implementation.md`
+- `15-free-terrain-toolchain.md` — 免费地形工具链与许可/性能实测
+- `16-free-assets.md` — 免费资产与许可
+- `17-quality-assets.md` — 高质量 CC0 材质/植被/角色/工业道具
 
 已有设计底稿：
 
@@ -259,7 +264,7 @@ M1 具体交付：
 1. **玩家视角**：第三人称默认，V 切第一人称。
 2. **小船起降**：assist 默认，autoland 可选；手动 landing Phase 2。
 3. **城市切片**：600×600 m、S pad、1 个可进入商店、3 个 NPC；不先做 1 km 全城。
-4. **地形工具链**：确定走 **Blender + Python 免费线**，不购买 World Machine；后续只在质量不足时评估免费替代（Houdini Apprentice 等）。
+4. **地形工具链**：确定走 **Python 3.12/3.13 + pyfastnoiselite + fastscapelib + Blender 5.3** 的 $0 方案；不使用 World Machine / Houdini Apprentice / Gaea Community 等 non-commercial 许可。
 5. **T12 正式名称**：仍未定；等级保留，无现役舰。
 6. **候选舰接入顺序**：DK6 → F2-5 → PH3 → SH3，先接入垂直切片需要的 1 艘。
 7. **资产许可**：Kitbash3D 本地镜像不能直接进 public repo；优先正版/CC0/自建 kit。
