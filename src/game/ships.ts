@@ -27,6 +27,8 @@ export interface WeaponMount {
   turret?: boolean;
   /** 侧向发射：su(L)/su(R) */
   side?: 'left' | 'right';
+  /** 动态装填范围（秒）；定制鱼雷每次发射后在范围内随机 */
+  reloadRange?: [number, number];
 }
 
 export type NozzleRole = 'main' | 'secondary' | 'retro';
@@ -148,9 +150,9 @@ const SHIELD_REGEN_FRACTION: Record<string, number> = {
 
 /** A 级主炮：4 发击毁同型号舰船（按结构+护盾计算） */
 const A_SHOTS_TO_KILL = 4;
-/** A 级定制鱼雷：伤害为主炮一半、初速 6×、装填 0.5× */
+/** A 级定制鱼雷：伤害为主炮一半、初速 4×、装填 0.5× */
 const A_TORPEDO_SHOTS_TO_KILL = 8;
-const A_TORPEDO_SPEED_MULT = 6;
+const A_TORPEDO_SPEED_MULT = 4;
 const A_TORPEDO_RATE_MULT = 0.5;
 
 /** 从标注标签解析武器：W1su- / W3K A / W2ca+++Auto */
@@ -195,6 +197,7 @@ function parseWeapon(
     color: base.color,
     turret,
     side,
+    reloadRange: aTorpedo ? [5, 15] : undefined,
   };
 }
 

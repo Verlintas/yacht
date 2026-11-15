@@ -17,6 +17,8 @@ interface Projectile {
   speed: number;
   weaponType: WeaponType;
   homing?: () => THREE.Vector3 | null;
+  /** 制导最大转向角速度（rad/s），高速鱼雷需要更高机动性 */
+  turnRate: number;
 }
 
 interface FlashFx {
@@ -703,6 +705,8 @@ export class Combat {
       speed,
       weaponType,
       homing,
+      // 低速鱼雷保持原机动性；高速 A 鱼雷最高 9 rad/s，避免冲过头
+      turnRate: weaponType === 'torpedo' ? Math.max(2.5, Math.min(9, speed / 450)) : 1.9,
     });
   }
 
@@ -773,7 +777,7 @@ export class Combat {
           this.homingDesired.copy(target).sub(p.mesh.position).normalize();
           this.homingCurrent.copy(p.velocity).normalize();
           const angle = this.homingCurrent.angleTo(this.homingDesired);
-          const step = Math.min(angle, 1.9 * dt);
+          const step = Math.min(angle, p.turnRate * dt);
           if (step > 1e-5) {
             this.homingAxis.crossVectors(this.homingCurrent, this.homingDesired);
             if (this.homingAxis.lengthSq() > 1e-8) {

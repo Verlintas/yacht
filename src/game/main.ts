@@ -11,15 +11,21 @@ import { EngineAudio } from './audio';
 import { SpeedLines } from './speedlines';
 import { LocalPlume } from './trails';
 import { DamageVisuals } from './damage';
-import { Combat, type HostileContact } from './combat';
+import { Combat } from './combat';
 import { SurfacePatch } from './surface';
-import { SHIPS, getShip, manualWeaponTypes, shiftSpeedMultiplier, tierLabel, WEAPON_LABELS, type ShipSpec, type WeaponType } from './ships';
+import { SHIPS, getShip, manualWeaponTypes, shiftSpeedMultiplier, tierLabel, WEAPON_LABELS, type ShipSpec, type WeaponMount, type WeaponType } from './ships';
 import type { SystemData } from './data';
 
 interface WeaponState {
   selected: WeaponType | 'all';
   cooldowns: Map<string, number>;
   firing: boolean;
+  /** 鱼雷发射顺序：左右交错、同侧按哈希打散 */
+  torpedoOrder: number[];
+  /** 全局鱼雷发射闸门：只限制发射间隔，不限制总吞吐 */
+  torpedoLaunchGate: number;
+  torpedoLaunchCursor: number;
+  torpedoLaunchInterval: number;
 }
 
 const FIRE_SHAKE: Record<WeaponType, number> = {
@@ -62,6 +68,15 @@ function formatNumber(value: number): string {
   return value > 0 ? value.toLocaleString('zh-CN') : '—';
 }
 
+/** 稳定哈希：让同侧鱼雷管按非相邻顺序轮换 */
+function weaponOrderHash(id: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < id.length; i += 1) {
+    hash = Math.imul(hash ^ id.charCodeAt(i), 16777619);
+  }
+  return hash >>> 0;
+}
+
 function distanceLabel(value: number): string {
   if (value > 1000) return `${(value / 1000).toFixed(2)} km`;
   return `${Math.round(value)} m`;
@@ -72,6 +87,15 @@ function closestPointOnSegment(point: THREE.Vector3, a: THREE.Vector3, b: THREE.
   const lengthSq = ab.lengthSq();
   const t = lengthSq > 1e-8 ? THREE.MathUtils.clamp(point.clone().sub(a).dot(ab) / lengthSq, 0, 1) : 0;
   return a.clone().addScaledVector(ab, t);
+}
+
+/** 武器装填时间：定制鱼雷在 4–10 秒内随机，其余按射速 */
+function weaponReload(weapon: WeaponMount): number {
+  if (weapon.reloadRange) {
+    const [min, max] = weapon.reloadRange;
+    return min + Math.random() * Math.max(0, max - min);
+  }
+  return 1 / Math.max(0.05, weapon.rate);
 }
 
 function updateWeaponCooldowns(ctx: GameContext, dt: number): void {
@@ -101,7 +125,7 @@ function fireSelectedWeapons(ctx: GameContext): void {
       ? new THREE.Vector3(weapon.side === 'left' ? -1 : 1, 0, 0).applyQuaternion(ctx.flight.quaternion).normalize()
       : ctx.flight.forwardVector;
     ctx.combat.fire(origin, direction, weapon, ctx.flight.quaternion);
-    ctx.weapons.cooldowns.set(key, 1 / Math.max(0.05, weapon.rate));
+    ctx.weapons.cooldowns.set(key, weaponReload(weapon));
     firedTypes.set(weapon.type, Math.max(firedTypes.get(weapon.type) ?? 0, Math.min(1.1, 0.25 + weapon.damage / 120)));
     shake = Math.max(shake, FIRE_SHAKE[weapon.type]);
   }
@@ -360,7 +384,15 @@ export async function startGame(system: SystemData): Promise<void> {
   boot.classList.add('is-done');
   window.setTimeout(() => boot.remove(), 900);
 
-  const weapons: WeaponState = { selected: 'all', cooldowns: new Map(), firing: false };
+  const weapons: WeaponState = {
+    selected: 'all',
+    cooldowns: new Map(),
+    firing: false,
+    torpedoOrder: [],
+    torpedoLaunchGate: 0,
+    torpedoLaunchCursor: 0,
+    torpedoLaunchInterval: 0,
+  };
   const autoCooldowns = new Map<string, number>();
   let shipSpec: ShipSpec = initialSpec;
   const specRef = { current: shipSpec };
@@ -483,14 +515,38 @@ export async function startGame(system: SystemData): Promise<void> {
     weapons.cooldowns.clear();
     weapons.selected = 'all';
     weapons.firing = false;
-    // 自动鱼雷按发射器错峰：每个发射器独立装填，不再全舰同时齐射
+    // 鱼雷发射调度：左右交错、同侧打散；闸门只限制发射间隔，不限制总吞吐
     ctx.autoCooldowns.clear();
-    const torpedoLaunchers = spec.weapons.filter((weapon) => weapon.turret && weapon.type === 'torpedo');
-    torpedoLaunchers.forEach((weapon, index) => {
-      const interval = 1 / Math.max(0.05, weapon.rate);
-      const phase = (index / Math.max(1, torpedoLaunchers.length)) * interval;
-      ctx.autoCooldowns.set(`${spec.id}:${weapon.id}`, phase);
-    });
+    const torpedoes = spec.weapons
+      .map((weapon, index) => ({ weapon, index }))
+      .filter(({ weapon }) => weapon.turret && weapon.type === 'torpedo');
+    const left = torpedoes
+      .filter(({ weapon }) => weapon.side === 'left')
+      .sort((a, b) => weaponOrderHash(a.weapon.id) - weaponOrderHash(b.weapon.id));
+    const right = torpedoes
+      .filter(({ weapon }) => weapon.side === 'right')
+      .sort((a, b) => weaponOrderHash(a.weapon.id) - weaponOrderHash(b.weapon.id));
+    const center = torpedoes
+      .filter(({ weapon }) => !weapon.side)
+      .sort((a, b) => weaponOrderHash(a.weapon.id) - weaponOrderHash(b.weapon.id));
+    const order: number[] = [];
+    let leftIndex = 0;
+    let rightIndex = 0;
+    while (leftIndex < left.length || rightIndex < right.length) {
+      if (leftIndex < left.length) order.push(left[leftIndex++].index);
+      if (rightIndex < right.length) order.push(right[rightIndex++].index);
+    }
+    for (const entry of center) order.push(entry.index);
+    weapons.torpedoOrder = order;
+    weapons.torpedoLaunchGate = 0;
+    weapons.torpedoLaunchCursor = 0;
+    const totalTorpedoRate = torpedoes.reduce((sum, entry) => {
+      const averageReload = entry.weapon.reloadRange
+        ? (entry.weapon.reloadRange[0] + entry.weapon.reloadRange[1]) / 2
+        : 1 / Math.max(0.05, entry.weapon.rate);
+      return sum + 1 / averageReload;
+    }, 0);
+    weapons.torpedoLaunchInterval = totalTorpedoRate > 0 ? Math.max(0.08, 1 / totalTorpedoRate) : 0;
   };
   applyShip(shipSpec);
 
@@ -633,6 +689,7 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     ctx.flight.update(dt);
     updateWeaponCooldowns(ctx, dt);
+    ctx.weapons.torpedoLaunchGate = Math.max(0, ctx.weapons.torpedoLaunchGate - dt);
     fireSelectedWeapons(ctx);
 
     // 实体碰撞：撞上天体就被推开并卸掉法向速度
@@ -765,11 +822,9 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     ctx.combat.update(dt, ctx.flight.position, ctx.flight.velocity, ctx.flight.quaternion, ctx.camera, ctx.spec.current.length, ctx.ship.collision);
 
-    // 自动炮：只打「已攻击我方」的目标
-    let inverseQuat: THREE.Quaternion | null = null;
-    for (let weaponIndex = 0; weaponIndex < ctx.spec.current.weapons.length; weaponIndex += 1) {
-      const weapon = ctx.spec.current.weapons[weaponIndex];
-      if (!weapon.turret) continue;
+    // 自动炮：只打「已攻击我方」的目标；鱼雷走下面的独立发射调度
+    for (const weapon of ctx.spec.current.weapons) {
+      if (!weapon.turret || weapon.type === 'torpedo') continue;
       const key = `${ctx.spec.current.id}:${weapon.id}`;
       const cd = ctx.autoCooldowns.get(key) ?? 0;
       if (cd > 0) {
@@ -778,12 +833,35 @@ function loop(ctx: GameContext, hud: Hud): void {
       }
       const mount = new THREE.Vector3(...weapon.pos);
       const origin = mount.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
+      const target = ctx.combat.nearestHostile(origin, weapon.range);
+      if (!target) continue;
 
-      let target: HostileContact | null = null;
-      if (weapon.type === 'torpedo') {
-        // 每具鱼雷发射器自己选目标：在最近几个敌对目标之间轮换，形成多目标饱和攻击
+      const aim = ctx.combat.leadPoint(origin, target.position, target.velocity, weapon.speed);
+      const dir = weapon.side
+        ? new THREE.Vector3(weapon.side === 'left' ? -1 : 1, 0, 0).applyQuaternion(ctx.flight.quaternion).normalize()
+        : aim.sub(origin).normalize();
+      ctx.combat.fire(origin, dir, weapon, ctx.flight.quaternion);
+      ctx.audio.weapon(weapon.type, Math.min(0.34, 0.07 + weapon.damage / 1100));
+      ctx.autoCooldowns.set(key, 1 / weapon.rate);
+    }
+
+    // 鱼雷发射闸门：按交错顺序每次只放一发，避免一排一排齐射
+    if (ctx.weapons.torpedoOrder.length > 0 && ctx.weapons.torpedoLaunchGate <= 0) {
+      const order = ctx.weapons.torpedoOrder;
+      const spec = ctx.spec.current;
+      let inverseQuat: THREE.Quaternion | null = null;
+      for (let attempt = 0; attempt < order.length; attempt += 1) {
+        const orderIndex = (ctx.weapons.torpedoLaunchCursor + attempt) % order.length;
+        const weapon = spec.weapons[order[orderIndex]];
+        if (!weapon || !weapon.turret || weapon.type !== 'torpedo') continue;
+        const key = `${spec.id}:${weapon.id}`;
+        if ((ctx.autoCooldowns.get(key) ?? 0) > 0) continue;
+
+        const mount = new THREE.Vector3(...weapon.pos);
+        const origin = mount.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
         const hostiles = ctx.combat.hostilesInRange(origin, weapon.range);
         if (hostiles.length === 0) continue;
+
         let candidates = hostiles;
         if (weapon.side) {
           inverseQuat ??= ctx.flight.quaternion.clone().invert();
@@ -793,26 +871,20 @@ function loop(ctx: GameContext, hud: Hud): void {
           });
         }
         if (candidates.length === 0) continue;
-        const poolSize = Math.min(4, candidates.length);
-        target = candidates[weaponIndex % poolSize];
-      } else {
-        target = ctx.combat.nearestHostile(origin, weapon.range);
-      }
-      if (!target) continue;
 
-      const aim = ctx.combat.leadPoint(origin, target.position, target.velocity, weapon.speed);
-      const dir = weapon.side
-        ? new THREE.Vector3(weapon.side === 'left' ? -1 : 1, 0, 0).applyQuaternion(ctx.flight.quaternion).normalize()
-        : aim.sub(origin).normalize();
-      ctx.combat.fire(
-        origin,
-        dir,
-        weapon,
-        ctx.flight.quaternion,
-        weapon.type === 'torpedo' ? target.homing : undefined,
-      );
-      ctx.audio.weapon(weapon.type, Math.min(0.34, 0.07 + weapon.damage / 1100));
-      ctx.autoCooldowns.set(key, 1 / weapon.rate);
+        const poolSize = Math.min(4, candidates.length);
+        const target = candidates[orderIndex % poolSize];
+        const aim = ctx.combat.leadPoint(origin, target.position, target.velocity, weapon.speed);
+        const dir = weapon.side
+          ? new THREE.Vector3(weapon.side === 'left' ? -1 : 1, 0, 0).applyQuaternion(ctx.flight.quaternion).normalize()
+          : aim.sub(origin).normalize();
+        ctx.combat.fire(origin, dir, weapon, ctx.flight.quaternion, target.homing);
+        ctx.audio.weapon(weapon.type, Math.min(0.34, 0.07 + weapon.damage / 1100));
+        ctx.autoCooldowns.set(key, weaponReload(weapon));
+        ctx.weapons.torpedoLaunchCursor = (orderIndex + 1) % order.length;
+        ctx.weapons.torpedoLaunchGate = ctx.weapons.torpedoLaunchInterval;
+        break;
+      }
     }
 
     // 引力吸附
