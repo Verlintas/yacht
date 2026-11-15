@@ -595,7 +595,7 @@ export class Combat {
       .normalize();
 
     const torpedoTarget =
-      weapon.type === 'torpedo' ? this.findTorpedoTarget(origin, dir, weapon.range) : null;
+      weapon.type === 'torpedo' ? this.findTorpedoTarget(origin, dir, weapon.range, !!weapon.side) : null;
 
     this.spawnProjectile(
       origin,
@@ -615,6 +615,7 @@ export class Combat {
     origin: THREE.Vector3,
     direction: THREE.Vector3,
     range: number,
+    ignoreArc = false,
   ): Npc | null {
     let best: Npc | null = null;
     let bestScore = Infinity;
@@ -624,7 +625,7 @@ export class Combat {
       const distance = to.length();
       if (distance > range) continue;
       const dot = to.normalize().dot(direction);
-      if (dot < 0.55) continue;
+      if (!ignoreArc && dot < 0.55) continue;
       const score = distance * (1.25 - dot);
       if (score < bestScore) {
         bestScore = score;
@@ -1319,14 +1320,18 @@ export class Combat {
       const aimDir = aim.clone().sub(npc.group.position).normalize();
       const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(npc.group.quaternion);
       const arc = npc.role === 'flagship' ? Math.cos(0.5) : Math.cos(0.3);
-      if (forward.dot(aimDir) > arc) {
+      const sideDir = weapon.side
+        ? new THREE.Vector3(weapon.side === 'left' ? -1 : 1, 0, 0).applyQuaternion(npc.group.quaternion).normalize()
+        : null;
+      if (sideDir || forward.dot(aimDir) > arc) {
         npc.cooldown = (1 / Math.max(weapon.rate, 0.08)) * (npc.role === 'flagship' ? 1.3 : 1);
         npc.alerted = true;
-        const origin = npc.group.position.clone().addScaledVector(aimDir, npc.radius);
+        const fireDir = sideDir ?? aimDir;
+        const origin = npc.group.position.clone().addScaledVector(fireDir, npc.radius);
         const homing = weapon.type === 'torpedo' ? () => playerPos : undefined;
         this.spawnProjectile(
           origin,
-          aimDir,
+          fireDir,
           weapon.speed,
           weapon.damage,
           Math.min(6, weapon.range / weapon.speed),

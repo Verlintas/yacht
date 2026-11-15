@@ -25,6 +25,8 @@ export interface WeaponMount {
   color: number;
   /** 自动炮塔：可独立瞄准 */
   turret?: boolean;
+  /** 侧向发射：su(L)/su(R) */
+  side?: 'left' | 'right';
 }
 
 export type NozzleRole = 'main' | 'secondary' | 'retro';
@@ -103,12 +105,12 @@ const BASE: Record<WeaponType, { damage: number; rate: number; speed: number; ra
 };
 
 const MOD: Record<string, number> = {
-  '': 1, '-': 0.7, '--': 0.5, '+': 1.3, '++': 1.6, '+++': 2.0,
+  '': 1, '-': 0.7, '--': 0.5, '+': 1.3, '++': 1.6, '+++': 2.0, '++++': 2.5,
 };
 
 /** 伤害越低射速越快；A 级主炮刻意更慢 */
 const MOD_RATE: Record<string, number> = {
-  '': 1, '-': 1.35, '--': 1.7, '+': 0.9, '++': 0.78, '+++': 0.68, 'A': 0.85,
+  '': 1, '-': 1.35, '--': 1.7, '+': 0.9, '++': 0.78, '+++': 0.68, '++++': 0.6, 'A': 0.85,
 };
 
 /** 每艘船的设计射速系数：拦截机快、轰炸机慢、大舰更慢 */
@@ -142,13 +144,16 @@ function parseWeapon(
 ): WeaponMount {
   const code = tag.replace(/^W\d+/, '');
   const turret = /Auto/i.test(code);
-  const body = code.replace(/Auto/i, '');
+  let body = code.replace(/Auto/i, '');
+  const sideMatch = body.match(/\((L|R)\)/i);
+  const side = sideMatch ? (sideMatch[1].toUpperCase() === 'L' ? 'left' as const : 'right' as const) : undefined;
+  body = body.replace(/\((L|R)\)/gi, '');
 
   const typeMatch = body.match(/^(su|le|ca|K|P|io)/);
   const prefix = typeMatch ? typeMatch[1] : 'le';
   const rest = body.slice(prefix.length);
 
-  const modMatch = rest.match(/(---+|\+{1,3}|A|)$/);
+  const modMatch = rest.match(/(---+|\+{1,4}|A|)$/);
   const mod = modMatch ? modMatch[1] : '';
 
   const type: WeaponType =
@@ -168,6 +173,7 @@ function parseWeapon(
     spread: base.spread,
     color: base.color,
     turret,
+    side,
   };
 }
 

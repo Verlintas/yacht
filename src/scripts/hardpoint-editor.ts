@@ -934,7 +934,7 @@ export function initHardpointEditor(): void {
 
       const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
       const modelUrl = withBase(`models/${ship.model}`);
-      const gltf = await loader.loadAsync(`${modelUrl}?v=20261116b`);
+      const gltf = await loader.loadAsync(`${modelUrl}?v=20261116c`);
       if (token !== loadToken) {
         disposeObject(gltf.scene);
         return;

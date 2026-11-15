@@ -20,6 +20,7 @@ interface WeaponState {
   selected: WeaponType | 'all';
   cooldowns: Map<string, number>;
   firing: boolean;
+  missileCooldown: number;
 }
 
 const FIRE_SHAKE: Record<WeaponType, number> = {
@@ -353,7 +354,7 @@ export async function startGame(system: SystemData): Promise<void> {
   boot.classList.add('is-done');
   window.setTimeout(() => boot.remove(), 900);
 
-  const weapons: WeaponState = { selected: 'all', cooldowns: new Map(), firing: false };
+  const weapons: WeaponState = { selected: 'all', cooldowns: new Map(), firing: false, missileCooldown: 0 };
   const autoCooldowns = new Map<string, number>();
   let shipSpec: ShipSpec = getShip('thunderbolt');
   const specRef = { current: shipSpec };
@@ -476,6 +477,7 @@ export async function startGame(system: SystemData): Promise<void> {
     weapons.cooldowns.clear();
     weapons.selected = 'all';
     weapons.firing = false;
+    weapons.missileCooldown = 0;
   };
   applyShip(shipSpec);
 
@@ -617,6 +619,7 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     ctx.flight.update(dt);
     updateWeaponCooldowns(ctx, dt);
+    ctx.weapons.missileCooldown = Math.max(0, ctx.weapons.missileCooldown - dt);
     fireSelectedWeapons(ctx);
 
     // 实体碰撞：撞上天体就被推开并卸掉法向速度
@@ -762,9 +765,13 @@ function loop(ctx: GameContext, hud: Hud): void {
       const origin = mount.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
       const target = ctx.combat.nearestHostile(origin, weapon.range);
       if (!target) continue;
+      if (weapon.type === 'torpedo' && ctx.weapons.missileCooldown > 0) continue;
       const aim = ctx.combat.leadPoint(origin, target.position, target.velocity, weapon.speed);
-      const dir = aim.sub(origin).normalize();
+      const dir = weapon.side
+        ? new THREE.Vector3(weapon.side === 'left' ? -1 : 1, 0, 0).applyQuaternion(ctx.flight.quaternion).normalize()
+        : aim.sub(origin).normalize();
       ctx.combat.fire(origin, dir, weapon, ctx.flight.quaternion);
+      if (weapon.type === 'torpedo') ctx.weapons.missileCooldown = 1.1;
       ctx.audio.weapon(weapon.type, Math.min(0.34, 0.07 + weapon.damage / 1100));
       ctx.autoCooldowns.set(key, 1 / weapon.rate);
     }
