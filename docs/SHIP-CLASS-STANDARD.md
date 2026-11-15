@@ -66,9 +66,11 @@ Overlaps are intentional. T1–T5 keep the old 2× ladder; T6+ re-anchor around 
 | **`io`** | **副炮 / secondary battery** |
 | `A` | 定制级主炮 |
 
-- `A` damage is `(hull + shield) / 4` so four hits kill a same-tier ship.
-- Custom `A` torpedoes have **2.4×** projectile speed; custom `A` bow guns have **1.5×** projectile speed.
+- `A` guns deal `(hull + shield) / 4`, so four hits kill a same-tier ship.
+- `A` torpedoes deal `(hull + shield) / 8` — half an A gun — with **6×** base projectile speed and **0.5×** reload rate.
+- Custom `A` bow guns have **1.5×** projectile speed.
 - AR10 uses `P A` for W1–W8 bow guns and `su A` for W13–W33 torpedoes.
+- AR10 values: `P A` = 355,000 damage / 3,300 m/s; `su A` = 177,500 damage / 5,400 m/s / 5 s reload.
 - `io` is a secondary battery; `P` is a bow gun. They are not interchangeable in role or placement.
 - `Auto` turrets only fire at targets that have already attacked us.
 
