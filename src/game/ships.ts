@@ -42,7 +42,7 @@ export const WEAPON_LABELS: Record<WeaponType, string> = {
 
 export const TIER_LABELS: Record<number, string> = {
   1: '微型', 2: '轻型', 3: '中型', 4: '重型', 5: '大型', 6: '主力',
-  7: '旗舰', 8: '母舰', 9: '无畏', 10: '超无畏', 11: '贡献', 12: '泰坦',
+  7: '旗舰', 8: '母舰', 9: '无畏', 10: '超无畏', 11: '贡献', 12: '未定',
 };
 
 export function tierLabel(tier: number): string {

@@ -264,9 +264,9 @@ export const PLANET_FRAG = /* glsl */ `
     float fres = pow(1.0 - max(dot(N, V), 0.0), 3.6);
     color += mix(uMid, uHigh, 0.45) * fres * uAtmo * (0.012 + wrap * 0.99) * 0.30;
 
-    // 夜面整体压暗，但保留一点星光环境色
-    color *= mix(0.035, 1.0, day);
-    color += albedo * 0.004;
+    // 夜面：保留星光/行星反照，不能纯黑；否则贴近夜面时会像整屏闪黑
+    vec3 nightColor = albedo * 0.030 + vec3(0.004, 0.007, 0.014);
+    color = mix(nightColor, color, day);
 
     // 城市灯光：只出现在陆地和夜面，云层会遮挡
     float cityNoise = fbm3(n * 32.0 + seed * 4.0);
@@ -275,6 +275,76 @@ export const PLANET_FRAG = /* glsl */ `
     color += vec3(1.0, 0.66, 0.28) * city * uLights * 1.25;
 
     gl_FragColor = vec4(color, 1.0);
+  }
+`;
+
+export const SKY_VERT = /* glsl */ `#include <common>
+  #include <logdepthbuf_pars_vertex>
+
+  varying vec3 vWorld;
+  void main() {
+    vec4 world = modelMatrix * vec4(position, 1.0);
+    vWorld = world.xyz;
+    gl_Position = projectionMatrix * viewMatrix * world;
+    #include <logdepthbuf_vertex>
+  }
+`;
+
+/**
+ * 行星低空天空穹顶。
+ * 从外侧看 BackSide 会被剔除，所以只在进入大气层后出现；
+ * 白天按行星类型显示白/淡蓝/淡粉/淡绿/淡红，夜面保留少量透明让星空透出。
+ */
+export const SKY_FRAG = /* glsl */ `
+  precision highp float;
+  #include <common>
+  #include <logdepthbuf_pars_fragment>
+
+  uniform vec3 uCamera;
+  uniform vec3 uPlanetCenter;
+  uniform vec3 uUp;
+  uniform vec3 uSunDir;
+  uniform vec3 uZenith;
+  uniform vec3 uHorizon;
+  uniform vec3 uSunset;
+  uniform float uDay;
+  uniform float uOpacity;
+  uniform float uTime;
+
+  varying vec3 vWorld;
+
+  ${NOISE}
+
+  void main() {
+    #include <logdepthbuf_fragment>
+    vec3 viewDir = normalize(vWorld - uCamera);
+
+    // 相对当地地平线的仰角：0 为地平线，1 为天顶
+    float altitude = dot(viewDir, uUp);
+    float horizon = 1.0 - smoothstep(-0.04, 0.58, altitude);
+
+    vec3 color = mix(uZenith, uHorizon, horizon);
+
+    // 太阳附近的亮斑与地平线暖色
+    float sunDot = max(dot(viewDir, uSunDir), 0.0);
+    color += vec3(1.0, 0.90, 0.76) * pow(sunDot, 110.0) * 0.42;
+    color += uSunset * pow(sunDot, 5.0) * 0.10 * (1.0 - uDay * 0.55);
+
+    vec2 viewAzimuth = normalize(viewDir.xz + vec2(1e-4));
+    vec2 sunAzimuth = normalize(uSunDir.xz + vec2(1e-4));
+    float sunsetBand = pow(max(dot(viewAzimuth, sunAzimuth), 0.0), 5.0);
+    float terminator = 1.0 - abs(uDay * 2.0 - 1.0);
+    color = mix(color, uSunset, horizon * sunsetBand * terminator * 0.26);
+
+    // 地平线附近很淡的雾/云带，避免天空纯渐变
+    float haze = smoothstep(0.42, 0.82, vnoise(viewDir * 7.0 + vec3(uTime * 0.003, 0.0, 0.0)));
+    color = mix(color, vec3(1.0), haze * horizon * 0.055);
+
+    // 夜面压暗；alpha 很低，让星空和远舰仍然可见
+    color *= mix(0.055, 1.0, uDay);
+
+    float alpha = uOpacity * mix(0.055, 0.92, uDay);
+    gl_FragColor = vec4(color, alpha);
   }
 `;
 

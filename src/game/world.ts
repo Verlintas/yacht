@@ -5,9 +5,11 @@ import {
   PLANET_FRAG,
   PLANET_VERT,
   RING_FRAG,
+  SKY_FRAG,
+  SKY_VERT,
   SUN_FRAG,
 } from './shaders';
-import type { PlanetDef, StationDef, SystemData } from './data';
+import type { PlanetDef, StationDef, Surface, SystemData } from './data';
 import { makeRandom } from './data';
 import { greebles, mergeStatic, panel, truss } from './kit';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -56,6 +58,8 @@ export interface CelestialBody {
   planet?: PlanetDef;
   station?: StationDef;
   materials?: THREE.ShaderMaterial[];
+  /** 低空天空穹顶（只在进入大气层时可见） */
+  sky?: THREE.Mesh;
 }
 
 export interface World {
@@ -66,7 +70,19 @@ export interface World {
   hangars: Array<{ group: THREE.Group; depth: number; width: number; height: number }>;
   mixers: THREE.AnimationMixer[];
   update: (dt: number, elapsed: number, camera: THREE.Camera) => void;
+
 }
+
+/** 白天天空：每种行星形态一套低饱和配色，进入大气层后压在地平线以下 */
+const SKY_PALETTE: Record<Surface, { zenith: number; horizon: number; sunset: number }> = {
+  ocean: { zenith: 0x82b8dc, horizon: 0xeaf5ff, sunset: 0xffb27a },
+  desert: { zenith: 0xd8a88f, horizon: 0xffe7d4, sunset: 0xff995c },
+  ice: { zenith: 0xa6c9e4, horizon: 0xf5fbff, sunset: 0xffc9b2 },
+  gas: { zenith: 0xc7a7c9, horizon: 0xf4e7f1, sunset: 0xffb09e },
+  lava: { zenith: 0x8d3a2b, horizon: 0xe9a184, sunset: 0xff5a2a },
+  verdigris: { zenith: 0x8fc8b8, horizon: 0xe8f8ee, sunset: 0xffb080 },
+  barren: { zenith: 0x9aa8b8, horizon: 0xdbe3eb, sunset: 0xffb080 },
+};
 
 export function createWorld(
   system: SystemData,
@@ -364,6 +380,34 @@ export function createWorld(
     );
     bodyGroup.add(atmosphere);
 
+    // 低空天空穹顶：从外部看不见，进入大气层后才出现
+    const skyPalette = SKY_PALETTE[def.surface] ?? SKY_PALETTE.ocean;
+    const skyMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uCamera: { value: new THREE.Vector3() },
+        uPlanetCenter: { value: new THREE.Vector3() },
+        uUp: { value: new THREE.Vector3(0, 1, 0) },
+        uSunDir: { value: new THREE.Vector3(1, 0, 0) },
+        uZenith: { value: new THREE.Color(skyPalette.zenith) },
+        uHorizon: { value: new THREE.Color(skyPalette.horizon) },
+        uSunset: { value: new THREE.Color(skyPalette.sunset) },
+        uDay: { value: 1 },
+        uOpacity: { value: 0 },
+        uTime: { value: 0 },
+      },
+      vertexShader: SKY_VERT,
+      fragmentShader: SKY_FRAG,
+      side: THREE.BackSide,
+      transparent: true,
+      depthWrite: false,
+      depthTest: true,
+      blending: THREE.AdditiveBlending,
+    });
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(def.radius * 1.18, 48, 32), skyMaterial);
+    sky.frustumCulled = false;
+    sky.visible = false;
+    bodyGroup.add(sky);
+
     if (def.ring) {
       const ring = new THREE.Mesh(
         new THREE.RingGeometry(def.radius * 1.4, def.radius * 2.4, 192, 1),
@@ -406,6 +450,7 @@ export function createWorld(
       radius: def.radius,
       planet: def,
       materials: [material],
+      sky,
     });
   }
 
@@ -471,6 +516,27 @@ export function createWorld(
         const amat = atmo.material as THREE.ShaderMaterial;
         amat.uniforms.uLight.value.copy(mat.uniforms.uLight.value);
         amat.uniforms.uCamera.value.copy(camera.position);
+
+        // 大气层：高度 0.16R 以下淡入空白天穹，离地越近越明显
+        if (body.sky) {
+          const skyMat = body.sky.material as THREE.ShaderMaterial;
+          const altitude = camera.position.distanceTo(tmpPos) - def.radius;
+          const skyTop = def.radius * 0.16;
+          const opacity = 1 - THREE.MathUtils.smoothstep(altitude, def.radius * 0.02, skyTop);
+          body.sky.visible = opacity > 0.001;
+          if (body.sky.visible) {
+            const up = camera.position.clone().sub(tmpPos).normalize();
+            const sunDir = tmpPos.clone().negate().normalize();
+            const day = THREE.MathUtils.smoothstep(up.dot(sunDir), -0.35, 0.15);
+            skyMat.uniforms.uCamera.value.copy(camera.position);
+            skyMat.uniforms.uPlanetCenter.value.copy(tmpPos);
+            skyMat.uniforms.uUp.value.copy(up);
+            skyMat.uniforms.uSunDir.value.copy(sunDir);
+            skyMat.uniforms.uDay.value = day;
+            skyMat.uniforms.uOpacity.value = opacity;
+            skyMat.uniforms.uTime.value = elapsed;
+          }
+        }
       } else if (body.type === 'station' && body.station) {
         const def = body.station;
         const parent = bodies.find((item) => item.id === def.parent && item.planet);

@@ -340,7 +340,12 @@ export async function startGame(system: SystemData): Promise<void> {
       const dist = Number(params.get('dist') ?? 3.2) * body.radius;
       const dir = new THREE.Vector3(0.4, 0.28, 1).normalize();
       ctx.flight.position.copy(body.position).addScaledVector(dir, dist);
-      const look = body.position.clone().sub(ctx.flight.position).normalize();
+      const lookAtHorizon = params.get('look') === 'horizon';
+      const tangent = new THREE.Vector3(-dir.z, 0, dir.x).normalize();
+      const target = lookAtHorizon
+        ? body.position.clone().addScaledVector(tangent, body.radius * 0.98).addScaledVector(dir, body.radius * 0.02)
+        : body.position.clone();
+      const look = target.sub(ctx.flight.position).normalize();
       ctx.flight.setLookDirection(look);
       ctx.flight.halt();
       ctx.camera.position.copy(ctx.flight.position).addScaledVector(look, -34).add(new THREE.Vector3(0, 10, 0));
@@ -423,13 +428,15 @@ export async function startGame(system: SystemData): Promise<void> {
     { faction: 'neutral', angle: 4.7, distance: 58000 },
     { faction: 'neutral', angle: 5.7, distance: 92000 },
   ];
-  for (const plan of fleetPlan) {
-    const offset = new THREE.Vector3(
-      Math.cos(plan.angle) * plan.distance,
-      (Math.random() - 0.5) * 12000,
-      Math.sin(plan.angle) * plan.distance,
-    );
-    ctx.combat.spawnFleet(plan.faction, ctx.flight.position.clone().add(offset));
+  if (!params.get('peace')) {
+    for (const plan of fleetPlan) {
+      const offset = new THREE.Vector3(
+        Math.cos(plan.angle) * plan.distance,
+        (Math.random() - 0.5) * 12000,
+        Math.sin(plan.angle) * plan.distance,
+      );
+      ctx.combat.spawnFleet(plan.faction, ctx.flight.position.clone().add(offset));
+    }
   }
 
   const hud = setupHud(ctx, system, playerState, specRef);
@@ -438,6 +445,16 @@ export async function startGame(system: SystemData): Promise<void> {
   if (openParam) {
     window.setTimeout(() => hud.openById(openParam), 600);
   }
+
+  // 固定渲染分辨率，避免动态像素比在行星近景触发黑帧/闪屏
+  window.addEventListener('resize', () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+    composer.setSize(width, height);
+  });
 
   loop(ctx, hud);
 }
@@ -452,36 +469,17 @@ interface Hud {
 
 function loop(ctx: GameContext, hud: Hud): void {
   const clock = new THREE.Clock();
-  const maxPixelRatio = Math.min(window.devicePixelRatio, 1.5);
-  let pixelRatio = ctx.renderer.getPixelRatio();
   const fade = document.getElementById('fade') as HTMLElement;
   const heat = document.getElementById('heat-warning') as HTMLElement;
+  const atmoEntry = document.getElementById('atmo-entry') as HTMLElement;
   const motionBlur = ctx.motionBlur;
   let elapsed = 0;
+  let inAtmosphere = false;
+  let entryFlash = 0;
 
-  let perfAccum = 0;
-  let perfFrames = 0;
   const tick = (): void => {
     const dt = Math.min(clock.getDelta(), 0.05);
     elapsed += dt;
-    perfAccum += dt;
-    perfFrames += 1;
-    if (perfAccum > 2) {
-      const fps = perfFrames / perfAccum;
-      if (fps < 46 && pixelRatio > 0.8) {
-        pixelRatio = Math.max(0.8, pixelRatio - 0.15);
-        ctx.renderer.setPixelRatio(pixelRatio);
-        ctx.composer.setPixelRatio?.(pixelRatio);
-        ctx.composer.setSize(window.innerWidth, window.innerHeight);
-      } else if (fps > 58 && pixelRatio < maxPixelRatio) {
-        pixelRatio = Math.min(maxPixelRatio, pixelRatio + 0.1);
-        ctx.renderer.setPixelRatio(pixelRatio);
-        ctx.composer.setPixelRatio?.(pixelRatio);
-        ctx.composer.setSize(window.innerWidth, window.innerHeight);
-      }
-      perfAccum = 0;
-      perfFrames = 0;
-    }
     const prevPosition = ctx.flight.position.clone();
 
     ctx.flight.update(dt);
@@ -500,6 +498,57 @@ function loop(ctx: GameContext, hud: Hud): void {
         const vn = ctx.flight.velocity.dot(normal);
         if (vn < 0) ctx.flight.velocity.addScaledVector(normal, -vn * 1.8);
       }
+    }
+
+    // 大气进入：最近行星高度 + 防热/阻力/空白天穹淡入
+    let atmoPlanet: CelestialBody | null = null;
+    let atmoAltitude = Number.POSITIVE_INFINITY;
+    for (const body of ctx.world.bodies) {
+      if (body.type !== 'planet') continue;
+      const altitude = ctx.flight.position.distanceTo(body.position) - body.radius;
+      if (altitude < atmoAltitude) {
+        atmoAltitude = altitude;
+        atmoPlanet = body;
+      }
+    }
+
+    if (atmoPlanet) {
+      const radius = atmoPlanet.radius;
+      const top = radius * 0.16;
+      const entry = 1 - THREE.MathUtils.smoothstep(atmoAltitude, radius * 0.02, top);
+      if (entry > 0.01) {
+        const speed = ctx.flight.speed;
+        const heatAmount = entry * THREE.MathUtils.clamp(0.32 + speed / 8000, 0, 1);
+        entryFlash = Math.max(0, entryFlash - dt * 1.35);
+        atmoEntry.style.opacity = String(Math.min(0.86, heatAmount * 0.72 + entryFlash * 0.42));
+        ctx.flight.addShake(heatAmount * dt * 0.55);
+
+        // 大气阻力 + 速度上限：避免跃迁速度直接穿过行星
+        const cap = Math.max(ctx.spec.current.maxSpeed * 2.2, 1800);
+        if (speed > cap) {
+          const blend = 1 - Math.exp(-1.8 * dt);
+          ctx.flight.velocity.multiplyScalar(THREE.MathUtils.lerp(1, cap / speed, blend));
+        }
+        ctx.flight.velocity.multiplyScalar(Math.exp(-0.16 * entry * dt));
+
+        if (!inAtmosphere) {
+          inAtmosphere = true;
+          entryFlash = 1;
+          ctx.flight.addShake(0.55);
+          hud.toast(`进入 ${atmoPlanet.planet?.title ?? '行星'} 大气层 · 防热盾展开`);
+        }
+      } else {
+        atmoEntry.style.opacity = '0';
+        entryFlash = 0;
+        if (inAtmosphere) {
+          inAtmosphere = false;
+          hud.toast('脱离大气层');
+        }
+      }
+    } else {
+      atmoEntry.style.opacity = '0';
+      inAtmosphere = false;
+      entryFlash = 0;
     }
 
     // 恒星熔毁

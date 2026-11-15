@@ -313,6 +313,7 @@ const systemData = {
       </div>
     </div>
 
+    <div id="atmo-entry"></div>
     <div id="heat-warning">⚠ 恒星辐射区 · 自动脱离</div>
     <div id="fade"></div>
     <div id="toast"></div>
@@ -2258,6 +2259,20 @@ const systemData = {
     font-size: 11.5px;
     color: var(--text-faint);
   }
+  /* ── 大气进入 ───────────────────────── */
+  #atmo-entry {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    opacity: 0;
+    background:
+      radial-gradient(120% 110% at 50% 46%, transparent 28%, rgba(255, 196, 140, 0.10) 58%, rgba(255, 84, 40, 0.48) 100%),
+      linear-gradient(90deg, transparent 0%, rgba(255, 226, 190, 0.05) 46%, transparent 52%, rgba(255, 140, 90, 0.08) 100%);
+    mix-blend-mode: screen;
+    transition: opacity 0.14s linear;
+  }
+
   #heat-warning {
     position: absolute;
     top: 76px;
@@ -2707,7 +2722,7 @@ const systemData = {
   #fleet-status[data-status="无畏"],
   #fleet-status[data-status="超无畏"],
   #fleet-status[data-status="贡献"],
-  #fleet-status[data-status="泰坦"] {
+  #fleet-status[data-status="未定"] {
     border-color: rgba(255, 80, 60, 0.9);
     color: #ff7a64;
     box-shadow: 0 0 12px rgba(255, 60, 40, 0.35);

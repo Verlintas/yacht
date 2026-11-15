@@ -129,7 +129,7 @@ export interface FleetIntel {
   flagship: string;
   code: string;
   tier: number;
-  status: '主力' | '准主力' | '超主力' | '无畏' | '超无畏' | '贡献' | '泰坦' | '编队';
+  status: '主力' | '准主力' | '超主力' | '无畏' | '超无畏' | '贡献' | '未定' | '编队';
   escorts: number;
   heavyEscorts: number;
   distance: number;
@@ -1521,7 +1521,7 @@ export class Combat {
     const escorts = ships.filter((ship) => ship.role === 'escort');
     const tier = flagship.spec.tier;
     const status: FleetIntel['status'] =
-      tier >= 12 ? '泰坦' : tier >= 11 ? '贡献' : tier >= 10 ? '超无畏' : tier >= 9 ? '无畏' : tier >= 7 ? '超主力' : tier >= 6 ? '准主力' : tier >= 5 ? '主力' : '编队';
+      tier >= 12 ? '未定' : tier >= 11 ? '贡献' : tier >= 10 ? '超无畏' : tier >= 9 ? '无畏' : tier >= 7 ? '超主力' : tier >= 6 ? '准主力' : tier >= 5 ? '主力' : '编队';
 
     return {
       faction: bestFleet.faction,
