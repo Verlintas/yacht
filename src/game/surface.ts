@@ -80,6 +80,9 @@ export class SurfacePatch {
       color: 0xffffff,
       roughness: 0.94,
       metalness: 0.02,
+      // 夜面地形自发光：避免低空飞行时整块地形变成纯黑屏
+      emissive: new THREE.Color(0x0d2238),
+      emissiveIntensity: 0,
       side: THREE.FrontSide,
       polygonOffset: true,
       polygonOffsetFactor: -3,
@@ -98,13 +101,17 @@ export class SurfacePatch {
       return;
     }
 
-    const visibleDistance = Math.max(3000, shipLength * 8);
+    // 大舰的局部地形不要覆盖到轨道高度；低空才显示
+    const visibleDistance = Math.min(20_000, Math.max(3000, shipLength * 8));
     if (altitude > visibleDistance) {
       this.group.visible = false;
       return;
     }
 
     const up = shipPosition.clone().sub(planet.position).normalize();
+    const sunDir = planet.position.clone().negate().normalize();
+    const daylight = THREE.MathUtils.clamp(up.dot(sunDir), 0, 1);
+    this.material.emissiveIntensity = (1 - daylight) * 1.6;
     const right = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), up);
     if (right.lengthSq() < 1e-5) right.set(1, 0, 0);
     right.normalize();
@@ -112,7 +119,7 @@ export class SurfacePatch {
     const basis = new THREE.Matrix4().makeBasis(right, forward, up);
     const quaternion = new THREE.Quaternion().setFromRotationMatrix(basis);
 
-    const size = Math.max(600, shipLength * 18);
+    const size = Math.min(60_000, Math.max(600, shipLength * 18));
     const center = planet.position.clone().addScaledVector(up, planet.radius + Math.max(20, size * 0.01));
     const cellX = Math.round(center.x / size);
     const cellZ = Math.round(center.z / size);

@@ -265,7 +265,10 @@ export const PLANET_FRAG = /* glsl */ `
     color += mix(uMid, uHigh, 0.45) * fres * uAtmo * (0.012 + wrap * 0.99) * 0.30;
 
     // 夜面：保留星光/行星反照，不能纯黑；否则贴近夜面时会像整屏闪黑
-    vec3 nightColor = albedo * 0.030 + vec3(0.004, 0.007, 0.014);
+    vec3 nightColor = albedo * 0.060 + vec3(0.012, 0.020, 0.036);
+    // 夜侧边缘的微弱大气辉光，避免行星临边完全消失
+    float nightRim = pow(1.0 - max(dot(N, V), 0.0), 4.0) * (1.0 - day);
+    nightColor += vec3(0.030, 0.060, 0.110) * uAtmo * nightRim;
     color = mix(nightColor, color, day);
 
     // 城市灯光：只出现在陆地和夜面，云层会遮挡
@@ -340,10 +343,10 @@ export const SKY_FRAG = /* glsl */ `
     float haze = smoothstep(0.42, 0.82, vnoise(viewDir * 7.0 + vec3(uTime * 0.003, 0.0, 0.0)));
     color = mix(color, vec3(1.0), haze * horizon * 0.055);
 
-    // 夜面压暗；alpha 很低，让星空和远舰仍然可见
-    color *= mix(0.055, 1.0, uDay);
+    // 夜面保留一点蓝色星辉；alpha 较低，让星空和远舰仍然可见
+    color *= mix(0.16, 1.0, uDay);
 
-    float alpha = uOpacity * mix(0.055, 0.92, uDay);
+    float alpha = uOpacity * mix(0.14, 0.92, uDay);
     gl_FragColor = vec4(color, alpha);
   }
 `;
@@ -382,8 +385,10 @@ export const ATMO_FRAG = /* glsl */ `
 
     float fres = pow(1.0 - abs(dot(N, V)), uPower);
     float lit = smoothstep(-0.18, 0.32, dot(normalize(-N), L));
+    // 夜侧保留一圈很淡的大气辉光，避免临边完全黑掉
+    float lightAmount = lit * 0.3 + (1.0 - lit) * 0.045;
 
-    gl_FragColor = vec4(uColor, 1.0) * fres * lit * 0.3;
+    gl_FragColor = vec4(uColor, 1.0) * fres * lightAmount;
   }
 `;
 

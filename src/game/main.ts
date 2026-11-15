@@ -767,8 +767,9 @@ function loop(ctx: GameContext, hud: Hud): void {
       surfacePatch.group.visible = false;
     }
 
-    // 低空接触阴影：按行星表面切面放置，不依赖阴影贴图
-    if (atmoPlanet && atmoAltitude < Math.max(3000, ctx.spec.current.length * 8)) {
+    // 低空接触阴影：只在真正贴近地面时显示，避免大舰在几十公里高空铺一块黑色平面
+    const contactShadowRange = Math.min(3000, Math.max(300, ctx.spec.current.length * 0.4));
+    if (atmoPlanet && atmoAltitude < contactShadowRange) {
       const up = ctx.flight.position.clone().sub(atmoPlanet.position).normalize();
       const sunDir = atmoPlanet.position.clone().negate().normalize();
       const daylight = THREE.MathUtils.clamp(up.dot(sunDir), 0, 1);
@@ -776,9 +777,9 @@ function loop(ctx: GameContext, hud: Hud): void {
       const fadeOut = 1 - THREE.MathUtils.smoothstep(
         altitude,
         0,
-        Math.max(3000, ctx.spec.current.length * 8),
+        contactShadowRange,
       );
-      const size = Math.max(30, ctx.spec.current.length * 1.8) * (1 + altitude / 2500);
+      const size = Math.min(30_000, Math.max(30, ctx.spec.current.length * 1.8) * (1 + altitude / 2500));
       contactShadow.visible = fadeOut > 0.01;
       if (contactShadow.visible) {
         contactShadow.position.copy(atmoPlanet.position).addScaledVector(up, atmoPlanet.radius + 2);
