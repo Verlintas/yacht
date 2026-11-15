@@ -98,7 +98,10 @@ function fireSelectedWeapons(ctx: GameContext): void {
 
     const local = new THREE.Vector3(...weapon.pos);
     const origin = local.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
-    ctx.combat.fire(origin, ctx.flight.forwardVector, weapon, ctx.flight.quaternion);
+    const direction = weapon.side
+      ? new THREE.Vector3(weapon.side === 'left' ? -1 : 1, 0, 0).applyQuaternion(ctx.flight.quaternion).normalize()
+      : ctx.flight.forwardVector;
+    ctx.combat.fire(origin, direction, weapon, ctx.flight.quaternion);
     ctx.weapons.cooldowns.set(key, 1 / Math.max(0.05, weapon.rate));
     firedTypes.set(weapon.type, Math.max(firedTypes.get(weapon.type) ?? 0, Math.min(1.1, 0.25 + weapon.damage / 120)));
     shake = Math.max(shake, FIRE_SHAKE[weapon.type]);
@@ -215,14 +218,18 @@ export async function startGame(system: SystemData): Promise<void> {
   window.addEventListener('pointerup', () => { weapons.firing = false; });
   window.addEventListener('blur', () => { weapons.firing = false; });
 
+  // 支持 ?ship=id 直接进入指定舰船（调试与分享用）
+  const requestedShip = new URLSearchParams(window.location.search).get('ship');
+  const initialSpec = getShip(requestedShip ?? 'thunderbolt');
+
   // 优先用 Blender 导出的高模舰，失败则回退到程序化几何
   try {
     const loaded = await loadShipModel(
-      `${BASE}/models/${getShip('thunderbolt').model}`,
-      getShip("thunderbolt").length,
-      getShip("thunderbolt").nozzles,
-      getShip("thunderbolt").cockpits[0],
-      getShip("thunderbolt").exhaust,
+      `${BASE}/models/${initialSpec.model}`,
+      initialSpec.length,
+      initialSpec.nozzles,
+      initialSpec.cockpits[0],
+      initialSpec.exhaust,
     );
     scene.remove(ship.group);
     ship = loaded;
@@ -231,7 +238,7 @@ export async function startGame(system: SystemData): Promise<void> {
     /* 保留程序化舰 */
   }
 
-  flight.setCockpitOffset(new THREE.Vector3(...getShip("thunderbolt").cockpits[0]).add(new THREE.Vector3(0, 0.1, 0.2)));
+  flight.setCockpitOffset(new THREE.Vector3(...initialSpec.cockpits[0]).add(new THREE.Vector3(0, 0.1, 0.2)));
   flight.bindShip(ship.group);
 
   await step('装载飞船', 0.62);
@@ -356,7 +363,7 @@ export async function startGame(system: SystemData): Promise<void> {
 
   const weapons: WeaponState = { selected: 'all', cooldowns: new Map(), firing: false, missileCooldown: 0 };
   const autoCooldowns = new Map<string, number>();
-  let shipSpec: ShipSpec = getShip('thunderbolt');
+  let shipSpec: ShipSpec = initialSpec;
   const specRef = { current: shipSpec };
   const playerState = {
     hull: shipSpec.hull,
