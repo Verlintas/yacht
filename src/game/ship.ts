@@ -413,8 +413,10 @@ export async function loadShipModel(
   // 先量出模型原始长度，再缩放到目标全长（米）
   const rawBox = new THREE.Box3().setFromObject(model);
   const rawSize = rawBox.getSize(new THREE.Vector3());
-  const rawLongest = Math.max(rawSize.x, rawSize.y, rawSize.z);
-  model.scale.setScalar(targetLength / rawLongest);
+  // 舰长轴是 glTF 的 Z 轴；不能用 max(x,y,z)，否则宽翼展的船会被按翼展缩小
+  const rawLength = rawSize.z;
+  if (!Number.isFinite(rawLength) || rawLength <= 0) throw new Error('模型长度轴无效');
+  model.scale.setScalar(targetLength / rawLength);
   model.updateMatrixWorld(true);
 
   // 收敛材质：关掉双面、压掉过强的自发光

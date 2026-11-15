@@ -948,12 +948,13 @@ export function initHardpointEditor(): void {
 
       const rawBox = new THREE.Box3().setFromObject(model);
       const rawSize = rawBox.getSize(new THREE.Vector3());
-      const rawLongest = Math.max(rawSize.x, rawSize.y, rawSize.z);
-      if (!Number.isFinite(rawLongest) || rawLongest <= 0) {
-        throw new Error('无法测量模型尺寸');
+      // 舰长轴是 Z；max(x,y,z) 会把宽翼展舰按翼展缩放
+      const rawLength = rawSize.z;
+      if (!Number.isFinite(rawLength) || rawLength <= 0) {
+        throw new Error('无法测量模型长度轴');
       }
 
-      model.scale.setScalar(ship.length / rawLongest);
+      model.scale.setScalar(ship.length / rawLength);
       model.updateMatrixWorld(true);
 
       const materials = new Set<THREE.Material>();
