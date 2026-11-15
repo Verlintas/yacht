@@ -382,6 +382,8 @@ export async function loadShipModel(
     if ('roughness' in material) material.roughness = Math.max(material.roughness ?? 0.5, 0.45);
     material.envMapIntensity = 1.1;
     obj.frustumCulled = true;
+    obj.castShadow = true;
+    obj.receiveShadow = true;
   });
 
   const box = new THREE.Box3().setFromObject(model);

@@ -12,7 +12,8 @@ import { SpeedLines } from './speedlines';
 import { LocalPlume } from './trails';
 import { DamageVisuals } from './damage';
 import { Combat } from './combat';
-import { SHIPS, getShip, manualWeaponTypes, tierLabel, WEAPON_LABELS, type ShipSpec, type WeaponType } from './ships';
+import { SurfacePatch } from './surface';
+import { SHIPS, getShip, manualWeaponTypes, shiftSpeedMultiplier, tierLabel, WEAPON_LABELS, type ShipSpec, type WeaponType } from './ships';
 import type { SystemData } from './data';
 
 interface WeaponState {
@@ -38,6 +39,9 @@ interface GameContext {
   ship: Ship;
   audio: EngineAudio;
   motionBlur: ShaderPass;
+  warpPass: ShaderPass;
+  contactShadow: THREE.Mesh;
+  surfacePatch: SurfacePatch;
   combat: Combat;
   weapons: WeaponState;
   player: { alive: boolean };
@@ -103,6 +107,23 @@ function fireSelectedWeapons(ctx: GameContext): void {
   if (shake > 0) ctx.flight.addShake(shake);
 }
 
+function contactShadowTexture(): THREE.CanvasTexture {
+  const size = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  gradient.addColorStop(0, 'rgba(0,0,0,0.72)');
+  gradient.addColorStop(0.45, 'rgba(0,0,0,0.42)');
+  gradient.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
 export async function startGame(system: SystemData): Promise<void> {
   const canvas = $('flight-canvas') as unknown as HTMLCanvasElement;
   const boot = $('boot');
@@ -129,8 +150,29 @@ export async function startGame(system: SystemData): Promise<void> {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.86;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
+
+  // 低空接触阴影：不依赖阴影贴图，贴近行星时给飞船一个落地投影
+  const contactShadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1),
+    new THREE.MeshBasicMaterial({
+      map: contactShadowTexture(),
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      color: 0x000000,
+    }),
+  );
+  contactShadow.visible = false;
+  contactShadow.renderOrder = 2;
+  scene.add(contactShadow);
+
+  const surfacePatch = new SurfacePatch();
+  scene.add(surfacePatch.group);
 
   const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 1_800_000_000);
   // 高速时的屏幕空间流线
@@ -248,6 +290,57 @@ export async function startGame(system: SystemData): Promise<void> {
     `,
   });
   composer.addPass(motionBlur);
+
+  // 跃迁：屏幕空间径向拖影 + 蓝白速度条纹 + 中心闪光
+  const warpPass = new ShaderPass({
+    uniforms: {
+      tDiffuse: { value: null },
+      uIntensity: { value: 0 },
+      uTime: { value: 0 },
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D tDiffuse;
+      uniform float uIntensity;
+      uniform float uTime;
+      varying vec2 vUv;
+
+      void main() {
+        vec2 p = vUv - 0.5;
+        float r = length(p);
+        float a = atan(p.y, p.x);
+
+        vec3 sum = vec3(0.0);
+        float total = 0.0;
+        const int SAMPLES = 7;
+        for (int i = 0; i < SAMPLES; i++) {
+          float t = float(i) / float(SAMPLES - 1);
+          float scale = 1.0 - uIntensity * t * 0.15;
+          float w = 1.0 - t * 0.55;
+          sum += texture2D(tDiffuse, 0.5 + p * scale).rgb * w;
+          total += w;
+        }
+        vec3 color = sum / max(total, 1.0);
+
+        float streakA = smoothstep(0.70, 1.0, sin(a * 74.0 + r * 42.0 - uTime * 26.0));
+        float streakB = smoothstep(0.82, 0.99, sin(a * 39.0 - r * 23.0 + uTime * 17.0));
+        float edge = smoothstep(0.04, 0.58, r);
+        vec3 tint = mix(vec3(0.28, 0.62, 1.0), vec3(1.0, 0.94, 0.78), 0.5 + 0.5 * sin(a * 3.0 + uTime * 1.7));
+        color += tint * (streakA * 0.85 + streakB * 0.34) * edge * uIntensity;
+        color += vec3(0.08, 0.20, 0.46) * smoothstep(0.0, 0.85, r) * uIntensity;
+        color = mix(color, vec3(1.0), pow(uIntensity, 5.0) * 0.12);
+
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `,
+  });
+  composer.addPass(warpPass);
   composer.addPass(new OutputPass());
 
   await step('编译着色器', 0.82);
@@ -316,7 +409,7 @@ export async function startGame(system: SystemData): Promise<void> {
   });
 
   combat.setTemplates(npcTemplates);
-  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, combat, weapons, player: playerState, spec: specRef, autoCooldowns, speedLines, trail: trailRef, damage: damageRef, switchShip: async () => false };
+  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, warpPass, contactShadow, surfacePatch, combat, weapons, player: playerState, spec: specRef, autoCooldowns, speedLines, trail: trailRef, damage: damageRef, switchShip: async () => false };
 
   const dock = world.bodies.find((body) => body.id === 'station-dock');
   if (dock) {
@@ -441,6 +534,36 @@ export async function startGame(system: SystemData): Promise<void> {
 
   const hud = setupHud(ctx, system, playerState, specRef);
 
+  // B：选择目标后按一次开始跃迁；跃迁中再按一次取消。大型舰需要 B+H+N。
+  window.addEventListener('keydown', (event) => {
+    if (event.code !== 'KeyB' || event.repeat) return;
+    if (ctx.flight.warpPhase !== 'idle') {
+      ctx.flight.cancelWarp();
+      hud.toast('跃迁取消');
+      return;
+    }
+    const selected = hud.getTarget();
+    if (!selected) {
+      hud.toast('先在星图选择跃迁目标');
+      return;
+    }
+    if (ctx.spec.current.warpCombo && !(ctx.flight.isKeyHeld('KeyH') && ctx.flight.isKeyHeld('KeyN'))) {
+      hud.toast('大型舰需要 B+H+N 组合跃迁');
+      return;
+    }
+    const targetPosition = selected.position.clone();
+    const away = ctx.flight.position.clone().sub(targetPosition);
+    if (away.lengthSq() < 1) away.set(0, 1, 0);
+    away.normalize();
+    const safeDistance = selected.type === 'planet'
+      ? selected.radius * 2.2
+      : Math.max(selected.radius * 4, 5000);
+    const arrival = targetPosition.clone().addScaledVector(away, safeDistance);
+    if (ctx.flight.beginWarp(targetPosition, arrival, ctx.spec.current.chargeTime)) {
+      hud.toast(`跃迁目标：${selected.planet?.title ?? selected.station?.title ?? ''}`);
+    }
+  });
+
   const openParam = params.get('open');
   if (openParam) {
     window.setTimeout(() => hud.openById(openParam), 600);
@@ -465,6 +588,7 @@ interface Hud {
   toast: (message: string) => void;
   hit: () => void;
   explosionFlash: (strength: number) => void;
+  getTarget: () => CelestialBody | null;
 }
 
 function loop(ctx: GameContext, hud: Hud): void {
@@ -472,6 +596,8 @@ function loop(ctx: GameContext, hud: Hud): void {
   const fade = document.getElementById('fade') as HTMLElement;
   const heat = document.getElementById('heat-warning') as HTMLElement;
   const atmoEntry = document.getElementById('atmo-entry') as HTMLElement;
+  const contactShadow = ctx.contactShadow;
+  const surfacePatch = ctx.surfacePatch;
   const motionBlur = ctx.motionBlur;
   let elapsed = 0;
   let inAtmosphere = false;
@@ -488,7 +614,9 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     // 实体碰撞：撞上天体就被推开并卸掉法向速度
     for (const body of ctx.world.bodies) {
-      const min = body.radius * (body.type === 'station' ? 0.34 : 1.03);
+      const min = body.type === 'station'
+        ? body.radius * 0.34
+        : body.radius + Math.max(50, ctx.spec.current.length * 0.8);
       const closest = closestPointOnSegment(body.position, prevPosition, ctx.flight.position);
       const delta = closest.clone().sub(body.position);
       const distance = delta.length();
@@ -551,6 +679,36 @@ function loop(ctx: GameContext, hud: Hud): void {
       entryFlash = 0;
     }
 
+    // 低空局部地形：只覆盖飞船附近，提供真实材质/起伏/阴影
+    if (atmoPlanet) {
+      surfacePatch.update(atmoPlanet, ctx.flight.position, ctx.spec.current.length, atmoAltitude);
+    } else {
+      surfacePatch.group.visible = false;
+    }
+
+    // 低空接触阴影：按行星表面切面放置，不依赖阴影贴图
+    if (atmoPlanet && atmoAltitude < Math.max(3000, ctx.spec.current.length * 8)) {
+      const up = ctx.flight.position.clone().sub(atmoPlanet.position).normalize();
+      const sunDir = atmoPlanet.position.clone().negate().normalize();
+      const daylight = THREE.MathUtils.clamp(up.dot(sunDir), 0, 1);
+      const altitude = Math.max(0, atmoAltitude);
+      const fadeOut = 1 - THREE.MathUtils.smoothstep(
+        altitude,
+        0,
+        Math.max(3000, ctx.spec.current.length * 8),
+      );
+      const size = Math.max(30, ctx.spec.current.length * 1.8) * (1 + altitude / 2500);
+      contactShadow.visible = fadeOut > 0.01;
+      if (contactShadow.visible) {
+        contactShadow.position.copy(atmoPlanet.position).addScaledVector(up, atmoPlanet.radius + 2);
+        contactShadow.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), up);
+        contactShadow.scale.setScalar(size);
+        (contactShadow.material as THREE.MeshBasicMaterial).opacity = fadeOut * (0.18 + daylight * 0.42);
+      }
+    } else {
+      contactShadow.visible = false;
+    }
+
     // 恒星熔毁
     if (ctx.flight.position.length() < ctx.world.sunRadius * 1.35) {
       heat.classList.add('is-melting');
@@ -576,7 +734,10 @@ function loop(ctx: GameContext, hud: Hud): void {
     // 动态模糊：速度越快越明显，加速时再叠一点
     const comfort = THREE.MathUtils.clamp(ctx.spec.current.length / 1200, 0.25, 1);
     const speedNorm = Math.min(1, ctx.flight.speed / 9000);
-    motionBlur.uniforms.uStrength.value = (speedNorm * 0.18 + ctx.flight.boost * 0.18) * (0.4 + 0.6 * comfort);
+    const warpVisual = ctx.flight.warpVisual;
+    motionBlur.uniforms.uStrength.value = (speedNorm * 0.18 + ctx.flight.boost * 0.18 + warpVisual * 0.42) * (0.4 + 0.6 * comfort);
+    ctx.warpPass.uniforms.uIntensity.value = warpVisual;
+    ctx.warpPass.uniforms.uTime.value = elapsed;
 
     ctx.combat.update(dt, ctx.flight.position, ctx.flight.velocity, ctx.flight.quaternion, ctx.camera);
 
@@ -616,6 +777,17 @@ function loop(ctx: GameContext, hud: Hud): void {
     ctx.trail.current?.update(dt, 0.2 + ctx.flight.throttle * 0.9 + ctx.flight.boost * 1.8);
 
     ctx.flight.updateCamera(dt);
+    // 相机也不能钻进行星表面，否则会看到黑屏/地下
+    for (const body of ctx.world.bodies) {
+      if (body.type !== 'planet') continue;
+      const min = body.radius + Math.max(6, ctx.spec.current.length * 0.12);
+      const distance = ctx.camera.position.distanceTo(body.position);
+      if (distance < min) {
+        const up = ctx.camera.position.clone().sub(body.position);
+        if (up.lengthSq() < 1e-6) up.set(0, 1, 0);
+        ctx.camera.position.copy(body.position).addScaledVector(up.normalize(), min);
+      }
+    }
     if (ctx.ship.model) ctx.ship.model.visible = ctx.flight.cameraMode !== 'first';
     if (ctx.ship.cockpitGroup) ctx.ship.cockpitGroup.visible = ctx.flight.cameraMode === 'first';
 
@@ -630,6 +802,11 @@ function loop(ctx: GameContext, hud: Hud): void {
       const dir = ctx.flight.position.clone().normalize();
       ctx.flight.velocity.addScaledVector(dir, push * 900 * dt);
       hud.toast('警告：恒星辐射过强，自动脱离');
+    }
+
+    if (ctx.flight.warpArrived) {
+      ctx.flight.warpArrived = false;
+      hud.toast('跃迁完成');
     }
 
     hud.update(dt);
@@ -1126,9 +1303,10 @@ function setupHud(
   const startDock = (body: CelestialBody): void => {
     const landing = body.type === 'planet';
     const dir = body.position.clone().sub(ctx.flight.position).normalize();
+    const landingHeight = Math.max(50, ctx.spec.current.length * 0.8);
     const stop = body.position
       .clone()
-      .addScaledVector(dir, -body.radius * (landing ? 1.12 : 1.6))
+      .addScaledVector(dir, -(landing ? body.radius + landingHeight : body.radius * 1.6))
       .add(new THREE.Vector3(0, landing ? 0 : body.radius * 0.1, 0));
 
     docking = {
@@ -1148,10 +1326,14 @@ function setupHud(
     openBody(body);
     if (landing) {
       window.setTimeout(() => {
-        const dir = ctx.flight.position.clone().normalize();
-        ctx.flight.position.copy(body.position).addScaledVector(dir, body.radius * 2.4);
+        const up = ctx.flight.position.clone().sub(body.position).normalize();
+        const landingHeight = Math.max(50, ctx.spec.current.length * 0.8);
+        ctx.flight.position.copy(body.position).addScaledVector(up, body.radius + landingHeight);
         ctx.flight.halt();
+        ctx.flight.throttle = 0;
+        ctx.flight.boost = 0;
         fade.classList.remove('is-black');
+        toast(`${body.planet?.title ?? '行星'} · 已着陆`);
       }, 700);
     }
   };
@@ -1168,7 +1350,7 @@ function setupHud(
       if (!nearest) return;
       if (nearest.type === 'station') {
         if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius * 1.9) startDock(nearest);
-      } else if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius * 1.25) {
+      } else if (nearest.position.distanceTo(ctx.flight.position) < nearest.radius + Math.max(800, ctx.spec.current.length * 2.2)) {
         startDock(nearest);
       }
     }
@@ -1213,6 +1395,10 @@ function setupHud(
     }
 
     const speed = ctx.flight.speed;
+    ctx.flight.shiftMultiplier = shiftSpeedMultiplier(
+      ctx.spec.current,
+      playerState.hull / Math.max(1, ctx.spec.current.hull),
+    );
     speedValue.textContent = Math.round(speed).toString();
     speedBar.style.width = `${Math.min(100, (speed / 1500) * 100)}%`;
     throttleBar.style.width = `${Math.round(ctx.flight.throttle * 100)}%`;
@@ -1239,11 +1425,11 @@ function setupHud(
       best &&
       !docking &&
       ((best.type === 'station' && bestDist < best.radius * 1.9) ||
-        (best.type === 'planet' && bestDist < best.radius * 1.25));
+        (best.type === 'planet' && bestDist < best.radius + Math.max(800, ctx.spec.current.length * 2.2)));
 
     if (best && canDock && !panelOpen) {
       prompt.classList.add('is-on');
-      prompt.innerHTML = `<b>F</b> ${best.type === 'station' ? '停靠' : '进入'} ${best.planet?.title ?? best.station?.title ?? ''}`;
+      prompt.innerHTML = `<b>F</b> ${best.type === 'station' ? '停靠' : '降落'} ${best.planet?.title ?? best.station?.title ?? ''}`;
     } else {
       prompt.classList.remove('is-on');
     }
@@ -1279,45 +1465,48 @@ function setupHud(
 
     // 跃迁充能环 / Shift 次级加速
     const chargeTime = Math.max(0.1, ctx.spec.current.chargeTime);
-    const chargeRatio = Math.min(1, ctx.flight.charge / chargeTime);
+    const warpPhase = ctx.flight.warpPhase;
+    const chargeRatio = warpPhase === 'charge'
+      ? Math.min(1, ctx.flight.warpCharge / chargeTime)
+      : warpPhase === 'jump'
+        ? ctx.flight.warpProgress
+        : 0;
     const circ = 2 * Math.PI * 46;
     const shifting = ctx.flight.boostMode === 'shift';
-    const charged = ctx.flight.boostMode === 'charged';
-    const warping = ctx.flight.boost > 0.4;
-    const remaining = Math.max(0, chargeTime - ctx.flight.charge);
+    const warping = warpPhase === 'jump';
+    const aligning = warpPhase === 'align';
+    const charging = warpPhase === 'charge';
+    const remaining = Math.max(0, chargeTime - ctx.flight.warpCharge);
 
     if (shifting) {
-      boostRing.style.strokeDashoffset = String(circ * (1 - 0.12 * Math.max(ctx.flight.boost, 0.2)));
-    } else if (charged || warping) {
-      boostRing.style.strokeDashoffset = '0';
+      boostRing.style.strokeDashoffset = String(circ * 0.18);
     } else {
       boostRing.style.strokeDashoffset = String(circ * (1 - chargeRatio));
     }
 
-    boostKey.textContent = ctx.spec.current.warpCombo ? 'G+H+B' : 'B';
+    boostKey.textContent = ctx.spec.current.warpCombo ? 'B+H+N' : 'B';
     if (warping) {
       boostLabel.textContent = '跃迁中';
       boostSub.textContent = `${Math.round(speed)} m/s`;
-    } else if (shifting) {
-      boostLabel.textContent = 'SHIFT';
-      boostSub.textContent = '次级加速';
-    } else if (charged) {
-      boostLabel.textContent = '跃迁就绪';
-      boostSub.textContent = '全速释放';
-    } else if (chargeRatio > 0.01) {
+    } else if (aligning) {
+      boostLabel.textContent = '校准';
+      boostSub.textContent = '锁定跃迁目标';
+    } else if (charging) {
       boostLabel.textContent = `${Math.round(chargeRatio * 100)}%`;
       boostSub.textContent = `${remaining.toFixed(1)} s`;
+    } else if (shifting) {
+      boostLabel.textContent = 'SHIFT';
+      boostSub.textContent = `×${ctx.flight.shiftMultiplier.toFixed(1)} 极速`;
     } else {
       boostLabel.textContent = '待机';
-      boostSub.textContent = ctx.spec.current.warpCombo ? 'G+H+B 充能' : '按住 B 充能';
+      boostSub.textContent = 'M 选择目标 · B 跃迁';
     }
 
-    boostUi.classList.toggle('is-on', chargeRatio > 0.01 || ctx.flight.boost > 0.05 || shifting);
-    boostUi.classList.toggle('is-ready', charged);
+    boostUi.classList.toggle('is-on', warpPhase !== 'idle' || shifting);
+    boostUi.classList.toggle('is-ready', charging && chargeRatio > 0.98);
     boostUi.classList.toggle('is-shift', shifting);
-    boostUi.classList.toggle('is-charging', chargeRatio > 0.01 && !charged);
+    boostUi.classList.toggle('is-charging', charging);
     boostUi.classList.toggle('is-warping', warping);
-    hudRoot.classList.toggle('is-warp-ready', charged);
     hudRoot.classList.toggle('is-warping', warping);
 
     // 结构值
@@ -1578,5 +1767,6 @@ function setupHud(
       const body = ctx.world.bodies.find((item) => item.id === id);
       if (body) openBody(body);
     },
+    getTarget: () => target,
   };
 }

@@ -307,6 +307,17 @@ export function createWorld(
   const sunKey = new THREE.DirectionalLight(0xfff0dd, 3.4);
   sunKey.position.set(0, 0, 0);
   sunKey.target.position.set(0, 0, -1);
+  sunKey.castShadow = true;
+  sunKey.shadow.mapSize.set(1024, 1024);
+  sunKey.shadow.camera.left = -5000;
+  sunKey.shadow.camera.right = 5000;
+  sunKey.shadow.camera.top = 5000;
+  sunKey.shadow.camera.bottom = -5000;
+  sunKey.shadow.camera.near = 1_000_000;
+  sunKey.shadow.camera.far = 30_000_000;
+  sunKey.shadow.bias = -0.0004;
+  sunKey.shadow.normalBias = 0.03;
+  sunKey.shadow.camera.updateProjectionMatrix();
   scene.add(sunKey);
   scene.add(sunKey.target);
 

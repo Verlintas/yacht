@@ -31,8 +31,21 @@ export class FlightController {
   private cockpitOffset = new THREE.Vector3(0, 2.2, -2.2);
   private spec = { maxSpeed: 4200, boostSpeed: 52000, accel: 2600, turnRate: 1, length: 25, chargeTime: 3, warpCombo: false };
   charge = 0;
-  /** none / shift（次级加速） / charged（B 充满） */
-  boostMode: 'none' | 'shift' | 'charged' = 'none';
+  /** Shift 极速倍率；由 main 根据船体完好度每帧更新 */
+  shiftMultiplier = 3;
+  /** 跃迁状态机：idle → align → charge → jump → idle */
+  warpPhase: 'idle' | 'align' | 'charge' | 'jump' = 'idle';
+  warpTarget = new THREE.Vector3();
+  warpArrival = new THREE.Vector3();
+  warpCharge = 0;
+  warpTimer = 0;
+  warpDuration = 1;
+  warpProgress = 0;
+  warpJumpStart = new THREE.Vector3();
+  /** 主循环读取后清空：跃迁完成事件 */
+  warpArrived = false;
+  /** none / shift（次级加速） / warp（跃迁） */
+  boostMode: 'none' | 'shift' | 'warp' = 'none';
   get isReversing(): boolean {
     return this.keys.has('KeyS') || this.keys.has('ArrowDown');
   }
@@ -167,11 +180,67 @@ export class FlightController {
     this.velocity.set(0, 0, 0);
   }
 
+  isKeyHeld(code: string): boolean {
+    return this.keys.has(code);
+  }
+
+  /** 设定目标后启动跃迁；对齐 → 充能 → 跳跃 → 抵达。 */
+  beginWarp(target: THREE.Vector3, arrival: THREE.Vector3, chargeTime: number): boolean {
+    if (this.warpPhase !== 'idle') return false;
+    if (target.distanceToSquared(this.position) < 1_000_000) return false;
+    this.warpTarget.copy(target);
+    this.warpArrival.copy(arrival);
+    this.warpPhase = 'align';
+    this.warpTimer = 0;
+    this.warpCharge = 0;
+    this.warpProgress = 0;
+    this.charge = 0;
+    this.velocity.set(0, 0, 0);
+    this.throttle = 0;
+    this.boost = 0;
+    this.boostMode = 'warp';
+    const dir = target.clone().sub(this.position).normalize();
+    this.target.copy(this.lookQuaternion(dir));
+    return true;
+  }
+
+  cancelWarp(): void {
+    if (this.warpPhase === 'idle') return;
+    this.warpPhase = 'idle';
+    this.warpCharge = 0;
+    this.warpProgress = 0;
+    this.charge = 0;
+    this.boost = 0;
+    this.boostMode = 'none';
+    this.velocity.set(0, 0, 0);
+  }
+
+  get warpVisual(): number {
+    if (this.warpPhase === 'align') return 0.16;
+    if (this.warpPhase === 'charge') {
+      const t = Math.min(1, this.warpCharge / Math.max(0.1, this.spec.chargeTime));
+      return 0.18 + t * 0.22;
+    }
+    if (this.warpPhase === 'jump') return 1;
+    return 0;
+  }
+
+  private lookQuaternion(direction: THREE.Vector3): THREE.Quaternion {
+    const m = new THREE.Matrix4().lookAt(new THREE.Vector3(0, 0, 0), direction, new THREE.Vector3(0, 1, 0));
+    return new THREE.Quaternion().setFromRotationMatrix(m);
+  }
+
   update(dt: number): void {
     const has = (code: string) => this.keys.has(code);
+    const warpActive = this.warpPhase !== 'idle';
+    if (warpActive) {
+      this.mouseYaw = 0;
+      this.mousePitch = 0;
+    }
 
     /* ── 姿态：鼠标偏航/俯仰作用在舰体局部轴上，滚转后不会反 ── */
-    if (Math.abs(this.mouseYaw) > 1e-7 || Math.abs(this.mousePitch) > 1e-7) {
+    // 跃迁对准/充能/跳跃期间锁定姿态，不能转向
+    if (!warpActive && (Math.abs(this.mouseYaw) > 1e-7 || Math.abs(this.mousePitch) > 1e-7)) {
       this.tmpQ.setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.mouseYaw);
       this.target.multiply(this.tmpQ);
       this.tmpQ.setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.mousePitch);
@@ -181,66 +250,121 @@ export class FlightController {
       this.mousePitch = 0;
     }
 
-    const rollRate = (has('KeyQ') ? 1 : 0) - (has('KeyE') ? 1 : 0);
-    if (rollRate !== 0) {
-      this.tmpQ.setFromAxisAngle(new THREE.Vector3(0, 0, 1), rollRate * 2.2 * dt);
-      this.target.multiply(this.tmpQ);
-      this.target.normalize();
+    if (!warpActive) {
+      const rollRate = (has('KeyQ') ? 1 : 0) - (has('KeyE') ? 1 : 0);
+      if (rollRate !== 0) {
+        this.tmpQ.setFromAxisAngle(new THREE.Vector3(0, 0, 1), rollRate * 2.2 * dt);
+        this.target.multiply(this.tmpQ);
+        this.target.normalize();
+      }
     }
 
     if (!this.ready) {
       this.quaternion.copy(this.target);
       this.ready = true;
     } else {
-      this.quaternion.slerp(this.target, Math.min(1, dt * 9 * this.spec.turnRate));
+      const turn = this.warpPhase === 'align' ? 5.5 : this.warpPhase === 'charge' ? 2.4 : 9;
+      this.quaternion.slerp(this.target, Math.min(1, dt * turn * this.spec.turnRate));
     }
 
-    /* ── 推进 ── */
+    /* ── 跃迁状态机 ── */
+    if (this.warpPhase === 'align') {
+      this.warpTimer += dt;
+      this.charge = 0;
+      this.velocity.multiplyScalar(Math.exp(-6 * dt));
+      this.boost = THREE.MathUtils.lerp(this.boost, 0.08, Math.min(1, dt * 3));
+      this.shake = THREE.MathUtils.lerp(this.shake, 0.08, Math.min(1, dt * 3));
+      if (this.warpTimer > 0.9) {
+        this.warpPhase = 'charge';
+        this.warpTimer = 0;
+      }
+      return;
+    }
+
+    if (this.warpPhase === 'charge') {
+      this.warpCharge += dt;
+      this.charge = Math.min(this.spec.chargeTime, this.warpCharge);
+      this.velocity.multiplyScalar(Math.exp(-8 * dt));
+      const chargeRatio = Math.min(1, this.warpCharge / Math.max(0.1, this.spec.chargeTime));
+      this.boost = THREE.MathUtils.lerp(this.boost, 0.16 + chargeRatio * 0.22, Math.min(1, dt * 4));
+      this.shake = THREE.MathUtils.lerp(this.shake, 0.12 + chargeRatio * 0.08, Math.min(1, dt * 3));
+      if (this.warpCharge >= this.spec.chargeTime) {
+        this.warpPhase = 'jump';
+        this.warpTimer = 0;
+        this.warpProgress = 0;
+        this.warpJumpStart.copy(this.position);
+        const distance = this.warpArrival.distanceTo(this.position);
+        this.warpDuration = THREE.MathUtils.clamp(distance / 6_000_000, 1.15, 3.4);
+        this.velocity
+          .copy(this.warpArrival)
+          .sub(this.warpJumpStart)
+          .normalize()
+          .multiplyScalar(distance / this.warpDuration);
+        this.boost = 1;
+      }
+      return;
+    }
+
+    if (this.warpPhase === 'jump') {
+      this.warpTimer += dt;
+      this.warpProgress = Math.min(1, this.warpTimer / this.warpDuration);
+      const p = this.warpProgress;
+      const ease = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      this.position.lerpVectors(this.warpJumpStart, this.warpArrival, ease);
+      const distance = this.warpJumpStart.distanceTo(this.warpArrival);
+      this.velocity
+        .copy(this.warpArrival)
+        .sub(this.warpJumpStart)
+        .normalize()
+        .multiplyScalar(distance / this.warpDuration);
+      this.boost = 1;
+      this.shake = 0.85;
+      if (this.warpProgress >= 1) {
+        this.position.copy(this.warpArrival);
+        this.velocity.set(0, 0, 0);
+        this.warpPhase = 'idle';
+        this.warpArrived = true;
+        this.charge = 0;
+        this.warpCharge = 0;
+        this.warpProgress = 0;
+        this.boost = 0;
+        this.boostMode = 'none';
+        const look = this.warpTarget.clone().sub(this.position);
+        if (look.lengthSq() > 0.1) {
+          this.target.copy(this.lookQuaternion(look.normalize()));
+          this.quaternion.copy(this.target);
+        }
+      }
+      return;
+    }
+
+    /* ── 普通推进 / Shift 次级加速 ── */
     const forwardInput = (has('KeyW') || has('ArrowUp') ? 1 : 0) - (has('KeyS') || has('ArrowDown') ? 1 : 0);
     const braking = has('KeyX') || has('Space');
-
-    // B：按住充能 3 秒后进入全速推进
-    const charging = this.spec.warpCombo
-      ? has('KeyG') && has('KeyH') && has('KeyB')
-      : has('KeyB');
-    if (charging) {
-      this.charge = Math.min(this.spec.chargeTime, this.charge + dt);
-    } else {
-      this.charge = 0;
-    }
-    const charged = charging && this.charge >= this.spec.chargeTime;
-
-    // Shift：次级加速，约 55% 的推进档位，比 B 慢但比基础速度快
     const shifting = (has('ShiftLeft') || has('ShiftRight')) && forwardInput >= 0 && !braking;
-    const targetBoost = charged ? 1 : shifting ? 0.12 : 0;
-    this.boostMode = charged ? 'charged' : shifting ? 'shift' : 'none';
+    this.boostMode = shifting ? 'shift' : 'none';
+    this.charge = 0;
 
-    const autoWarp = charged && forwardInput >= 0;
     this.throttle = THREE.MathUtils.lerp(
       this.throttle,
-      Math.max(0, forwardInput, autoWarp ? 1 : shifting ? 0.55 : 0),
+      Math.max(0, forwardInput, shifting ? 0.55 : 0),
       Math.min(1, dt * 4),
     );
-    this.boost = THREE.MathUtils.lerp(this.boost, targetBoost, Math.min(1, dt * 1.5));
+    this.boost = THREE.MathUtils.lerp(this.boost, shifting ? 0.18 : 0, Math.min(1, dt * 2.5));
     this.brake = THREE.MathUtils.lerp(this.brake, braking ? 1 : 0, Math.min(1, dt * 6));
 
     const forward = this.forwardVector;
     const right = this.tmp.set(1, 0, 0).applyQuaternion(this.quaternion).clone();
     const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.quaternion);
+    const accel = this.spec.accel * (shifting ? 3.0 : 1);
 
     // 前向 / 反推：反推只有 45% 推力
-    if (forwardInput > 0 || autoWarp) {
-      const warpAccel = Math.max(this.spec.accel * 4, (this.spec.boostSpeed - this.spec.maxSpeed) * 4);
-      const accel = this.spec.accel + this.boost * warpAccel;
-      const thrust = forwardInput > 0 ? forwardInput : 1;
-      this.velocity.addScaledVector(forward, accel * thrust * dt);
+    if (forwardInput > 0) {
+      this.velocity.addScaledVector(forward, accel * forwardInput * dt);
     } else if (forwardInput < 0) {
-      // forwardInput 是负数，乘上去才是真正的反推
       this.velocity.addScaledVector(forward, 1500 * forwardInput * dt);
     } else if (shifting) {
-      // 只按 Shift 也能推进，但比 W 弱
-      const accel = (this.spec.accel + this.boost * this.spec.accel * 16) * 0.55;
-      this.velocity.addScaledVector(forward, accel * dt);
+      this.velocity.addScaledVector(forward, accel * 0.55 * dt);
     }
 
     // 侧移
@@ -251,11 +375,11 @@ export class FlightController {
     const lift = (has('KeyR') ? 1 : 0) - (has('KeyC') ? 1 : 0);
     if (lift !== 0) this.velocity.addScaledVector(up, lift * 1800 * dt);
 
-    /* ── 阻尼：assist 开时像有推进器的飞行器，关时接近纯惯性 ── */
-    const damping = this.assist ? 1.9 : 0.06;
+    /* ── 阻尼：Shift 时降低阻尼以接近 2–5× 极速 ── */
+    let damping = this.assist ? 1.9 : 0.06;
+    if (shifting) damping = this.assist ? 0.35 : 0.03;
     this.velocity.multiplyScalar(Math.exp(-damping * dt));
 
-    // 主动刹车
     if (this.brake > 0.01) {
       this.velocity.multiplyScalar(Math.exp(-9 * this.brake * dt));
     }
@@ -271,8 +395,14 @@ export class FlightController {
       this.velocity.copy(forward).multiplyScalar(vForward).addScaledVector(right, nRight).addScaledVector(up, nUp);
     }
 
-    const maxSpeed = this.spec.maxSpeed + this.boost * (this.spec.boostSpeed - this.spec.maxSpeed);
-    if (this.velocity.lengthSq() > maxSpeed * maxSpeed) this.velocity.setLength(maxSpeed);
+    const shiftCap = this.spec.maxSpeed * Math.max(2, this.shiftMultiplier);
+    const cap = shifting ? shiftCap : this.spec.maxSpeed;
+    const speed = this.velocity.length();
+    if (speed > cap) {
+      // Shift 内软限制在极速；退出 Shift 后让超速平滑衰减，不瞬间掉回普通极速
+      const next = shifting ? cap : Math.max(cap, speed - (speed - cap) * Math.min(1, dt * 2.0));
+      this.velocity.setLength(next);
+    }
 
     this.position.addScaledVector(this.velocity, dt);
 
@@ -301,7 +431,7 @@ export class FlightController {
         this.camera.position.copy(this.cockpitOffset);
         this.camera.quaternion.identity();
         const fovComfort = THREE.MathUtils.clamp((this.spec.length ?? 25) / 1200, 0.25, 1);
-        this.camera.fov = 78 + this.boost * (3 + 6 * fovComfort);
+        this.camera.fov = 78 + this.boost * (3 + 6 * fovComfort) + (this.warpPhase === 'jump' ? 10 : 0);
         this.camera.updateProjectionMatrix();
       }
     } else if (this.cameraMode === 'free') {
@@ -327,7 +457,7 @@ export class FlightController {
         this.camera.position.x += (Math.random() - 0.5) * this.shake * 0.3;
         this.camera.position.y += (Math.random() - 0.5) * this.shake * 0.3;
       }
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62, Math.min(1, dt * 4));
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62 + (this.warpPhase === 'jump' ? 8 : 0), Math.min(1, dt * 4));
       this.camera.updateProjectionMatrix();
     } else {
       const shipParent = this.shipRef?.parent ?? null;
@@ -355,7 +485,7 @@ export class FlightController {
       }
 
       const fovComfort = THREE.MathUtils.clamp(L / 1200, 0.25, 1);
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62 + this.boost * (4 + 8 * fovComfort) + Math.min(4, this.velocity.length() / 7000), Math.min(1, dt * 4));
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62 + this.boost * (4 + 8 * fovComfort) + Math.min(4, this.velocity.length() / 7000) + (this.warpPhase === 'jump' ? 12 : 0), Math.min(1, dt * 4));
       this.camera.updateProjectionMatrix();
     }
   }

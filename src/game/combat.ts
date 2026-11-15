@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { getShip, type ShipSpec, type WeaponMount, type WeaponType } from './ships';
+import { getShip, shiftSpeedMultiplier, type ShipSpec, type WeaponMount, type WeaponType } from './ships';
 import { LocalPlume } from './trails';
 import { DamageVisuals } from './damage';
 
@@ -369,7 +369,8 @@ export class Combat {
       ships.push(escort);
     });
 
-    const cruise = flagshipSpec.tier >= 6 ? 1600 : flagshipSpec.tier >= 5 ? 1900 : 2400;
+    // 舰队巡航速度以旗舰的 Shift 极速为基准，而不是固定数值
+    const cruise = flagshipSpec.maxSpeed * shiftSpeedMultiplier(flagshipSpec, 1);
     this.fleets.push({
       id: fleetId,
       faction,

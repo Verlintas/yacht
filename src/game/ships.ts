@@ -313,6 +313,20 @@ export const SHIPS: ShipSpec[] = RAW.map((raw) => {
   };
 });
 
+/** Shift 极速倍率：船型决定上下限，船体完好度决定当前值（2–5×） */
+export function shiftSpeedMultiplier(spec: ShipSpec, hullRatio: number): number {
+  const health = Math.max(0, Math.min(1, hullRatio));
+  const ranges: Record<string, [number, number]> = {
+    light: [3.0, 5.0],
+    heavy: [2.6, 4.2],
+    large: [2.3, 3.5],
+    capital: [2.0, 2.8],
+    flagship: [2.0, 2.6],
+  };
+  const [low, high] = ranges[spec.class] ?? [2.4, 4.0];
+  return low + (high - low) * health;
+}
+
 export function getShip(id: string): ShipSpec {
   return SHIPS.find((ship) => ship.id === id) ?? SHIPS[0];
 }
