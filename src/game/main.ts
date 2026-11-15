@@ -561,7 +561,7 @@ export async function startGame(system: SystemData): Promise<void> {
     const entryAltitude = selected.radius + Math.max(50_000, atmosphere * 0.45);
     const highOrbit = selected.radius + Math.max(atmosphere * 4, selected.radius * 0.08);
     const safeDistance = selected.type === 'planet'
-      ? currentDistance > selected.radius * 1.25
+      ? currentDistance > selected.radius * 1.6
         ? Math.max(entryAltitude, Math.min(highOrbit, currentDistance * 0.85))
         : entryAltitude
       : Math.max(selected.radius * 4, 5000);
@@ -1487,7 +1487,7 @@ function setupHud(
     const charging = warpPhase === 'charge';
     const remaining = Math.max(0, chargeTime - ctx.flight.warpCharge);
     const targetDistance = target ? target.position.distanceTo(ctx.flight.position) : Infinity;
-    const canSecondWarp = !!target && target.type === 'planet' && targetDistance < target.radius * 1.25;
+    const canSecondWarp = !!target && target.type === 'planet' && targetDistance < target.radius * 1.6;
 
     if (shifting) {
       boostRing.style.strokeDashoffset = String(circ * 0.18);
