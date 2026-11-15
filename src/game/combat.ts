@@ -8,6 +8,8 @@ interface Projectile {
   mesh: THREE.Mesh;
   glow: THREE.Sprite;
   velocity: THREE.Vector3;
+  /** 上一帧位置，避免每帧 clone */
+  prev: THREE.Vector3;
   damage: number;
   life: number;
   owner: 'player' | 'npc';
@@ -131,6 +133,15 @@ export interface NpcTemplate {
   collision?: ShipCollision;
 }
 
+/** 自动武器可用的敌对目标快照 */
+export interface HostileContact {
+  position: THREE.Vector3;
+  velocity: THREE.Vector3;
+  distance: number;
+  /** 返回目标的实时位置；目标已死亡时返回 null */
+  homing: () => THREE.Vector3 | null;
+}
+
 export interface FleetIntel {
   faction: Faction;
   flagship: string;
@@ -237,6 +248,14 @@ export class Combat {
   private encounterRange = 150000;
   private despawnRange = 500000;
   private playerCollisionCooldown = 0;
+  // 弹丸热路径复用向量，避免大量鱼雷时每帧产生垃圾
+  private hitAB = new THREE.Vector3();
+  private hitToTarget = new THREE.Vector3();
+  private hitClosest = new THREE.Vector3();
+  private homingDesired = new THREE.Vector3();
+  private homingCurrent = new THREE.Vector3();
+  private homingAxis = new THREE.Vector3();
+  private readonly forwardAxis = new THREE.Vector3(0, 0, 1);
 
   constructor(scene: THREE.Scene, events: CombatEvents) {
     this.scene = scene;
@@ -580,8 +599,14 @@ export class Combat {
     );
   }
 
-  /** 玩家开火 */
-  fire(origin: THREE.Vector3, direction: THREE.Vector3, weapon: WeaponMount, _quaternion: THREE.Quaternion): void {
+  /** 玩家开火；传入 homingOverride 时鱼雷锁定调用方指定的目标 */
+  fire(
+    origin: THREE.Vector3,
+    direction: THREE.Vector3,
+    weapon: WeaponMount,
+    _quaternion: THREE.Quaternion,
+    homingOverride?: () => THREE.Vector3 | null,
+  ): void {
     const spread = weapon.spread;
     const dir = direction
       .clone()
@@ -595,7 +620,9 @@ export class Combat {
       .normalize();
 
     const torpedoTarget =
-      weapon.type === 'torpedo' ? this.findTorpedoTarget(origin, dir, weapon.range, !!weapon.side) : null;
+      weapon.type === 'torpedo' && !homingOverride
+        ? this.findTorpedoTarget(origin, dir, weapon.range, !!weapon.side)
+        : null;
 
     this.spawnProjectile(
       origin,
@@ -607,7 +634,8 @@ export class Combat {
       weapon.type === 'cannon' ? 1.5 : weapon.type === 'torpedo' ? 2.4 : 1,
       'player',
       weapon.type,
-      torpedoTarget ? () => torpedoTarget.group.position : undefined,
+      homingOverride ??
+        (torpedoTarget ? () => (torpedoTarget.alive ? torpedoTarget.group.position : null) : undefined),
     );
   }
 
@@ -620,7 +648,7 @@ export class Combat {
     let best: Npc | null = null;
     let bestScore = Infinity;
     for (const npc of this.npcs) {
-      if (!npc.alive) continue;
+      if (!npc.alive || !npc.hostile) continue;
       const to = npc.group.position.clone().sub(origin);
       const distance = to.length();
       if (distance > range) continue;
@@ -667,6 +695,7 @@ export class Combat {
       mesh,
       glow,
       velocity: dir.multiplyScalar(speed),
+      prev: new THREE.Vector3().copy(origin),
       damage,
       life,
       owner,
@@ -718,12 +747,15 @@ export class Combat {
     if (this.glowPool.length < MAX_PROJECTILES) this.glowPool.push(p.glow);
   }
 
-  /** 线段到点的最近距离，用于高速弹丸的连续碰撞检测 */
+  /** 线段到点的最近距离，用于高速弹丸的连续碰撞检测（复用向量，避免每颗弹丸每帧分配） */
   private segmentHit(target: THREE.Vector3, from: THREE.Vector3, to: THREE.Vector3, radius: number): boolean {
-    const ab = to.clone().sub(from);
-    const lengthSq = ab.lengthSq();
-    const t = lengthSq > 1e-8 ? THREE.MathUtils.clamp(target.clone().sub(from).dot(ab) / lengthSq, 0, 1) : 0;
-    return target.distanceTo(from.clone().addScaledVector(ab, t)) < radius;
+    this.hitAB.subVectors(to, from);
+    const lengthSq = this.hitAB.lengthSq();
+    const t =
+      lengthSq > 1e-8
+        ? THREE.MathUtils.clamp(this.hitToTarget.subVectors(target, from).dot(this.hitAB) / lengthSq, 0, 1)
+        : 0;
+    return target.distanceTo(this.hitClosest.copy(from).addScaledVector(this.hitAB, t)) < radius;
   }
 
   update(dt: number, playerPos: THREE.Vector3, playerVelocity: THREE.Vector3, playerQuaternion: THREE.Quaternion, _camera?: THREE.Camera, playerLength = 25, playerCollision?: ShipCollision): void {
@@ -734,21 +766,21 @@ export class Combat {
     // 弹丸
     for (let i = this.projectiles.length - 1; i >= 0; i -= 1) {
       const p = this.projectiles[i];
-      const prev = p.mesh.position.clone();
+      const prev = p.prev.copy(p.mesh.position);
       if (p.homing) {
         const target = p.homing();
         if (target) {
-          const desired = target.clone().sub(p.mesh.position).normalize();
-          const current = p.velocity.clone().normalize();
-          const angle = current.angleTo(desired);
+          this.homingDesired.copy(target).sub(p.mesh.position).normalize();
+          this.homingCurrent.copy(p.velocity).normalize();
+          const angle = this.homingCurrent.angleTo(this.homingDesired);
           const step = Math.min(angle, 1.9 * dt);
           if (step > 1e-5) {
-            const axis = new THREE.Vector3().crossVectors(current, desired);
-            if (axis.lengthSq() > 1e-8) {
-              axis.normalize();
-              current.applyAxisAngle(axis, step);
-              p.velocity.copy(current).multiplyScalar(p.speed);
-              p.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), current);
+            this.homingAxis.crossVectors(this.homingCurrent, this.homingDesired);
+            if (this.homingAxis.lengthSq() > 1e-8) {
+              this.homingAxis.normalize();
+              this.homingCurrent.applyAxisAngle(this.homingAxis, step);
+              p.velocity.copy(this.homingCurrent).multiplyScalar(p.speed);
+              p.mesh.quaternion.setFromUnitVectors(this.forwardAxis, this.homingCurrent);
             }
           }
         }
@@ -1715,7 +1747,7 @@ export class Combat {
   }
 
   /** 最近的一个「已攻击我方」的目标 */
-  nearestHostile(position: THREE.Vector3, range: number): { position: THREE.Vector3; velocity: THREE.Vector3; distance: number } | null {
+  nearestHostile(position: THREE.Vector3, range: number): HostileContact | null {
     let best: Npc | null = null;
     let bestDist = range;
     for (const npc of this.npcs) {
@@ -1726,7 +1758,31 @@ export class Combat {
         best = npc;
       }
     }
-    return best ? { position: best.group.position.clone(), velocity: best.velocity.clone(), distance: bestDist } : null;
+    if (!best) return null;
+    const target = best;
+    return {
+      position: target.group.position.clone(),
+      velocity: target.velocity.clone(),
+      distance: bestDist,
+      homing: () => (target.alive ? target.group.position : null),
+    };
+  }
+
+  /** 范围内所有「已攻击我方」的目标，按距离排序。鱼雷发射器用它分配不同目标。 */
+  hostilesInRange(position: THREE.Vector3, range: number): HostileContact[] {
+    const found: Array<{ npc: Npc; distance: number }> = [];
+    for (const npc of this.npcs) {
+      if (!npc.alive || !npc.hostile) continue;
+      const distance = npc.group.position.distanceTo(position);
+      if (distance <= range) found.push({ npc, distance });
+    }
+    found.sort((a, b) => a.distance - b.distance);
+    return found.map(({ npc, distance }) => ({
+      position: npc.group.position.clone(),
+      velocity: npc.velocity.clone(),
+      distance,
+      homing: () => (npc.alive ? npc.group.position : null),
+    }));
   }
 
   /** 弹道预测：给定炮口、目标位置/速度、弹速，返回提前量瞄准点 */

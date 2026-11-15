@@ -76,6 +76,8 @@ export interface ShipSpec {
   length: number;
   /** 引擎尾焰颜色 */
   exhaust: number;
+  /** 主推进器尾焰长度/宽度缩放，默认 1；超大舰可调小 */
+  plumeScale: number;
   /** 舰载传感器探测距离（米） */
   sensorRange: number;
   /** B 键跃迁充能秒数 */
@@ -121,6 +123,11 @@ const SHIP_FIRE_RATE: Record<string, number> = {
   freighter: 0.7,
   commander: 0.95,
   battleship: 0.72,
+};
+
+/** 大舰尾焰缩放：Archon 的喷口太大，缩小成红色小尾焰 */
+const PLUME_SCALE: Record<string, number> = {
+  rta_archon: 0.16,
 };
 
 /** 护盾每秒恢复比例：大舰按最大护盾百分比恢复，避免 120k 护盾回满要半小时 */
@@ -198,6 +205,7 @@ interface Raw {
   model: string;
   length: number;
   exhaust: number;
+  plumeScale?: number;
   sensorRange: number;
   speed: [number, number, number, number];
   hull: [number, number, number, number];
@@ -306,7 +314,7 @@ const RAW: Raw[] = [
     ],
   },
   {
-    id: 'rta_archon', name: 'RTA Archon', code: 'AR-10', role: '超无畏舰', class: 'dreadnought', tier: 10, model: 'candidates/rta_archon.glb', length: 8000, exhaust: 0xffd28a, sensorRange: 650000,
+    id: 'rta_archon', name: 'RTA Archon', code: 'AR-10', role: '超无畏舰', class: 'dreadnought', tier: 10, model: 'candidates/rta_archon.glb', length: 8000, exhaust: 0xff2a1a, plumeScale: 0.16, sensorRange: 650000,
     speed: [170, 240000, 100, 0.16], hull: [1000000, 420000, 180, 18000],
     cockpits: [[2.2, 369.4, -3602.3]],
     nozzles: [
@@ -367,6 +375,7 @@ export const SHIPS: ShipSpec[] = RAW.map((raw) => {
     model: raw.model,
     length: raw.length,
     exhaust: raw.exhaust,
+    plumeScale: raw.plumeScale ?? PLUME_SCALE[raw.id] ?? 1,
     sensorRange: raw.sensorRange,
     chargeTime: Math.max(3, Math.min(10, 3 + (7 * Math.log10(raw.length / 25)) / Math.log10(50))),
     warpCombo: raw.length > 3000,

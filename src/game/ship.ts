@@ -525,6 +525,10 @@ export async function loadShipModel(
       ];
 
   for (const mount of mounts) {
+    const role = mount.role ?? 'main';
+    // 光晕按喷口尺寸，而不是按舰长；否则 8 km 大舰的副喷口会糊成一片
+    const baseScale = Math.max(0.9, mount.size * (role === 'secondary' ? 0.8 : 1.6));
+    const baseOpacity = role === 'retro' ? 0.5 : role === 'secondary' ? 0.34 : 0.72;
     const sprite = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: glowTexture,
@@ -532,13 +536,15 @@ export async function loadShipModel(
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         transparent: true,
-        opacity: mount.role === 'retro' ? 0.5 : 0.75,
+        opacity: baseOpacity,
       }),
     );
     sprite.position.set(mount.pos[0], mount.pos[1], mount.pos[2]);
-    sprite.scale.setScalar(Math.max(1.2, mount.size * 2.4));
-    sprite.userData.role = mount.role;
+    sprite.scale.setScalar(baseScale);
+    sprite.userData.role = role;
     sprite.userData.engineGlow = true;
+    sprite.userData.baseScale = baseScale;
+    sprite.userData.baseOpacity = baseOpacity;
     group.add(sprite);
     engineGlow.push(sprite);
 
@@ -550,14 +556,22 @@ export async function loadShipModel(
     const power = 0.25 + throttle * 1.5 + boost * 2.2;
     for (const sprite of engineGlow) {
       const role = sprite.userData.role as string;
+      const baseScale = (sprite.userData.baseScale as number) ?? 1;
+      const baseOpacity = (sprite.userData.baseOpacity as number) ?? 0.7;
       if (role === 'retro') {
         sprite.visible = retro;
         (sprite.material as THREE.SpriteMaterial).opacity = retro ? 0.55 : 0;
         continue;
       }
       sprite.visible = true;
-      sprite.scale.setScalar(Math.max(1.0, targetLength * (0.045 + power * 0.05)));
-      (sprite.material as THREE.SpriteMaterial).opacity = 0.3 + Math.min(power * 0.12, 0.35);
+      if (role === 'secondary') {
+        // 副推进器只保留一点光，不随主推力大幅膨胀
+        sprite.scale.setScalar(baseScale * (1 + Math.min(power * 0.08, 0.18)));
+        (sprite.material as THREE.SpriteMaterial).opacity = baseOpacity * (0.8 + Math.min(power * 0.08, 0.2));
+      } else {
+        sprite.scale.setScalar(baseScale * (1 + Math.min(power * 0.32, 1.0)));
+        (sprite.material as THREE.SpriteMaterial).opacity = baseOpacity * (0.65 + Math.min(power * 0.16, 0.35));
+      }
     }
 
   };

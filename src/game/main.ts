@@ -11,7 +11,7 @@ import { EngineAudio } from './audio';
 import { SpeedLines } from './speedlines';
 import { LocalPlume } from './trails';
 import { DamageVisuals } from './damage';
-import { Combat } from './combat';
+import { Combat, type HostileContact } from './combat';
 import { SurfacePatch } from './surface';
 import { SHIPS, getShip, manualWeaponTypes, shiftSpeedMultiplier, tierLabel, WEAPON_LABELS, type ShipSpec, type WeaponType } from './ships';
 import type { SystemData } from './data';
@@ -20,7 +20,6 @@ interface WeaponState {
   selected: WeaponType | 'all';
   cooldowns: Map<string, number>;
   firing: boolean;
-  missileCooldown: number;
 }
 
 const FIRE_SHAKE: Record<WeaponType, number> = {
@@ -361,7 +360,7 @@ export async function startGame(system: SystemData): Promise<void> {
   boot.classList.add('is-done');
   window.setTimeout(() => boot.remove(), 900);
 
-  const weapons: WeaponState = { selected: 'all', cooldowns: new Map(), firing: false, missileCooldown: 0 };
+  const weapons: WeaponState = { selected: 'all', cooldowns: new Map(), firing: false };
   const autoCooldowns = new Map<string, number>();
   let shipSpec: ShipSpec = initialSpec;
   const specRef = { current: shipSpec };
@@ -458,9 +457,9 @@ export async function startGame(system: SystemData): Promise<void> {
   const applyShip = (spec: ShipSpec): void => {
     trailRef.current?.dispose();
     if (ship.group) {
-      const mainNozzles = spec.nozzles.filter((nozzle) => nozzle.role === 'main');
-      const nozzles = mainNozzles.length > 0 ? mainNozzles : spec.nozzles.slice(0, 2);
-      trailRef.current = new LocalPlume(ship.group, nozzles, spec.length, spec.exhaust);
+      // 主推进器保留完整尾焰；副推进器只给一点小光。反推进器不喷。
+      const nozzles = spec.nozzles.filter((nozzle) => nozzle.role !== 'retro');
+      trailRef.current = new LocalPlume(ship.group, nozzles, spec.length, spec.exhaust, spec.plumeScale);
       damageRef.current?.dispose();
       damageRef.current = new DamageVisuals(ship.group, spec.length, spec);
     }
@@ -484,7 +483,14 @@ export async function startGame(system: SystemData): Promise<void> {
     weapons.cooldowns.clear();
     weapons.selected = 'all';
     weapons.firing = false;
-    weapons.missileCooldown = 0;
+    // 自动鱼雷按发射器错峰：每个发射器独立装填，不再全舰同时齐射
+    ctx.autoCooldowns.clear();
+    const torpedoLaunchers = spec.weapons.filter((weapon) => weapon.turret && weapon.type === 'torpedo');
+    torpedoLaunchers.forEach((weapon, index) => {
+      const interval = 1 / Math.max(0.05, weapon.rate);
+      const phase = (index / Math.max(1, torpedoLaunchers.length)) * interval;
+      ctx.autoCooldowns.set(`${spec.id}:${weapon.id}`, phase);
+    });
   };
   applyShip(shipSpec);
 
@@ -626,7 +632,6 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     ctx.flight.update(dt);
     updateWeaponCooldowns(ctx, dt);
-    ctx.weapons.missileCooldown = Math.max(0, ctx.weapons.missileCooldown - dt);
     fireSelectedWeapons(ctx);
 
     // 实体碰撞：撞上天体就被推开并卸掉法向速度
@@ -760,7 +765,9 @@ function loop(ctx: GameContext, hud: Hud): void {
     ctx.combat.update(dt, ctx.flight.position, ctx.flight.velocity, ctx.flight.quaternion, ctx.camera, ctx.spec.current.length, ctx.ship.collision);
 
     // 自动炮：只打「已攻击我方」的目标
-    for (const weapon of ctx.spec.current.weapons) {
+    let inverseQuat: THREE.Quaternion | null = null;
+    for (let weaponIndex = 0; weaponIndex < ctx.spec.current.weapons.length; weaponIndex += 1) {
+      const weapon = ctx.spec.current.weapons[weaponIndex];
       if (!weapon.turret) continue;
       const key = `${ctx.spec.current.id}:${weapon.id}`;
       const cd = ctx.autoCooldowns.get(key) ?? 0;
@@ -770,15 +777,39 @@ function loop(ctx: GameContext, hud: Hud): void {
       }
       const mount = new THREE.Vector3(...weapon.pos);
       const origin = mount.clone().applyQuaternion(ctx.flight.quaternion).add(ctx.flight.position);
-      const target = ctx.combat.nearestHostile(origin, weapon.range);
+
+      let target: HostileContact | null = null;
+      if (weapon.type === 'torpedo') {
+        // 每具鱼雷发射器自己选目标：在最近几个敌对目标之间轮换，形成多目标饱和攻击
+        const hostiles = ctx.combat.hostilesInRange(origin, weapon.range);
+        if (hostiles.length === 0) continue;
+        let candidates = hostiles;
+        if (weapon.side) {
+          inverseQuat ??= ctx.flight.quaternion.clone().invert();
+          candidates = hostiles.filter((contact) => {
+            const local = contact.position.clone().sub(ctx.flight.position).applyQuaternion(inverseQuat!);
+            return weapon.side === 'left' ? local.x < 0 : local.x > 0;
+          });
+        }
+        if (candidates.length === 0) continue;
+        const poolSize = Math.min(4, candidates.length);
+        target = candidates[weaponIndex % poolSize];
+      } else {
+        target = ctx.combat.nearestHostile(origin, weapon.range);
+      }
       if (!target) continue;
-      if (weapon.type === 'torpedo' && ctx.weapons.missileCooldown > 0) continue;
+
       const aim = ctx.combat.leadPoint(origin, target.position, target.velocity, weapon.speed);
       const dir = weapon.side
         ? new THREE.Vector3(weapon.side === 'left' ? -1 : 1, 0, 0).applyQuaternion(ctx.flight.quaternion).normalize()
         : aim.sub(origin).normalize();
-      ctx.combat.fire(origin, dir, weapon, ctx.flight.quaternion);
-      if (weapon.type === 'torpedo') ctx.weapons.missileCooldown = 1.1;
+      ctx.combat.fire(
+        origin,
+        dir,
+        weapon,
+        ctx.flight.quaternion,
+        weapon.type === 'torpedo' ? target.homing : undefined,
+      );
       ctx.audio.weapon(weapon.type, Math.min(0.34, 0.07 + weapon.damage / 1100));
       ctx.autoCooldowns.set(key, 1 / weapon.rate);
     }

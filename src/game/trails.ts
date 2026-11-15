@@ -226,9 +226,10 @@ export class LocalPlume {
 
   constructor(
     group: THREE.Group,
-    nozzles: Array<{ pos: [number, number, number]; size: number }>,
+    nozzles: Array<{ pos: [number, number, number]; size: number; role?: string }>,
     shipLength: number,
     color: number,
+    plumeScale = 1,
   ) {
     this.object = new THREE.Group();
     group.add(this.object);
@@ -248,7 +249,7 @@ export class LocalPlume {
     });
     const innerMat = new THREE.MeshBasicMaterial({
       map: tex,
-      color: 0xffffff,
+      color: new THREE.Color(color).lerp(new THREE.Color(0xffffff), 0.72),
       transparent: true,
       opacity: 0.8,
       blending: THREE.AdditiveBlending,
@@ -258,8 +259,14 @@ export class LocalPlume {
     this.materials.push(outerMat, innerMat);
 
     for (const nozzle of nozzles) {
-      const baseLength = Math.max(3.5, shipLength * 0.32);
-      const baseWidth = Math.max(1.4, nozzle.size * 2.4);
+      const secondary = nozzle.role === 'secondary';
+      // 副推进器只留一点光：长度按舰长的小比例，宽度直接按喷口尺寸
+      const baseLength = secondary
+        ? Math.max(2.2, shipLength * 0.015)
+        : Math.max(3.5, shipLength * 0.32 * plumeScale);
+      const baseWidth = secondary
+        ? Math.max(0.6, nozzle.size * 0.9)
+        : Math.max(1.2, nozzle.size * 2.4 * plumeScale);
       const pos = new THREE.Vector3(...nozzle.pos);
       const data: FlameNozzle = {
         x: pos.x,
@@ -274,6 +281,8 @@ export class LocalPlume {
         [qb, false],
         [qa, true],
       ] as Array<[THREE.Quaternion, boolean]>) {
+        // 副推进器不需要白热核心，只保留外层的小光斑
+        if (secondary && inner) continue;
         const mesh = new THREE.Mesh(flameGeo, inner ? innerMat : outerMat);
         mesh.quaternion.copy(quat);
         mesh.position.set(data.x, data.y, data.z + baseLength * 0.5);
