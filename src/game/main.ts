@@ -236,7 +236,7 @@ export async function startGame(system: SystemData): Promise<void> {
   await step('装载飞船', 0.62);
 
   // NPC 模板：全部先按各自的舰长缩放好，战斗时直接 clone
-  const npcTemplates = new Map<string, { group: THREE.Group; spec: ShipSpec }>();
+  const npcTemplates = new Map<string, { group: THREE.Group; spec: ShipSpec; collision?: import('./ship').ShipCollision }>();
   await step('集结舰队', 0.7);
   await Promise.all(
     ['thunderbolt', 'f008', 'bomber', 'freighter', 'commander', 'battleship'].map(async (id) => {
@@ -248,7 +248,7 @@ export async function startGame(system: SystemData): Promise<void> {
         spec.cockpits[0],
         spec.exhaust,
       );
-      npcTemplates.set(id, { group: template.group, spec });
+      npcTemplates.set(id, { group: template.group, spec, collision: template.collision });
     }),
   );
 
@@ -747,7 +747,7 @@ function loop(ctx: GameContext, hud: Hud): void {
     ctx.warpPass.uniforms.uIntensity.value = warpVisual;
     ctx.warpPass.uniforms.uTime.value = elapsed;
 
-    ctx.combat.update(dt, ctx.flight.position, ctx.flight.velocity, ctx.flight.quaternion, ctx.camera, ctx.spec.current.length);
+    ctx.combat.update(dt, ctx.flight.position, ctx.flight.velocity, ctx.flight.quaternion, ctx.camera, ctx.spec.current.length, ctx.ship.collision);
 
     // 自动炮：只打「已攻击我方」的目标
     for (const weapon of ctx.spec.current.weapons) {

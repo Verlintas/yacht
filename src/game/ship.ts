@@ -1,6 +1,14 @@
 import * as THREE from 'three';
 import { armorPlate, greebles, lightStrip, panel, truss } from './kit';
 import { makeRandom } from './data';
+import { MeshBVH } from 'three-mesh-bvh';
+
+export interface ShipCollision {
+  geometry: THREE.BufferGeometry;
+  bvh: MeshBVH;
+  bounds: THREE.Box3;
+  triangles: number;
+}
 
 export interface Ship {
   group: THREE.Group;
@@ -11,7 +19,45 @@ export interface Ship {
   cockpitGroup?: THREE.Group;
   /** 舰体模型：第一人称时隐藏，避免船体挡住视野 */
   model?: THREE.Object3D;
+  /** 逐三角碰撞体（位于 group 局部坐标） */
+  collision?: ShipCollision;
   update: (dt: number, throttle: number, boost: number, retro?: boolean) => void;
+}
+
+function buildShipCollision(model: THREE.Object3D): ShipCollision | undefined {
+  model.updateMatrixWorld(true);
+  const positions: number[] = [];
+  const vertex = new THREE.Vector3();
+
+  model.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return;
+    const geometry = object.geometry as THREE.BufferGeometry;
+    const position = geometry.attributes.position;
+    if (!position) return;
+    const index = geometry.index;
+    const matrix = object.matrixWorld;
+    const count = index ? index.count : position.count;
+    for (let i = 0; i < count; i += 3) {
+      for (let k = 0; k < 3; k += 1) {
+        const idx = index ? index.getX(i + k) : i + k;
+        vertex.fromBufferAttribute(position, idx).applyMatrix4(matrix);
+        positions.push(vertex.x, vertex.y, vertex.z);
+      }
+    }
+  });
+
+  if (positions.length < 9) return undefined;
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.computeBoundingBox();
+  const bvh = new MeshBVH(geometry);
+  (geometry as THREE.BufferGeometry & { boundsTree?: MeshBVH }).boundsTree = bvh;
+  return {
+    geometry,
+    bvh,
+    bounds: geometry.boundingBox!.clone(),
+    triangles: positions.length / 9,
+  };
 }
 
 export function createShip(): Ship {
@@ -338,7 +384,7 @@ export function createShip(): Ship {
     }
   };
 
-  return { group, engineGlow, engineCore, cockpit: new THREE.Vector3(0, 2.2, -2.2), update };
+  return { group, engineGlow, engineCore, cockpit: new THREE.Vector3(0, 2.2, -2.2), collision: buildShipCollision(group), update };
 }
 
 /** 从 Blender 导出的 GLB 加载舰体，并补上引擎光。 */
@@ -390,6 +436,8 @@ export async function loadShipModel(
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
   model.position.sub(center);
+
+  const collision = buildShipCollision(model);
 
   const group = new THREE.Group();
   group.add(model);
@@ -511,5 +559,5 @@ export async function loadShipModel(
 
   };
 
-  return { group, engineGlow, engineCore, cockpit, cockpitGroup, model, update };
+  return { group, engineGlow, engineCore, cockpit, cockpitGroup, model, collision, update };
 }

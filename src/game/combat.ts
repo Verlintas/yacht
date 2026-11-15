@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { getShip, shiftSpeedMultiplier, type ShipSpec, type WeaponMount, type WeaponType } from './ships';
 import { LocalPlume } from './trails';
 import { DamageVisuals } from './damage';
+import type { ShipCollision } from './ship';
 
 interface Projectile {
   mesh: THREE.Mesh;
@@ -82,6 +83,7 @@ interface Npc {
   collisionRadius: number;
   collisionHalfLength: number;
   collisionCooldown: number;
+  collision?: ShipCollision;
 }
 
 interface ExplosionFx {
@@ -126,6 +128,7 @@ interface Fleet {
 export interface NpcTemplate {
   group: THREE.Group;
   spec: ShipSpec;
+  collision?: ShipCollision;
 }
 
 export interface FleetIntel {
@@ -552,9 +555,10 @@ export class Combat {
       cooldown: Math.random() * 2,
       scanCooldown: 1 + Math.random() * 2,
       radius: Math.max(12, spec.length * 0.42),
-      collisionRadius: Math.max(1.5, spec.length * 0.16),
+      collisionRadius: Math.max(1.5, spec.length * 0.28),
       collisionHalfLength: spec.length * 0.42,
       collisionCooldown: 0,
+      collision: template?.collision,
       alive: true,
       hostile: faction === 'hostile',
       alerted: false,
@@ -721,7 +725,7 @@ export class Combat {
     return target.distanceTo(from.clone().addScaledVector(ab, t)) < radius;
   }
 
-  update(dt: number, playerPos: THREE.Vector3, playerVelocity: THREE.Vector3, playerQuaternion: THREE.Quaternion, _camera?: THREE.Camera, playerLength = 25): void {
+  update(dt: number, playerPos: THREE.Vector3, playerVelocity: THREE.Vector3, playerQuaternion: THREE.Quaternion, _camera?: THREE.Camera, playerLength = 25, playerCollision?: ShipCollision): void {
     this.time += dt;
     this.playerCollisionCooldown = Math.max(0, this.playerCollisionCooldown - dt);
     for (const npc of this.npcs) npc.collisionCooldown = Math.max(0, npc.collisionCooldown - dt);
@@ -806,7 +810,7 @@ export class Combat {
     }
 
     // 舰体胶囊碰撞：玩家撞舰、NPC 互撞都产生伤害
-    this.resolveShipCollisions(dt, playerPos, playerVelocity, playerQuaternion, playerLength);
+    this.resolveShipCollisions(dt, playerPos, playerVelocity, playerQuaternion, playerLength, playerCollision);
 
     // 舰船解体序列：引擎→武器→船体→燃料大爆炸
     for (let i = this.deaths.length - 1; i >= 0; i -= 1) {
@@ -990,8 +994,9 @@ export class Combat {
     playerVelocity: THREE.Vector3,
     playerQuaternion: THREE.Quaternion,
     playerLength: number,
+    playerCollision?: ShipCollision,
   ): void {
-    const playerRadius = Math.max(2, playerLength * 0.16);
+    const playerRadius = Math.max(2, playerLength * 0.28);
     const playerHalf = playerLength * 0.42;
     const playerA = new THREE.Vector3(0, 0, -playerHalf).applyQuaternion(playerQuaternion).add(playerPos);
     const playerB = new THREE.Vector3(0, 0, playerHalf).applyQuaternion(playerQuaternion).add(playerPos);
@@ -1011,6 +1016,14 @@ export class Combat {
       const distance = delta.length();
       const minDistance = playerRadius + npc.collisionRadius;
       if (distance >= minDistance) continue;
+
+      // 胶囊只做 broadphase；有逐三角碰撞体时再做精确相交
+      if (playerCollision && npc.collision) {
+        const playerMatrix = new THREE.Matrix4().compose(playerPos, playerQuaternion, new THREE.Vector3(1, 1, 1));
+        const npcMatrix = new THREE.Matrix4().compose(npc.group.position, npc.group.quaternion, new THREE.Vector3(1, 1, 1));
+        const geometryToPlayer = playerMatrix.clone().invert().multiply(npcMatrix);
+        if (!playerCollision.bvh.intersectsGeometry(npc.collision.geometry, geometryToPlayer)) continue;
+      }
 
       const normal = distance > 0.001 ? delta.multiplyScalar(1 / distance) : playerPos.clone().sub(npc.group.position).normalize();
       const penetration = minDistance - distance;
@@ -1053,6 +1066,12 @@ export class Combat {
         const distance = delta.length();
         const minDistance = a.collisionRadius + b.collisionRadius;
         if (distance >= minDistance) continue;
+        if (a.collision && b.collision) {
+          const aMatrix = new THREE.Matrix4().compose(a.group.position, a.group.quaternion, new THREE.Vector3(1, 1, 1));
+          const bMatrix = new THREE.Matrix4().compose(b.group.position, b.group.quaternion, new THREE.Vector3(1, 1, 1));
+          const geometryToA = aMatrix.clone().invert().multiply(bMatrix);
+          if (!a.collision.bvh.intersectsGeometry(b.collision.geometry, geometryToA)) continue;
+        }
         const normal = distance > 0.001 ? delta.multiplyScalar(1 / distance) : new THREE.Vector3(0, 1, 0);
         const penetration = (minDistance - distance) * 0.5;
         a.group.position.addScaledVector(normal, -penetration);

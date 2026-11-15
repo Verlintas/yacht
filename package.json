@@ -15,7 +15,8 @@
   "dependencies": {
     "@types/three": "^0.187.0",
     "astro": "^7.3.3",
-    "three": "^0.187.0"
+    "three": "^0.187.0",
+    "three-mesh-bvh": "^0.9.18"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
