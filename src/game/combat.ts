@@ -244,7 +244,7 @@ export class Combat {
   private fleetSeq = 0;
   private time = 0;
   private encounterTimer = 45;
-  private maxFleets = 3;
+  private maxFleets = 4;
   private encounterRange = 150000;
   private despawnRange = 500000;
   private playerCollisionCooldown = 0;
@@ -1141,14 +1141,10 @@ export class Combat {
       return;
     }
 
-    const nearbyHostiles = living.filter((fleet) => {
-      if (fleet.faction !== 'hostile') return false;
-      const flagship = fleet.ships.find((ship) => ship.alive);
-      return !!flagship && flagship.group.position.distanceTo(playerPos) < this.encounterRange;
-    }).length;
+    const livingHostiles = living.filter((fleet) => fleet.faction === 'hostile').length;
 
-    // 最多保持一支敌对舰队；清掉后等冷却再补，避免无限刷海盗
-    const faction: Faction = nearbyHostiles === 0 ? 'hostile' : 'neutral';
+    // 全图最多一支敌对舰队；大多数时候补中立商队，海盗只是偶发事件
+    const faction: Faction = livingHostiles === 0 && Math.random() < 0.32 ? 'hostile' : 'neutral';
     const angle = Math.random() * Math.PI * 2;
     const distance = 28000 + Math.random() * 62000;
     const origin = playerPos.clone().add(new THREE.Vector3(
@@ -1157,7 +1153,9 @@ export class Combat {
       Math.sin(angle) * distance,
     ));
     this.spawnFleet(faction, origin);
-    this.encounterTimer = 75 + Math.random() * 75;
+    this.encounterTimer = faction === 'hostile'
+      ? 100 + Math.random() * 100
+      : 28 + Math.random() * 42;
   }
 
   /** 跃迁抵达后：清掉远处旧舰队，并在抵达点附近补一队敌对/中立。 */
@@ -1171,21 +1169,19 @@ export class Combat {
       }
     }
     const living = this.fleets.filter((fleet) => fleet.ships.some((ship) => ship.alive));
-    const hostileNear = living.filter((fleet) => {
-      if (fleet.faction !== 'hostile') return false;
-      const flagship = fleet.ships.find((ship) => ship.alive);
-      return !!flagship && flagship.group.position.distanceTo(position) < this.encounterRange;
-    }).length;
-    if (living.length < this.maxFleets && hostileNear === 0) {
+    const existingHostiles = living.filter((fleet) => fleet.faction === 'hostile').length;
+    if (living.length < this.maxFleets) {
+      // 跃迁抵达后优先补中立船，只有三成概率遇到海盗
+      const faction: Faction = existingHostiles === 0 && Math.random() < 0.35 ? 'hostile' : 'neutral';
       const angle = Math.random() * Math.PI * 2;
       const distance = 36000 + Math.random() * 36000;
-      this.spawnFleet('hostile', position.clone().add(new THREE.Vector3(
+      this.spawnFleet(faction, position.clone().add(new THREE.Vector3(
         Math.cos(angle) * distance,
         (Math.random() - 0.3) * 12000,
         Math.sin(angle) * distance,
       )));
     }
-    this.encounterTimer = Math.max(this.encounterTimer, 60);
+    this.encounterTimer = Math.max(this.encounterTimer, 45);
   }
 
   private removeFleet(fleet: Fleet): void {

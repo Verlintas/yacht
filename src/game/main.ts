@@ -534,8 +534,9 @@ export async function startGame(system: SystemData): Promise<void> {
   // 开局舰队：敌对舰队会扫描并主动上门，中立舰队全图游荡
   const fleetPlan: Array<{ faction: 'hostile' | 'neutral'; angle: number; distance: number }> = [
     { faction: 'hostile', angle: 0.45, distance: 28000 },
-    { faction: 'neutral', angle: 2.2, distance: 52000 },
-    { faction: 'neutral', angle: 4.7, distance: 86000 },
+    { faction: 'neutral', angle: 2.2, distance: 42000 },
+    { faction: 'neutral', angle: 4.7, distance: 72000 },
+    { faction: 'neutral', angle: 5.6, distance: 108000 },
   ];
   if (!params.get('peace')) {
     for (const plan of fleetPlan) {
