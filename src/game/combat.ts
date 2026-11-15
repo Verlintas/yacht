@@ -117,6 +117,7 @@ interface Fleet {
   engaged: boolean;
   cruise: number;
   tier: number;
+  farTimer: number;
 }
 
 export interface NpcTemplate {
@@ -144,7 +145,7 @@ export interface CombatEvents {
 }
 
 const MAX_PROJECTILES = 260;
-const SCAN_RANGE = 35000;
+const SCAN_RANGE = 150000;
 
 const ENEMY_FLAGSHIPS = ['freighter', 'commander', 'commander', 'battleship'] as const;
 const NEUTRAL_FLAGSHIPS = ['freighter', 'commander', 'freighter'] as const;
@@ -177,6 +178,10 @@ export class Combat {
   private npcSeq = 0;
   private fleetSeq = 0;
   private time = 0;
+  private encounterTimer = 10;
+  private maxFleets = 7;
+  private encounterRange = 220000;
+  private despawnRange = 650000;
 
   constructor(scene: THREE.Scene, events: CombatEvents) {
     this.scene = scene;
@@ -382,6 +387,7 @@ export class Combat {
       engaged: false,
       cruise,
       tier: flagshipSpec.tier,
+      farTimer: 0,
     });
 
     return fleetId;
@@ -733,7 +739,8 @@ export class Combat {
       }
     }
 
-    // 舰队
+    // 舰队 / 遭遇导演
+    this.updateEncounters(dt, playerPos);
     for (const fleet of this.fleets) this.updateFleet(fleet, dt, playerPos, playerVelocity);
     // 没有舰队的散兵
     for (const npc of this.npcs) {
@@ -897,6 +904,88 @@ export class Combat {
         this.sparks = null;
       }
     }
+  }
+
+  /** 保持玩家附近始终有可遭遇的舰队；远离的旧舰队回收。 */
+  private updateEncounters(dt: number, playerPos: THREE.Vector3): void {
+    for (let i = this.fleets.length - 1; i >= 0; i -= 1) {
+      const fleet = this.fleets[i];
+      const flagship = fleet.ships.find((ship) => ship.alive) ?? fleet.flagship;
+      const distance = flagship.group.position.distanceTo(playerPos);
+      fleet.farTimer = distance > this.despawnRange ? fleet.farTimer + dt : 0;
+      const hasDeathSequence = this.deaths.some((death) => fleet.ships.includes(death.npc));
+      if (fleet.farTimer > 10 && !hasDeathSequence) this.removeFleet(fleet);
+    }
+
+    this.encounterTimer -= dt;
+    if (this.encounterTimer > 0) return;
+
+    const living = this.fleets.filter((fleet) => fleet.ships.some((ship) => ship.alive));
+    if (living.length >= this.maxFleets) {
+      this.encounterTimer = 8;
+      return;
+    }
+
+    const nearbyHostiles = living.filter((fleet) => {
+      if (fleet.faction !== 'hostile') return false;
+      const flagship = fleet.ships.find((ship) => ship.alive);
+      return !!flagship && flagship.group.position.distanceTo(playerPos) < this.encounterRange;
+    }).length;
+
+    const faction: Faction = nearbyHostiles >= 3 ? 'neutral' : Math.random() < 0.72 ? 'hostile' : 'neutral';
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 28000 + Math.random() * 62000;
+    const origin = playerPos.clone().add(new THREE.Vector3(
+      Math.cos(angle) * distance,
+      (Math.random() - 0.35) * 22000,
+      Math.sin(angle) * distance,
+    ));
+    this.spawnFleet(faction, origin);
+    this.encounterTimer = 16 + Math.random() * 16;
+  }
+
+  /** 跃迁抵达后：清掉远处旧舰队，并在抵达点附近补一队敌对/中立。 */
+  refreshEncounters(position: THREE.Vector3): void {
+    for (let i = this.fleets.length - 1; i >= 0; i -= 1) {
+      const fleet = this.fleets[i];
+      const flagship = fleet.ships.find((ship) => ship.alive) ?? fleet.flagship;
+      if (flagship.group.position.distanceTo(position) > 250000) {
+        const hasDeathSequence = this.deaths.some((death) => fleet.ships.includes(death.npc));
+        if (!hasDeathSequence) this.removeFleet(fleet);
+      }
+    }
+    const living = this.fleets.filter((fleet) => fleet.ships.some((ship) => ship.alive));
+    if (living.length < this.maxFleets) {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 32000 + Math.random() * 38000;
+      this.spawnFleet('hostile', position.clone().add(new THREE.Vector3(
+        Math.cos(angle) * distance,
+        (Math.random() - 0.3) * 12000,
+        Math.sin(angle) * distance,
+      )));
+    }
+    if (living.length + 1 < this.maxFleets) {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 45000 + Math.random() * 45000;
+      this.spawnFleet('neutral', position.clone().add(new THREE.Vector3(
+        Math.cos(angle) * distance,
+        (Math.random() - 0.3) * 14000,
+        Math.sin(angle) * distance,
+      )));
+    }
+    this.encounterTimer = Math.max(this.encounterTimer, 12);
+  }
+
+  private removeFleet(fleet: Fleet): void {
+    for (const npc of fleet.ships) {
+      this.scene.remove(npc.group);
+      npc.trail.dispose();
+      npc.damage.dispose();
+      const index = this.npcs.indexOf(npc);
+      if (index >= 0) this.npcs.splice(index, 1);
+    }
+    const index = this.fleets.indexOf(fleet);
+    if (index >= 0) this.fleets.splice(index, 1);
   }
 
   private angerFleet(npc: Npc): void {

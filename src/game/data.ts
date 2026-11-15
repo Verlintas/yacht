@@ -22,6 +22,9 @@ export interface ProjectInput {
 
 export type Surface = 'ocean' | 'desert' | 'ice' | 'gas' | 'lava' | 'verdigris' | 'barren';
 
+/** 大气层厚度：战列舰满血 Shift 约 784 m/s × 300 s ≈ 235 km，取 240 km */
+export const ATMOSPHERE_HEIGHT = 240_000;
+
 export interface PlanetDef {
   id: string;
   kind: 'planet';
@@ -45,6 +48,8 @@ export interface PlanetDef {
   surface: Surface;
   palette: [number, number, number];
   atmosphere: number;
+  /** 大气层厚度（米）。按大船 Shift 约 5 分钟飞出大气层顶设定 */
+  atmosphereHeight: number;
   ring: boolean;
   moon: boolean;
   clouds: number;
@@ -150,12 +155,14 @@ export function buildSystem(input: {
       radius,
       orbit,
       phase: rand() * Math.PI * 2,
-      periodDays: 240 + index * 55 + rand() * 60,
+      // 放慢公转：外圈行星约 170–230 m/s，战列舰 Shift 可以追上
+      periodDays: 1500 + index * 24 + rand() * 120,
       inclination: (rand() - 0.5) * 0.08,
-      spinHours: 14 + rand() * 40,
+      spinHours: 96 + rand() * 120,
       surface,
       palette: PALETTE[surface],
       atmosphere: 0.55 + rand() * 0.7,
+      atmosphereHeight: ATMOSPHERE_HEIGHT,
       ring: ratio > 0.55 && rand() > 0.45,
       moon: rand() > 0.5,
       clouds: surface === 'gas' ? 1.1 : surface === 'barren' ? 0.05 : 0.4 + rand() * 0.5,

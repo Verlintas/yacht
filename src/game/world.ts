@@ -29,7 +29,8 @@ const RING_VERT = /* glsl */ `
 `;
 
 const EPOCH_MS = Date.UTC(2026, 0, 1);
-const TIME_SCALE = 60;
+// 放慢整体公转/自转：原 60× 会让外圈行星切向速度超过大船 Shift 极速
+const TIME_SCALE = 8;
 const SIM_DAYS = ((Date.now() - EPOCH_MS) / 86_400_000) * TIME_SCALE;
 
 function glowTexture(inner = 'rgba(255,255,255,1)', mid = 'rgba(255,180,90,0.35)') {
@@ -414,7 +415,7 @@ export function createWorld(
       depthTest: true,
       blending: THREE.AdditiveBlending,
     });
-    const sky = new THREE.Mesh(new THREE.SphereGeometry(def.radius * 1.18, 48, 32), skyMaterial);
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(def.radius + def.atmosphereHeight * 1.05, 48, 32), skyMaterial);
     sky.frustumCulled = false;
     sky.visible = false;
     bodyGroup.add(sky);
@@ -532,8 +533,9 @@ export function createWorld(
         if (body.sky) {
           const skyMat = body.sky.material as THREE.ShaderMaterial;
           const altitude = camera.position.distanceTo(tmpPos) - def.radius;
-          const skyTop = def.radius * 0.16;
-          const opacity = 1 - THREE.MathUtils.smoothstep(altitude, def.radius * 0.02, skyTop);
+          const skyTop = def.atmosphereHeight;
+          const skyBottom = Math.max(2000, skyTop * 0.03);
+          const opacity = 1 - THREE.MathUtils.smoothstep(altitude, skyBottom, skyTop);
           body.sky.visible = opacity > 0.001;
           if (body.sky.visible) {
             const up = camera.position.clone().sub(tmpPos).normalize();

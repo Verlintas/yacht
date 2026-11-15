@@ -515,11 +515,12 @@ export async function startGame(system: SystemData): Promise<void> {
   });
   // 开局舰队：敌对舰队会扫描并主动上门，中立舰队全图游荡
   const fleetPlan: Array<{ faction: 'hostile' | 'neutral'; angle: number; distance: number }> = [
-    { faction: 'hostile', angle: 0.5, distance: 95000 },
-    { faction: 'neutral', angle: 1.9, distance: 32000 },
-    { faction: 'hostile', angle: 3.4, distance: 150000 },
-    { faction: 'neutral', angle: 4.7, distance: 58000 },
-    { faction: 'neutral', angle: 5.7, distance: 92000 },
+    { faction: 'hostile', angle: 0.35, distance: 18000 },
+    { faction: 'neutral', angle: 1.1, distance: 26000 },
+    { faction: 'hostile', angle: 2.2, distance: 40000 },
+    { faction: 'neutral', angle: 3.3, distance: 58000 },
+    { faction: 'hostile', angle: 4.5, distance: 80000 },
+    { faction: 'neutral', angle: 5.6, distance: 105000 },
   ];
   if (!params.get('peace')) {
     for (const plan of fleetPlan) {
@@ -555,8 +556,14 @@ export async function startGame(system: SystemData): Promise<void> {
     const away = ctx.flight.position.clone().sub(targetPosition);
     if (away.lengthSq() < 1) away.set(0, 1, 0);
     away.normalize();
+    const atmosphere = selected.planet?.atmosphereHeight ?? selected.radius * 0.04;
+    const currentDistance = ctx.flight.position.distanceTo(targetPosition);
+    const entryAltitude = selected.radius + Math.max(50_000, atmosphere * 0.45);
+    const highOrbit = selected.radius + Math.max(atmosphere * 4, selected.radius * 0.08);
     const safeDistance = selected.type === 'planet'
-      ? selected.radius * 2.2
+      ? currentDistance > selected.radius * 1.25
+        ? Math.max(entryAltitude, Math.min(highOrbit, currentDistance * 0.85))
+        : entryAltitude
       : Math.max(selected.radius * 4, 5000);
     const arrival = targetPosition.clone().addScaledVector(away, safeDistance);
     if (ctx.flight.beginWarp(targetPosition, arrival, ctx.spec.current.chargeTime)) {
@@ -642,8 +649,9 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     if (atmoPlanet) {
       const radius = atmoPlanet.radius;
-      const top = radius * 0.16;
-      const entry = 1 - THREE.MathUtils.smoothstep(atmoAltitude, radius * 0.02, top);
+      const top = atmoPlanet.planet?.atmosphereHeight ?? radius * 0.04;
+      const bottom = Math.max(2000, top * 0.03);
+      const entry = 1 - THREE.MathUtils.smoothstep(atmoAltitude, bottom, top);
       if (entry > 0.01) {
         const speed = ctx.flight.speed;
         const heatAmount = entry * THREE.MathUtils.clamp(0.32 + speed / 8000, 0, 1);
@@ -806,6 +814,7 @@ function loop(ctx: GameContext, hud: Hud): void {
 
     if (ctx.flight.warpArrived) {
       ctx.flight.warpArrived = false;
+      ctx.combat.refreshEncounters(ctx.flight.position);
       hud.toast('跃迁完成');
     }
 
@@ -1477,6 +1486,8 @@ function setupHud(
     const aligning = warpPhase === 'align';
     const charging = warpPhase === 'charge';
     const remaining = Math.max(0, chargeTime - ctx.flight.warpCharge);
+    const targetDistance = target ? target.position.distanceTo(ctx.flight.position) : Infinity;
+    const canSecondWarp = !!target && target.type === 'planet' && targetDistance < target.radius * 1.25;
 
     if (shifting) {
       boostRing.style.strokeDashoffset = String(circ * 0.18);
@@ -1497,6 +1508,9 @@ function setupHud(
     } else if (shifting) {
       boostLabel.textContent = 'SHIFT';
       boostSub.textContent = `×${ctx.flight.shiftMultiplier.toFixed(1)} 极速`;
+    } else if (canSecondWarp) {
+      boostLabel.textContent = '二次跃迁';
+      boostSub.textContent = 'B 进入大气层';
     } else {
       boostLabel.textContent = '待机';
       boostSub.textContent = 'M 选择目标 · B 跃迁';
