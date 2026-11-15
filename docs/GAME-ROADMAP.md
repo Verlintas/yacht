@@ -192,9 +192,9 @@ Anvil Landing 切片：600 × 600 m、1 个 S pad、1 个 hero shop、3 个 NPC�
 M1 具体交付：
 
 - 16 km 高精地形（Forgeheart / Anvil Landing）
-- 1 个 S landing pad + 1 家商店 + 3 个 NPC
+- Anvil Landing：420×260 m port apron + AP-03 **S 60×60 m TLOF** + 1 家商店 + 3 个 NPC
 - 玩家角色：下船、步行、交互、登船
-- 1 艘小船完整起降（A-30 优先，Phalanx 内部测试）
+- 1 艘小船完整起降：**A-30 25 m 为主**；Phalanx 80 m 作为内部 M pad 测试
 - 地图 POI + 导航 + 着陆标记
 - 性能预算：地形 tile 流式加载、城市 draw call、角色/NPC LOD
 
