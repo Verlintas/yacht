@@ -108,6 +108,7 @@
 - 40–160 m block stamp 手工拼装；district 用 `city.plan.json` authored。
 - headless Blender `build_city.py` 按 plan 组装、切 cell、导出 LOD/collision/nav。
 - 运行时 `CityStreamer`、`CityCollision`、`InstancedMesh` / `BatchedMesh`。
+- 质量分层：英雄镜头/主城区用本地 purchased Kitbash3D + Blender 手工拼装 + 原包 PBR；背景量用 CC0 Quaternius/Kenney/Poly Haven，经 decimate + KTX2 优化。
 
 尺度规则：
 
@@ -245,7 +246,7 @@ M1 具体交付：
 - `14-ship-takeoff-landing-implementation.md`
 - `15-free-terrain-toolchain.md` — 免费地形工具链与许可/性能实测
 - `16-free-assets.md` — 免费资产与许可
-- `17-quality-assets.md` — 高质量 CC0 材质/植被/角色/工业道具
+- `17-quality-assets.md` — 高质量 CC0 材质/植被/角色/工业道具、实测面数与下载链接
 
 已有设计底稿：
 
