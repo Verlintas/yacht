@@ -1,0 +1,694 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+---
+
+<Base
+  title="Anvil Landing · 地形样本 · Verlintas 的小窝"
+  description="1 km × 1 km authored terrain tile with a 420 × 260 m port apron and a 60 × 60 m TLOF. Three.js scale sample."
+  panic={false}
+>
+  <style is:global>
+    .terrain-sample {
+      --terrain-gutter: max(20px, calc((100vw - 1120px) / 2 + 20px));
+      --terrain-panel-bg: rgba(6, 12, 16, 0.68);
+      --terrain-panel-border: rgba(255, 255, 255, 0.14);
+      --terrain-panel-text: #e9eff3;
+      --terrain-panel-dim: #9fb1ba;
+      --terrain-panel-faint: #70838d;
+      --terrain-warm: #e9b16d;
+      --terrain-sea: #74d9ca;
+    }
+
+    .terrain-stage {
+      position: relative;
+      width: 100vw;
+      height: clamp(580px, calc(100vh - 96px), 960px);
+      margin-left: calc(50% - 50vw);
+      overflow: hidden;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: #0a1218;
+      isolation: isolate;
+    }
+
+    .terrain-stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(4, 8, 12, 0.22) 0%, transparent 14%, transparent 74%, rgba(4, 8, 12, 0.2) 100%),
+        radial-gradient(120% 90% at 50% 40%, transparent 58%, rgba(2, 7, 10, 0.35) 100%);
+    }
+
+    #terrain-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
+      touch-action: none;
+    }
+
+    #terrain-canvas:focus-visible {
+      outline: 2px solid var(--sea);
+      outline-offset: -3px;
+    }
+
+    /* ── panels ─────────────────────────────── */
+
+    .terrain-panel {
+      position: absolute;
+      z-index: 5;
+      color: var(--terrain-panel-text);
+      background: var(--terrain-panel-bg);
+      border: 1px solid var(--terrain-panel-border);
+      border-radius: 3px;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+      backdrop-filter: blur(14px) saturate(1.1);
+      pointer-events: auto;
+    }
+
+    .terrain-title-panel {
+      top: clamp(16px, 3vh, 28px);
+      left: var(--terrain-gutter);
+      max-width: min(405px, calc(100vw - 40px));
+      padding: 16px 18px 14px;
+      border-left: 2px solid var(--terrain-warm);
+    }
+
+    .terrain-eyebrow {
+      margin: 0 0 7px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--terrain-warm);
+    }
+
+    .terrain-title-panel h1 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(26px, 3.2vw, 37px);
+      font-weight: 500;
+      line-height: 1.08;
+      letter-spacing: -0.01em;
+      color: #f2f4f3;
+    }
+
+    .terrain-sub {
+      margin: 7px 0 0;
+      max-width: 38ch;
+      color: var(--terrain-panel-dim);
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+
+    .terrain-stats {
+      margin: 11px 0 0;
+      padding-top: 9px;
+      border-top: 1px solid rgba(255, 255, 255, 0.11);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      color: var(--terrain-panel-faint);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .terrain-scale-panel {
+      top: clamp(16px, 3vh, 28px);
+      right: var(--terrain-gutter);
+      width: 258px;
+      padding: 13px 15px 12px;
+    }
+
+    .terrain-scale-list {
+      display: grid;
+      gap: 6px;
+      margin: 0;
+    }
+
+    .terrain-scale-list > div {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 5px;
+      border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+    }
+
+    .terrain-scale-list > div:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .terrain-scale-list dt {
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      color: #f0dfb4;
+      white-space: nowrap;
+    }
+
+    .terrain-scale-list dd {
+      margin: 0;
+      color: var(--terrain-panel-dim);
+      font-size: 10.5px;
+      white-space: nowrap;
+    }
+
+    .terrain-legend {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 11px;
+      padding-top: 9px;
+      border-top: 1px solid rgba(255, 255, 255, 0.11);
+      font-family: var(--mono);
+      font-size: 8.5px;
+      color: var(--terrain-panel-faint);
+    }
+
+    .terrain-legend i {
+      flex: 1;
+      height: 5px;
+      display: block;
+      background: linear-gradient(90deg, #8a7957, #5f704d 38%, #979282 66%, #5b584e 84%, #dde4df);
+    }
+
+    .terrain-controls {
+      left: var(--terrain-gutter);
+      bottom: clamp(16px, 3vh, 26px);
+      max-width: min(700px, calc(100vw - 40px));
+      padding: 10px 12px 11px;
+    }
+
+    .terrain-modes {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.1em;
+      color: var(--terrain-panel-faint);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .terrain-mode-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--terrain-sea);
+      box-shadow: 0 0 8px rgba(116, 217, 202, 0.8);
+    }
+
+    .is-walking .terrain-mode-dot {
+      background: var(--terrain-warm);
+      box-shadow: 0 0 8px rgba(233, 177, 109, 0.85);
+    }
+
+    #terrain-mode {
+      color: #cfdbdf;
+    }
+
+    .terrain-sep {
+      opacity: 0.5;
+    }
+
+    .terrain-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 9px;
+      pointer-events: auto;
+    }
+
+    .terrain-buttons button {
+      appearance: none;
+      padding: 5px 9px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.045);
+      color: var(--terrain-panel-dim);
+      font: 10px/1.2 var(--mono);
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .terrain-buttons button:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.36);
+      background: rgba(255, 255, 255, 0.09);
+    }
+
+    .terrain-buttons button.is-active {
+      color: #f2e3c5;
+      border-color: rgba(233, 177, 109, 0.66);
+      background: rgba(233, 177, 109, 0.13);
+    }
+
+    .terrain-hint {
+      margin: 9px 0 0;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.11);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      line-height: 1.55;
+      color: var(--terrain-warm);
+    }
+
+    .terrain-note {
+      position: absolute;
+      right: var(--terrain-gutter);
+      bottom: clamp(17px, 3vh, 27px);
+      z-index: 5;
+      max-width: 310px;
+      font-family: var(--mono);
+      font-size: 8.5px;
+      line-height: 1.7;
+      letter-spacing: 0.05em;
+      color: rgba(226, 236, 239, 0.5);
+      text-align: right;
+      pointer-events: none;
+    }
+
+    /* ── world labels ───────────────────────── */
+
+    .terrain-labels {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .world-label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      padding: 3px 6px 3px 7px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-left: 2px solid var(--terrain-warm);
+      background: rgba(4, 10, 13, 0.7);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+      white-space: nowrap;
+      will-change: transform;
+    }
+
+    .world-label strong {
+      display: block;
+      font: 600 8.5px/1.2 var(--mono);
+      letter-spacing: 0.15em;
+      color: #f0dfb4;
+    }
+
+    .world-label span {
+      display: block;
+      margin-top: 1px;
+      font: 8px/1.25 var(--mono);
+      color: #aebfc7;
+    }
+
+    .world-label--accent {
+      border-left-color: var(--terrain-sea);
+    }
+
+    .world-label--accent strong {
+      color: #89e4d7;
+    }
+
+    .world-label--warm {
+      border-left-color: #ef8f5a;
+    }
+
+    .world-label--warm strong {
+      color: #ffa574;
+    }
+
+    /* ── walk mode ──────────────────────────── */
+
+    .walk-crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 6;
+      width: 24px;
+      height: 24px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      opacity: 0.9;
+    }
+
+    .walk-crosshair::before,
+    .walk-crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 241, 216, 0.86);
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.7);
+    }
+
+    .walk-crosshair::before {
+      left: 11px;
+      top: 3px;
+      width: 2px;
+      height: 18px;
+    }
+
+    .walk-crosshair::after {
+      top: 11px;
+      left: 3px;
+      height: 2px;
+      width: 18px;
+    }
+
+    .is-walking .terrain-title-panel,
+    .is-walking .terrain-note {
+      opacity: 0.5;
+    }
+
+    /* ── loading / error ────────────────────── */
+
+    .terrain-loading {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      display: grid;
+      place-items: center;
+      background: #081016;
+      color: #dce6e9;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      transition: opacity 0.6s ease;
+    }
+
+    .terrain-loading.is-done {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .terrain-loading-inner {
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+    }
+
+    .terrain-loading-bar {
+      width: 180px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+
+    .terrain-loading-bar i {
+      display: block;
+      width: 45%;
+      height: 100%;
+      background: var(--terrain-warm);
+      animation: terrain-load 1.1s ease-in-out infinite;
+    }
+
+    @keyframes terrain-load {
+      0% {
+        transform: translateX(-110%);
+      }
+      100% {
+        transform: translateX(230%);
+      }
+    }
+
+    .terrain-error {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 9;
+      transform: translate(-50%, -50%);
+      max-width: 420px;
+      padding: 14px 18px;
+      border: 1px solid rgba(224, 122, 102, 0.6);
+      background: rgba(20, 8, 8, 0.9);
+      color: #f0b0a4;
+      font: 11px/1.6 var(--mono);
+    }
+
+    /* ── page footer notes ──────────────────── */
+
+    .terrain-explainer {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 22px 0 0;
+    }
+
+    .terrain-card {
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .terrain-card h2 {
+      margin: 0 0 7px;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--brass);
+    }
+
+    .terrain-card p {
+      margin: 0;
+      color: var(--text-dim);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .terrain-card code {
+      display: block;
+      margin-top: 9px;
+      padding: 8px 10px;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 10.5px;
+      white-space: nowrap;
+    }
+
+    .terrain-card a {
+      color: var(--sea);
+      border-bottom: 1px solid color-mix(in srgb, var(--sea) 45%, transparent);
+    }
+
+    @media (max-width: 900px) {
+      .terrain-scale-panel {
+        width: 216px;
+        padding: 11px 12px;
+      }
+
+      .terrain-scale-list dt {
+        font-size: 11px;
+      }
+
+      .terrain-note {
+        display: none;
+      }
+
+      .terrain-explainer {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .terrain-stage {
+        height: clamp(520px, calc(100vh - 80px), 760px);
+      }
+
+      .terrain-title-panel {
+        padding: 12px 14px 11px;
+        max-width: calc(100vw - 32px);
+      }
+
+      .terrain-title-panel h1 {
+        font-size: 26px;
+      }
+
+      .terrain-sub {
+        display: none;
+      }
+
+      .terrain-scale-panel {
+        top: auto;
+        right: 16px;
+        bottom: 130px;
+        width: 192px;
+        padding: 9px 10px;
+        background: rgba(6, 12, 16, 0.82);
+      }
+
+      .terrain-scale-list {
+        gap: 3px;
+      }
+
+      .terrain-scale-list > div {
+        padding-bottom: 3px;
+      }
+
+      .terrain-scale-list dt {
+        font-size: 9.5px;
+      }
+
+      .terrain-scale-list dd {
+        font-size: 9px;
+      }
+
+      .terrain-legend {
+        display: none;
+      }
+
+      .terrain-controls {
+        left: 16px;
+        right: 16px;
+        bottom: 14px;
+        max-width: none;
+        padding: 8px 10px 9px;
+      }
+
+      .terrain-buttons button {
+        padding: 5px 7px;
+        font-size: 9.5px;
+      }
+
+      .terrain-hint {
+        font-size: 9px;
+      }
+
+      .world-label span {
+        display: none;
+      }
+
+      .world-label {
+        padding: 3px 5px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .terrain-loading-bar i {
+        animation: none;
+        width: 100%;
+      }
+    }
+  </style>
+
+  <section class="terrain-sample">
+    <div class="terrain-stage" id="terrain-stage">
+      <canvas
+        id="terrain-canvas"
+        tabindex="0"
+        aria-label="Anvil Landing 1 公里地形样本：港区平台、60 米起降坪、A-30 舰船与 1.8 米玩家胶囊"
+      ></canvas>
+
+      <div class="terrain-labels" id="terrain-labels" aria-hidden="true"></div>
+      <div class="walk-crosshair" id="walk-crosshair" hidden aria-hidden="true"></div>
+
+      <div class="terrain-panel terrain-title-panel">
+        <p class="terrain-eyebrow">Authored terrain · sample 01</p>
+        <h1>Anvil Landing</h1>
+        <p class="terrain-sub">1 km 级港区地形瓦片 · A-30 起降验证场</p>
+        <p class="terrain-stats" id="terrain-stats">正在读取地表数据…</p>
+      </div>
+
+      <aside class="terrain-panel terrain-scale-panel" aria-label="样本尺度">
+        <p class="terrain-eyebrow">真实尺度 / Scale</p>
+        <dl class="terrain-scale-list">
+          <div><dt>1 km</dt><dd>地形瓦片</dd></div>
+          <div><dt>420 × 260 m</dt><dd>港区平台</dd></div>
+          <div><dt>60 × 60 m</dt><dd>TLOF 起降坪</dd></div>
+          <div><dt>1.8 m</dt><dd>玩家胶囊</dd></div>
+          <div><dt>25 m</dt><dd>A-30 舰体</dd></div>
+        </dl>
+        <div class="terrain-legend" aria-hidden="true">
+          <span id="terrain-min-height">17 m</span>
+          <i></i>
+          <span id="terrain-max-height">151 m</span>
+        </div>
+      </aside>
+
+      <div class="terrain-panel terrain-controls">
+        <div class="terrain-modes">
+          <span class="terrain-mode-dot" aria-hidden="true"></span>
+          <span id="terrain-mode">轨道 / Orbit</span>
+          <span class="terrain-sep">·</span>
+          <span id="walk-coords">拖动旋转 · 滚轮缩放 · 右键平移</span>
+        </div>
+        <div class="terrain-buttons">
+          <button type="button" data-terrain-preset="port" class="is-active">港区</button>
+          <button type="button" data-terrain-preset="pad">起降坪</button>
+          <button type="button" data-terrain-preset="tile">整块瓦片</button>
+          <button type="button" id="walk-toggle" aria-pressed="false">步行 V</button>
+          <button type="button" id="label-toggle" aria-pressed="true">标签 L</button>
+        </div>
+        <p class="terrain-hint" id="walk-hint" hidden>
+          点击画面锁定鼠标 · WASD 移动 · Shift 加速 · Esc 释放鼠标
+        </p>
+      </div>
+
+      <p class="terrain-note">
+        SEED 20261116 · R16 HEIGHTFIELD 257²<br />
+        离线生成，运行时只解码二进制高程
+      </p>
+
+      <div class="terrain-loading" id="terrain-loading">
+        <div class="terrain-loading-inner">
+          <span>LOADING ANVIL LANDING</span>
+          <span class="terrain-loading-bar"><i></i></span>
+        </div>
+      </div>
+      <div class="terrain-error" id="terrain-error" hidden></div>
+    </div>
+
+    <div class="terrain-explainer">
+      <article class="terrain-card">
+        <h2>01 · 离线地形</h2>
+        <p>
+          固定种子的 FBM + ridged noise、液滴侵蚀、峡谷雕刻与平台压平，全部在提交的 Python
+          脚本里完成。浏览器只加载 132 KB 的 R16 高程与 meta.json。
+        </p>
+        <code>python3 tools/terrain/generate_sample.py</code>
+      </article>
+
+      <article class="terrain-card">
+        <h2>02 · 尺度样本</h2>
+        <p>
+          1.8 m 玩家胶囊、25 m A-30、30 × 18 m 航站楼、12 m 商店亭、420 × 260 m
+          港区与 60 × 60 m TLOF 在同一坐标系里，所有尺寸都可在地面采样中走一遍。
+        </p>
+      </article>
+
+      <article class="terrain-card">
+        <h2>03 · 操作</h2>
+        <p>
+          左键拖动旋转，滚轮缩放，右键平移；按 <kbd>V</kbd> 进入第一人称步行（WASD +
+          鼠标视角，Shift 加速），按 <kbd>L</kbd> 切换世界标签，按 <kbd>R</kbd> 回到港区视角。
+          地形采样来自同一份 257 × 257 高程数据。
+        </p>
+        <p style="margin-top:9px">
+          <a href={`${base}/`}>← 返回夜航</a>
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <script>
+    import { initTerrainSample } from '../scripts/terrain-sample';
+    void initTerrainSample();
+  </script>
+</Base>

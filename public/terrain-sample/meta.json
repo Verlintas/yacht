@@ -1,0 +1,64 @@
+{
+  "name": "Anvil Landing terrain sample",
+  "generator": "tools/terrain/generate_sample.py",
+  "seed": 20261116,
+  "license": "procedural sample, generated in-repo (no third-party assets)",
+  "grid": {
+    "width": 257,
+    "height": 257,
+    "spacing_m": 3.90625
+  },
+  "tile_size_m": 1000.0,
+  "heightmap": {
+    "file": "heights.r16",
+    "format": "r16le",
+    "dtype": "uint16",
+    "height_scale_m": 200.0,
+    "row_order": "north_to_south",
+    "column_order": "west_to_east",
+    "origin": "northwest corner",
+    "decode": "height_m = value / 65535 * height_scale_m",
+    "sha256": "6f56926419e666e8af4bd22859601660f0df69824cc1a73a86d75ab0e3b4deba"
+  },
+  "elevation": {
+    "min_m": 13.27,
+    "max_m": 163.33,
+    "ridge_peak_m": 163.33,
+    "canyon_floor_m": 15.35,
+    "pad_m": 54.0
+  },
+  "apron": {
+    "center_m": [
+      0.0,
+      0.0
+    ],
+    "size_m": [
+      420.0,
+      260.0
+    ],
+    "elevation_m": 54.0
+  },
+  "pad": {
+    "name": "TLOF",
+    "center_m": [
+      0.0,
+      0.0
+    ],
+    "size_m": [
+      60.0,
+      60.0
+    ],
+    "elevation_m": 54.0,
+    "markings": [
+      "H",
+      "touchdown circle",
+      "border",
+      "corner brackets"
+    ]
+  },
+  "features": {
+    "ridge": "west side, roughly north-south, cut by the canyon",
+    "plateau": "eastern scarp plateau",
+    "canyon": "diagonal gorge west/south-west of the apron"
+  }
+}
