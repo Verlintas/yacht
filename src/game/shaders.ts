@@ -127,7 +127,7 @@ export const PLANET_FRAG = /* glsl */ `
     // 地表：低处沙/岩，高处亮
     vec3 rock = mix(uDeep, uMid, smoothstep(sea - 0.02, sea + 0.18, height));
     rock = mix(rock, uHigh, smoothstep(0.55, 0.82, height) * 0.75);
-    rock *= 0.85 + fine * 0.3;
+    rock *= 0.9 + fine * 0.16;
 
     // 海面
     vec3 water = mix(uDeep * 0.6, uMid * 0.8, 0.3);

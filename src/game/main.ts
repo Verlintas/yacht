@@ -12,7 +12,7 @@ import { SpeedLines } from './speedlines';
 import { LocalPlume } from './trails';
 import { DamageVisuals } from './damage';
 import { Combat } from './combat';
-import { SHIPS, getShip, manualWeaponTypes, WEAPON_LABELS, type ShipSpec, type WeaponType } from './ships';
+import { SHIPS, getShip, manualWeaponTypes, tierLabel, WEAPON_LABELS, type ShipSpec, type WeaponType } from './ships';
 import type { SystemData } from './data';
 
 interface WeaponState {
@@ -132,7 +132,7 @@ export async function startGame(system: SystemData): Promise<void> {
 
   const scene = new THREE.Scene();
 
-  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 50_000_000);
+  const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 150_000_000);
   // 高速时的屏幕空间流线
   const speedLines = new SpeedLines(camera);
   // 挂在相机上的补光，避免飞船暗面全黑
@@ -716,7 +716,7 @@ function setupHud(
     const h = mapCanvas.height;
     const cx = w / 2;
     const cy = h / 2;
-    const range = 12_000_000;
+    const range = 45_000_000;
 
     c.clearRect(0, 0, w, h);
     c.fillStyle = '#04080d';
@@ -997,7 +997,7 @@ function setupHud(
               <button type="button" class="ship-card ${item.id === ctx.spec.current.id ? 'is-current' : ''}" data-ship="${item.id}">
                 <span class="ship-card-code">${item.code}</span>
                 <span class="ship-card-name">${item.name}</span>
-                <span class="ship-card-meta">T${item.tier} · ${item.length} m · ${item.role}</span>
+                <span class="ship-card-meta">T${item.tier} ${tierLabel(item.tier)} · ${item.length} m · ${item.role}</span>
               </button>`,
             ).join('')}
           </div>
@@ -1226,7 +1226,7 @@ function setupHud(
     }
 
     cockpitSpeed.textContent = Math.round(speed).toString();
-    shipLabel.textContent = `${ctx.spec.current.code} · T${ctx.spec.current.tier}`;
+    shipLabel.textContent = `${ctx.spec.current.code} · T${ctx.spec.current.tier} ${tierLabel(ctx.spec.current.tier)}`;
 
     // 跃迁充能环 / Shift 次级加速
     const chargeTime = Math.max(0.1, ctx.spec.current.chargeTime);
@@ -1311,7 +1311,7 @@ function setupHud(
     bossBar.classList.toggle('is-on', Boolean(capital));
     if (capital) {
       bossName.textContent = capital.name;
-      bossLevel.textContent = `T${capital.tier} · ${capital.code}`;
+      bossLevel.textContent = `T${capital.tier} ${tierLabel(capital.tier)} · ${capital.code}`;
       bossHullFill.style.width = `${Math.max(0, (capital.hull / capital.maxHull) * 100)}%`;
       bossShieldFill.style.width = `${Math.max(0, (capital.shield / capital.maxShield) * 100)}%`;
       bossHpText.textContent = `${Math.round(capital.hull)} / ${capital.maxHull}`;

@@ -98,7 +98,7 @@ export function createWorld(
     const u = rand() * 2 - 1;
     const theta = rand() * Math.PI * 2;
     const r = Math.sqrt(1 - u * u);
-    const distance = 15000000 + rand() * 5000000;
+    const distance = 60000000 + rand() * 30000000;
     positions[i * 3] = Math.cos(theta) * r * distance;
     positions[i * 3 + 1] = u * distance;
     positions[i * 3 + 2] = Math.sin(theta) * r * distance;
@@ -332,13 +332,13 @@ export function createWorld(
         uLights: { value: def.lights ? 1 : 0 },
         uAtmo: { value: def.atmosphere },
         uRough: { value: def.roughness },
-        uAmp: { value: def.radius * (def.surface === 'gas' ? 0.006 : 0.06) },
+        uAmp: { value: def.radius * (def.surface === 'gas' ? 0.0015 : 0.012) },
       },
       vertexShader: PLANET_VERT,
       fragmentShader: PLANET_FRAG,
     });
 
-    const planet = new THREE.Mesh(new THREE.SphereGeometry(def.radius, 128, 80), material);
+    const planet = new THREE.Mesh(new THREE.SphereGeometry(def.radius, 192, 128), material);
     planet.rotation.z = def.axialTilt;
     bodyGroup.add(planet);
 

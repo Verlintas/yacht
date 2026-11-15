@@ -129,7 +129,7 @@ export interface FleetIntel {
   flagship: string;
   code: string;
   tier: number;
-  status: '主力' | '准主力' | '超主力' | '编队';
+  status: '主力' | '准主力' | '超主力' | '无畏' | '超无畏' | '贡献' | '泰坦' | '编队';
   escorts: number;
   heavyEscorts: number;
   distance: number;
@@ -333,6 +333,8 @@ export class Combat {
   }
 
   private escortPlan(tier: number): string[] {
+    if (tier >= 11) return ['bomber', 'bomber', 'bomber', 'bomber', 'f008', 'f008', 'thunderbolt', 'thunderbolt', 'thunderbolt', 'thunderbolt'];
+    if (tier >= 9) return ['bomber', 'bomber', 'bomber', 'bomber', 'f008', 'f008', 'thunderbolt', 'thunderbolt'];
     if (tier >= 7) return ['bomber', 'bomber', 'bomber', 'thunderbolt', 'f008', 'thunderbolt'];
     if (tier >= 6) return ['bomber', 'bomber', 'thunderbolt', 'f008', 'thunderbolt'];
     if (tier >= 5) return ['bomber', 'thunderbolt', 'f008'];
@@ -1519,7 +1521,7 @@ export class Combat {
     const escorts = ships.filter((ship) => ship.role === 'escort');
     const tier = flagship.spec.tier;
     const status: FleetIntel['status'] =
-      tier >= 7 ? '超主力' : tier >= 6 ? '准主力' : tier >= 5 ? '主力' : '编队';
+      tier >= 12 ? '泰坦' : tier >= 11 ? '贡献' : tier >= 10 ? '超无畏' : tier >= 9 ? '无畏' : tier >= 7 ? '超主力' : tier >= 6 ? '准主力' : tier >= 5 ? '主力' : '编队';
 
     return {
       faction: bestFleet.faction,
