@@ -45,42 +45,21 @@ export const NOISE = /* glsl */ `
 export const PLANET_VERT = /* glsl */ `#include <common>
   #include <logdepthbuf_pars_vertex>
 
-  uniform float uSeed;
-  uniform float uAmp;
-  uniform float uTime;
-
   varying vec3 vLocal;
   varying vec3 vWorld;
   varying vec3 vNormalW;
   varying float vHeight;
 
-  ${NOISE}
-
-  float terrain(vec3 n) {
-    float base = fbm(n * 2.35 + uSeed * 11.0);
-    float ridge = ridged(n * 5.4 + uSeed * 3.0);
-    float detail = fbm(n * 13.0 + uSeed * 21.0);
-    return base * 0.62 + ridge * 0.28 + detail * 0.1;
-  }
-
   void main() {
     vec3 n = normalize(position);
-    float h = terrain(n);
-    vHeight = h;
-
-    vec3 displaced = position + n * (h - 0.5) * uAmp;
-
-    // 用邻域采样估算扰动后的法线
-    vec3 tangent = normalize(cross(n, vec3(0.0, 1.0, 0.0) + vec3(0.001)));
-    vec3 bitangent = normalize(cross(n, tangent));
-    float h1 = terrain(normalize(n + tangent * 0.02));
-    float h2 = terrain(normalize(n + bitangent * 0.02));
-    vec3 bumped = normalize(n - tangent * (h1 - h) * 28.0 - bitangent * (h2 - h) * 28.0);
-
     vLocal = n;
-    vec4 world = modelMatrix * vec4(displaced, 1.0);
+    vHeight = 0.5;
+
+    // 保持球体轮廓绝对平滑；地表细节全部在片元里完成，
+    // 避免低模球体在高空看起来像「迷彩多面体」。
+    vec4 world = modelMatrix * vec4(position, 1.0);
     vWorld = world.xyz;
-    vNormalW = normalize(mat3(modelMatrix) * bumped);
+    vNormalW = normalize(mat3(modelMatrix) * normal);
     gl_Position = projectionMatrix * viewMatrix * world;
     #include <logdepthbuf_vertex>
   }
@@ -90,7 +69,6 @@ export const PLANET_FRAG = /* glsl */ `
   precision highp float;
   #include <common>
   #include <logdepthbuf_pars_fragment>
-
 
   uniform vec3 uDeep;
   uniform vec3 uMid;
@@ -103,8 +81,9 @@ export const PLANET_FRAG = /* glsl */ `
   uniform float uClouds;
   uniform float uLights;
   uniform float uAtmo;
-
   uniform float uRough;
+  /** 0 海洋 / 1 沙漠 / 2 冰 / 3 气态 / 4 熔岩 / 5 铜绿 / 6 荒芜 */
+  uniform float uKind;
 
   varying vec3 vLocal;
   varying vec3 vWorld;
@@ -113,62 +92,187 @@ export const PLANET_FRAG = /* glsl */ `
 
   ${NOISE}
 
+  float fbm3(vec3 p) {
+    float v = 0.0;
+    float a = 0.5;
+    for (int i = 0; i < 3; i++) {
+      v += a * vnoise(p);
+      p *= 2.03;
+      a *= 0.5;
+    }
+    return v;
+  }
+
+  float ridged3(vec3 p) {
+    float v = 0.0;
+    float a = 0.5;
+    for (int i = 0; i < 3; i++) {
+      v += a * (1.0 - abs(vnoise(p) * 2.0 - 1.0));
+      p *= 2.08;
+      a *= 0.5;
+    }
+    return v;
+  }
+
+  // 域扭曲的连续地形：低频大陆、山脊、细节，颜色在片元里平滑混合，
+  // 不再把顶点高度直接映射成高对比色块。
+  float terrain(vec3 n) {
+    vec3 q = n * 2.35 + vec3(uSeed * 3.71, uSeed * 1.37, uSeed * 7.19);
+    vec3 warp = vec3(
+      vnoise(q * 1.17 + 1.7),
+      vnoise(q * 1.17 + 5.3),
+      vnoise(q * 1.17 + 9.1)
+    ) - 0.5;
+    float base = fbm3(q + warp * 1.15);
+    float ridge = ridged3(q * 2.25 + warp * 0.9);
+    float detail = fbm3(q * 8.0 + 3.1);
+    return base * 0.62 + ridge * 0.24 + detail * 0.14;
+  }
+
   void main() {
     #include <logdepthbuf_fragment>
     vec3 n = normalize(vLocal);
-    float seed = uSeed * 7.31;
-
-    float height = vHeight;
-    float fine = fbm(n * 42.0 + seed * 3.1);
-
-    float sea = mix(0.62, 0.40, uOcean);
-    float isLand = smoothstep(sea, sea + 0.012, height);
-
-    // 地表：低处沙/岩，高处亮
-    vec3 rock = mix(uDeep, uMid, smoothstep(sea - 0.02, sea + 0.18, height));
-    rock = mix(rock, uHigh, smoothstep(0.55, 0.82, height) * 0.75);
-    rock *= 0.9 + fine * 0.16;
-
-    // 海面
-    vec3 water = mix(uDeep * 0.6, uMid * 0.8, 0.3);
-
-    vec3 albedo = mix(water, rock, isLand);
-
-    // 云
-    float cloudNoise = fbm(n * 3.6 + vec3(uTime * 0.008, seed, 0.0));
-    float cloud = smoothstep(0.52, 0.72, cloudNoise) * uClouds;
-
-    // 光照
     vec3 N = normalize(vNormalW);
     vec3 L = normalize(uLight);
     vec3 V = normalize(uCamera - vWorld);
+    float seed = uSeed * 17.13;
 
     float ndl = dot(N, L);
-    float day = smoothstep(-0.18, 0.35, ndl);
+    float day = smoothstep(-0.12, 0.24, ndl);
     float diffuse = max(ndl, 0.0);
     float wrap = 0.5 + 0.5 * ndl;
 
-    vec3 color = albedo * (0.006 + diffuse * 1.35);
+    float h = terrain(n);
+    float detail = fbm3(n * 21.0 + seed * 0.37);
+    float fine = vnoise(n * 92.0 + seed * 1.7);
 
-    // 海面高光
+    vec3 albedo = vec3(0.1);
+    float specMask = 0.0;
+    float landMask = 0.0;
+
+    if (uKind > 2.5 && uKind < 3.5) {
+      /* ── 气态巨行星：多频纬向带 + 缓慢涡流，避免大块「斑马纹」 ── */
+      float lat = n.y;
+      vec3 q = vec3(n.x * 1.7, lat * 7.5, n.z * 1.7) + seed * 0.11;
+      float flow = fbm3(q + vec3(0.0, uTime * 0.004, 0.0));
+      float flow2 = ridged3(q * 2.1 + vec3(0.0, uTime * 0.002, seed));
+      float b1 = 0.5 + 0.5 * sin(lat * 52.0 + flow * 10.0 + flow2 * 3.0 + seed);
+      float b2 = 0.5 + 0.5 * sin(lat * 118.0 - flow * 18.0 + 1.7);
+      float bands = smoothstep(0.16, 0.84, b1 * 0.70 + b2 * 0.30);
+      vec3 gas = mix(uDeep, uMid, bands);
+      gas = mix(gas, uHigh, smoothstep(0.70, 0.96, b2) * 0.22);
+      gas *= 0.90 + detail * 0.20;
+      float storm = exp(-pow((lat - 0.22) * 8.0, 2.0)) * smoothstep(0.52, 0.76, fbm3(n * 4.0 + seed));
+      gas = mix(gas, uHigh * 0.88, storm * 0.32);
+      albedo = gas;
+    } else if (uKind > 3.5 && uKind < 4.5) {
+      /* ── 熔岩世界：暗色结壳，只有细窄裂缝发光 ── */
+      float crust = fbm3(n * 8.0 + seed * 0.7);
+      float fissure = 1.0 - smoothstep(0.0, 0.018, abs(crust - 0.50));
+      fissure *= smoothstep(0.38, 0.72, vnoise(n * 34.0 + seed * 2.0));
+      float ember = smoothstep(0.62, 0.82, fbm3(n * 19.0 + seed * 4.0));
+      vec3 lava = mix(vec3(0.018, 0.009, 0.007), vec3(0.075, 0.028, 0.018), detail);
+      lava += vec3(1.0, 0.26, 0.04) * pow(fissure, 2.2) * 1.05;
+      lava += vec3(0.75, 0.14, 0.02) * ember * 0.06;
+      albedo = lava;
+    } else if (uKind > 1.5 && uKind < 2.5) {
+      /* ── 冰封世界：蓝白冰盖与暗色裂谷 ── */
+      float cracks = ridged3(n * 9.0 + seed);
+      vec3 ice = mix(vec3(0.52, 0.68, 0.80), vec3(0.90, 0.96, 1.0), detail);
+      ice = mix(ice, vec3(0.22, 0.40, 0.56), smoothstep(0.62, 0.92, cracks) * 0.42);
+      ice *= 0.94 + fine * 0.12;
+      albedo = ice;
+    } else if (uKind > 5.5 && uKind < 6.5) {
+      /* ── 荒芜世界：灰褐岩壳、陨击坑与月海 ── */
+      float crater = ridged3(n * 14.0 + seed);
+      vec3 barren = mix(uDeep * 0.55, uMid, detail);
+      barren = mix(barren, uHigh, smoothstep(0.70, 0.95, detail) * 0.35);
+      barren *= 0.86 + crater * 0.24;
+      albedo = barren;
+      landMask = 1.0;
+    } else {
+      /* ── 有海/无海的岩石行星 ── */
+      bool wetWorld = uKind < 0.5 || uKind > 4.5;
+      float sea = wetWorld ? mix(0.43, 0.58, uOcean) : 0.0;
+      float land = wetWorld ? smoothstep(sea - 0.004, sea + 0.026, h) : 1.0;
+      landMask = land;
+
+      float depth = clamp((sea - h) / 0.30, 0.0, 1.0);
+      vec3 deepWater = mix(uDeep * 0.24, vec3(0.004, 0.016, 0.038), 0.5);
+      vec3 shallowWater = mix(uMid * 0.72, uHigh * 0.46, 0.35);
+      vec3 water = mix(deepWater, shallowWater, 1.0 - depth);
+      water *= 0.94 + fine * 0.08;
+
+      float moisture = fbm3(n * 3.7 + seed * 2.3);
+      float equator = 1.0 - smoothstep(0.08, 0.68, abs(n.y));
+      float dry = 1.0 - smoothstep(0.34, 0.58, moisture);
+      float desertMix = dry * equator;
+      float rockMix = smoothstep(0.10, 0.34, h - sea);
+      float snow = smoothstep(0.64, 0.90, abs(n.y) + (detail - 0.5) * 0.20);
+
+      vec3 forest = mix(vec3(0.030, 0.078, 0.045), vec3(0.10, 0.17, 0.065), detail);
+      vec3 wetLand = mix(forest, vec3(0.08, 0.13, 0.07), moisture * 0.55);
+      vec3 desert = mix(vec3(0.31, 0.22, 0.11), vec3(0.52, 0.38, 0.21), detail);
+      vec3 rock = mix(vec3(0.16, 0.15, 0.14), vec3(0.31, 0.29, 0.26), detail);
+      vec3 landCol = mix(wetLand, desert, desertMix * 0.86);
+      landCol = mix(landCol, rock, rockMix * 0.72);
+      landCol = mix(landCol, vec3(0.82, 0.86, 0.90), snow);
+
+      if (uKind > 0.5 && uKind < 1.5) {
+        /* 沙漠行星：用调色板做沙丘，但保持低频、低对比 */
+        vec3 dune = mix(uDeep * 0.82, uMid, smoothstep(0.08, 0.72, detail));
+        dune = mix(dune, uHigh, smoothstep(0.66, 0.94, detail) * 0.42);
+        landCol = mix(landCol, dune, 0.72);
+        water = uMid * 0.16;
+        land = 1.0;
+      } else if (uKind > 4.5) {
+        /* 铜绿世界：暗青海洋 + 灰绿陆地 */
+        water = mix(uDeep * 0.45, uMid * 0.50, 1.0 - depth);
+        landCol = mix(landCol, vec3(0.10, 0.20, 0.17), 0.38);
+      }
+
+      albedo = mix(water, landCol, land);
+      specMask = (1.0 - land) * 0.85;
+    }
+
+    /* ── 云层：大尺度云团 + 丝状高空云，避免均匀「噪点壳」 ── */
+    float cloudField = fbm(n * 3.4 + vec3(uTime * 0.0022, seed * 0.13, 0.0)) * 0.66;
+    cloudField += ridged3(n * 9.0 - vec3(0.0, uTime * 0.0011, seed)) * 0.34;
+    float cloud = smoothstep(0.57, 0.76, cloudField) * uClouds;
+    cloud *= smoothstep(0.015, 0.12, abs(n.y)); // 赤道云带稀疏一点
+    if (uKind > 2.5 && uKind < 3.5) cloud = 0.0; // 气态行星的云已在条带里
+
+    /* ── 光照与材质 ── */
+    vec3 color = albedo * (0.008 + diffuse * 1.42);
+    color += albedo * 0.006;
+
+    // 云影
+    color *= 1.0 - cloud * 0.16 * day;
+
     vec3 H = normalize(L + V);
-    float spec = pow(max(dot(N, H), 0.0), 42.0) * (1.0 - isLand) * (1.0 - cloud) * (1.0 - uRough * 0.5);
-    color += uHigh * spec * 0.28;
+    float spec = pow(max(dot(N, H), 0.0), 86.0) * specMask * (1.0 - cloud);
+    color += uHigh * spec * 0.46;
 
-    // 云
-    color = mix(color, vec3(0.86, 0.92, 1.0) * (0.006 + day * 0.99), cloud * 0.9);
+    vec3 cloudColor = vec3(0.80, 0.86, 0.93) * (0.012 + day * 1.18);
+    color = mix(color, cloudColor, cloud * 0.78);
 
-    // 城市灯光
-    float cityNoise = fbm(n * 26.0 + seed);
-    float city = smoothstep(0.62, 0.8, cityNoise) * isLand * (1.0 - smoothstep(-0.1, 0.15, ndl));
-    color += vec3(1.0, 0.72, 0.38) * city * uLights * 0.55;
+    // 晨昏线附近的暖色散射
+    float term = smoothstep(-0.22, 0.0, ndl) * (1.0 - smoothstep(0.0, 0.30, ndl));
+    color += vec3(0.92, 0.34, 0.11) * term * 0.035;
 
     // 大气边缘
-    float fres = pow(1.0 - max(dot(N, V), 0.0), 3.2);
-    color += mix(uMid, uHigh, 0.5) * fres * uAtmo * (0.008 + wrap * 0.99) * 0.22;
+    float fres = pow(1.0 - max(dot(N, V), 0.0), 3.6);
+    color += mix(uMid, uHigh, 0.45) * fres * uAtmo * (0.012 + wrap * 0.99) * 0.30;
 
-    // 暗面
-    color *= mix(0.16, 1.0, day);
+    // 夜面整体压暗，但保留一点星光环境色
+    color *= mix(0.035, 1.0, day);
+    color += albedo * 0.004;
+
+    // 城市灯光：只出现在陆地和夜面，云层会遮挡
+    float cityNoise = fbm3(n * 32.0 + seed * 4.0);
+    float city = smoothstep(0.66, 0.81, cityNoise) * landMask * (1.0 - cloud);
+    city *= 1.0 - smoothstep(0.02, 0.20, ndl);
+    color += vec3(1.0, 0.66, 0.28) * city * uLights * 1.25;
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -235,7 +339,7 @@ export const RING_FRAG = /* glsl */ `
 
     float inner = smoothstep(0.02, 0.12, r);
     float outer = 1.0 - smoothstep(0.82, 1.0, r);
-    float alpha = density * inner * outer * 0.75;
+    float alpha = density * inner * outer * 0.46;
 
     vec3 color = mix(uColorA, uColorB, bands);
     gl_FragColor = vec4(color, alpha);

@@ -76,7 +76,7 @@ export function createWorld(
   const sunPosition = new THREE.Vector3(0, 0, 0);
   const bodies: CelestialBody[] = [];
   const hangars: Array<{ group: THREE.Group; depth: number; width: number; height: number }> = [];
-  const sunRadius = 22000;
+  const sunRadius = 15_000_000;
 
   /* ── 星空 ─────────────────────────────────── */
   const starCount = 16000;
@@ -98,7 +98,7 @@ export function createWorld(
     const u = rand() * 2 - 1;
     const theta = rand() * Math.PI * 2;
     const r = Math.sqrt(1 - u * u);
-    const distance = 60000000 + rand() * 30000000;
+    const distance = 800_000_000 + rand() * 220_000_000;
     positions[i * 3] = Math.cos(theta) * r * distance;
     positions[i * 3 + 1] = u * distance;
     positions[i * 3 + 2] = Math.sin(theta) * r * distance;
@@ -153,7 +153,10 @@ export function createWorld(
 
   const stars = new THREE.Points(starGeometry, starMaterial);
   stars.frustumCulled = false;
-  scene.add(stars);
+  // 星空跟随相机，保证飞到任何轨道都不会把星场甩到身后
+  const starGroup = new THREE.Group();
+  starGroup.add(stars);
+  scene.add(starGroup);
 
   /* ── 星云背景 ─────────────────────────────── */
   // 用等距柱状贴图做背景，避免大球壳在高速运动时与深度/裁剪产生黑块闪烁
@@ -205,7 +208,7 @@ export function createWorld(
     vertexShader: PLANET_VERT,
     fragmentShader: SUN_FRAG,
   });
-  const sun = new THREE.Mesh(new THREE.SphereGeometry(sunRadius, 64, 48), sunMaterial);
+  const sun = new THREE.Mesh(new THREE.SphereGeometry(sunRadius, 96, 64), sunMaterial);
   sun.frustumCulled = false;
   sunGroup.add(sun);
 
@@ -332,7 +335,7 @@ export function createWorld(
         uLights: { value: def.lights ? 1 : 0 },
         uAtmo: { value: def.atmosphere },
         uRough: { value: def.roughness },
-        uAmp: { value: def.radius * (def.surface === 'gas' ? 0.0015 : 0.012) },
+        uKind: { value: ({ ocean: 0, desert: 1, ice: 2, gas: 3, lava: 4, verdigris: 5, barren: 6 } as Record<string, number>)[def.surface] ?? 0 },
       },
       vertexShader: PLANET_VERT,
       fragmentShader: PLANET_FRAG,
@@ -432,11 +435,12 @@ export function createWorld(
   const update = (dt: number, elapsed: number, camera: THREE.Camera) => {
     sunMaterial.uniforms.uTime.value = elapsed;
     starMaterial.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
+    starGroup.position.copy(camera.position);
 
     const simDays = SIM_DAYS + (elapsed * TIME_SCALE) / 86_400;
 
     const toSun = camera.position.clone().negate().normalize();
-    sunKey.position.copy(camera.position).addScaledVector(toSun, 900000);
+    sunKey.position.copy(camera.position).addScaledVector(toSun, 18_000_000);
     sunKey.target.position.copy(camera.position);
     sunKey.target.updateMatrixWorld();
 

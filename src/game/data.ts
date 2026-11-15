@@ -94,7 +94,7 @@ const PALETTE: Record<Surface, [number, number, number]> = {
   ocean: [0x081826, 0x1b5d86, 0xa9dcf2],
   desert: [0x2a1608, 0x9a5a28, 0xf2c48a],
   ice: [0x101d2b, 0x6f9ab8, 0xeaf6ff],
-  gas: [0x1a1430, 0x7a5796, 0xe0cbf5],
+  gas: [0x1b1712, 0x7a6244, 0xd8c9a8],
   lava: [0x140705, 0x8f2f14, 0xffa05e],
   verdigris: [0x091a18, 0x226e62, 0xa8ead6],
   barren: [0x14161a, 0x5c6168, 0xb8bcc2],
@@ -132,8 +132,9 @@ export function buildSystem(input: {
     const surface = lang.surfaces[seed % lang.surfaces.length];
     const ratio = Math.log10(project.loc + 1) / Math.log10(maxLoc + 1);
 
-    const radius = 300000 + ratio * 500000 + rand() * 100000;
-    const orbit = 10000000 + index * 4000000 + rand() * 500000;
+    // 半径 2400–6600 km，接近地球尺度，足够承载城市/基地模型；轨道 8000 万米起步
+    const radius = 2_400_000 + ratio * 3_600_000 + rand() * 600_000;
+    const orbit = 80_000_000 + index * 28_000_000 + rand() * 2_000_000;
 
     return {
       id: project.id,
