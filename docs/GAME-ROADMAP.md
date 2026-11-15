@@ -1,7 +1,7 @@
 # 夜航 · 游戏路线图
 
 **更新：** 2026-11-16  
-**当前提交：** `53ca209`  
+**当前提交：** `3485f77`  
 **目标：** 从静态个人站升级为可飞行、可下船、可探索六组织母星的 Three.js 太空游戏。
 
 ---
@@ -174,6 +174,7 @@ Anvil Landing 切片：600 × 600 m、1 个 S pad、1 个 hero shop、3 个 NPC�
 - [x] 大气层减薄到 100 km
 - [x] 近行星黑屏修复
 - [x] NPC 密度与海盗频率调整
+- [x] Anvil Landing v2 样本：Kitbash3D K039 + Blender + PBR + 实际 A-30
 - [ ] AR-10 / 候选舰纹理与 LOD 收尾
 - [ ] 帧率与内存基线（目标：1080p / 60 fps，高精地表 30 fps+）
 
@@ -235,6 +236,8 @@ M1 具体交付：
 ---
 
 ## 7. 研究文档
+
+**当前质量样本：** `/yacht/terrain-sample/`，说明见 `docs/TERRAIN-SAMPLE.md`。Blender 参考渲染在 `docs/anvil-port-wide.png`、`docs/anvil-pad-close.png`、`docs/anvil-terrain-vista.png`；实时截图在 `docs/three-port.png`、`docs/three-pad.png`、`docs/three-vista.png`。
 
 四份实现研究在：
 
