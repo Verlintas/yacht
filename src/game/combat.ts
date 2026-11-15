@@ -537,7 +537,7 @@ export class Combat {
       spec.length,
       spec.exhaust,
     );
-    const damage = new DamageVisuals(group, spec.length, spec);
+    const damage = new DamageVisuals(group, spec.length, spec, template?.collision);
 
     const fallbackWeapon: WeaponMount = {
       id: 'fallback',
@@ -751,6 +751,30 @@ export class Combat {
     if (this.glowPool.length < MAX_PROJECTILES) this.glowPool.push(p.glow);
   }
 
+  /** 线段与舰体三角面 BVH 的精确相交；返回世界坐标命中点 */
+  private segmentMeshHit(
+    collision: ShipCollision | undefined,
+    position: THREE.Vector3,
+    quaternion: THREE.Quaternion,
+    from: THREE.Vector3,
+    to: THREE.Vector3,
+  ): THREE.Vector3 | null {
+    if (!collision) return null;
+    const matrix = new THREE.Matrix4().compose(position, quaternion, new THREE.Vector3(1, 1, 1));
+    const inverse = matrix.clone().invert();
+    const localFrom = from.clone().applyMatrix4(inverse);
+    const localTo = to.clone().applyMatrix4(inverse);
+    const delta = localTo.clone().sub(localFrom);
+    const distance = delta.length();
+    if (distance < 1e-6) return null;
+    const ray = new THREE.Ray(localFrom, delta.multiplyScalar(1 / distance));
+    const hits = collision.bvh.raycast(ray, THREE.DoubleSide);
+    if (hits.length === 0) return null;
+    const first = hits[0];
+    if (first.distance > distance) return null;
+    return first.point.clone().applyMatrix4(matrix);
+  }
+
   /** 线段到点的最近距离，用于高速弹丸的连续碰撞检测（复用向量，避免每颗弹丸每帧分配） */
   private segmentHit(target: THREE.Vector3, from: THREE.Vector3, to: THREE.Vector3, radius: number): boolean {
     this.hitAB.subVectors(to, from);
@@ -798,36 +822,59 @@ export class Combat {
       if (!dead && p.owner === 'player') {
         for (const npc of this.npcs) {
           if (!npc.alive) continue;
-          if (this.segmentHit(npc.group.position, prev, p.mesh.position, npc.radius)) {
-            const absorbed = Math.min(npc.shield, p.damage);
-            npc.shield -= absorbed;
-            npc.hp -= p.damage - absorbed;
-            npc.lastHit = this.time;
-            if (absorbed > 0 && npc.shield <= 0) npc.damage.shieldBreak();
-            const localHit = p.mesh.position.clone().sub(npc.group.position).applyQuaternion(npc.group.quaternion.clone().invert());
-            if (absorbed > 0) npc.damage.shieldHit(localHit);
-            else npc.damage.hullHit(localHit);
-            this.angerFleet(npc);
-            this.burst(p.mesh.position, p.color, p.weaponType === 'railgun' ? 42 : 14);
-            this.events.onImpact?.(p.weaponType, p.mesh.position.clone(), 'player');
-            if (p.weaponType === 'railgun') {
-              this.spawnFlash(p.mesh.position, 0xffffff, 34, 0.2);
-            }
-            if (npc.hp <= 0) {
-              npc.alive = false;
-              this.beginNpcDeath(npc);
-            }
-            dead = true;
-            break;
+          // 先用球体做 broadphase，再用舰体三角面 BVH 求精确命中点
+          if (!this.segmentHit(npc.group.position, prev, p.mesh.position, npc.radius)) continue;
+          const hitPoint = this.segmentMeshHit(
+            npc.collision,
+            npc.group.position,
+            npc.group.quaternion,
+            prev,
+            p.mesh.position,
+          );
+          if (npc.collision && !hitPoint) continue;
+          const impact = hitPoint ?? p.mesh.position.clone();
+          const absorbed = Math.min(npc.shield, p.damage);
+          npc.shield -= absorbed;
+          npc.hp -= p.damage - absorbed;
+          npc.lastHit = this.time;
+          if (absorbed > 0 && npc.shield <= 0) npc.damage.shieldBreak();
+          const localHit = impact.clone().sub(npc.group.position).applyQuaternion(npc.group.quaternion.clone().invert());
+          if (absorbed > 0) npc.damage.shieldHit(localHit);
+          else npc.damage.hullHit(localHit);
+          this.angerFleet(npc);
+          this.burst(impact, p.color, p.weaponType === 'railgun' ? 42 : 14);
+          this.events.onImpact?.(p.weaponType, impact.clone(), 'player');
+          if (p.weaponType === 'railgun') {
+            this.spawnFlash(impact, 0xffffff, 34, 0.2);
           }
+          if (npc.hp <= 0) {
+            npc.alive = false;
+            this.beginNpcDeath(npc);
+          }
+          dead = true;
+          break;
         }
       } else if (!dead && p.owner === 'npc') {
-        if (this.segmentHit(playerPos, prev, p.mesh.position, 18)) {
-          this.events.onPlayerDamage(p.damage, p.mesh.position.clone());
-          this.events.onImpact?.(p.weaponType, p.mesh.position.clone(), 'npc');
-          this.burst(p.mesh.position, p.color, p.weaponType === 'railgun' ? 30 : 10);
-          if (p.weaponType === 'railgun') this.spawnFlash(p.mesh.position, 0xffffff, 26, 0.18);
-          dead = true;
+        // 大舰不能用一个固定 18 m 球判断命中；broadphase 半径随舰长放大
+        const broadphase = Math.max(18, playerLength * 0.55);
+        if (this.segmentHit(playerPos, prev, p.mesh.position, broadphase)) {
+          const hitPoint = this.segmentMeshHit(
+            playerCollision,
+            playerPos,
+            playerQuaternion,
+            prev,
+            p.mesh.position,
+          );
+          if (playerCollision && !hitPoint) {
+            // 擦过 broadphase 球但没有碰到舰体三角面：不造成伤害
+          } else {
+            const impact = hitPoint ?? p.mesh.position.clone();
+            this.events.onPlayerDamage(p.damage, impact);
+            this.events.onImpact?.(p.weaponType, impact.clone(), 'npc');
+            this.burst(impact, p.color, p.weaponType === 'railgun' ? 30 : 10);
+            if (p.weaponType === 'railgun') this.spawnFlash(impact, 0xffffff, 26, 0.18);
+            dead = true;
+          }
         }
       }
 

@@ -518,7 +518,7 @@ export async function startGame(system: SystemData): Promise<void> {
       const nozzles = spec.nozzles.filter((nozzle) => nozzle.role !== 'retro');
       trailRef.current = new LocalPlume(ship.group, nozzles, spec.length, spec.exhaust, spec.plumeScale);
       damageRef.current?.dispose();
-      damageRef.current = new DamageVisuals(ship.group, spec.length, spec);
+      damageRef.current = new DamageVisuals(ship.group, spec.length, spec, ship.collision);
     }
     shipSpec = spec;
     specRef.current = spec;

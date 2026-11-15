@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { ShipSpec } from './ships';
+import type { ShipCollision } from './ship';
 
 export interface DamageParts {
   engine: number;
@@ -118,6 +119,7 @@ export class DamageVisuals {
     private group: THREE.Group,
     private length: number,
     spec: ShipSpec,
+    collision?: ShipCollision,
   ) {
     this.capital = spec.tier >= 5 || length > 240;
     this.anchors = {
@@ -165,21 +167,44 @@ export class DamageVisuals {
       depthWrite: false,
       side: THREE.DoubleSide,
     });
-    this.bubble = new THREE.Mesh(shieldGeometry, this.bubbleMat);
-    const hullBox = new THREE.Box3();
-    group.traverse((obj) => {
-      if (obj instanceof THREE.Mesh && obj.userData.shipHull) hullBox.expandByObject(obj);
-    });
-    if (hullBox.isEmpty()) hullBox.setFromObject(group);
-    const hullSize = hullBox.getSize(new THREE.Vector3());
-    const hullCenter = hullBox.getCenter(new THREE.Vector3());
-    this.bubbleBaseScale.set(
-      Math.max(2, hullSize.x * 0.54),
-      Math.max(2, hullSize.y * 0.58),
-      Math.max(2, hullSize.z * 0.52),
-    );
+    if (collision) {
+      // 护盾壳直接由舰体三角面生成：沿顶点法线向外偏移，而不是套一个球/椭球
+      const shieldGeo = collision.geometry.clone();
+      shieldGeo.computeVertexNormals();
+      const position = shieldGeo.attributes.position as THREE.BufferAttribute;
+      const normal = shieldGeo.attributes.normal as THREE.BufferAttribute;
+      const offset = Math.max(0.05, length * 0.0015);
+      for (let i = 0; i < position.count; i += 1) {
+        position.setXYZ(
+          i,
+          position.getX(i) + normal.getX(i) * offset,
+          position.getY(i) + normal.getY(i) * offset,
+          position.getZ(i) + normal.getZ(i) * offset,
+        );
+      }
+      position.needsUpdate = true;
+      shieldGeo.computeBoundingSphere();
+      this.bubble = new THREE.Mesh(shieldGeo, this.bubbleMat);
+      this.bubbleBaseScale.setScalar(1);
+      this.bubble.position.set(0, 0, 0);
+    } else {
+      // 程序化/无碰撞体时的回退：椭球护盾
+      this.bubble = new THREE.Mesh(shieldGeometry, this.bubbleMat);
+      const hullBox = new THREE.Box3();
+      group.traverse((obj) => {
+        if (obj instanceof THREE.Mesh && obj.userData.shipHull) hullBox.expandByObject(obj);
+      });
+      if (hullBox.isEmpty()) hullBox.setFromObject(group);
+      const hullSize = hullBox.getSize(new THREE.Vector3());
+      const hullCenter = hullBox.getCenter(new THREE.Vector3());
+      this.bubbleBaseScale.set(
+        Math.max(2, hullSize.x * 0.54),
+        Math.max(2, hullSize.y * 0.58),
+        Math.max(2, hullSize.z * 0.52),
+      );
+      this.bubble.position.copy(hullCenter);
+    }
     this.bubble.scale.copy(this.bubbleBaseScale);
-    this.bubble.position.copy(hullCenter);
     this.bubble.renderOrder = 2;
     this.bubble.frustumCulled = false;
     this.bubble.visible = false;
@@ -259,7 +284,6 @@ export class DamageVisuals {
 
   /** 护盾被打破：只在大舰上短暂显示护盾泡，然后消失 */
   shieldBreak(): void {
-    if (!this.capital) return;
     this.breakTimer = 1.1;
     this.bubble.visible = true;
   }
@@ -267,10 +291,8 @@ export class DamageVisuals {
   /** 护盾命中：单次命中闪光；小飞船不显示护盾泡 */
   shieldHit(localPoint: THREE.Vector3): void {
     this.hitFlash = 1;
-    if (this.capital) {
-      this.breakTimer = Math.max(this.breakTimer, 0.55);
-      this.bubble.visible = true;
-    }
+    this.breakTimer = Math.max(this.breakTimer, this.capital ? 0.55 : 0.28);
+    this.bubble.visible = true;
     const material = new THREE.SpriteMaterial({
       map: makeSparkTexture(),
       color: 0x8fe8ff,
@@ -327,7 +349,7 @@ export class DamageVisuals {
     this.hitFlash = Math.max(0, this.hitFlash - dt * 3.5);
     this.bubbleMat.uniforms.uHit.value = this.hitFlash;
     this.bubbleMat.uniforms.uTime.value = this.time;
-    if (this.capital && this.breakTimer > 0) {
+    if (this.breakTimer > 0) {
       this.breakTimer = Math.max(0, this.breakTimer - dt);
       const k = this.breakTimer / 1.1;
       this.bubbleMat.uniforms.uOpacity.value = 0.6 * k;
