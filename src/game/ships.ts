@@ -105,6 +105,30 @@ const MOD: Record<string, number> = {
   '': 1, '-': 0.7, '--': 0.5, '+': 1.3, '++': 1.6, '+++': 2.0,
 };
 
+/** 伤害越低射速越快；A 级主炮刻意更慢 */
+const MOD_RATE: Record<string, number> = {
+  '': 1, '-': 1.35, '--': 1.7, '+': 0.9, '++': 0.78, '+++': 0.68, 'A': 0.85,
+};
+
+/** 每艘船的设计射速系数：拦截机快、轰炸机慢、大舰更慢 */
+const SHIP_FIRE_RATE: Record<string, number> = {
+  thunderbolt: 1.25,
+  f008: 1.5,
+  bomber: 0.82,
+  freighter: 0.7,
+  commander: 0.95,
+  battleship: 0.72,
+};
+
+/** 护盾每秒恢复比例：大舰按最大护盾百分比恢复，避免 120k 护盾回满要半小时 */
+const SHIELD_REGEN_FRACTION: Record<string, number> = {
+  light: 0.022,
+  heavy: 0.014,
+  large: 0.010,
+  capital: 0.0075,
+  flagship: 0.0085,
+};
+
 /** A 级主炮：4 发击毁同型号舰船（按结构+护盾计算） */
 const A_SHOTS_TO_KILL = 4;
 
@@ -113,6 +137,7 @@ function parseWeapon(
   tag: string,
   pos: [number, number, number],
   durability: number,
+  shipFireRate = 1,
 ): WeaponMount {
   const code = tag.replace(/^W\d+/, '');
   const turret = /Auto/i.test(code);
@@ -136,7 +161,7 @@ function parseWeapon(
     type,
     pos,
     damage,
-    rate: base.rate,
+    rate: base.rate * (MOD_RATE[mod] ?? 1) * shipFireRate,
     speed: base.speed,
     range: base.range,
     spread: base.spread,
@@ -280,6 +305,8 @@ export const SHIPS: ShipSpec[] = RAW.map((raw) => {
     y * coordScale,
     z * coordScale,
   ];
+  const shipFireRate = SHIP_FIRE_RATE[raw.id] ?? 1;
+  const shieldRegenFraction = SHIELD_REGEN_FRACTION[raw.class] ?? 0.012;
   return {
     id: raw.id,
     name: raw.name,
@@ -300,7 +327,7 @@ export const SHIPS: ShipSpec[] = RAW.map((raw) => {
     turnRate: raw.speed[3],
     hull: raw.hull[0],
     shield: raw.hull[1],
-    shieldRegen: raw.hull[2],
+    shieldRegen: Math.max(1, Math.round(raw.hull[1] * shieldRegenFraction)),
     parts: {
       engine: Math.round(raw.hull[3]),
       weapon: Math.round(raw.hull[3] * 0.9),
@@ -308,7 +335,7 @@ export const SHIPS: ShipSpec[] = RAW.map((raw) => {
     },
     nozzles: raw.nozzles.map(([tag, x, y, z]) => parseNozzle(tag, scaled(x, y, z), raw.length)),
     weapons: raw.weapons.map(([tag, x, y, z]) =>
-      parseWeapon(tag, scaled(x, y, z), raw.hull[0] + raw.hull[1]),
+      parseWeapon(tag, scaled(x, y, z), raw.hull[0] + raw.hull[1], shipFireRate),
     ),
   };
 });

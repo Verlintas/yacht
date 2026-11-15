@@ -360,6 +360,7 @@ export async function startGame(system: SystemData): Promise<void> {
   const playerState = {
     hull: shipSpec.hull,
     shield: shipSpec.shield,
+    shieldDelay: 0,
     parts: { ...shipSpec.parts },
     alive: true,
   };
@@ -375,6 +376,7 @@ export async function startGame(system: SystemData): Promise<void> {
       }
       if (absorbed > 0 && playerState.shield - absorbed <= 0) damageRef.current?.shieldBreak();
       if (specRef.current.tier < 5) hud?.hit();
+      playerState.shieldDelay = 3.5;
       playerState.shield -= absorbed;
       const rest = damage - absorbed;
       if (rest > 0) {
@@ -468,6 +470,7 @@ export async function startGame(system: SystemData): Promise<void> {
     ship.group.scale.setScalar(1);
     playerState.hull = spec.hull;
     playerState.shield = spec.shield;
+    playerState.shieldDelay = 0;
     playerState.parts = { ...spec.parts };
     playerState.alive = true;
     weapons.cooldowns.clear();
@@ -744,7 +747,7 @@ function loop(ctx: GameContext, hud: Hud): void {
     ctx.warpPass.uniforms.uIntensity.value = warpVisual;
     ctx.warpPass.uniforms.uTime.value = elapsed;
 
-    ctx.combat.update(dt, ctx.flight.position, ctx.flight.velocity, ctx.flight.quaternion, ctx.camera);
+    ctx.combat.update(dt, ctx.flight.position, ctx.flight.velocity, ctx.flight.quaternion, ctx.camera, ctx.spec.current.length);
 
     // 自动炮：只打「已攻击我方」的目标
     for (const weapon of ctx.spec.current.weapons) {
@@ -828,6 +831,7 @@ function loop(ctx: GameContext, hud: Hud): void {
 interface PlayerState {
   hull: number;
   shield: number;
+  shieldDelay: number;
   parts: { engine: number; weapon: number; cockpit: number };
   alive: boolean;
 }
@@ -1602,9 +1606,13 @@ function setupHud(
       fleetDist.textContent = distanceLabel(intel.distance);
     }
 
-    // 护盾再生
-    if (playerState.alive && playerState.shield < specRef.current.shield) {
-      playerState.shield = Math.min(specRef.current.shield, playerState.shield + specRef.current.shieldRegen * dt);
+    // 护盾再生：受击后 3.5s 延迟；交战中 35% 速率；脱离战斗后 300% 速率
+    playerState.shieldDelay = Math.max(0, playerState.shieldDelay - dt);
+    const threat = ctx.combat.nearestHostile(ctx.flight.position, ctx.spec.current.sensorRange);
+    const inCombat = playerState.shieldDelay > 0 || !!threat;
+    if (playerState.alive && playerState.shieldDelay <= 0 && playerState.shield < specRef.current.shield) {
+      const regen = specRef.current.shieldRegen * (inCombat ? 0.35 : 3.0);
+      playerState.shield = Math.min(specRef.current.shield, playerState.shield + regen * dt);
     }
 
     if (!playerState.alive && !playerDeath && !respawning) {

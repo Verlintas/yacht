@@ -79,6 +79,9 @@ interface Npc {
   formation: THREE.Vector3;
   trail: LocalPlume;
   damage: DamageVisuals;
+  collisionRadius: number;
+  collisionHalfLength: number;
+  collisionCooldown: number;
 }
 
 interface ExplosionFx {
@@ -147,6 +150,54 @@ export interface CombatEvents {
 const MAX_PROJECTILES = 260;
 const SCAN_RANGE = 100000;
 
+/** 两条 3D 线段最近点，用于舰体胶囊碰撞 */
+function closestPointsOnSegments(
+  p1: THREE.Vector3,
+  q1: THREE.Vector3,
+  p2: THREE.Vector3,
+  q2: THREE.Vector3,
+  out1: THREE.Vector3,
+  out2: THREE.Vector3,
+): void {
+  const d1 = q1.clone().sub(p1);
+  const d2 = q2.clone().sub(p2);
+  const r = p1.clone().sub(p2);
+  const a = d1.dot(d1);
+  const e = d2.dot(d2);
+  const f = d2.dot(r);
+  let s = 0;
+  let t = 0;
+
+  if (a <= 1e-8 && e <= 1e-8) {
+    s = 0;
+    t = 0;
+  } else if (a <= 1e-8) {
+    s = 0;
+    t = THREE.MathUtils.clamp(f / e, 0, 1);
+  } else {
+    const c = d1.dot(r);
+    if (e <= 1e-8) {
+      t = 0;
+      s = THREE.MathUtils.clamp(-c / a, 0, 1);
+    } else {
+      const b = d1.dot(d2);
+      const denom = a * e - b * b;
+      s = denom !== 0 ? THREE.MathUtils.clamp((b * f - c * e) / denom, 0, 1) : 0;
+      t = (b * s + f) / e;
+      if (t < 0) {
+        t = 0;
+        s = THREE.MathUtils.clamp(-c / a, 0, 1);
+      } else if (t > 1) {
+        t = 1;
+        s = THREE.MathUtils.clamp((b - c) / a, 0, 1);
+      }
+    }
+  }
+
+  out1.copy(p1).addScaledVector(d1, s);
+  out2.copy(p2).addScaledVector(d2, t);
+}
+
 const ENEMY_FLAGSHIPS = ['freighter', 'commander', 'commander', 'battleship'] as const;
 const NEUTRAL_FLAGSHIPS = ['freighter', 'commander', 'freighter'] as const;
 
@@ -182,6 +233,7 @@ export class Combat {
   private maxFleets = 3;
   private encounterRange = 150000;
   private despawnRange = 500000;
+  private playerCollisionCooldown = 0;
 
   constructor(scene: THREE.Scene, events: CombatEvents) {
     this.scene = scene;
@@ -500,6 +552,9 @@ export class Combat {
       cooldown: Math.random() * 2,
       scanCooldown: 1 + Math.random() * 2,
       radius: Math.max(12, spec.length * 0.42),
+      collisionRadius: Math.max(1.5, spec.length * 0.16),
+      collisionHalfLength: spec.length * 0.42,
+      collisionCooldown: 0,
       alive: true,
       hostile: faction === 'hostile',
       alerted: false,
@@ -666,8 +721,10 @@ export class Combat {
     return target.distanceTo(from.clone().addScaledVector(ab, t)) < radius;
   }
 
-  update(dt: number, playerPos: THREE.Vector3, playerVelocity: THREE.Vector3, _playerQuat: THREE.Quaternion, _camera?: THREE.Camera): void {
+  update(dt: number, playerPos: THREE.Vector3, playerVelocity: THREE.Vector3, playerQuaternion: THREE.Quaternion, _camera?: THREE.Camera, playerLength = 25): void {
     this.time += dt;
+    this.playerCollisionCooldown = Math.max(0, this.playerCollisionCooldown - dt);
+    for (const npc of this.npcs) npc.collisionCooldown = Math.max(0, npc.collisionCooldown - dt);
 
     // 弹丸
     for (let i = this.projectiles.length - 1; i >= 0; i -= 1) {
@@ -747,6 +804,9 @@ export class Combat {
       if (!npc.alive || npc.fleetId !== -1) continue;
       this.updateNpc(npc, dt, playerPos, playerPos, playerVelocity, 0.9);
     }
+
+    // 舰体胶囊碰撞：玩家撞舰、NPC 互撞都产生伤害
+    this.resolveShipCollisions(dt, playerPos, playerVelocity, playerQuaternion, playerLength);
 
     // 舰船解体序列：引擎→武器→船体→燃料大爆炸
     for (let i = this.deaths.length - 1; i >= 0; i -= 1) {
@@ -902,6 +962,109 @@ export class Combat {
       if (this.sparkLife <= 0) {
         this.scene.remove(this.sparks);
         this.sparks = null;
+      }
+    }
+  }
+
+  private damageNpcFromCollision(npc: Npc, damage: number, point: THREE.Vector3): void {
+    if (!npc.alive) return;
+    npc.lastHit = this.time;
+    const absorbed = Math.min(npc.shield, damage);
+    npc.shield -= absorbed;
+    const rest = damage - absorbed;
+    npc.hp -= rest;
+    const local = point.clone().sub(npc.group.position).applyQuaternion(npc.group.quaternion.clone().invert());
+    if (absorbed > 0) npc.damage.shieldHit(local);
+    else npc.damage.hullHit(local);
+    if (absorbed > 0 && npc.shield <= 0) npc.damage.shieldBreak();
+    this.burst(point, new THREE.Color(0xffc47a), 8);
+    if (npc.hp <= 0) {
+      npc.alive = false;
+      this.beginNpcDeath(npc);
+    }
+  }
+
+  private resolveShipCollisions(
+    _dt: number,
+    playerPos: THREE.Vector3,
+    playerVelocity: THREE.Vector3,
+    playerQuaternion: THREE.Quaternion,
+    playerLength: number,
+  ): void {
+    const playerRadius = Math.max(2, playerLength * 0.16);
+    const playerHalf = playerLength * 0.42;
+    const playerA = new THREE.Vector3(0, 0, -playerHalf).applyQuaternion(playerQuaternion).add(playerPos);
+    const playerB = new THREE.Vector3(0, 0, playerHalf).applyQuaternion(playerQuaternion).add(playerPos);
+
+    for (const npc of this.npcs) {
+      if (!npc.alive) continue;
+      const npcA = new THREE.Vector3(0, 0, -npc.collisionHalfLength)
+        .applyQuaternion(npc.group.quaternion)
+        .add(npc.group.position);
+      const npcB = new THREE.Vector3(0, 0, npc.collisionHalfLength)
+        .applyQuaternion(npc.group.quaternion)
+        .add(npc.group.position);
+      const pa = new THREE.Vector3();
+      const pb = new THREE.Vector3();
+      closestPointsOnSegments(playerA, playerB, npcA, npcB, pa, pb);
+      const delta = pb.clone().sub(pa);
+      const distance = delta.length();
+      const minDistance = playerRadius + npc.collisionRadius;
+      if (distance >= minDistance) continue;
+
+      const normal = distance > 0.001 ? delta.multiplyScalar(1 / distance) : playerPos.clone().sub(npc.group.position).normalize();
+      const penetration = minDistance - distance;
+      playerPos.addScaledVector(normal, -penetration * 0.55);
+      npc.group.position.addScaledVector(normal, penetration * 0.45);
+
+      const relative = playerVelocity.clone().sub(npc.velocity);
+      const impact = relative.dot(normal);
+      if (impact > 0) {
+        playerVelocity.addScaledVector(normal, -impact * 0.65);
+        npc.velocity.addScaledVector(normal, impact * 0.35);
+      }
+
+      if (this.playerCollisionCooldown <= 0 && npc.collisionCooldown <= 0) {
+        const hitSpeed = Math.max(0, Math.abs(impact));
+        const damage = Math.min(3000, 8 + hitSpeed * 0.45);
+        this.events.onPlayerDamage(damage, pa.clone().addScaledVector(normal, -playerRadius * 0.5));
+        this.damageNpcFromCollision(npc, damage, pb);
+        this.angerFleet(npc);
+        this.playerCollisionCooldown = 0.55;
+        npc.collisionCooldown = 0.55;
+      }
+    }
+
+    // NPC 互撞：同舰队只推挤不互相伤害，避免编队自己打自己
+    for (let i = 0; i < this.npcs.length; i += 1) {
+      const a = this.npcs[i];
+      if (!a.alive) continue;
+      for (let j = i + 1; j < this.npcs.length; j += 1) {
+        const b = this.npcs[j];
+        if (!b.alive) continue;
+        const aA = new THREE.Vector3(0, 0, -a.collisionHalfLength).applyQuaternion(a.group.quaternion).add(a.group.position);
+        const aB = new THREE.Vector3(0, 0, a.collisionHalfLength).applyQuaternion(a.group.quaternion).add(a.group.position);
+        const bA = new THREE.Vector3(0, 0, -b.collisionHalfLength).applyQuaternion(b.group.quaternion).add(b.group.position);
+        const bB = new THREE.Vector3(0, 0, b.collisionHalfLength).applyQuaternion(b.group.quaternion).add(b.group.position);
+        const pa = new THREE.Vector3();
+        const pb = new THREE.Vector3();
+        closestPointsOnSegments(aA, aB, bA, bB, pa, pb);
+        const delta = pb.clone().sub(pa);
+        const distance = delta.length();
+        const minDistance = a.collisionRadius + b.collisionRadius;
+        if (distance >= minDistance) continue;
+        const normal = distance > 0.001 ? delta.multiplyScalar(1 / distance) : new THREE.Vector3(0, 1, 0);
+        const penetration = (minDistance - distance) * 0.5;
+        a.group.position.addScaledVector(normal, -penetration);
+        b.group.position.addScaledVector(normal, penetration);
+        if (a.fleetId !== b.fleetId && a.collisionCooldown <= 0 && b.collisionCooldown <= 0) {
+          const impact = Math.max(0, Math.abs(a.velocity.clone().sub(b.velocity).dot(normal)));
+          const damage = Math.min(3000, 8 + impact * 0.45);
+          this.damageNpcFromCollision(a, damage, pa);
+          this.damageNpcFromCollision(b, damage, pb);
+          a.collisionCooldown = 0.55;
+          b.collisionCooldown = 0.55;
+        }
       }
     }
   }
