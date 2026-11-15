@@ -145,7 +145,7 @@ export interface CombatEvents {
 }
 
 const MAX_PROJECTILES = 260;
-const SCAN_RANGE = 150000;
+const SCAN_RANGE = 100000;
 
 const ENEMY_FLAGSHIPS = ['freighter', 'commander', 'commander', 'battleship'] as const;
 const NEUTRAL_FLAGSHIPS = ['freighter', 'commander', 'freighter'] as const;
@@ -178,10 +178,10 @@ export class Combat {
   private npcSeq = 0;
   private fleetSeq = 0;
   private time = 0;
-  private encounterTimer = 10;
-  private maxFleets = 7;
-  private encounterRange = 220000;
-  private despawnRange = 650000;
+  private encounterTimer = 45;
+  private maxFleets = 3;
+  private encounterRange = 150000;
+  private despawnRange = 500000;
 
   constructor(scene: THREE.Scene, events: CombatEvents) {
     this.scene = scene;
@@ -932,7 +932,8 @@ export class Combat {
       return !!flagship && flagship.group.position.distanceTo(playerPos) < this.encounterRange;
     }).length;
 
-    const faction: Faction = nearbyHostiles >= 3 ? 'neutral' : Math.random() < 0.72 ? 'hostile' : 'neutral';
+    // 最多保持一支敌对舰队；清掉后等冷却再补，避免无限刷海盗
+    const faction: Faction = nearbyHostiles === 0 ? 'hostile' : 'neutral';
     const angle = Math.random() * Math.PI * 2;
     const distance = 28000 + Math.random() * 62000;
     const origin = playerPos.clone().add(new THREE.Vector3(
@@ -941,7 +942,7 @@ export class Combat {
       Math.sin(angle) * distance,
     ));
     this.spawnFleet(faction, origin);
-    this.encounterTimer = 16 + Math.random() * 16;
+    this.encounterTimer = 75 + Math.random() * 75;
   }
 
   /** 跃迁抵达后：清掉远处旧舰队，并在抵达点附近补一队敌对/中立。 */
@@ -955,25 +956,21 @@ export class Combat {
       }
     }
     const living = this.fleets.filter((fleet) => fleet.ships.some((ship) => ship.alive));
-    if (living.length < this.maxFleets) {
+    const hostileNear = living.filter((fleet) => {
+      if (fleet.faction !== 'hostile') return false;
+      const flagship = fleet.ships.find((ship) => ship.alive);
+      return !!flagship && flagship.group.position.distanceTo(position) < this.encounterRange;
+    }).length;
+    if (living.length < this.maxFleets && hostileNear === 0) {
       const angle = Math.random() * Math.PI * 2;
-      const distance = 32000 + Math.random() * 38000;
+      const distance = 36000 + Math.random() * 36000;
       this.spawnFleet('hostile', position.clone().add(new THREE.Vector3(
         Math.cos(angle) * distance,
         (Math.random() - 0.3) * 12000,
         Math.sin(angle) * distance,
       )));
     }
-    if (living.length + 1 < this.maxFleets) {
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 45000 + Math.random() * 45000;
-      this.spawnFleet('neutral', position.clone().add(new THREE.Vector3(
-        Math.cos(angle) * distance,
-        (Math.random() - 0.3) * 14000,
-        Math.sin(angle) * distance,
-      )));
-    }
-    this.encounterTimer = Math.max(this.encounterTimer, 12);
+    this.encounterTimer = Math.max(this.encounterTimer, 60);
   }
 
   private removeFleet(fleet: Fleet): void {
