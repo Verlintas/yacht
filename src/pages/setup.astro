@@ -798,7 +798,7 @@ const firstShip = EDITOR_SHIPS[0];
                 >
                   <span class="hp-ship-code">{ship.code}</span>
                   <span class="hp-ship-name">{ship.name}</span>
-                  <span class="hp-ship-len">{ship.length} m · {ship.role}</span>
+                  <span class="hp-ship-len">{ship.tier ? `T${ship.tier} · ` : ''}{ship.length} m · {ship.role}{ship.npcOnly ? ' · NPC' : ''}</span>
                 </button>
               ))
             }

@@ -34,8 +34,9 @@ export const WEAPON_ORDER: WeaponType[] = ['railgun', 'torpedo', 'plasma', 'ion'
 export const WEAPON_LABELS: Record<WeaponType, string> = {
   railgun: '轨道炮',
   torpedo: '鱼雷',
-  plasma: '等离子',
-  ion: '离子炮',
+  // P = 舰首炮；io = 副炮
+  plasma: '舰首炮',
+  ion: '副炮',
   cannon: '机炮',
   laser: '激光',
 };
