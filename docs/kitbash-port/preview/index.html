@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anvil Landing — Kitbash3D real-time kit</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --ink:#e8eef4; --dim:#9fb0bf; --accent:#67d6ff; --warm:#ffb15e; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:#06080c; color:var(--ink);
+    font-family: "Avenir Next Condensed", "Helvetica Neue", Arial, sans-serif; overflow:hidden; }
+  #app { position:fixed; inset:0; }
+  canvas { display:block; }
+  .hud { position:fixed; pointer-events:none; z-index:10; }
+  .title { top:32px; left:36px; max-width:700px; }
+  .eyebrow { font-size:11px; letter-spacing:.34em; color:var(--accent); text-transform:uppercase; }
+  h1 { margin:6px 0 4px; font-size:44px; line-height:.95; letter-spacing:.06em; font-weight:700;
+    text-transform:uppercase; text-shadow:0 2px 20px rgba(0,0,0,.6); }
+  .sub { font-size:13px; letter-spacing:.18em; color:var(--dim); text-transform:uppercase; }
+  .meta { top:32px; right:36px; text-align:right; font-size:11px; line-height:1.8;
+    letter-spacing:.12em; color:var(--dim); text-transform:uppercase; }
+  .meta b { color:var(--ink); font-weight:600; }
+  .foot { left:36px; bottom:28px; font-size:11px; letter-spacing:.12em; color:var(--dim);
+    text-transform:uppercase; display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
+  .key { display:inline-flex; gap:6px; align-items:center; }
+  .key span { border:1px solid rgba(255,255,255,.22); border-radius:3px; padding:2px 6px;
+    color:var(--ink); font-size:10px; background:rgba(0,0,0,.25); }
+  .controls { pointer-events:auto; display:flex; gap:8px; margin-top:14px; }
+  button { pointer-events:auto; color:var(--ink); background:rgba(8,14,22,.62);
+    border:1px solid rgba(120,190,220,.25); padding:8px 13px; border-radius:2px;
+    font:inherit; font-size:11px; letter-spacing:.14em; text-transform:uppercase; cursor:pointer;
+    backdrop-filter: blur(8px); }
+  button:hover { border-color:var(--accent); color:#fff; }
+  #loading { position:fixed; inset:0; z-index:40; background:#06080c; display:flex;
+    align-items:center; justify-content:center; flex-direction:column; gap:20px; transition:opacity .8s; }
+  #loading.hide { opacity:0; pointer-events:none; }
+  .loadbar { width:320px; height:2px; background:rgba(255,255,255,.12); overflow:hidden; }
+  .loadbar i { display:block; height:100%; width:0%; background:var(--accent); transition:width .25s; }
+  #loading .small { font-size:11px; letter-spacing:.25em; color:var(--dim); text-transform:uppercase; }
+  #err { position:fixed; inset:0; display:none; z-index:50; background:#06080c; padding:50px;
+    font-family:monospace; color:#ff9a8a; white-space:pre-wrap; overflow:auto; }
+  @media (max-width:800px){ h1{font-size:30px} .meta{display:none} .title{left:20px;top:22px} .foot{left:20px;bottom:18px} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="hud title">
+  <div class="eyebrow">Kitbash3D Sci-Fi Industrial · Anvil Landing</div>
+  <h1>Anvil Landing</h1>
+  <div class="sub">TLOF-01 · Port 07 · A-30 Thunderbolt</div>
+  <div class="controls">
+    <button data-cam="wide">1 · Wide</button>
+    <button data-cam="close">2 · Pad</button>
+    <button data-cam="aerial">3 · Aerial</button>
+    <button id="spin">R · Orbit</button>
+  </div>
+</div>
+<div class="hud meta">
+  <div><b>Kitbash3D</b> purchased assets</div>
+  <div>1.19 M tris · 38 materials</div>
+  <div>Meshopt + WebP · 25 MB</div>
+  <div>Three.js r187 · real-time</div>
+</div>
+<div class="hud foot">
+  <div class="key"><span>Drag</span> orbit</div>
+  <div class="key"><span>Scroll</span> dolly</div>
+  <div class="key"><span>1</span><span>2</span><span>3</span> cameras</div>
+  <div id="fps">—</div>
+</div>
+<div id="loading">
+  <div class="eyebrow">Anvil Landing</div>
+  <div class="small" id="loadtext">Streaming real-time kit</div>
+  <div class="loadbar"><i id="loadbar"></i></div>
+</div>
+<div id="err"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const app = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.18;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+// dusk gradient background
+const bg = document.createElement('canvas'); bg.width = 1024; bg.height = 512;
+const ctx = bg.getContext('2d');
+const g = ctx.createLinearGradient(0, 0, 0, 512);
+g.addColorStop(0.00, '#0d1b33');
+g.addColorStop(0.44, '#4d6c8c');
+g.addColorStop(0.62, '#b6a08a');
+g.addColorStop(0.72, '#d9a878');
+g.addColorStop(1.00, '#6e6259');
+ctx.fillStyle = g; ctx.fillRect(0, 0, 1024, 512);
+const bgTex = new THREE.CanvasTexture(bg);
+bgTex.colorSpace = THREE.SRGBColorSpace;
+scene.background = bgTex;
+scene.fog = new THREE.Fog(0x8b9aaa, 260, 1500);
+
+const camera = new THREE.PerspectiveCamera(48, innerWidth/innerHeight, 0.5, 3500);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.06;
+controls.minDistance = 12; controls.maxDistance = 520;
+controls.maxPolarAngle = Math.PI * 0.49;
+controls.target.set(0, 8, 0);
+
+const hemi = new THREE.HemisphereLight(0x9dc2ff, 0x6d5942, 1.45);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffd6a2, 3.5);
+sun.position.set(-150, 210, -90);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near = 10; sun.shadow.camera.far = 650;
+sun.shadow.camera.left = -260; sun.shadow.camera.right = 260;
+sun.shadow.camera.top = 260; sun.shadow.camera.bottom = -260;
+sun.shadow.bias = -0.00035;
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0x8fb6ff, 0.75);
+fill.position.set(180, 90, 160); scene.add(fill);
+const warm = new THREE.DirectionalLight(0xffa35c, 0.55);
+warm.position.set(-60, 40, 140); scene.add(warm);
+
+// environment for PBR reflections
+const envCanvas = document.createElement('canvas'); envCanvas.width = 1024; envCanvas.height = 512;
+const ectx = envCanvas.getContext('2d');
+const eg = ectx.createLinearGradient(0, 0, 0, 512);
+eg.addColorStop(0.0, '#2e4b70'); eg.addColorStop(0.45, '#7190a9');
+eg.addColorStop(0.68, '#e5b183'); eg.addColorStop(1.0, '#4c4a45');
+ectx.fillStyle = eg; ectx.fillRect(0, 0, 1024, 512);
+const envTex = new THREE.CanvasTexture(envCanvas);
+envTex.mapping = THREE.EquirectangularReflectionMapping;
+envTex.colorSpace = THREE.SRGBColorSpace;
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromEquirectangular(envTex).texture;
+scene.environmentIntensity = 0.75;
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.38, 0.55, 0.88);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+const presets = {
+  wide:   { pos:[-38, 17, 76],   target:[3, 12, -10] },
+  close:  { pos:[-38, 6.2, 54],  target:[-6, 4.5, -1] },
+  aerial: { pos:[-120, 82, 145], target:[5, 12, -40] },
+};
+let tween = null;
+function setCam(name, instant=false){
+  const p = presets[name]; if(!p) return;
+  if(instant){
+    camera.position.set(...p.pos); controls.target.set(...p.target); controls.update();
+  } else {
+    tween = { t:0, fromPos:camera.position.clone(), fromTarget:controls.target.clone(),
+              toPos:new THREE.Vector3(...p.pos), toTarget:new THREE.Vector3(...p.target) };
+  }
+}
+setCam('wide', true);
+document.querySelectorAll('[data-cam]').forEach(b => b.addEventListener('click', () => setCam(b.dataset.cam)));
+addEventListener('keydown', e => {
+  if(e.key==='1') setCam('wide'); if(e.key==='2') setCam('close'); if(e.key==='3') setCam('aerial');
+  if(e.key.toLowerCase()==='r') toggleSpin();
+});
+let spin = false;
+function toggleSpin(){ spin = !spin; controls.autoRotate = spin; controls.autoRotateSpeed = 0.35;
+  document.getElementById('spin').style.borderColor = spin ? 'var(--accent)' : ''; }
+document.getElementById('spin').addEventListener('click', toggleSpin);
+
+const loader = new GLTFLoader();
+loader.setMeshoptDecoder(MeshoptDecoder);
+let modelReady = false;
+const loadingEl = document.getElementById('loading');
+const bar = document.getElementById('loadbar');
+const loadtext = document.getElementById('loadtext');
+
+loader.load('../glb/anvil_landing_port.glb', gltf => {
+  const root = gltf.scene;
+  root.traverse(o => {
+    if(o.isMesh){
+      o.castShadow = true; o.receiveShadow = true;
+      if(o.material){
+        o.material.envMapIntensity = 1.15;
+        o.material.needsUpdate = true;
+      }
+    }
+  });
+  scene.add(root);
+  let tris = 0, mats = new Set();
+  root.traverse(o => { if(o.isMesh){ mats.add(o.material); const g=o.geometry;
+    tris += (g.index ? g.index.count : g.attributes.position.count) / 3; } });
+  document.querySelector('.meta').innerHTML =
+    `<div><b>Kitbash3D</b> purchased assets</div>` +
+    `<div>${(tris/1e6).toFixed(2)} M tris · ${mats.size} materials</div>` +
+    `<div>Meshopt + WebP · 25 MB</div><div>Three.js r187 · real-time</div>`;
+  modelReady = true;
+  window.__ready = true;
+  window.__tris = tris; window.__mats = mats.size;
+  loadtext.textContent = 'Ready';
+  bar.style.width = '100%';
+  setTimeout(() => loadingEl.classList.add('hide'), 350);
+}, xhr => {
+  if(xhr.total) bar.style.width = Math.min(98, (xhr.loaded/xhr.total)*100) + '%';
+  loadtext.textContent = xhr.total ? `Streaming · ${(xhr.loaded/1048576).toFixed(1)} MB` : 'Streaming real-time kit';
+}, err => {
+  console.error(err);
+  window.__error = String(err);
+  const el = document.getElementById('err'); el.style.display='block';
+  el.textContent = 'Failed to load the kit.\n\nServe this folder over HTTP from docs/kitbash-port:\n  python3 -m http.server 8765\n\n' + err;
+});
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+});
+
+let last = performance.now(), frames = 0, acc = 0;
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt = Math.min(0.05, (now - last)/1000); last = now;
+  if(tween){
+    tween.t += dt/1.25;
+    const k = Math.min(1, tween.t); const e = 1 - Math.pow(1-k, 3);
+    camera.position.lerpVectors(tween.fromPos, tween.toPos, e);
+    controls.target.lerpVectors(tween.fromTarget, tween.toTarget, e);
+    if(k >= 1) tween = null;
+  }
+  controls.update();
+  composer.render();
+  frames++; acc += dt;
+  if(acc > 0.8){ document.getElementById('fps').textContent = Math.round(frames/acc)+' fps'; frames=0; acc=0; }
+}
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

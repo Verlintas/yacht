@@ -1,0 +1,285 @@
+{
+ "project": "Anvil Landing \u2014 Kitbash3D Sci-Fi Industrial hero port",
+ "date": "2026-11-16",
+ "status": "private quality proof, not merged to main",
+ "sources": {
+  "kitbash_fbx": "/tmp/kb3d_fbx/asset_1.fbx",
+  "kitbash_textures": "/tmp/kb3d_tex/Textures",
+  "a30_ship": "public/models/thunderbolt.glb",
+  "additional_packs_audited": [
+   "K014 Greebles (FBX)",
+   "K025 Industrial (factories/crane audit)"
+  ],
+  "license": "user-purchased assets; private sample, no redistribution"
+ },
+ "audit": {
+  "mesh_count": 359,
+  "tris": 4990134,
+  "materials": 12,
+  "material_sets": [
+   "Floor",
+   "Glass",
+   "Iron",
+   "Metal",
+   "MetalSilver",
+   "Panels2",
+   "PanelsBlack",
+   "PanelsBrown",
+   "PanelsLightBlue",
+   "PanelsWhite",
+   "Tech",
+   "lights"
+  ],
+  "building_modules": 30,
+  "props": 32,
+  "hero_modules": [
+   {
+    "module": "BldgLG_G",
+    "role": "terminal / control tower",
+    "tris": 904013,
+    "dims_m": [
+     15.9,
+     8.57,
+     28.12
+    ]
+   },
+   {
+    "module": "BldgLG_H",
+    "role": "terminal + skybridge",
+    "tris": 1503264,
+    "dims_m": [
+     12.97,
+     6.64,
+     25.34
+    ]
+   },
+   {
+    "module": "BldgLG_I",
+    "role": "hangar / warehouse",
+    "tris": 526387,
+    "dims_m": [
+     22.19,
+     11.07,
+     17.11
+    ]
+   },
+   {
+    "module": "BldgLG_J",
+    "role": "city block backdrop",
+    "tris": 226893,
+    "dims_m": [
+     14.04,
+     4.77,
+     16.13
+    ]
+   }
+  ]
+ },
+ "scene": {
+  "units": "metres",
+  "coordinate_system": "Z-up in Blender / Y-up in glTF",
+  "apron_m": [
+   210,
+   140
+  ],
+  "tlof_m": [
+   60,
+   60
+  ],
+  "gantry_span_m": 56,
+  "gantry_height_m": 24,
+  "ship": {
+   "name": "A-30 Thunderbolt",
+   "length_m": 25.0,
+   "source_length_m": 30.0,
+   "scale": 0.833333,
+   "yaw_deg": 72,
+   "landing_gear": "custom 3-point skids"
+  },
+  "humans": 4,
+  "hero_buildings": 4,
+  "city_edge_buildings": 6,
+  "cameras": {
+   "Cam_Wide": {
+    "loc": [
+     -38,
+     -76,
+     17
+    ],
+    "target": [
+     3,
+     10,
+     12
+    ],
+    "lens_mm": 26
+   },
+   "Cam_Close": {
+    "loc": [
+     -38,
+     -54,
+     6.2
+    ],
+    "target": [
+     -6,
+     1,
+     4.5
+    ],
+    "lens_mm": 42
+   },
+   "Cam_Aerial": {
+    "loc": [
+     -120,
+     -145,
+     82
+    ],
+    "target": [
+     5,
+     40,
+     12
+    ],
+    "lens_mm": 55
+   }
+  },
+  "lighting": "warm sun 6.3, custom equirect sky, facade fill, gantry/mast spots, emissive strips, EEVEE AO/raytracing"
+ },
+ "materials": {
+  "mapping": {
+   "Metal": "KB3D_SF_Metal_{basecolor,normal,roughness,metallic,ao}",
+   "MetalSilver": "KB3D_SF_MetalSilver_*",
+   "PanelsWhite": "KB3D_SF_PanelsWhite_*",
+   "PanelsBlack": "KB3D_SF_PanelsBlack_*",
+   "PanelsBrown": "KB3D_SF_PanelsBrown_*",
+   "Panels2": "KB3D_SF_Panels2_*",
+   "PanelsLightBlue": "KB3D_SF_PanelsLightBlue_*",
+   "Iron": "KB3D_SF_Iron_*",
+   "Glass": "KB3D_SF_Glass_* (transmission)",
+   "Tech": "KB3D_SF_Tech_* + emissive",
+   "lights": "KB3D_SF_Lights_* emissive",
+   "Floor": "KB3D_SF_Floor_*"
+  },
+  "glb": "2K basecolour / 1K normal / 512 metal-rough-emissive WebP; AO + tint baked",
+  "custom": [
+   "concrete",
+   "terrain",
+   "cliff",
+   "hazard",
+   "paint",
+   "neon",
+   "suit/visor"
+  ]
+ },
+ "renders": [
+  {
+   "file": "renders/01_wide_port.png",
+   "camera": "Cam_Wide",
+   "resolution": [
+    1920,
+    1200
+   ],
+   "bytes": 2702310
+  },
+  {
+   "file": "renders/02_pad_closeup.png",
+   "camera": "Cam_Close",
+   "resolution": [
+    1920,
+    1200
+   ],
+   "bytes": 2917465
+  },
+  {
+   "file": "renders/03_elevated_city.png",
+   "camera": "Cam_Aerial",
+   "resolution": [
+    1920,
+    1200
+   ],
+   "bytes": 3541503
+  }
+ ],
+ "glb": {
+  "file": "glb/anvil_landing_port.glb",
+  "bytes": 25660288,
+  "size_mb": 25.66,
+  "tris": 1186399,
+  "groups": {
+   "RT_Ground": 62268,
+   "RT_Buildings": 674395,
+   "RT_City": 306772,
+   "RT_Port": 88992,
+   "RT_Ship": 44196,
+   "RT_People": 9776
+  },
+  "threejs_materials": 40,
+  "kit_materials": 38,
+  "textures": 12,
+  "extensions": [
+   "EXT_meshopt_compression",
+   "EXT_texture_webp",
+   "KHR_mesh_quantization",
+   "KHR_materials_clearcoat"
+  ],
+  "decimation": {
+   "BldgLG_G": 0.22,
+   "BldgLG_H": 0.2,
+   "BldgLG_I": 0.32,
+   "BldgLG_J": 0.4,
+   "city_duplicates": 0.1,
+   "port_gantry": 0.55,
+   "terrain": 0.35,
+   "cliff": 0.42,
+   "ship": 0.9
+  },
+  "texture_formats": {
+   "basecolor": "WebP 2048",
+   "normal": "WebP 1024",
+   "metal_rough_emissive": "WebP 512"
+  },
+  "optimizer": "gltf-transform 4.5.1 optimize (meshopt, webp, join, weld, prune; simplify/palette disabled)"
+ },
+ "preview": {
+  "page": "preview/index.html",
+  "screenshot": "preview/preview_web.png",
+  "screenshot_bytes": 1573860,
+  "serve": "cd docs/kitbash-port && python3 -m http.server 8765",
+  "url": "http://localhost:8765/preview/",
+  "dependencies": "Three.js r187 via jsDelivr; MeshoptDecoder for EXT_meshopt_compression"
+ },
+ "files": {
+  "blend_local_only": "anvil_landing.blend (122 MB, not committed)",
+  "scripts": [
+   "audit_fbx.py",
+   "audit_industrial.py",
+   "build_architecture.py",
+   "build_port.py",
+   "build_props.py",
+   "build_scene.py",
+   "export_glb.py",
+   "gen_textures.py",
+   "grade_renders.py",
+   "lib_kb3d.py",
+   "make_rt_textures.py",
+   "render.py"
+  ],
+  "generated_textures": [
+   "concrete_albedo.jpg",
+   "concrete_normal.png",
+   "concrete_roughness.jpg",
+   "dusk_sky.jpg",
+   "hazard_stripes.jpg",
+   "paint_wear.jpg",
+   "terrain_albedo.jpg",
+   "terrain_normal.png",
+   "terrain_roughness.jpg"
+  ]
+ },
+ "limitations": [
+  "GLB glass is opaque reflective; Blender uses transmission",
+  "GLB is decimated from 6.1M to 1.19M tris for real-time",
+  "A-30 source has no landing gear; custom skids/stair authored",
+  "Humans are minimal custom suited figures, not scanned characters",
+  "City edge/cliff are backdrop elements, not full interior city",
+  "Preview needs HTTP + CDN for Three.js",
+  "The full .blend is local-only due to size; rebuild with the documented scripts"
+ ]
+}

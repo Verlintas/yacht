@@ -10,3 +10,11 @@ LOCAL-*.md
 
 # 本地标注用，不进仓库
 public/ship-sheets/
+
+# Kitbash port local-only intermediates (large / regenerable)
+docs/kitbash-port/anvil_landing.blend
+docs/kitbash-port/anvil_landing.blend1
+docs/kitbash-port/renders/raw/
+docs/kitbash-port/glb/anvil_landing_port_raw.glb
+docs/kitbash-port/glb/textures/
+docs/kitbash-port/glb/texture_paths.json
