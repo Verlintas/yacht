@@ -1,0 +1,57 @@
+{
+ "schema": 1,
+ "name": "IAC Forgeheart / Anvil Landing 16 km tile",
+ "generator": "tools/terrain/generate_iac_16km.py",
+ "seed": 20261117,
+ "grid": {
+  "width": 641,
+  "height": 641,
+  "spacing_m": 25.6
+ },
+ "extent_m": 16384.0,
+ "heightmap": {
+  "file": "height_16km.r16",
+  "format": "r16le",
+  "min_h": -93.75343955566737,
+  "max_h": 1417.8244801499172,
+  "row_order": "north_to_south",
+  "origin": "northwest corner",
+  "decode": "height_m = min_h + (value / 65535) * (max_h - min_h)"
+ },
+ "backdrop": {
+  "file": "backdrop.r16",
+  "grid": 193,
+  "extent_m": 49152.0,
+  "min_h": -111.38492578523507,
+  "max_h": 1402.0868384104106
+ },
+ "plateau": {
+  "height_m": 40.0,
+  "size_m": [
+   2200.0,
+   2600.0
+  ],
+  "corner_radius_m": 260.0,
+  "port_flat_m": [
+   640,
+   640
+  ]
+ },
+ "maps": {
+  "splat": "splat.png",
+  "splat_channels": [
+   "rock",
+   "dirt",
+   "grass",
+   "sand"
+  ],
+  "macro": "macro.png"
+ },
+ "features": {
+  "north_ridge": "760 m ridged mountain arc behind the market row",
+  "east_scarp": "360 m foundry mesa east of the plateau",
+  "west_canyon": "115 m deep diagonal canyon west of the plateau",
+  "south_hills": "low foundry mesas beyond the cargo road"
+ },
+ "license": "project-owned procedural heightfield; detail textures from the existing project terrain sample"
+}
