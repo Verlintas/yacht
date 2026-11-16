@@ -26,13 +26,14 @@ Kitbash3D maps; the real-time GLB below is a separate, decimated build.
 
 ![Three.js preview](preview/preview_web.png)
 
-- `glb/anvil_landing_port.glb` — **25.66 MB / 1,186,399 tris / 40 materials**
+- `glb/anvil_landing_port.glb` — **25.57 MB / ~1.15 M tris / 40 materials**
   in Three.js (38 compact kit materials + the A-30's two original materials)
 - 12 WebP textures (2K base colours, 1K normals, 512 metallic/roughness/emissive;
   AO + material tint baked into base colour)
 - `EXT_meshopt_compression`, `EXT_texture_webp`, `KHR_mesh_quantization`
 - Logical meshes: `RT_Buildings`, `RT_City`, `RT_Ground`, `RT_Port`, `RT_Ship`,
   `RT_People`; the exporter and gltf-transform collate primitives by material
+- Hero scale: **10×** (Kitbash3D 1/10-scale modules)
 - Decimation: G 0.22, H 0.20, I 0.32, J 0.40, city duplicates 0.10, port/gantry 0.55,
   terrain 0.35, cliff 0.42, ship 0.90; small props and neon strips skipped
 - Preview: serve the folder over HTTP, e.g.
@@ -48,7 +49,7 @@ Kitbash3D maps; the real-time GLB below is a separate, decimated build.
 | TLOF-01 | 60 × 60 m chamfered pad, 42 m ring, H marking, cyan edge lights |
 | A-30 | 25.0 m long (source 30 m, scaled 0.833), yaw 72°, custom landing skids |
 | Gantry 02 | 56 m span × 24 m high; lattice towers, catwalk, trolley/hook, work lights |
-| Hero buildings | `BldgLG_G` 28.1 m, `BldgLG_H` 25.3 m, `BldgLG_I` 17.1 m (×1.14), `BldgLG_J` 16.1 m |
+| Hero buildings | Kitbash3D modules authored at 1/10 scale; placed at **10×**: G ≈281 m, H ≈253 m, I ≈171 m, J ≈161 m |
 | Control cab | 4 m glass drum on the terminal roof, warm interior + beacon |
 | Skybridge | enclosed 22 m bridge between H and I at ≈ 12 m |
 | Hangar | 11 m door with warm interior spill and ANVIL LANDING sign |
