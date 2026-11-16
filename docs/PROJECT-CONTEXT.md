@@ -23,6 +23,7 @@
 - TM-5 / TG-6 / RH-7 硬点已用 setup 截图验收：`docs/hardpoints/`。
 - 第一人称座舱 v3 已合并：独立 `Scene`/`CockpitPass`、VX-9 HUD、canopy mask、伤害裂纹、warp 遮挡；A-30 103k tris / AR10 108k tris，31 draw calls。截图在 `docs/cockpit-ui/`。
 - Archon 贴图 0 成本 pass 已合并：AO/ORM、金属/自发光、MikkTSpace tangents、anisotropy 16；几何/硬点不变，2K WebP 4.67 MB，纹理 VRAM ≈89.5 MB，4K 不作为默认。报告 `docs/ARCHON-TEXTURE-PASS.md`。
+- 鱼雷/爆炸 VFX v2 已合并：InstancedMesh 弹体、分层尾迹、破缺冲击波、多瓣火球、棱角残骸、终末级联殉爆；220 枚鱼雷 bench `Combat.update` ≈0.39 ms/帧，鱼雷相关 11 draw calls。测试场 `/yacht/vfx-torpedo-test/`。
 - 建模流程已确定：**不能只靠 CLI 程序化改模**；必须 authored/Blender/kitbash，静态近景单物体至少 5,000 tris（球体除外）。
 - Tripo：**不买来做建筑/城市**；最多 Pro 月付试 props/rocks/角色底模。
 
@@ -335,6 +336,13 @@ K047 不完整（只有 `.baiduyun.p.downloading`）；K043/K022 无贴图；K02
 - `implementation/mockups/27-cockpit/cockpit-mockup.html`
 - `implementation/mockups/27-cockpit/preview.png`
 
+### 本仓视觉/系统文档
+
+- `docs/ARCHON-TEXTURE-PASS.md` — Archon 贴图 pass、UV/AO 限制、2K/4K 对比
+- `docs/TORPEDO-VFX.md` — 鱼雷/爆炸 VFX 架构、性能、限制
+- `docs/cockpit-ui/README.md` — 第一人称座舱/HUD、截图、数据接线
+- `docs/hardpoints/README.md` — TM-5/TG-6/RH-7 硬点验收
+
 ---
 
 ## 8. 关键代码地图
@@ -356,11 +364,12 @@ K047 不完整（只有 `.baiduyun.p.downloading`）；K043/K022 无贴图；K02
 | `src/game/audio.ts` | 引擎声、武器声、爆炸声 |
 | `src/pages/index.astro` | 游戏 HTML/CSS/HUD |
 | `src/pages/terrain-sample.astro` | 1 km 地形样本 |
-| `src/pages/city-hero.astro` | Nautilus Reach WIP 样本 |
+| `src/pages/city-hero.astro` | Nautilus Reach city-hero v4 港口街区样本 |
+| `src/pages/vfx-torpedo-test.astro` | 鱼雷/爆炸 VFX 测试场 |
 | `src/pages/kitbash-port.astro` | K039 港口预览 |
 | `src/scripts/hardpoint-data.ts` | setup 编辑器 18 艘船硬点 |
 | `tools/terrain/generate_sample.py` | 地形高度场样本 |
-| `scripts/city-hero/` | Nautilus Reach Blender 场景 |
+| `scripts/city-hero-v2/` | Nautilus Reach city-hero v4 Blender 场景 |
 | `scripts/kitbash/` | K039 港区 Blender 场景 |
 
 ---
@@ -416,7 +425,7 @@ npm run build
 - 4K 贴图单栋 hero 2.3–3.2 GB VRAM；1K–2K + KTX2 才适合 WebGL。
 - 第一人称座舱 v3 已合并；仍是程序化 authored kit，不是 Blender 45–65k GLB + 2K PBR atlas；AR10 是 light kit 放大 + 桥楼附加件，不是独立 capital 舰桥。
 - 座舱 103k/108k tris，高于设计 45–65k；draw call 保持 31。
-- 爆炸、护盾、相机已经做了一轮实机修复，但仍需真机验收。
+- 爆炸/鱼雷 VFX v2 已合并；冲击环仍是相机朝向 Sprite，不是真实 3D 球壳；需真机长时间 Archon 实战 FPS 验收。
 - city-hero v4 已合并：单栋 K032/K038 hero、45 个街区模块、品牌清理、工业边缘；仍是离线 Cycles stills + 1200 m 工程平台，不是最终城市系统。K015 只做远景。
 - 行星真实地形/城市/步行/起降仍未接入主游戏。
 - `surfacePatch` 已禁用；地形占位平面会产生黑块/边缘。
@@ -426,7 +435,7 @@ npm run build
 
 ## 11. 下一步优先级
 
-1. **实机验收**：BHN 3 秒、NPC 多敌对、护盾简化/静态、爆炸随机殉爆/终末、第三人称动态。
+1. **实机验收**：BHN 3 秒、NPC 多敌对、护盾简化/静态、鱼雷/爆炸 VFX v2、座舱、第三人称 HUD、Archon 贴图。
 2. **第一人称座舱验收**：已合并 v3；真机检查 A-30/AR10、1280×720、warp/受击/损伤，再决定是否用 Blender GLB 替换程序化 kit。
 3. **Archon 贴图后续**：0 成本 pass 已合并；如需进一步降 VRAM，再接 KTX2Loader 走 2K KTX2（16.8 MB），不要默认 4K。
 4. **候选舰硬点验收**：TM5/TG6/RH7 已在 setup 截图确认，标记落在舰体正确位置；截图在 `docs/hardpoints/`。实机开火/喷口朝向仍待逐舰飞行验收。
@@ -438,6 +447,8 @@ npm run build
 
 ## 12. 最近提交
 
+- `90a37dd` — 合并鱼雷/爆炸 VFX v2（InstancedMesh 弹体、破缺冲击波、多瓣火球、棱角残骸）
+- `e5c250d` / `9955ff9` — VFX v2.1/v2：软冲击波、多瓣火球、残骸形状、长烟尘
 - `1678c12` — 合并 city-hero v4（单栋 hero、港口街区、品牌清理、工业边缘）
 - `972a759` — city-hero v4：品牌清理、45 个街区模块、T2 门厅、地形/工业边缘
 - `9867539` — city-hero v3：dense port district、T2 facade、terrain/skyline
