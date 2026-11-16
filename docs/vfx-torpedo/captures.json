@@ -1,0 +1,217 @@
+[
+  {
+    "scene": "torpedo",
+    "time": 0.3,
+    "file": "docs/vfx-torpedo/torpedo-01-t0.30.jpg"
+  },
+  {
+    "scene": "torpedo",
+    "time": 0.48,
+    "file": "docs/vfx-torpedo/torpedo-02-t0.48.jpg"
+  },
+  {
+    "scene": "torpedo",
+    "time": 0.66,
+    "file": "docs/vfx-torpedo/torpedo-03-t0.66.jpg"
+  },
+  {
+    "scene": "torpedo",
+    "time": 0.82,
+    "file": "docs/vfx-torpedo/torpedo-04-t0.82.jpg"
+  },
+  {
+    "scene": "torpedo",
+    "time": 0.98,
+    "file": "docs/vfx-torpedo/torpedo-05-t0.98.jpg"
+  },
+  {
+    "scene": "torpedo",
+    "time": 1.18,
+    "file": "docs/vfx-torpedo/torpedo-06-t1.18.jpg"
+  },
+  {
+    "scene": "volley",
+    "time": 0.3,
+    "file": "docs/vfx-torpedo/volley-01-t0.30.jpg"
+  },
+  {
+    "scene": "volley",
+    "time": 0.7,
+    "file": "docs/vfx-torpedo/volley-02-t0.70.jpg"
+  },
+  {
+    "scene": "volley",
+    "time": 1.2,
+    "file": "docs/vfx-torpedo/volley-03-t1.20.jpg"
+  },
+  {
+    "scene": "volley",
+    "time": 1.8,
+    "file": "docs/vfx-torpedo/volley-04-t1.80.jpg"
+  },
+  {
+    "scene": "volley",
+    "time": 2.6,
+    "file": "docs/vfx-torpedo/volley-05-t2.60.jpg"
+  },
+  {
+    "scene": "volley",
+    "time": 3.6,
+    "file": "docs/vfx-torpedo/volley-06-t3.60.jpg"
+  },
+  {
+    "scene": "impact",
+    "time": 2.5999999999999934,
+    "file": "docs/vfx-torpedo/impact-01-t2.60.jpg"
+  },
+  {
+    "scene": "impact",
+    "time": 2.9699999999999935,
+    "file": "docs/vfx-torpedo/impact-02-t2.97.jpg"
+  },
+  {
+    "scene": "impact",
+    "time": 3.1099999999999937,
+    "file": "docs/vfx-torpedo/impact-03-t3.11.jpg"
+  },
+  {
+    "scene": "impact",
+    "time": 3.2099999999999937,
+    "file": "docs/vfx-torpedo/impact-04-t3.21.jpg"
+  },
+  {
+    "scene": "impact",
+    "time": 3.349999999999994,
+    "file": "docs/vfx-torpedo/impact-05-t3.35.jpg"
+  },
+  {
+    "scene": "impact",
+    "time": 3.6499999999999937,
+    "file": "docs/vfx-torpedo/impact-06-t3.65.jpg"
+  },
+  {
+    "scene": "impact",
+    "time": 4.249999999999994,
+    "file": "docs/vfx-torpedo/impact-07-t4.25.jpg"
+  },
+  {
+    "scene": "impact",
+    "time": 5.549999999999994,
+    "file": "docs/vfx-torpedo/impact-08-t5.55.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 0.3,
+    "file": "docs/vfx-torpedo/death-01-t0.30.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 2.2,
+    "file": "docs/vfx-torpedo/death-02-t2.20.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 5.2,
+    "file": "docs/vfx-torpedo/death-03-t5.20.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 9.5,
+    "file": "docs/vfx-torpedo/death-04-t9.50.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 14.2,
+    "file": "docs/vfx-torpedo/death-05-t14.20.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 17.55,
+    "file": "docs/vfx-torpedo/death-06-t17.55.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 17.92,
+    "file": "docs/vfx-torpedo/death-07-t17.92.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 18.04,
+    "file": "docs/vfx-torpedo/death-08-t18.04.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 18.16,
+    "file": "docs/vfx-torpedo/death-09-t18.16.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 18.45,
+    "file": "docs/vfx-torpedo/death-10-t18.45.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 19.1,
+    "file": "docs/vfx-torpedo/death-11-t19.10.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 20.6,
+    "file": "docs/vfx-torpedo/death-12-t20.60.jpg"
+  },
+  {
+    "scene": "death",
+    "time": 23,
+    "file": "docs/vfx-torpedo/death-13-t23.00.jpg"
+  },
+  {
+    "scene": "finale",
+    "time": 0.03,
+    "file": "docs/vfx-torpedo/finale-01-t0.03.jpg"
+  },
+  {
+    "scene": "finale",
+    "time": 0.1,
+    "file": "docs/vfx-torpedo/finale-02-t0.10.jpg"
+  },
+  {
+    "scene": "finale",
+    "time": 0.22,
+    "file": "docs/vfx-torpedo/finale-03-t0.22.jpg"
+  },
+  {
+    "scene": "finale",
+    "time": 0.4,
+    "file": "docs/vfx-torpedo/finale-04-t0.40.jpg"
+  },
+  {
+    "scene": "finale",
+    "time": 0.7,
+    "file": "docs/vfx-torpedo/finale-05-t0.70.jpg"
+  },
+  {
+    "scene": "finale",
+    "time": 1.15,
+    "file": "docs/vfx-torpedo/finale-06-t1.15.jpg"
+  },
+  {
+    "scene": "finale",
+    "time": 1.8,
+    "file": "docs/vfx-torpedo/finale-07-t1.80.jpg"
+  },
+  {
+    "scene": "finale",
+    "time": 2.8,
+    "file": "docs/vfx-torpedo/finale-08-t2.80.jpg"
+  },
+  {
+    "scene": "finale",
+    "time": 4.5,
+    "file": "docs/vfx-torpedo/finale-09-t4.50.jpg"
+  },
+  {
+    "scene": "finale",
+    "time": 7.5,
+    "file": "docs/vfx-torpedo/finale-10-t7.50.jpg"
+  }
+]

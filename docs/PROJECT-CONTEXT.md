@@ -89,7 +89,13 @@
 - 护盾受击延迟 3.5 秒；交战中 35%、脱战 300%、按最大护盾比例回复。
 - 爆炸：
   - T10 武器/导弹模块随机殉爆，不再按 W1→W45 一排排爆。
-  - 终末爆炸：多层火球 + 三重冲击波 + 冷白/等离子闪光。
+  - 终末爆炸：沿舰体轴线的多层级联殉爆 + 连续火球底光 + 相机朝向等离子冲击环 + Instanced 残骸 + 预置点光源；屏幕闪光有 final 专用更强衰减。
+  - 普通命中：定向火焰/等离子喷流 + 火花 + 局部火球，不再是纯粒子点。
+- 鱼雷视觉：
+  - A 级/小型鱼雷使用不同尺度的独立导弹弹体（鼻锥/尾翼/舵面/助推器），InstancedMesh 共享几何/材质。
+  - 分层尾迹（亮核 + 宽柔光丝带 + 热核/辉光/火花/烟粒子）、轻微螺旋、终端增推视觉。
+  - 3,600 m/s 速度与 5–15 秒装填逻辑未改。
+  - 长度 ≥ 500 m 的大舰鱼雷命中增加细长胶囊兜底 + 船壳 BVH 吸附，避免从发动机口/结构缝穿过。
 - NPC 舰队：
   - 最多 8 支舰队。
   - 最多 3 支敌对。
@@ -340,6 +346,9 @@ K047 不完整（只有 `.baiduyun.p.downloading`）；K043/K022 无贴图；K02
 | `src/game/cockpit.ts` | 第一人称独立座舱 Scene/CockpitPass、3D 内饰、MFD、裂纹/灯光 |
 | `src/game/ships.ts` | 舰船数据、武器解析、射程、护盾回复、A 级规则 |
 | `src/game/combat.ts` | NPC 舰队、弹丸、护盾/结构、BVH 碰撞、爆炸、死亡序列 |
+| `src/game/torpedo-vfx.ts` | 鱼雷/导弹 InstancedMesh 弹体、尾迹丝带/粒子、终端增推 |
+| `src/game/explosion-vfx.ts` | 火球、等离子冲击环、残骸、灯光、级联殉爆 |
+| `src/game/vfx-common.ts` | 程序化 VFX 贴图、固定容量 GPU 粒子场 |
 | `src/game/damage.ts` | 护盾壳、命中特效、烟/火、损伤可视化 |
 | `src/game/world.ts` | 行星、太阳、空间站、天空、阴影 |
 | `src/game/shaders.ts` | 行星/太阳/大气/天空/环 |
@@ -362,7 +371,18 @@ cd /Users/apple/orca/projects/verlins_home
 npm run dev -- --port 4329
 # 游戏： http://localhost:4329/yacht/
 # setup：http://localhost:4329/yacht/setup/
+# 鱼雷/爆炸 VFX 测试场：http://localhost:4329/yacht/vfx-torpedo-test/?scene=finale&hud=0
 ```
+
+鱼雷/爆炸 VFX 逐帧截图与性能：
+
+```sh
+VFX_URL='http://localhost:4329/yacht/vfx-torpedo-test/' node scripts/vfx-capture.mjs
+# 单场景：VFX_SCENES=impact,finale ...
+```
+
+产物：`docs/vfx-torpedo/*.jpg`、`docs/vfx-torpedo/captures.json`、`docs/vfx-torpedo/perf.json`。
+设计与限制说明：`docs/TORPEDO-VFX.md`。
 
 构建：
 

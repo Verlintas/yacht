@@ -492,13 +492,15 @@ export async function startGame(system: SystemData): Promise<void> {
     onNpcKilled: () => {
       hud?.toast('敌舰击毁');
     },
-    onExplosion: (position, size) => {
+    onExplosion: (position, size, kind = 'normal') => {
       const distance = position.distanceTo(flight.position);
       const force = Math.max(0, 1 - distance / 5200) * Math.min(1.4, size / 90);
       flight.addShake(force);
       const volume = THREE.MathUtils.clamp(1 - distance / 7000, 0.05, 1) * THREE.MathUtils.clamp(size / 180, 0.15, 1);
       audio.explosion(volume);
-      hud?.explosionFlash(THREE.MathUtils.clamp((size / 220) * (1 - distance / 9000), 0, 1));
+      const falloff = Math.max(0, 1 - distance / (kind === 'final' ? 26000 : 9000));
+      const strength = THREE.MathUtils.clamp((size / 220) * falloff, 0, kind === 'final' ? 0.95 : 0.85);
+      hud?.explosionFlash(strength, kind);
     },
     onImpact: (type, position, owner) => {
       const distance = position.distanceTo(flight.position);
@@ -749,7 +751,7 @@ interface Hud {
   openById: (id: string) => void;
   toast: (message: string) => void;
   hit: (localDirection?: THREE.Vector3) => void;
-  explosionFlash: (strength: number) => void;
+  explosionFlash: (strength: number, kind?: 'normal' | 'final') => void;
   setTarget: (id: string) => void;
   getTarget: () => CelestialBody | null;
 }
@@ -1318,12 +1320,15 @@ function setupHud(
     ckHit.classList.add('is-on');
   };
 
-  const showExplosionFlash = (strength: number): void => {
-    const value = THREE.MathUtils.clamp(strength, 0, 0.85);
+  const showExplosionFlash = (strength: number, kind: 'normal' | 'final' = 'normal'): void => {
+    const value = THREE.MathUtils.clamp(strength, 0, kind === 'final' ? 0.95 : 0.85);
+    impactFlash.style.background = kind === 'final'
+      ? 'radial-gradient(72% 62% at 50% 50%, rgba(255,255,255,0.96), rgba(170,225,255,0.5) 32%, rgba(255,120,55,0.24) 58%, transparent 80%)'
+      : '';
     impactFlash.style.transition = 'none';
     impactFlash.style.opacity = String(value);
     requestAnimationFrame(() => {
-      impactFlash.style.transition = 'opacity 0.4s ease-out';
+      impactFlash.style.transition = kind === 'final' ? 'opacity 0.95s cubic-bezier(0.16, 0.9, 0.3, 1)' : 'opacity 0.4s ease-out';
       impactFlash.style.opacity = '0';
     });
   };
