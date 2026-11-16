@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { ShipSpec } from './ships';
 import type { ShipCollision } from './ship';
+import { SimplifyModifier } from 'three/examples/jsm/modifiers/SimplifyModifier.js';
 
 export interface DamageParts {
   engine: number;
@@ -175,24 +176,45 @@ export class DamageVisuals {
     });
     if (collision) {
       // 护盾壳直接由舰体三角面生成：沿顶点法线向外偏移，而不是套一个球/椭球
-      const shieldGeo = collision.geometry.clone();
-      shieldGeo.computeVertexNormals();
-      const position = shieldGeo.attributes.position as THREE.BufferAttribute;
-      const normal = shieldGeo.attributes.normal as THREE.BufferAttribute;
-      const offset = Math.max(0.35, length * 0.0025);
-      for (let i = 0; i < position.count; i += 1) {
-        position.setXYZ(
-          i,
-          position.getX(i) + normal.getX(i) * offset,
-          position.getY(i) + normal.getY(i) * offset,
-          position.getZ(i) + normal.getZ(i) * offset,
-        );
-      }
-      position.needsUpdate = true;
-      shieldGeo.computeBoundingSphere();
+      const shapeShield = (source: THREE.BufferGeometry): THREE.BufferGeometry => {
+        source.computeVertexNormals();
+        const position = source.attributes.position as THREE.BufferAttribute;
+        const normal = source.attributes.normal as THREE.BufferAttribute;
+        const offset = Math.max(0.2, length * 0.001);
+        for (let i = 0; i < position.count; i += 1) {
+          position.setXYZ(
+            i,
+            position.getX(i) + normal.getX(i) * offset,
+            position.getY(i) + normal.getY(i) * offset,
+            position.getZ(i) + normal.getZ(i) * offset,
+          );
+        }
+        position.needsUpdate = true;
+        source.computeBoundingSphere();
+        return source;
+      };
+      const shieldGeo = shapeShield(collision.geometry.clone());
       this.bubble = new THREE.Mesh(shieldGeo, this.bubbleMat);
       this.bubbleBaseScale.setScalar(1);
       this.bubble.position.set(0, 0, 0);
+      // 全分辨率护盾视觉三角形太多；异步简化到 4k-14k 顶点，不阻塞进场
+      const fullVertices = (shieldGeo.attributes.position as THREE.BufferAttribute).count;
+      const targetVertices = Math.min(14_000, Math.max(4_000, Math.round(length * 1.5)));
+      if (fullVertices > targetVertices * 1.4) {
+        const source = collision.geometry.clone();
+        new SimplifyModifier()
+          .modify(source, fullVertices - targetVertices)
+          .then((simplified) => {
+            if (!simplified?.attributes.position) return;
+            if (simplified.attributes.position.count >= fullVertices) return;
+            const shaped = shapeShield(simplified);
+            this.bubble.geometry.dispose();
+            this.bubble.geometry = shaped;
+          })
+          .catch(() => {
+            // 简化失败时保留全分辨率护盾
+          });
+      }
     } else {
       // 程序化/无碰撞体时的回退：椭球护盾
       this.bubble = new THREE.Mesh(shieldGeometry, this.bubbleMat);
@@ -360,11 +382,8 @@ export class DamageVisuals {
       const k = this.breakTimer / 1.1;
       this.bubbleMat.uniforms.uOpacity.value = 0.6 * k;
       // 小舰不要做膨胀脉冲，否则连续命中会看起来像护盾在抽搐
-      if (this.capital) {
-        this.bubble.scale.copy(this.bubbleBaseScale).multiplyScalar(1 + (1 - k) * 0.16);
-      } else {
-        this.bubble.scale.copy(this.bubbleBaseScale);
-      }
+      // 护盾壳始终保持贴合，不做膨胀/收缩动画
+      this.bubble.scale.copy(this.bubbleBaseScale);
       this.bubble.visible = true;
     } else {
       this.bubbleMat.uniforms.uOpacity.value = 0;

@@ -57,6 +57,7 @@ interface GameContext {
   trail: { current: LocalPlume | null };
   damage: { current: DamageVisuals | null };
   switchShip: (id: string) => Promise<boolean>;
+  requestWarp: () => void;
 }
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -468,7 +469,7 @@ export async function startGame(system: SystemData): Promise<void> {
       flight.addShake(force);
       const volume = THREE.MathUtils.clamp(1 - distance / 7000, 0.05, 1) * THREE.MathUtils.clamp(size / 180, 0.15, 1);
       audio.explosion(volume);
-      hud?.explosionFlash(THREE.MathUtils.clamp((size / 260) * (1 - distance / 9000), 0, 0.8));
+      hud?.explosionFlash(THREE.MathUtils.clamp((size / 220) * (1 - distance / 9000), 0, 1));
     },
     onImpact: (type, position, owner) => {
       const distance = position.distanceTo(flight.position);
@@ -481,7 +482,7 @@ export async function startGame(system: SystemData): Promise<void> {
   });
 
   combat.setTemplates(npcTemplates);
-  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, warpPass, contactShadow, surfacePatch, combat, weapons, player: playerState, spec: specRef, autoCooldowns, speedLines, trail: trailRef, damage: damageRef, switchShip: async () => false };
+  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, warpPass, contactShadow, surfacePatch, combat, weapons, player: playerState, spec: specRef, autoCooldowns, speedLines, trail: trailRef, damage: damageRef, switchShip: async () => false, requestWarp: () => {} };
 
   const dock = world.bodies.find((body) => body.id === 'station-dock');
   if (dock) {
@@ -638,21 +639,10 @@ export async function startGame(system: SystemData): Promise<void> {
 
   const hud = setupHud(ctx, system, playerState, specRef);
 
-  // B：选择目标后按一次开始跃迁；跃迁中再按一次取消。大型舰需要 B+H+N。
-  window.addEventListener('keydown', (event) => {
-    if (event.code !== 'KeyB' || event.repeat) return;
-    if (ctx.flight.warpPhase !== 'idle') {
-      ctx.flight.cancelWarp();
-      hud.toast('跃迁取消');
-      return;
-    }
+  const requestWarp = (): void => {
     const selected = hud.getTarget();
     if (!selected) {
       hud.toast('先在星图选择跃迁目标');
-      return;
-    }
-    if (ctx.spec.current.warpCombo && !(ctx.flight.isKeyHeld('KeyH') && ctx.flight.isKeyHeld('KeyN'))) {
-      hud.toast('大型舰需要 B+H+N 组合跃迁');
       return;
     }
     const targetPosition = selected.position.clone();
@@ -672,6 +662,22 @@ export async function startGame(system: SystemData): Promise<void> {
     if (ctx.flight.beginWarp(targetPosition, arrival, ctx.spec.current.chargeTime)) {
       hud.toast(`跃迁目标：${selected.planet?.title ?? selected.station?.title ?? ''}`);
     }
+  };
+  ctx.requestWarp = requestWarp;
+
+  // B：普通舰按一次开始跃迁；大型舰必须持续按住 B+H+N 3 秒。
+  window.addEventListener('keydown', (event) => {
+    if (event.code !== 'KeyB' || event.repeat) return;
+    if (ctx.flight.warpPhase !== 'idle') {
+      ctx.flight.cancelWarp();
+      hud.toast('跃迁取消');
+      return;
+    }
+    if (ctx.spec.current.warpCombo) {
+      hud.toast('大型舰跃迁：保持 B+H+N 3 秒');
+      return;
+    }
+    requestWarp();
   });
 
   const openParam = params.get('open');
@@ -712,6 +718,7 @@ function loop(ctx: GameContext, hud: Hud): void {
   let elapsed = 0;
   let inAtmosphere = false;
   let entryFlash = 0;
+  let warpComboHold = 0;
 
   const tick = (): void => {
     const dt = Math.min(clock.getDelta(), 0.05);
@@ -719,6 +726,19 @@ function loop(ctx: GameContext, hud: Hud): void {
     const prevPosition = ctx.flight.position.clone();
 
     ctx.flight.update(dt);
+    if (ctx.spec.current.warpCombo && ctx.flight.warpPhase === 'idle') {
+      const comboHeld =
+        ctx.flight.isKeyHeld('KeyH') &&
+        ctx.flight.isKeyHeld('KeyN') &&
+        ctx.flight.isKeyHeld('KeyB');
+      warpComboHold = comboHeld ? warpComboHold + dt : 0;
+      if (warpComboHold >= 3) {
+        ctx.requestWarp();
+        warpComboHold = 0;
+      }
+    } else {
+      warpComboHold = 0;
+    }
     updateWeaponCooldowns(ctx, dt);
     ctx.weapons.torpedoLaunchGate = Math.max(0, ctx.weapons.torpedoLaunchGate - dt);
     fireSelectedWeapons(ctx);
@@ -845,7 +865,8 @@ function loop(ctx: GameContext, hud: Hud): void {
     const speedNorm = Math.min(1, ctx.flight.speed / 9000);
     const warpVisual = ctx.flight.warpVisual;
     motionBlur.uniforms.uStrength.value = (speedNorm * 0.18 + ctx.flight.boost * 0.18 + warpVisual * 0.42) * (0.4 + 0.6 * comfort);
-    ctx.warpPass.uniforms.uIntensity.value = warpVisual;
+    const heavyWarp = 1 + Math.min(1.2, ctx.spec.current.length / 6000);
+    ctx.warpPass.uniforms.uIntensity.value = Math.min(1.6, warpVisual * heavyWarp);
     ctx.warpPass.uniforms.uTime.value = elapsed;
 
     ctx.combat.update(dt, ctx.flight.position, ctx.flight.velocity, ctx.flight.quaternion, ctx.camera, ctx.spec.current.length, ctx.ship.collision);

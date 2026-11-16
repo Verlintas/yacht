@@ -29,6 +29,8 @@ export class FlightController {
   private readonly forward = new THREE.Vector3();
   private ready = false;
   private cockpitOffset = new THREE.Vector3(0, 2.2, -2.2);
+  private cameraRoll = 0;
+  private lastForward = new THREE.Vector3(0, 0, -1);
   private spec = { maxSpeed: 4200, boostSpeed: 52000, accel: 2600, turnRate: 1, length: 25, chargeTime: 3, warpCombo: false };
   charge = 0;
   /** Shift 极速倍率；由 main 根据船体完好度每帧更新 */
@@ -466,17 +468,28 @@ export class FlightController {
         shipParent.add(this.camera);
       }
       const L = this.spec.length ?? 25;
-      const back = L * 1.25 + 8;
+      const speedRatio = THREE.MathUtils.clamp(this.velocity.length() / Math.max(1, this.spec.maxSpeed), 0, 3);
+      const back = L * 1.25 + 8 + speedRatio * L * 0.075 + this.boost * L * 0.11;
       const height = L * 0.26 + 2.5;
-      // 相机偏移固定在舰体局部坐标里：高速不会因世界坐标跟随滞后而被甩到前面
-      const desiredLocal = new THREE.Vector3(0, height, back);
+      // 速度会让相机轻微后拉；横向/纵向速度产生少量惯性摆动
+      const localVelocity = this.velocity.clone().applyQuaternion(this.quaternion.clone().invert());
+      const swayX = THREE.MathUtils.clamp(localVelocity.x / Math.max(1, this.spec.maxSpeed), -1, 1) * L * 0.035;
+      const swayY = THREE.MathUtils.clamp(localVelocity.y / Math.max(1, this.spec.maxSpeed), -1, 1) * L * 0.02;
+      const desiredLocal = new THREE.Vector3(swayX, height + swayY, back);
       if (this.smoothedOffset.lengthSq() === 0) this.smoothedOffset.copy(desiredLocal);
-      this.smoothedOffset.lerp(desiredLocal, 1 - Math.exp(-8 * dt));
+      this.smoothedOffset.lerp(desiredLocal, 1 - Math.exp(-6 * dt));
       this.camera.position
         .copy(this.smoothedOffset)
         .applyQuaternion(this.quaternion)
         .add(this.position);
-      this.camera.up.copy(up).lerp(new THREE.Vector3(0, 1, 0), 0.12).normalize();
+      // 转向时轻微压杆/侧倾，避免第三人称像固定支架
+      const turn = this.lastForward.x * forward.z - this.lastForward.z * forward.x;
+      const targetRoll = THREE.MathUtils.clamp((turn / Math.max(dt, 0.016)) * 0.018, -0.16, 0.16);
+      this.cameraRoll = THREE.MathUtils.lerp(this.cameraRoll, targetRoll, 1 - Math.exp(-5 * dt));
+      this.lastForward.copy(forward);
+      const rolledUp = new THREE.Vector3(0, 1, 0).applyQuaternion(this.quaternion);
+      rolledUp.applyAxisAngle(forward, this.cameraRoll);
+      this.camera.up.copy(rolledUp).normalize();
       this.camera.lookAt(this.position.clone().addScaledVector(forward, L * 0.7 + 6));
 
       if (this.shake > 0.01) {
@@ -485,7 +498,7 @@ export class FlightController {
       }
 
       const fovComfort = THREE.MathUtils.clamp(L / 1200, 0.25, 1);
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62 + this.boost * (4 + 8 * fovComfort) + Math.min(4, this.velocity.length() / 7000) + (this.warpPhase === 'jump' ? 12 : 0), Math.min(1, dt * 4));
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 62 + speedRatio * 2 + this.boost * (4 + 8 * fovComfort) + Math.min(4, this.velocity.length() / 7000) + (this.warpPhase === 'jump' ? 12 + Math.min(18, (this.spec.length ?? 25) / 500) : 0), Math.min(1, dt * 4));
       this.camera.updateProjectionMatrix();
     }
   }

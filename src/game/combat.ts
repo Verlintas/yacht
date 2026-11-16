@@ -245,10 +245,11 @@ export class Combat {
   private npcSeq = 0;
   private fleetSeq = 0;
   private time = 0;
-  private encounterTimer = 45;
-  private maxFleets = 4;
-  private encounterRange = 150000;
-  private despawnRange = 500000;
+  private encounterTimer = 30;
+  private maxFleets = 8;
+  private maxHostiles = 3;
+  private encounterRange = 650000;
+  private despawnRange = 1_500_000;
   private playerCollisionCooldown = 0;
   // 弹丸热路径复用向量，避免大量鱼雷时每帧产生垃圾
   private hitAB = new THREE.Vector3();
@@ -929,8 +930,7 @@ export class Combat {
           ? event.local.clone().applyQuaternion(death.npc.group.quaternion).add(death.npc.group.position)
           : death.npc.group.position.clone();
         if (event.kind === 'final') {
-          this.explodeAt(world, death.npc.spec.length, death.npc.spec.tier);
-          this.spawnShockwave(world, death.npc.spec.length * 0.9);
+          this.finaleAt(world, death.npc.spec.length, death.npc.spec.tier);
           for (let k = 0; k < 3; k += 1) {
             const offset = new THREE.Vector3(
               (Math.random() - 0.5) * death.npc.spec.length * 0.35,
@@ -1211,19 +1211,20 @@ export class Combat {
 
     const livingHostiles = living.filter((fleet) => fleet.faction === 'hostile').length;
 
-    // 全图最多一支敌对舰队；大多数时候补中立商队，海盗只是偶发事件
-    const faction: Faction = livingHostiles === 0 && Math.random() < 0.32 ? 'hostile' : 'neutral';
+    // 舰队分散在全图，最多 3 支敌对；不再只围着玩家刷
+    const faction: Faction =
+      livingHostiles < this.maxHostiles && Math.random() < 0.52 ? 'hostile' : 'neutral';
     const angle = Math.random() * Math.PI * 2;
-    const distance = 28000 + Math.random() * 62000;
+    const distance = 60000 + Math.random() * 760000;
     const origin = playerPos.clone().add(new THREE.Vector3(
       Math.cos(angle) * distance,
-      (Math.random() - 0.35) * 22000,
+      (Math.random() - 0.45) * 120000,
       Math.sin(angle) * distance,
     ));
     this.spawnFleet(faction, origin);
     this.encounterTimer = faction === 'hostile'
-      ? 100 + Math.random() * 100
-      : 28 + Math.random() * 42;
+      ? 60 + Math.random() * 80
+      : 40 + Math.random() * 60;
   }
 
   /** 跃迁抵达后：清掉远处旧舰队，并在抵达点附近补一队敌对/中立。 */
@@ -1239,17 +1240,18 @@ export class Combat {
     const living = this.fleets.filter((fleet) => fleet.ships.some((ship) => ship.alive));
     const existingHostiles = living.filter((fleet) => fleet.faction === 'hostile').length;
     if (living.length < this.maxFleets) {
-      // 跃迁抵达后优先补中立船，只有三成概率遇到海盗
-      const faction: Faction = existingHostiles === 0 && Math.random() < 0.35 ? 'hostile' : 'neutral';
+      // 跃迁抵达后补一支随机舰队；敌对也可能有多支，逃跑不会制造长期和平
+      const faction: Faction =
+        existingHostiles < this.maxHostiles && Math.random() < 0.5 ? 'hostile' : 'neutral';
       const angle = Math.random() * Math.PI * 2;
-      const distance = 36000 + Math.random() * 36000;
+      const distance = 50000 + Math.random() * 500000;
       this.spawnFleet(faction, position.clone().add(new THREE.Vector3(
         Math.cos(angle) * distance,
-        (Math.random() - 0.3) * 12000,
+        (Math.random() - 0.4) * 80000,
         Math.sin(angle) * distance,
       )));
     }
-    this.encounterTimer = Math.max(this.encounterTimer, 45);
+    this.encounterTimer = Math.max(this.encounterTimer, 30);
   }
 
   private removeFleet(fleet: Fleet): void {
@@ -1467,19 +1469,19 @@ export class Combat {
     }
 
     t += isCapital ? 0.3 : 0.12;
+    // 武器/导弹模块随机殉爆，不再按 W1→W45 一排一排顺序炸
     for (const weapon of spec.weapons) {
       events.push({
-        at: t,
+        at: isCapital ? 0.45 + Math.random() * 3.4 : 0.1 + Math.random() * 0.55,
         kind: 'weapon',
         position: new THREE.Vector3(...weapon.pos),
         local: new THREE.Vector3(...weapon.pos),
         color: weapon.color,
         size: Math.max(8, spec.length * 0.02),
       });
-      t += isCapital ? 0.14 + Math.random() * 0.08 : 0.1;
     }
 
-    const hullStart = Math.max(t, isCapital ? 1.5 : 0.55);
+    const hullStart = Math.max(t, isCapital ? 2.0 : 0.55);
     const hullEnd = duration - (isCapital ? 1.5 : 0.35);
     for (let at = hullStart; at < hullEnd; at += isCapital ? 0.34 : 0.22) {
       events.push({
@@ -1505,11 +1507,11 @@ export class Combat {
     this.deaths.push({ npc, time: 0, duration, events, index: 0 });
   }
 
-  private spawnShockwave(position: THREE.Vector3, size: number): void {
+  private spawnShockwave(position: THREE.Vector3, size: number, color = 0xffe0b0): void {
     const sprite = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: this.ringTexture,
-        color: 0xffe0b0,
+        color,
         transparent: true,
         opacity: 0.55,
         blending: THREE.AdditiveBlending,
@@ -1529,12 +1531,15 @@ export class Combat {
     this.events.onExplosion?.(position, size);
   }
 
-  /** 玩家舰体终末大爆炸 + 冲击波 */
+  /** 终末大爆炸：多层火球 + 三重冲击波 + 冷白/等离子闪光 */
   finaleAt(position: THREE.Vector3, length: number, tier: number): void {
-    this.explodeAt(position, length, tier);
-    this.spawnShockwave(position, length * 0.9);
-    this.spawnShockwave(position, length * 1.45);
-    this.spawnFlash(position, 0xfff5dd, Math.max(30, length * 0.35), 0.35);
+    this.explodeAt(position, length * 1.35, tier);
+    this.spawnShockwave(position, length * 1.05, 0xfff1cf);
+    this.spawnShockwave(position, length * 1.65, 0x9fd8ff);
+    this.spawnShockwave(position, length * 2.3, 0xff7a3a);
+    this.spawnFlash(position, 0xffffff, Math.max(60, length * 0.55), 0.5);
+    this.spawnFlash(position, 0x9fd8ff, Math.max(45, length * 0.4), 1.05);
+    this.spawnFireball(position, length * 0.55, new THREE.Color(0x9fd8ff), 1.2, false);
   }
 
   /** 在指定位置制造爆炸；length 决定火球/残骸尺度 */
