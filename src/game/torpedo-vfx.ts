@@ -281,7 +281,7 @@ function createPlumeMaterial(core: boolean, color: number): THREE.ShaderMaterial
   return new THREE.ShaderMaterial({
     uniforms: {
       uColor: { value: new THREE.Color(color) },
-      uOpacity: { value: core ? 0.95 : 0.52 },
+      uOpacity: { value: core ? 0.72 : 0.48 },
     },
     vertexShader: /* glsl */ `
       varying vec2 vUv;
@@ -315,7 +315,7 @@ function createGlowMaterial(color: number): THREE.ShaderMaterial {
     uniforms: {
       uMap: { value: getSoftTexture() },
       uColor: { value: new THREE.Color(color) },
-      uOpacity: { value: 0.72 },
+      uOpacity: { value: 0.45 },
     },
     vertexShader: /* glsl */ `
       varying vec2 vUv;
@@ -358,9 +358,9 @@ function createBatch(
     exhaustZ: -BODY_HALF,
     plumeWidth: heavy ? 1.05 : 0.95,
     plumeLength: heavy ? 4.2 : 4.6,
-    glowSize: heavy ? 14 : 2.8,
+    glowSize: heavy ? 9 : 2.2,
     wobble: heavy ? 32 : 1.0,
-    trailWidth: heavy ? 23 : 2.4,
+    trailWidth: heavy ? 27 : 2.6,
     hullMaterial: new THREE.MeshStandardMaterial({
       map: getHullTexture(),
       color: heavy ? 0xc4d0dc : 0xa8b4c0,
@@ -379,7 +379,7 @@ function createBatch(
     }),
     plumeOuterMaterial: createPlumeMaterial(false, heavy ? 0xff7a3a : 0xff9a50),
     plumeCoreMaterial: createPlumeMaterial(true, heavy ? 0xbfeaff : 0xfff0d0),
-    glowMaterial: createGlowMaterial(heavy ? 0x9fd8ff : 0xffb066),
+    glowMaterial: createGlowMaterial(heavy ? 0xffa060 : 0xffb066),
   };
 
   const hull = new THREE.InstancedMesh(hullGeometry, spec.hullMaterial, MAX_INSTANCES);
@@ -531,11 +531,11 @@ class TrailRibbon {
         varying vec2 vUv;
         void main() {
           float d = abs(vUv.x - 0.5) * 2.0;
-          float core = pow(max(0.0, 1.0 - d), 4.0);
-          float glow = pow(max(0.0, 1.0 - d), 1.35) * 0.68;
+          float core = pow(max(0.0, 1.0 - d), 3.2);
+          float glow = pow(max(0.0, 1.0 - d), 1.5) * 0.82;
           float alpha = vAlpha * (core + glow) * uOpacity;
           if (alpha < 0.004) discard;
-          vec3 color = vColor * (0.75 + core * 1.35);
+          vec3 color = vColor * (0.55 + core * 1.05);
           gl_FragColor = vec4(color, alpha);
         }
       `,
@@ -664,9 +664,9 @@ class TrailRibbon {
 
         const t = count > 1 ? i / (count - 1) : 0;
         // 弹头处最窄最亮，越靠后越宽、越暗（尾迹扩散）
-        const width = data.width * (1.0 + (1 - t) * 1.15) * 0.5;
-        const alpha = Math.pow(t, 1.65) * 0.9 * fade * parallelFade;
-        const brightness = 0.55 + t * 0.85;
+        const width = data.width * (1.0 + (1 - t) * 1.3) * 0.5;
+        const alpha = Math.pow(t, 1.55) * 0.72 * fade * parallelFade;
+        const brightness = 0.5 + t * 0.75;
         const v = base + i * 2;
         const left = v * 3;
         const right = left + 3;
@@ -723,6 +723,7 @@ export class TorpedoHandle {
   right = new THREE.Vector3(1, 0, 0);
   up = new THREE.Vector3(0, 1, 0);
   offset = new THREE.Vector3();
+  trailOffset = new THREE.Vector3();
   age = 0;
   seed = Math.random() * 100;
   speed = 0;
@@ -859,19 +860,24 @@ export class TorpedoVfx {
 
     basisForDirection(handle.direction, handle.right, handle.up);
     const wobble = grade.wobble * (1 - mix * 0.62);
-    handle.wobbleX = Math.sin(handle.age * 6.0 + handle.seed) * wobble;
-    handle.wobbleY = Math.cos(handle.age * 7.3 + handle.seed * 1.7) * wobble * 0.72;
+    handle.wobbleX = Math.sin(handle.age * 5.0 + handle.seed) * wobble;
+    handle.wobbleY = Math.cos(handle.age * 6.2 + handle.seed * 1.7) * wobble * 0.72;
     handle.roll = Math.sin(handle.age * 4.8 + handle.seed * 0.6) * 0.16;
     handle.offset
       .copy(handle.right)
       .multiplyScalar(handle.wobbleX)
       .addScaledVector(handle.up, handle.wobbleY);
+    // 尾迹比弹体再多一点低频螺旋，避免整条尾迹是一条直线
+    handle.trailOffset
+      .copy(handle.right)
+      .multiplyScalar(Math.sin(handle.age * 3.2 + handle.seed * 2.3) * grade.wobble * 1.8)
+      .addScaledVector(handle.up, Math.cos(handle.age * 3.9 + handle.seed * 1.1) * grade.wobble * 1.2);
 
     // 尾迹采样点：喷口位置
     this.exhaust
       .copy(handle.position)
       .addScaledVector(handle.direction, grade.exhaustZ * grade.scale);
-    this.exhaust.add(handle.offset);
+    this.exhaust.add(handle.offset).add(handle.trailOffset);
     this.ribbon.push(handle.trail, this.exhaust.x, this.exhaust.y, this.exhaust.z);
 
     const boost = 1 + mix * 0.85;
@@ -893,7 +899,7 @@ export class TorpedoVfx {
       handle.emitterSpark -= 1;
       this.emitSpark(handle, grade, boost);
     }
-    handle.emitterSmoke += dt * (10 + mix * 6) * emission;
+    handle.emitterSmoke += dt * (14 + mix * 8) * emission;
     while (handle.emitterSmoke >= 1) {
       handle.emitterSmoke -= 1;
       this.emitSmoke(handle, grade, mix);
@@ -963,21 +969,21 @@ export class TorpedoVfx {
 
   private emitSmoke(handle: TorpedoHandle, grade: GradeSpec, mix: number): void {
     const unit = grade.scale;
-    const shade = 0.32 + Math.random() * 0.16;
+    const shade = 0.38 + Math.random() * 0.17;
     this.tmpColorA.setRGB(shade * 1.2, shade * 0.88, shade * 0.72);
     this.tmpColorB.setRGB(shade * 0.35, shade * 0.33, shade * 0.3);
     this.trailSmoke.spawn(
-      this.exhaust.x + (Math.random() - 0.5) * unit * 2,
-      this.exhaust.y + (Math.random() - 0.5) * unit * 2,
-      this.exhaust.z + (Math.random() - 0.5) * unit * 2,
+      this.exhaust.x + (Math.random() - 0.5) * unit * 2.5,
+      this.exhaust.y + (Math.random() - 0.5) * unit * 2.5,
+      this.exhaust.z + (Math.random() - 0.5) * unit * 2.5,
       -handle.direction.x * (18 + Math.random() * 40) + (Math.random() - 0.5) * 16,
       -handle.direction.y * (18 + Math.random() * 40) + (Math.random() - 0.5) * 16,
       -handle.direction.z * (18 + Math.random() * 40) + (Math.random() - 0.5) * 16,
-      1.8 + Math.random() * 2.4,
-      unit * (2.0 + Math.random() * 2.0) * (1 + mix * 0.35),
+      2.2 + Math.random() * 2.8,
+      unit * (2.6 + Math.random() * 2.3) * (1 + mix * 0.35),
       3.4,
       this.tmpColorA, this.tmpColorB,
-      0.3, 0.55,
+      0.36, 0.55,
       Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.4,
     );
   }
@@ -1030,9 +1036,9 @@ export class TorpedoVfx {
       batch.plumeOuter.setMatrixAt(count, this.dummy.matrix);
 
       this.dummy.scale.set(
-        spec.scale * widthScale * 0.52,
-        spec.scale * widthScale * 0.52,
-        spec.scale * lengthScale * 0.68,
+        spec.scale * widthScale * 0.45,
+        spec.scale * widthScale * 0.45,
+        spec.scale * lengthScale * 0.6,
       );
       this.dummy.updateMatrix();
       batch.plumeCore.setMatrixAt(count, this.dummy.matrix);

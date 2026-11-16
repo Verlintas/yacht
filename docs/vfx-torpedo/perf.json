@@ -7,8 +7,8 @@
       "activeHeavy": 1,
       "activeLight": 0,
       "activeTrailSlots": 1,
-      "trailParticles": 29,
-      "trailSmoke": 3,
+      "trailParticles": 32,
+      "trailSmoke": 4,
       "drawCalls": 11
     },
     "explosions": {
@@ -20,11 +20,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 38,
+    "drawCalls": 35,
     "triangles": 11552,
-    "programs": 19,
-    "geometries": 19,
-    "textures": 21
+    "programs": 18,
+    "geometries": 10,
+    "textures": 18
   },
   "torpedo-1": {
     "scene": "torpedo",
@@ -34,8 +34,8 @@
       "activeHeavy": 1,
       "activeLight": 0,
       "activeTrailSlots": 1,
-      "trailParticles": 52,
-      "trailSmoke": 5,
+      "trailParticles": 55,
+      "trailSmoke": 8,
       "drawCalls": 11
     },
     "explosions": {
@@ -47,11 +47,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 38,
+    "drawCalls": 35,
     "triangles": 11552,
-    "programs": 19,
-    "geometries": 19,
-    "textures": 21
+    "programs": 18,
+    "geometries": 10,
+    "textures": 18
   },
   "torpedo-2": {
     "scene": "torpedo",
@@ -61,8 +61,8 @@
       "activeHeavy": 1,
       "activeLight": 0,
       "activeTrailSlots": 1,
-      "trailParticles": 77,
-      "trailSmoke": 7,
+      "trailParticles": 82,
+      "trailSmoke": 11,
       "drawCalls": 11
     },
     "explosions": {
@@ -74,11 +74,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 38,
+    "drawCalls": 35,
     "triangles": 11552,
-    "programs": 19,
-    "geometries": 19,
-    "textures": 21
+    "programs": 18,
+    "geometries": 10,
+    "textures": 18
   },
   "torpedo-3": {
     "scene": "torpedo",
@@ -88,8 +88,8 @@
       "activeHeavy": 1,
       "activeLight": 0,
       "activeTrailSlots": 1,
-      "trailParticles": 100,
-      "trailSmoke": 10,
+      "trailParticles": 97,
+      "trailSmoke": 15,
       "drawCalls": 11
     },
     "explosions": {
@@ -101,11 +101,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 38,
+    "drawCalls": 35,
     "triangles": 11552,
-    "programs": 19,
-    "geometries": 19,
-    "textures": 21
+    "programs": 18,
+    "geometries": 10,
+    "textures": 18
   },
   "torpedo-4": {
     "scene": "torpedo",
@@ -115,8 +115,8 @@
       "activeHeavy": 1,
       "activeLight": 0,
       "activeTrailSlots": 1,
-      "trailParticles": 117,
-      "trailSmoke": 12,
+      "trailParticles": 114,
+      "trailSmoke": 18,
       "drawCalls": 11
     },
     "explosions": {
@@ -128,11 +128,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 38,
+    "drawCalls": 35,
     "triangles": 11552,
-    "programs": 19,
-    "geometries": 19,
-    "textures": 21
+    "programs": 18,
+    "geometries": 10,
+    "textures": 18
   },
   "torpedo-5": {
     "scene": "torpedo",
@@ -142,8 +142,8 @@
       "activeHeavy": 1,
       "activeLight": 0,
       "activeTrailSlots": 1,
-      "trailParticles": 129,
-      "trailSmoke": 16,
+      "trailParticles": 133,
+      "trailSmoke": 22,
       "drawCalls": 11
     },
     "explosions": {
@@ -155,11 +155,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 38,
+    "drawCalls": 35,
     "triangles": 11552,
-    "programs": 19,
-    "geometries": 19,
-    "textures": 21
+    "programs": 18,
+    "geometries": 10,
+    "textures": 18
   },
   "volley-0": {
     "scene": "volley",
@@ -169,8 +169,8 @@
       "activeHeavy": 14,
       "activeLight": 0,
       "activeTrailSlots": 14,
-      "trailParticles": 436,
-      "trailSmoke": 42,
+      "trailParticles": 440,
+      "trailSmoke": 58,
       "drawCalls": 11
     },
     "explosions": {
@@ -182,11 +182,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 27,
+    "drawCalls": 24,
     "triangles": 72640,
-    "programs": 19,
-    "geometries": 20,
-    "textures": 24
+    "programs": 18,
+    "geometries": 11,
+    "textures": 21
   },
   "volley-1": {
     "scene": "volley",
@@ -197,7 +197,7 @@
       "activeLight": 0,
       "activeTrailSlots": 14,
       "trailParticles": 798,
-      "trailSmoke": 98,
+      "trailSmoke": 138,
       "drawCalls": 11
     },
     "explosions": {
@@ -209,11 +209,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 27,
+    "drawCalls": 24,
     "triangles": 72640,
-    "programs": 19,
-    "geometries": 20,
-    "textures": 24
+    "programs": 18,
+    "geometries": 11,
+    "textures": 21
   },
   "volley-2": {
     "scene": "volley",
@@ -223,8 +223,8 @@
       "activeHeavy": 14,
       "activeLight": 0,
       "activeTrailSlots": 14,
-      "trailParticles": 899,
-      "trailSmoke": 168,
+      "trailParticles": 924,
+      "trailSmoke": 236,
       "drawCalls": 11
     },
     "explosions": {
@@ -236,11 +236,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 27,
+    "drawCalls": 24,
     "triangles": 72640,
-    "programs": 19,
-    "geometries": 20,
-    "textures": 24
+    "programs": 18,
+    "geometries": 11,
+    "textures": 21
   },
   "volley-3": {
     "scene": "volley",
@@ -250,8 +250,8 @@
       "activeHeavy": 14,
       "activeLight": 0,
       "activeTrailSlots": 14,
-      "trailParticles": 938,
-      "trailSmoke": 252,
+      "trailParticles": 946,
+      "trailSmoke": 352,
       "drawCalls": 11
     },
     "explosions": {
@@ -263,11 +263,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 27,
+    "drawCalls": 24,
     "triangles": 72640,
-    "programs": 19,
-    "geometries": 20,
-    "textures": 24
+    "programs": 18,
+    "geometries": 11,
+    "textures": 21
   },
   "volley-4": {
     "scene": "volley",
@@ -277,8 +277,8 @@
       "activeHeavy": 14,
       "activeLight": 0,
       "activeTrailSlots": 14,
-      "trailParticles": 951,
-      "trailSmoke": 346,
+      "trailParticles": 917,
+      "trailSmoke": 504,
       "drawCalls": 11
     },
     "explosions": {
@@ -290,11 +290,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 27,
+    "drawCalls": 24,
     "triangles": 72640,
-    "programs": 19,
-    "geometries": 20,
-    "textures": 24
+    "programs": 18,
+    "geometries": 11,
+    "textures": 21
   },
   "volley-5": {
     "scene": "volley",
@@ -304,8 +304,8 @@
       "activeHeavy": 14,
       "activeLight": 0,
       "activeTrailSlots": 14,
-      "trailParticles": 937,
-      "trailSmoke": 408,
+      "trailParticles": 941,
+      "trailSmoke": 634,
       "drawCalls": 11
     },
     "explosions": {
@@ -317,11 +317,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 27,
+    "drawCalls": 24,
     "triangles": 72640,
-    "programs": 19,
-    "geometries": 20,
-    "textures": 24
+    "programs": 18,
+    "geometries": 11,
+    "textures": 21
   },
   "impactTime": 3.1499999999999937,
   "impact-0": {
@@ -332,8 +332,8 @@
       "activeHeavy": 1,
       "activeLight": 0,
       "activeTrailSlots": 1,
-      "trailParticles": 67,
-      "trailSmoke": 25,
+      "trailParticles": 68,
+      "trailSmoke": 37,
       "drawCalls": 11
     },
     "explosions": {
@@ -345,11 +345,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 40,
+    "drawCalls": 37,
     "triangles": 51502,
-    "programs": 21,
-    "geometries": 21,
-    "textures": 25
+    "programs": 20,
+    "geometries": 12,
+    "textures": 22
   },
   "impact-1": {
     "scene": "impact",
@@ -359,8 +359,8 @@
       "activeHeavy": 1,
       "activeLight": 0,
       "activeTrailSlots": 1,
-      "trailParticles": 68,
-      "trailSmoke": 25,
+      "trailParticles": 69,
+      "trailSmoke": 41,
       "drawCalls": 11
     },
     "explosions": {
@@ -372,11 +372,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 40,
+    "drawCalls": 37,
     "triangles": 51502,
-    "programs": 21,
-    "geometries": 21,
-    "textures": 25
+    "programs": 20,
+    "geometries": 12,
+    "textures": 22
   },
   "impact-2": {
     "scene": "impact",
@@ -386,8 +386,8 @@
       "activeHeavy": 1,
       "activeLight": 0,
       "activeTrailSlots": 1,
-      "trailParticles": 68,
-      "trailSmoke": 24,
+      "trailParticles": 64,
+      "trailSmoke": 43,
       "drawCalls": 11
     },
     "explosions": {
@@ -399,11 +399,11 @@
       "smokeParticles": 0,
       "sparkParticles": 0
     },
-    "drawCalls": 40,
+    "drawCalls": 37,
     "triangles": 51502,
-    "programs": 21,
-    "geometries": 21,
-    "textures": 25
+    "programs": 20,
+    "geometries": 12,
+    "textures": 22
   },
   "impact-3": {
     "scene": "impact",
@@ -413,8 +413,8 @@
       "activeHeavy": 0,
       "activeLight": 0,
       "activeTrailSlots": 0,
-      "trailParticles": 62,
-      "trailSmoke": 24,
+      "trailParticles": 59,
+      "trailSmoke": 42,
       "drawCalls": 11
     },
     "explosions": {
@@ -422,15 +422,15 @@
       "flashes": 4,
       "rings": 1,
       "debris": 26,
-      "fireParticles": 335,
+      "fireParticles": 367,
       "smokeParticles": 6,
       "sparkParticles": 102
     },
-    "drawCalls": 48,
-    "triangles": 50154,
-    "programs": 22,
-    "geometries": 22,
-    "textures": 27
+    "drawCalls": 51,
+    "triangles": 50900,
+    "programs": 23,
+    "geometries": 21,
+    "textures": 26
   },
   "impact-4": {
     "scene": "impact",
@@ -441,7 +441,7 @@
       "activeLight": 0,
       "activeTrailSlots": 0,
       "trailParticles": 46,
-      "trailSmoke": 23,
+      "trailSmoke": 40,
       "drawCalls": 11
     },
     "explosions": {
@@ -449,15 +449,15 @@
       "flashes": 3,
       "rings": 1,
       "debris": 26,
-      "fireParticles": 345,
+      "fireParticles": 377,
       "smokeParticles": 6,
-      "sparkParticles": 102
+      "sparkParticles": 104
     },
-    "drawCalls": 47,
-    "triangles": 50152,
-    "programs": 22,
-    "geometries": 22,
-    "textures": 27
+    "drawCalls": 50,
+    "triangles": 50898,
+    "programs": 23,
+    "geometries": 21,
+    "textures": 26
   },
   "impact-5": {
     "scene": "impact",
@@ -467,8 +467,8 @@
       "activeHeavy": 0,
       "activeLight": 0,
       "activeTrailSlots": 0,
-      "trailParticles": 17,
-      "trailSmoke": 21,
+      "trailParticles": 22,
+      "trailSmoke": 38,
       "drawCalls": 11
     },
     "explosions": {
@@ -476,15 +476,15 @@
       "flashes": 1,
       "rings": 1,
       "debris": 26,
-      "fireParticles": 317,
+      "fireParticles": 357,
       "smokeParticles": 6,
-      "sparkParticles": 92
+      "sparkParticles": 90
     },
-    "drawCalls": 45,
-    "triangles": 50148,
-    "programs": 22,
-    "geometries": 22,
-    "textures": 27
+    "drawCalls": 47,
+    "triangles": 41014,
+    "programs": 23,
+    "geometries": 21,
+    "textures": 26
   },
   "impact-6": {
     "scene": "impact",
@@ -494,24 +494,24 @@
       "activeHeavy": 0,
       "activeLight": 0,
       "activeTrailSlots": 0,
-      "trailParticles": 4,
-      "trailSmoke": 17,
+      "trailParticles": 5,
+      "trailSmoke": 32,
       "drawCalls": 11
     },
     "explosions": {
       "blasts": 1,
       "flashes": 0,
-      "rings": 0,
+      "rings": 1,
       "debris": 26,
-      "fireParticles": 160,
+      "fireParticles": 179,
       "smokeParticles": 6,
-      "sparkParticles": 49
+      "sparkParticles": 37
     },
-    "drawCalls": 43,
-    "triangles": 50144,
-    "programs": 22,
-    "geometries": 22,
-    "textures": 27
+    "drawCalls": 46,
+    "triangles": 41012,
+    "programs": 23,
+    "geometries": 21,
+    "textures": 26
   },
   "impact-7": {
     "scene": "impact",
@@ -522,7 +522,7 @@
       "activeLight": 0,
       "activeTrailSlots": 0,
       "trailParticles": 0,
-      "trailSmoke": 7,
+      "trailSmoke": 16,
       "drawCalls": 11
     },
     "explosions": {
@@ -530,15 +530,15 @@
       "flashes": 0,
       "rings": 0,
       "debris": 26,
-      "fireParticles": 9,
+      "fireParticles": 29,
       "smokeParticles": 6,
-      "sparkParticles": 0
+      "sparkParticles": 2
     },
-    "drawCalls": 42,
-    "triangles": 50142,
-    "programs": 22,
-    "geometries": 22,
-    "textures": 27
+    "drawCalls": 43,
+    "triangles": 41008,
+    "programs": 23,
+    "geometries": 21,
+    "textures": 26
   },
   "death-0": {
     "scene": "death",
@@ -559,13 +559,13 @@
       "debris": 3,
       "fireParticles": 70,
       "smokeParticles": 15,
-      "sparkParticles": 22
+      "sparkParticles": 23
     },
-    "drawCalls": 72,
-    "triangles": 49964,
-    "programs": 22,
-    "geometries": 22,
-    "textures": 28
+    "drawCalls": 69,
+    "triangles": 40188,
+    "programs": 18,
+    "geometries": 12,
+    "textures": 26
   },
   "death-1": {
     "scene": "death",
@@ -580,19 +580,19 @@
       "drawCalls": 11
     },
     "explosions": {
-      "blasts": 8,
-      "flashes": 5,
+      "blasts": 7,
+      "flashes": 3,
       "rings": 0,
-      "debris": 12,
-      "fireParticles": 2152,
-      "smokeParticles": 525,
-      "sparkParticles": 458
+      "debris": 6,
+      "fireParticles": 1548,
+      "smokeParticles": 435,
+      "sparkParticles": 307
     },
-    "drawCalls": 78,
-    "triangles": 50080,
-    "programs": 22,
-    "geometries": 22,
-    "textures": 28
+    "drawCalls": 73,
+    "triangles": 40272,
+    "programs": 18,
+    "geometries": 14,
+    "textures": 26
   },
   "death-2": {
     "scene": "death",
@@ -607,19 +607,19 @@
       "drawCalls": 11
     },
     "explosions": {
-      "blasts": 1,
-      "flashes": 0,
+      "blasts": 2,
+      "flashes": 1,
       "rings": 0,
-      "debris": 12,
-      "fireParticles": 554,
-      "smokeParticles": 680,
-      "sparkParticles": 49
+      "debris": 15,
+      "fireParticles": 569,
+      "smokeParticles": 900,
+      "sparkParticles": 55
     },
     "drawCalls": 73,
-    "triangles": 50070,
-    "programs": 22,
-    "geometries": 22,
-    "textures": 28
+    "triangles": 40508,
+    "programs": 18,
+    "geometries": 14,
+    "textures": 26
   },
   "death-3": {
     "scene": "death",
@@ -637,16 +637,16 @@
       "blasts": 2,
       "flashes": 1,
       "rings": 0,
-      "debris": 20,
-      "fireParticles": 335,
-      "smokeParticles": 177,
-      "sparkParticles": 66
+      "debris": 26,
+      "fireParticles": 342,
+      "smokeParticles": 737,
+      "sparkParticles": 78
     },
-    "drawCalls": 74,
-    "triangles": 50144,
-    "programs": 22,
-    "geometries": 22,
-    "textures": 28
+    "drawCalls": 75,
+    "triangles": 40892,
+    "programs": 18,
+    "geometries": 14,
+    "textures": 26
   },
   "death-4": {
     "scene": "death",
@@ -661,19 +661,19 @@
       "drawCalls": 11
     },
     "explosions": {
-      "blasts": 2,
+      "blasts": 3,
       "flashes": 1,
       "rings": 0,
-      "debris": 36,
-      "fireParticles": 332,
-      "smokeParticles": 197,
-      "sparkParticles": 66
+      "debris": 48,
+      "fireParticles": 363,
+      "smokeParticles": 349,
+      "sparkParticles": 86
     },
-    "drawCalls": 74,
-    "triangles": 50296,
-    "programs": 22,
-    "geometries": 22,
-    "textures": 28
+    "drawCalls": 75,
+    "triangles": 41656,
+    "programs": 18,
+    "geometries": 14,
+    "textures": 26
   },
   "death-5": {
     "scene": "death",
@@ -691,16 +691,16 @@
       "blasts": 0,
       "flashes": 0,
       "rings": 0,
-      "debris": 47,
-      "fireParticles": 126,
-      "smokeParticles": 144,
-      "sparkParticles": 6
+      "debris": 52,
+      "fireParticles": 87,
+      "smokeParticles": 286,
+      "sparkParticles": 10
     },
-    "drawCalls": 73,
-    "triangles": 50410,
-    "programs": 22,
-    "geometries": 22,
-    "textures": 28
+    "drawCalls": 75,
+    "triangles": 41690,
+    "programs": 18,
+    "geometries": 14,
+    "textures": 26
   },
   "death-6": {
     "scene": "death",
@@ -718,16 +718,16 @@
       "blasts": 0,
       "flashes": 0,
       "rings": 0,
-      "debris": 47,
-      "fireParticles": 65,
-      "smokeParticles": 130,
-      "sparkParticles": 1
+      "debris": 51,
+      "fireParticles": 39,
+      "smokeParticles": 268,
+      "sparkParticles": 7
     },
-    "drawCalls": 73,
-    "triangles": 50410,
-    "programs": 22,
-    "geometries": 22,
-    "textures": 28
+    "drawCalls": 74,
+    "triangles": 41654,
+    "programs": 18,
+    "geometries": 14,
+    "textures": 26
   },
   "death-7": {
     "scene": "death",
@@ -742,18 +742,18 @@
       "drawCalls": 11
     },
     "explosions": {
-      "blasts": 1,
-      "flashes": 13,
+      "blasts": 2,
+      "flashes": 26,
       "rings": 4,
-      "debris": 237,
-      "fireParticles": 2980,
-      "smokeParticles": 137,
-      "sparkParticles": 161
+      "debris": 241,
+      "fireParticles": 3347,
+      "smokeParticles": 285,
+      "sparkParticles": 393
     },
-    "drawCalls": 50,
-    "triangles": 12320,
-    "programs": 20,
-    "geometries": 22,
+    "drawCalls": 83,
+    "triangles": 7904,
+    "programs": 16,
+    "geometries": 14,
     "textures": 29
   },
   "death-8": {
@@ -769,18 +769,18 @@
       "drawCalls": 11
     },
     "explosions": {
-      "blasts": 1,
-      "flashes": 11,
+      "blasts": 3,
+      "flashes": 27,
       "rings": 4,
-      "debris": 237,
-      "fireParticles": 3002,
-      "smokeParticles": 131,
-      "sparkParticles": 160
+      "debris": 254,
+      "fireParticles": 3562,
+      "smokeParticles": 287,
+      "sparkParticles": 493
     },
-    "drawCalls": 48,
-    "triangles": 12316,
-    "programs": 20,
-    "geometries": 22,
+    "drawCalls": 88,
+    "triangles": 8358,
+    "programs": 16,
+    "geometries": 14,
     "textures": 29
   },
   "death-9": {
@@ -796,18 +796,18 @@
       "drawCalls": 11
     },
     "explosions": {
-      "blasts": 3,
-      "flashes": 15,
-      "rings": 6,
-      "debris": 263,
-      "fireParticles": 3401,
-      "smokeParticles": 135,
-      "sparkParticles": 298
+      "blasts": 4,
+      "flashes": 25,
+      "rings": 4,
+      "debris": 266,
+      "fireParticles": 3840,
+      "smokeParticles": 275,
+      "sparkParticles": 581
     },
-    "drawCalls": 56,
-    "triangles": 12596,
-    "programs": 20,
-    "geometries": 22,
+    "drawCalls": 90,
+    "triangles": 8774,
+    "programs": 16,
+    "geometries": 14,
     "textures": 29
   },
   "death-10": {
@@ -823,18 +823,18 @@
       "drawCalls": 11
     },
     "explosions": {
-      "blasts": 5,
-      "flashes": 14,
-      "rings": 7,
-      "debris": 288,
-      "fireParticles": 3694,
-      "smokeParticles": 113,
-      "sparkParticles": 292
+      "blasts": 7,
+      "flashes": 28,
+      "rings": 4,
+      "debris": 305,
+      "fireParticles": 4332,
+      "smokeParticles": 282,
+      "sparkParticles": 678
     },
-    "drawCalls": 58,
-    "triangles": 12828,
-    "programs": 20,
-    "geometries": 22,
+    "drawCalls": 104,
+    "triangles": 10042,
+    "programs": 16,
+    "geometries": 14,
     "textures": 29
   },
   "death-11": {
@@ -850,18 +850,18 @@
       "drawCalls": 11
     },
     "explosions": {
-      "blasts": 5,
-      "flashes": 10,
-      "rings": 4,
-      "debris": 339,
-      "fireParticles": 2076,
-      "smokeParticles": 92,
-      "sparkParticles": 174
+      "blasts": 6,
+      "flashes": 13,
+      "rings": 3,
+      "debris": 355,
+      "fireParticles": 2560,
+      "smokeParticles": 239,
+      "sparkParticles": 500
     },
-    "drawCalls": 49,
-    "triangles": 13302,
-    "programs": 20,
-    "geometries": 22,
+    "drawCalls": 88,
+    "triangles": 11726,
+    "programs": 16,
+    "geometries": 14,
     "textures": 29
   },
   "death-12": {
@@ -877,77 +877,23 @@
       "drawCalls": 11
     },
     "explosions": {
-      "blasts": 0,
-      "flashes": 0,
-      "rings": 0,
-      "debris": 337,
-      "fireParticles": 3,
-      "smokeParticles": 34,
-      "sparkParticles": 0
+      "blasts": 2,
+      "flashes": 1,
+      "rings": 1,
+      "debris": 370,
+      "fireParticles": 738,
+      "smokeParticles": 147,
+      "sparkParticles": 348
     },
-    "drawCalls": 27,
-    "triangles": 13234,
-    "programs": 20,
-    "geometries": 22,
+    "drawCalls": 51,
+    "triangles": 12148,
+    "programs": 16,
+    "geometries": 14,
     "textures": 29
   },
   "finale-0": {
     "scene": "finale",
-    "time": 0.03,
-    "projectiles": 0,
-    "torpedoes": {
-      "activeHeavy": 0,
-      "activeLight": 0,
-      "activeTrailSlots": 0,
-      "trailParticles": 0,
-      "trailSmoke": 0,
-      "drawCalls": 11
-    },
-    "explosions": {
-      "blasts": 1,
-      "flashes": 13,
-      "rings": 4,
-      "debris": 100,
-      "fireParticles": 2930,
-      "smokeParticles": 10,
-      "sparkParticles": 160
-    },
-    "drawCalls": 50,
-    "triangles": 10924,
-    "programs": 18,
-    "geometries": 19,
-    "textures": 21
-  },
-  "finale-1": {
-    "scene": "finale",
-    "time": 0.1,
-    "projectiles": 0,
-    "torpedoes": {
-      "activeHeavy": 0,
-      "activeLight": 0,
-      "activeTrailSlots": 0,
-      "trailParticles": 0,
-      "trailSmoke": 0,
-      "drawCalls": 11
-    },
-    "explosions": {
-      "blasts": 1,
-      "flashes": 13,
-      "rings": 4,
-      "debris": 100,
-      "fireParticles": 2952,
-      "smokeParticles": 10,
-      "sparkParticles": 160
-    },
-    "drawCalls": 50,
-    "triangles": 10924,
-    "programs": 18,
-    "geometries": 19,
-    "textures": 21
-  },
-  "finale-2": {
-    "scene": "finale",
-    "time": 0.22,
+    "time": 0.05,
     "projectiles": 0,
     "torpedoes": {
       "activeHeavy": 0,
@@ -959,22 +905,76 @@
     },
     "explosions": {
       "blasts": 2,
-      "flashes": 14,
-      "rings": 5,
-      "debris": 113,
-      "fireParticles": 3143,
-      "smokeParticles": 17,
-      "sparkParticles": 234
+      "flashes": 26,
+      "rings": 4,
+      "debris": 100,
+      "fireParticles": 3317,
+      "smokeParticles": 20,
+      "sparkParticles": 385
     },
-    "drawCalls": 53,
-    "triangles": 11054,
-    "programs": 18,
-    "geometries": 19,
-    "textures": 21
+    "drawCalls": 83,
+    "triangles": 3548,
+    "programs": 14,
+    "geometries": 11,
+    "textures": 19
+  },
+  "finale-1": {
+    "scene": "finale",
+    "time": 0.3,
+    "projectiles": 0,
+    "torpedoes": {
+      "activeHeavy": 0,
+      "activeLight": 0,
+      "activeTrailSlots": 0,
+      "trailParticles": 0,
+      "trailSmoke": 0,
+      "drawCalls": 11
+    },
+    "explosions": {
+      "blasts": 4,
+      "flashes": 29,
+      "rings": 4,
+      "debris": 126,
+      "fireParticles": 3770,
+      "smokeParticles": 34,
+      "sparkParticles": 556
+    },
+    "drawCalls": 94,
+    "triangles": 4402,
+    "programs": 14,
+    "geometries": 11,
+    "textures": 19
+  },
+  "finale-2": {
+    "scene": "finale",
+    "time": 1,
+    "projectiles": 0,
+    "torpedoes": {
+      "activeHeavy": 0,
+      "activeLight": 0,
+      "activeTrailSlots": 0,
+      "trailParticles": 0,
+      "trailSmoke": 0,
+      "drawCalls": 11
+    },
+    "explosions": {
+      "blasts": 7,
+      "flashes": 28,
+      "rings": 4,
+      "debris": 165,
+      "fireParticles": 4478,
+      "smokeParticles": 55,
+      "sparkParticles": 661
+    },
+    "drawCalls": 104,
+    "triangles": 5698,
+    "programs": 14,
+    "geometries": 11,
+    "textures": 19
   },
   "finale-3": {
     "scene": "finale",
-    "time": 0.4,
+    "time": 2.5,
     "projectiles": 0,
     "torpedoes": {
       "activeHeavy": 0,
@@ -985,129 +985,21 @@
       "drawCalls": 11
     },
     "explosions": {
-      "blasts": 3,
+      "blasts": 7,
       "flashes": 15,
-      "rings": 6,
-      "debris": 126,
-      "fireParticles": 3364,
-      "smokeParticles": 24,
-      "sparkParticles": 292
+      "rings": 3,
+      "debris": 217,
+      "fireParticles": 2845,
+      "smokeParticles": 83,
+      "sparkParticles": 490
     },
-    "drawCalls": 56,
-    "triangles": 11200,
-    "programs": 18,
-    "geometries": 19,
-    "textures": 21
+    "drawCalls": 91,
+    "triangles": 7492,
+    "programs": 14,
+    "geometries": 11,
+    "textures": 19
   },
   "finale-4": {
-    "scene": "finale",
-    "time": 0.7,
-    "projectiles": 0,
-    "torpedoes": {
-      "activeHeavy": 0,
-      "activeLight": 0,
-      "activeTrailSlots": 0,
-      "trailParticles": 0,
-      "trailSmoke": 0,
-      "drawCalls": 11
-    },
-    "explosions": {
-      "blasts": 4,
-      "flashes": 15,
-      "rings": 7,
-      "debris": 139,
-      "fireParticles": 3647,
-      "smokeParticles": 31,
-      "sparkParticles": 314
-    },
-    "drawCalls": 58,
-    "triangles": 11328,
-    "programs": 18,
-    "geometries": 19,
-    "textures": 21
-  },
-  "finale-5": {
-    "scene": "finale",
-    "time": 1.15,
-    "projectiles": 0,
-    "torpedoes": {
-      "activeHeavy": 0,
-      "activeLight": 0,
-      "activeTrailSlots": 0,
-      "trailParticles": 0,
-      "trailSmoke": 0,
-      "drawCalls": 11
-    },
-    "explosions": {
-      "blasts": 6,
-      "flashes": 17,
-      "rings": 8,
-      "debris": 165,
-      "fireParticles": 3794,
-      "smokeParticles": 45,
-      "sparkParticles": 350
-    },
-    "drawCalls": 63,
-    "triangles": 11562,
-    "programs": 18,
-    "geometries": 19,
-    "textures": 21
-  },
-  "finale-6": {
-    "scene": "finale",
-    "time": 1.8,
-    "projectiles": 0,
-    "torpedoes": {
-      "activeHeavy": 0,
-      "activeLight": 0,
-      "activeTrailSlots": 0,
-      "trailParticles": 0,
-      "trailSmoke": 0,
-      "drawCalls": 11
-    },
-    "explosions": {
-      "blasts": 6,
-      "flashes": 12,
-      "rings": 5,
-      "debris": 178,
-      "fireParticles": 3155,
-      "smokeParticles": 52,
-      "sparkParticles": 207
-    },
-    "drawCalls": 53,
-    "triangles": 11674,
-    "programs": 18,
-    "geometries": 19,
-    "textures": 21
-  },
-  "finale-7": {
-    "scene": "finale",
-    "time": 2.8,
-    "projectiles": 0,
-    "torpedoes": {
-      "activeHeavy": 0,
-      "activeLight": 0,
-      "activeTrailSlots": 0,
-      "trailParticles": 0,
-      "trailSmoke": 0,
-      "drawCalls": 11
-    },
-    "explosions": {
-      "blasts": 4,
-      "flashes": 6,
-      "rings": 3,
-      "debris": 204,
-      "fireParticles": 1672,
-      "smokeParticles": 64,
-      "sparkParticles": 142
-    },
-    "drawCalls": 43,
-    "triangles": 11910,
-    "programs": 18,
-    "geometries": 19,
-    "textures": 21
-  },
-  "finale-8": {
     "scene": "finale",
     "time": 4.5,
     "projectiles": 0,
@@ -1120,21 +1012,21 @@
       "drawCalls": 11
     },
     "explosions": {
-      "blasts": 0,
-      "flashes": 0,
-      "rings": 0,
-      "debris": 204,
-      "fireParticles": 81,
-      "smokeParticles": 51,
-      "sparkParticles": 0
+      "blasts": 3,
+      "flashes": 2,
+      "rings": 1,
+      "debris": 239,
+      "fireParticles": 979,
+      "smokeParticles": 97,
+      "sparkParticles": 350
     },
-    "drawCalls": 28,
-    "triangles": 11880,
-    "programs": 18,
-    "geometries": 19,
-    "textures": 21
+    "drawCalls": 58,
+    "triangles": 8302,
+    "programs": 14,
+    "geometries": 11,
+    "textures": 19
   },
-  "finale-9": {
+  "finale-5": {
     "scene": "finale",
     "time": 7.5,
     "projectiles": 0,
@@ -1147,19 +1039,19 @@
       "drawCalls": 11
     },
     "explosions": {
-      "blasts": 0,
-      "flashes": 0,
+      "blasts": 1,
+      "flashes": 1,
       "rings": 0,
-      "debris": 196,
-      "fireParticles": 0,
-      "smokeParticles": 4,
-      "sparkParticles": 0
+      "debris": 223,
+      "fireParticles": 379,
+      "smokeParticles": 88,
+      "sparkParticles": 264
     },
-    "drawCalls": 27,
-    "triangles": 11806,
-    "programs": 18,
-    "geometries": 19,
-    "textures": 21
+    "drawCalls": 34,
+    "triangles": 7634,
+    "programs": 14,
+    "geometries": 11,
+    "textures": 19
   },
   "bench": {
     "requested": {
@@ -1167,9 +1059,9 @@
       "lightCount": 80,
       "frames": 240
     },
-    "updateMs": 0.362,
-    "sceneRenderMs": 0.125,
-    "composerRenderMs": 4.867,
+    "updateMs": 0.384,
+    "sceneRenderMs": 0.112,
+    "composerRenderMs": 4.817,
     "sceneDrawCalls": 14,
     "sceneTriangles": 352080,
     "time": 4,
@@ -1179,7 +1071,7 @@
       "activeHeavy": 140,
       "activeLight": 80,
       "activeTrailSlots": 220,
-      "trailParticles": 4564,
+      "trailParticles": 4553,
       "trailSmoke": 1600,
       "drawCalls": 11
     },

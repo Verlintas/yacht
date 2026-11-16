@@ -23,6 +23,11 @@ function canvasTexture(size: number, paint: (ctx: CanvasRenderingContext2D) => v
   return texture;
 }
 
+function smoothstep(edge0: number, edge1: number, value: number): number {
+  const t = Math.max(0, Math.min(1, (value - edge0) / Math.max(1e-6, edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
 /** 柔和圆形辉光，用于引擎光、冲击波和通用粒子 */
 export function getSoftTexture(): THREE.CanvasTexture {
   if (softTex) return softTex;
@@ -99,28 +104,41 @@ export function getFireTexture(): THREE.CanvasTexture {
 /** 烟雾团：正常混合，带絮状边缘 */
 export function getSmokeTexture(): THREE.CanvasTexture {
   if (smokeTex) return smokeTex;
-  smokeTex = canvasTexture(160, (ctx) => {
-    for (let i = 0; i < 28; i += 1) {
-      const x = 80 + (Math.random() - 0.5) * 100;
-      const y = 80 + (Math.random() - 0.5) * 100;
-      const r = 14 + Math.random() * 38;
-      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, 'rgba(255,255,255,0.42)');
-      g.addColorStop(0.45, 'rgba(255,255,255,0.2)');
-      g.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
+  const size = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  const image = ctx.createImageData(size, size);
+  const data = image.data;
+  const center = size / 2;
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const nx = (x - center) / center;
+      const ny = (y - center) / center;
+      const r = Math.hypot(nx, ny);
+      if (r > 1.02) continue;
+      const angle = Math.atan2(ny, nx);
+      let n = 0;
+      n += 0.5 * Math.sin(nx * 7.1 + 1.3) * Math.cos(ny * 6.3 - 0.7);
+      n += 0.25 * Math.sin(nx * 21.7 - 2.1) * Math.cos(ny * 18.2 + 1.4);
+      n += 0.125 * Math.sin(nx * 53.3 + 3.2) * Math.cos(ny * 47.7 - 2.4);
+      n = n * 0.5 + 0.5;
+      const edge = 1 - smoothstep(0.18, 0.98, r);
+      const lobed = 0.62 + 0.38 * Math.sin(angle * 5 + r * 9);
+      let alpha = Math.pow(n, 2.0) * edge * lobed * 0.95;
+      // 细丝/破洞：让烟团边缘不闭合
+      alpha *= 0.72 + 0.28 * Math.sin(nx * 39 + ny * 31 + 2.2);
+      if (alpha <= 0.002) continue;
+      const i = (y * size + x) * 4;
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+      data[i + 3] = Math.max(0, Math.min(255, alpha * 255));
     }
-    ctx.globalCompositeOperation = 'destination-in';
-    const mask = ctx.createRadialGradient(80, 80, 10, 80, 80, 80);
-    mask.addColorStop(0, 'rgba(255,255,255,1)');
-    mask.addColorStop(0.62, 'rgba(255,255,255,0.82)');
-    mask.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = mask;
-    ctx.fillRect(0, 0, 160, 160);
-  });
+  }
+  ctx.putImageData(image, 0, 0);
+  smokeTex = new THREE.CanvasTexture(canvas);
   return smokeTex;
 }
 

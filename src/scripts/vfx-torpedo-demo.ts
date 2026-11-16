@@ -274,7 +274,7 @@ function setupFinale(): void {
   const axis = new THREE.Vector3(1, 0.22, 0.35).normalize();
   const orientation = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), axis);
   combat.finaleAt(new THREE.Vector3(0, 0, 0), 8000, 10, orientation);
-  camera.position.set(10000, 4300, 16000);
+  camera.position.set(8000, 3400, 13000);
   camera.lookAt(0, 0, 0);
 }
 

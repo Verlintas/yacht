@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {
   ParticleField,
   getFireTexture,
@@ -223,44 +224,76 @@ class FlashPool {
   }
 }
 
-let plasmaRingTexture: THREE.CanvasTexture | null = null;
+let plasmaRingTextures: THREE.CanvasTexture[] | null = null;
 
-function getPlasmaRingTexture(): THREE.CanvasTexture {
-  if (plasmaRingTexture) return plasmaRingTexture;
-  const size = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-  // 软而薄的环形，带一点不规则亮度，面向相机时不会变成两条边线
-  const gradient = ctx.createRadialGradient(size / 2, size / 2, size * 0.32, size / 2, size / 2, size * 0.5);
-  gradient.addColorStop(0, 'rgba(255,255,255,0)');
-  gradient.addColorStop(0.58, 'rgba(255,255,255,0)');
-  gradient.addColorStop(0.72, 'rgba(255,255,255,0.12)');
-  gradient.addColorStop(0.82, 'rgba(255,255,255,0.95)');
-  gradient.addColorStop(0.88, 'rgba(255,255,255,0.45)');
-  gradient.addColorStop(0.96, 'rgba(255,255,255,0)');
-  gradient.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, size, size);
-  ctx.globalCompositeOperation = 'destination-out';
-  for (let i = 0; i < 42; i += 1) {
-    const angle = Math.random() * Math.PI * 2;
-    const radius = size * (0.34 + Math.random() * 0.12);
-    const x = size / 2 + Math.cos(angle) * radius;
-    const y = size / 2 + Math.sin(angle) * radius;
-    const r = 1 + Math.random() * 5;
-    const hole = ctx.createRadialGradient(x, y, 0, x, y, r);
-    hole.addColorStop(0, `rgba(0,0,0,${0.15 + Math.random() * 0.35})`);
-    hole.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = hole;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
+const RING_AMBER = new THREE.Color(0xffa35a);
+const RING_DARK_RED = new THREE.Color(0x5a1208);
+
+function smoothstep(edge0: number, edge1: number, value: number): number {
+  const t = Math.max(0, Math.min(1, (value - edge0) / Math.max(1e-6, edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+/**
+ * 程序化等离子冲击环：不是完美圆环，而是带缺口、厚度变化、湍流边缘的软环。
+ * 生成 4 个变体，避免同一爆炸里所有环长得一样。
+ */
+function getPlasmaRingTextures(): THREE.CanvasTexture[] {
+  if (plasmaRingTextures) return plasmaRingTextures;
+  const size = 384;
+  const center = size / 2;
+  const textures: THREE.CanvasTexture[] = [];
+  for (let variant = 0; variant < 4; variant += 1) {
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+    const image = ctx.createImageData(size, size);
+    const data = image.data;
+    const phase = variant * 2.13 + 0.7;
+    for (let y = 0; y < size; y += 1) {
+      for (let x = 0; x < size; x += 1) {
+        const nx = (x - center) / center;
+        const ny = (y - center) / center;
+        const r = Math.hypot(nx, ny);
+        if (r > 1.04) continue;
+        const theta = Math.atan2(ny, nx);
+        const radius = 0.76
+          + 0.018 * Math.sin(theta * 4 + phase)
+          + 0.012 * Math.sin(theta * 9 - phase * 1.4)
+          + 0.006 * Math.sin(theta * 17 + phase * 0.7);
+        const thickness = 0.022
+          + 0.012 * (0.5 + 0.5 * Math.sin(theta * 6 + phase))
+          + 0.008 * (0.5 + 0.5 * Math.sin(theta * 15 - phase * 0.8));
+        const d = (r - radius) / thickness;
+        let alpha = Math.exp(-d * d * 1.9);
+        // 向外拖一条更暗更宽的热气体尾
+        alpha += 0.16 * Math.exp(-Math.pow((r - (radius - 0.038)) / (thickness * 2.3), 2));
+        // 破碎弧段：低频缺口 + 高频碎裂
+        const arcNoise = 0.5
+          + 0.5 * Math.sin(theta * 2.0 + phase)
+            * Math.sin(theta * 3.1 - phase * 0.7)
+            * Math.sin(theta * 6.7 + phase * 1.1);
+        const arcs = 0.1 + 0.9 * Math.pow(arcNoise, 1.7);
+        alpha *= arcs;
+        // 湍流细丝
+        alpha *= 0.72 + 0.28 * Math.sin(theta * 31 + r * 22 + phase);
+        alpha *= smoothstep(0.0, 0.06, r) * (1 - smoothstep(0.92, 1.04, r));
+        if (alpha <= 0.002) continue;
+        const i = (y * size + x) * 4;
+        data[i] = 255;
+        data[i + 1] = 242;
+        data[i + 2] = 226;
+        data[i + 3] = Math.max(0, Math.min(255, alpha * 255));
+      }
+    }
+    ctx.putImageData(image, 0, 0);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    textures.push(texture);
   }
-  plasmaRingTexture = new THREE.CanvasTexture(canvas);
-  plasmaRingTexture.needsUpdate = true;
-  return plasmaRingTexture;
+  plasmaRingTextures = textures;
+  return textures;
 }
 
 interface RingSlot {
@@ -273,20 +306,22 @@ interface RingSlot {
   opacity: number;
   spin: number;
   squashY: number;
+  startColor: THREE.Color;
   active: boolean;
 }
 
 class RingPool {
   private readonly slots: RingSlot[] = [];
   private readonly scene: THREE.Scene;
+  private readonly textures: THREE.CanvasTexture[];
   private cursor = 0;
 
   constructor(scene: THREE.Scene, capacity = 18) {
     this.scene = scene;
-    const texture = getPlasmaRingTexture();
+    this.textures = getPlasmaRingTextures();
     for (let i = 0; i < capacity; i += 1) {
       const material = new THREE.SpriteMaterial({
-        map: texture,
+        map: this.textures[0],
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
@@ -307,6 +342,7 @@ class RingPool {
         opacity: 0.6,
         spin: 0,
         squashY: 1,
+        startColor: new THREE.Color(0xffffff),
         active: false,
       });
     }
@@ -325,12 +361,15 @@ class RingPool {
     slot.radius = radius;
     slot.opacity = opacity;
     slot.spin = spin;
-    slot.squashY = 0.54 + Math.random() * 0.06;
+    slot.squashY = 0.52 + Math.random() * 0.08;
+    slot.startColor.setHex(color);
+    slot.material.map = this.textures[Math.floor(Math.random() * this.textures.length)];
+    slot.material.needsUpdate = true;
     slot.sprite.position.copy(position);
     slot.sprite.scale.set(radius * 0.1, radius * 0.1 * slot.squashY, 1);
-    slot.material.color.setHex(color);
+    slot.material.color.copy(slot.startColor);
     slot.material.opacity = 0;
-    slot.material.rotation = (Math.random() - 0.5) * 0.1;
+    slot.material.rotation = (Math.random() - 0.5) * 0.12;
     slot.sprite.visible = true;
   }
 
@@ -343,10 +382,15 @@ class RingPool {
       }
       slot.age += dt;
       const k = Math.min(1, slot.age / slot.life);
-      const scale = slot.radius * (0.1 + 0.95 * easeOutCubic(k));
+      const scale = slot.radius * (0.06 + 0.94 * easeOutCubic(k));
       slot.sprite.scale.set(scale, scale * slot.squashY, 1);
       slot.material.rotation += slot.spin * dt;
-      slot.material.opacity = slot.opacity * Math.pow(1 - k, 1.35);
+      if (k < 0.35) {
+        slot.material.color.copy(slot.startColor).lerp(RING_AMBER, k / 0.35);
+      } else {
+        slot.material.color.copy(RING_AMBER).lerp(RING_DARK_RED, (k - 0.35) / 0.65);
+      }
+      slot.material.opacity = slot.opacity * Math.pow(1 - k, 1.8);
       if (slot.age >= slot.life) {
         slot.active = false;
         slot.sprite.visible = false;
@@ -375,6 +419,8 @@ interface DebrisPiece {
   scale: THREE.Vector3;
   life: number;
   maxLife: number;
+  hot: boolean;
+  sparkTimer: number;
   active: boolean;
 }
 
@@ -383,42 +429,70 @@ interface DebrisVariant {
   pieces: DebrisPiece[];
 }
 
+function mergeDebrisParts(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
+  const normalized = parts.map((part) => {
+    const geometry = part.index ? part.toNonIndexed() : part;
+    for (const key of Object.keys(geometry.attributes)) {
+      if (key !== 'position' && key !== 'normal' && key !== 'uv') geometry.deleteAttribute(key);
+    }
+    return geometry;
+  });
+  const merged = mergeGeometries(normalized, false);
+  if (!merged) throw new Error('残骸几何合并失败');
+  merged.computeBoundingBox();
+  merged.computeBoundingSphere();
+  for (const geometry of normalized) geometry.dispose();
+  return merged;
+}
+
+function makeDebrisMaterial(hot: boolean): THREE.MeshStandardMaterial {
+  const material = new THREE.MeshStandardMaterial({
+    map: getDebrisTexture(),
+    color: hot ? 0x7a3326 : 0xb8c4d0,
+    metalness: hot ? 0.45 : 0.68,
+    roughness: hot ? 0.56 : 0.5,
+    emissive: new THREE.Color(hot ? 0xc23a12 : 0x3a1a0c),
+    emissiveIntensity: hot ? 1.25 : 0.75,
+    flatShading: true,
+  });
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uEdgeColor = { value: new THREE.Color(hot ? 0xff8a30 : 0xff4a12) };
+    shader.uniforms.uEdgeIntensity = { value: hot ? 2.4 : 1.5 };
+    shader.fragmentShader = `uniform vec3 uEdgeColor;
+uniform float uEdgeIntensity;
+${shader.fragmentShader}`;
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <emissivemap_fragment>',
+      `#include <emissivemap_fragment>
+       float edge = pow(1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition))), 3.5);
+       totalEmissiveRadiance += uEdgeColor * edge * uEdgeIntensity;`,
+    );
+  };
+  material.customProgramCacheKey = () => (hot ? 'debris-edge-hot-v2' : 'debris-edge-cold-v2');
+  return material;
+}
+
 class DebrisField {
   private readonly scene: THREE.Scene;
+  private readonly sparks: ParticleField;
   private readonly variants: DebrisVariant[] = [];
   private readonly pool: DebrisPiece[] = [];
   private readonly all: DebrisPiece[] = [];
   private readonly dummy = new THREE.Object3D();
+  private readonly sparkStart = new THREE.Color(0xffb070);
+  private readonly sparkEnd = new THREE.Color(0x401008);
   private maxPieces = 620;
 
-  constructor(scene: THREE.Scene) {
+  constructor(scene: THREE.Scene, sparks: ParticleField) {
     this.scene = scene;
-    const shapes = [
-      new THREE.BoxGeometry(1, 0.55, 0.72),
-      new THREE.TetrahedronGeometry(0.72, 0),
-      new THREE.BoxGeometry(1.85, 0.12, 1.08),
-    ];
-    const map = getDebrisTexture();
-    const cold = new THREE.MeshStandardMaterial({
-      map,
-      color: 0x8a929a,
-      metalness: 0.55,
-      roughness: 0.72,
-      flatShading: true,
-    });
-    const hot = new THREE.MeshStandardMaterial({
-      map,
-      color: 0x6f3024,
-      metalness: 0.4,
-      roughness: 0.62,
-      emissive: new THREE.Color(0xb43a12),
-      emissiveIntensity: 1.0,
-      flatShading: true,
-    });
+    this.sparks = sparks;
+    const shapes = this.createShapes();
+    const cold = makeDebrisMaterial(false);
+    const hot = makeDebrisMaterial(true);
     for (let shape = 0; shape < shapes.length; shape += 1) {
       for (let variant = 0; variant < 2; variant += 1) {
         const material = variant === 0 ? cold : hot;
-        const mesh = new THREE.InstancedMesh(shapes[shape], material, 150);
+        const mesh = new THREE.InstancedMesh(shapes[shape], material, 120);
         mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         mesh.count = 0;
         mesh.visible = false;
@@ -431,15 +505,56 @@ class DebrisField {
     }
   }
 
+  /** 5 种有棱角的船壳碎片，避免盒子/方块像纸屑。全部只生成一次。 */
+  private createShapes(): THREE.BufferGeometry[] {
+    const panel = mergeDebrisParts([
+      new THREE.BoxGeometry(1.9, 0.13, 1.05).translate(0, 0, 0),
+      new THREE.BoxGeometry(0.85, 0.11, 1.15).rotateY(0.42).translate(0.92, 0.1, 0.12),
+      new THREE.BoxGeometry(0.32, 0.2, 0.32).translate(-0.62, 0.02, 0.3),
+    ]);
+
+    const shardShape = new THREE.Shape();
+    shardShape.moveTo(-0.9, -0.42);
+    shardShape.lineTo(-0.1, -0.75);
+    shardShape.lineTo(0.82, -0.18);
+    shardShape.lineTo(0.5, 0.5);
+    shardShape.lineTo(-0.42, 0.68);
+    shardShape.lineTo(-0.86, 0.22);
+    shardShape.closePath();
+    const shard = new THREE.ExtrudeGeometry(shardShape, { depth: 0.34, bevelEnabled: false, steps: 1 });
+    shard.translate(0, 0, -0.17);
+
+    const wedge = new THREE.CylinderGeometry(0.22, 0.95, 1.45, 3, 1, false);
+    wedge.rotateZ(Math.PI / 2);
+    wedge.rotateY(0.3);
+
+    const spar = mergeDebrisParts([
+      new THREE.BoxGeometry(1.75, 0.16, 0.2).translate(0, 0, 0),
+      new THREE.BoxGeometry(0.3, 0.52, 0.34).translate(-0.58, 0, 0),
+      new THREE.BoxGeometry(0.3, 0.52, 0.34).translate(0.58, 0, 0),
+      new THREE.BoxGeometry(0.42, 0.16, 0.62).translate(0.18, 0.12, 0),
+    ]);
+
+    const greeble = mergeDebrisParts([
+      new THREE.BoxGeometry(0.55, 0.4, 0.55).translate(-0.3, 0.05, 0),
+      new THREE.BoxGeometry(0.4, 0.22, 0.9).translate(0.28, 0.06, 0.1).rotateY(0.3),
+      new THREE.BoxGeometry(0.22, 0.7, 0.24).translate(0.1, -0.2, -0.32),
+      new THREE.BoxGeometry(0.26, 0.18, 0.26).translate(-0.1, 0.38, 0.25),
+    ]);
+
+    return [panel, shard, wedge, spar, greeble];
+  }
+
   spawn(position: THREE.Vector3, length: number, tier: number, count: number, final: boolean): void {
     const total = Math.min(count, 90);
+    const shapeCount = this.variants.length / 2;
     for (let i = 0; i < total; i += 1) {
       if (this.all.length >= this.maxPieces) this.removeOldest();
-      const hot = Math.random() < (final ? 0.22 : 0.13);
-      const shape = Math.random() < 0.42 ? 2 : Math.random() < 0.55 ? 0 : 1;
+      const hot = Math.random() < (final ? 0.32 : 0.18);
+      const shape = Math.floor(Math.random() * shapeCount);
       const variant = shape * 2 + (hot ? 1 : 0);
       const target = this.variants[variant];
-      if (target.pieces.length >= 150) continue;
+      if (target.pieces.length >= 120) continue;
       const piece = this.pool.pop() ?? {
         variant,
         position: new THREE.Vector3(),
@@ -449,9 +564,12 @@ class DebrisField {
         scale: new THREE.Vector3(),
         life: 0,
         maxLife: 0,
+        hot: false,
+        sparkTimer: 0,
         active: false,
       };
       piece.variant = variant;
+      piece.hot = hot;
       piece.active = true;
       const spread = length * 0.18;
       piece.position.set(
@@ -464,21 +582,22 @@ class DebrisField {
       piece.velocity.set(dir[0] * speed, dir[1] * speed, dir[2] * speed);
       piece.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
       piece.spin.set(
-        (Math.random() - 0.5) * 0.9,
-        (Math.random() - 0.5) * 0.9,
-        (Math.random() - 0.5) * 0.9,
+        (Math.random() - 0.5) * 1.4,
+        (Math.random() - 0.5) * 1.4,
+        (Math.random() - 0.5) * 1.4,
       );
-      const big = final && i < 10;
+      const big = final && i < 9;
       const base = big
-        ? length * (0.018 + Math.random() * 0.012)
-        : length * (final ? (0.006 + Math.random() * 0.012) : (0.015 + Math.random() * 0.02)) + 0.25;
+        ? length * (0.032 + Math.random() * 0.022)
+        : length * (final ? (0.015 + Math.random() * 0.022) : (0.02 + Math.random() * 0.03)) + 0.25;
       piece.scale.set(
+        base * (0.75 + Math.random() * 0.8),
+        base * (0.55 + Math.random() * 0.75),
         base * (0.7 + Math.random() * 0.9),
-        base * (0.35 + Math.random() * 0.45),
-        base * (0.6 + Math.random() * 0.8),
       );
-      piece.life = hot ? 5 + Math.random() * 8 : 18 + Math.random() * 22;
+      piece.life = hot ? 4 + Math.random() * 8 : 16 + Math.random() * 24;
       piece.maxLife = piece.life;
+      piece.sparkTimer = Math.random() * 0.4;
       target.pieces.push(piece);
       this.all.push(piece);
     }
@@ -520,6 +639,32 @@ class DebrisField {
         piece.rotation.x += piece.spin.x * dt;
         piece.rotation.y += piece.spin.y * dt;
         piece.rotation.z += piece.spin.z * dt;
+
+        // 热碎片拖出细小余烬，冷碎片不喷射
+        if (piece.hot) {
+          piece.sparkTimer -= dt;
+          if (piece.sparkTimer <= 0) {
+            piece.sparkTimer = 0.12 + Math.random() * 0.32;
+            const speed = 10 + Math.random() * 42;
+            this.sparks.spawn(
+              piece.position.x,
+              piece.position.y,
+              piece.position.z,
+              (Math.random() - 0.5) * speed,
+              (Math.random() - 0.5) * speed,
+              (Math.random() - 0.5) * speed,
+              0.18 + Math.random() * 0.4,
+              Math.max(0.35, piece.scale.x * 0.18),
+              -0.2,
+              this.sparkStart,
+              this.sparkEnd,
+              0.8,
+              0.9,
+              Math.random() * Math.PI * 2,
+              (Math.random() - 0.5) * 4,
+            );
+          }
+        }
       }
       for (let i = 0; i < pieces.length; i += 1) {
         const piece = pieces[i];
@@ -544,7 +689,7 @@ class DebrisField {
       this.scene.remove(variant.mesh);
       variant.mesh.geometry.dispose();
       const material = variant.mesh.material as THREE.Material;
-      // 冷/热材质在 6 个 variant 里共享，按引用去重
+      // 冷/热材质在 variant 间共享，按引用去重
       const shared = (material as THREE.Material & { userData?: { disposed?: boolean } });
       if (!shared.userData?.disposed) {
         shared.userData = { ...(shared.userData ?? {}), disposed: true };
@@ -605,6 +750,7 @@ export class ExplosionVfx {
   private readonly sparks: ParticleField;
   private readonly flashPool: FlashPool;
   private readonly fireGlowPool: FlashPool;
+  private readonly smokeGlowPool: FlashPool;
   private readonly ringPool: RingPool;
   private readonly debrisField: DebrisField;
   private readonly blasts: Blast[] = [];
@@ -616,6 +762,7 @@ export class ExplosionVfx {
   private readonly tmpColorB = new THREE.Color();
   private readonly tmpWhite = new THREE.Color(0xffffff);
   private readonly hotEnd = new THREE.Color(0x401008);
+  private readonly tmpVec = new THREE.Vector3();
   private time = 0;
 
   constructor(scene: THREE.Scene, options: ExplosionVfxOptions = {}) {
@@ -650,8 +797,9 @@ export class ExplosionVfx {
     });
     this.flashPool = new FlashPool(scene);
     this.fireGlowPool = new FlashPool(scene, 20, getFireTexture(), THREE.NormalBlending, 3);
+    this.smokeGlowPool = new FlashPool(scene, 28, getSmokeTexture(), THREE.NormalBlending, 2);
     this.ringPool = new RingPool(scene);
-    this.debrisField = new DebrisField(scene);
+    this.debrisField = new DebrisField(scene, this.sparks);
     for (let i = 0; i < 6; i += 1) {
       const light = new THREE.PointLight(0xff8a4a, 0, 12000, 2);
       light.position.set(0, 0, 0);
@@ -684,25 +832,58 @@ export class ExplosionVfx {
     const direction = axis ? axis.clone().normalize() : new THREE.Vector3(0, 0, 1);
     this.spawn(position, length, tier, 'final', direction);
     const size = length * 1.35;
-    this.flash(position, 0xffffff, Math.max(60, size * 0.45), 0.16, 0, 2.2, 1.5, 0.85);
-    this.flash(position, 0x9fd8ff, Math.max(45, size * 0.3), 0.55, 0.03, 1.8, 1.1, 0.38);
-    this.flash(position, 0xff6a2a, Math.max(60, size * 0.55), 1.1, 0.06, 1.4, 1.2, 0.22);
-    this.flash(position, 0xffe6b0, size * 0.22, 2.6, 0.05, 1.2, 1.0, 0.55);
-    this.flash(position, 0xff8a30, size * 0.4, 3.4, 0.08, 1.2, 0.9, 0.3);
-    this.ringPool.spawn(position, length * 1.3, 0xdff4ff, 1.0, 0, 0.5, 0.04);
-    this.ringPool.spawn(position, length * 2.0, 0x9fd8ff, 1.6, 0.04, 0.3, -0.03);
-    this.ringPool.spawn(position, length * 2.8, 0xff9a5a, 2.4, 0.1, 0.18, 0.02);
-    this.ringPool.spawn(position, length * 3.6, 0x7fb8ff, 3.6, 0.18, 0.1, -0.01);
+    // 更强的白热初始闪光；先白/青，再转琥珀
+    this.flash(position, 0xffffff, size * 0.27, 0.12, 0, 2.0, 1.8, 1.0);
+    this.flash(position, 0xffffff, size * 0.55, 0.18, 0, 2.6, 1.55, 0.95);
+    this.flash(position, 0xdff4ff, size * 0.36, 0.42, 0.02, 2.0, 1.15, 0.55);
+    this.flash(position, 0x9fd8ff, size * 0.47, 0.34, 0.01, 2.2, 1.1, 0.3);
+    this.flash(position, 0xffb066, size * 0.65, 1.2, 0.05, 1.4, 1.2, 0.3);
+    this.flash(position, 0xffffff, size * 0.18, 1.8, 0.1, 1.1, 1.0, 0.65);
+    this.flash(position, 0x9fd8ff, size * 0.28, 2.6, 0.14, 1.2, 0.9, 0.32);
+    this.flash(position, 0xff6a2a, size * 0.42, 3.6, 0.1, 1.2, 0.9, 0.18);
+    this.ringPool.spawn(position, length * 1.3, 0xdff4ff, 1.6, 0, 0.32, 0.035);
+    this.ringPool.spawn(position, length * 2.0, 0xbfeaff, 2.6, 0.08, 0.18, -0.025);
+    this.ringPool.spawn(position, length * 2.8, 0xffb066, 4.0, 0.2, 0.1, 0.018);
+    this.ringPool.spawn(position, length * 3.6, 0x8a6a7a, 5.6, 0.35, 0.045, -0.01);
     this.debrisField.spawn(position, length, tier, 60, true);
     this.emitJet(position, size, PALETTES.final, direction, 1, 160);
     this.emitJet(position, size, PALETTES.final, direction, -1, 160);
-    // 沿舰体轴线叠几个 normal-blend 火球底光，避免主火球亮度和体积不足
-    for (let i = -2; i <= 2; i += 1) {
-      const p = position.clone()
-        .addScaledVector(direction, length * 0.22 * i + (Math.random() - 0.5) * length * 0.05);
-      this.fireGlow(p, PALETTES.final.fire.getHex(), size * (0.3 + Math.random() * 0.12), 3.0 + Math.random() * 1.5, 0.05, 1.15, 0.85, 0.6);
-      this.flash(p, PALETTES.final.fire.getHex(), size * (0.16 + Math.random() * 0.08), 2.2 + Math.random(), 0.05, 1.2, 0.9, 0.18);
+
+    const helper = Math.abs(direction.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+    const right = new THREE.Vector3().crossVectors(direction, helper).normalize();
+    const up = new THREE.Vector3().crossVectors(direction, right).normalize();
+    const lobe = new THREE.Vector3();
+    // 多瓣火球：随机椭球分布 + 冷热色差，不再是一条对称的橙色长条
+    for (let i = 0; i < 14; i += 1) {
+      const along = (Math.random() * 2 - 1) * length * 0.55;
+      const angle = Math.random() * Math.PI * 2;
+      const radial = Math.sqrt(Math.random()) * length * 0.25;
+      lobe.copy(position)
+        .addScaledVector(direction, along)
+        .addScaledVector(right, Math.cos(angle) * radial)
+        .addScaledVector(up, Math.sin(angle) * radial);
+      const warm = i % 4 === 0 ? 0xffc080 : i % 3 === 0 ? 0xff7a20 : 0xff4a10;
+      this.fireGlow(lobe, warm, size * (0.1 + Math.random() * 0.18), 2.4 + Math.random() * 2.4, 0.04 + Math.random() * 0.12, 1.15, 0.9, 0.35 + Math.random() * 0.18);
+      this.flash(lobe, warm, size * (0.07 + Math.random() * 0.07), 1.6 + Math.random() * 1.6, 0.04, 1.2, 0.95, 0.1);
     }
+    this.fireGlow(position, 0xff7a20, size * 0.42, 3.4, 0.03, 1.1, 0.85, 0.45);
+    // 暗色烟/尘外层，寿命比火球长很多
+    for (let i = 0; i < 9; i += 1) {
+      const along = (Math.random() * 2 - 1) * length * 0.3;
+      const angle = Math.random() * Math.PI * 2;
+      const radial = Math.sqrt(Math.random()) * length * 0.42;
+      lobe.copy(position)
+        .addScaledVector(direction, along)
+        .addScaledVector(right, Math.cos(angle) * radial)
+        .addScaledVector(up, Math.sin(angle) * radial);
+      const smokeColor = i % 3 === 0 ? 0x6a5a50 : 0x444a52;
+      this.smokeGlow(lobe, smokeColor, size * (0.45 + Math.random() * 0.3), 16.0 + Math.random() * 10.0, 0.05 + Math.random() * 0.4, 1.4, 0.55, 0.42 + Math.random() * 0.16);
+    }
+    this.flash(position, 0x7a3a1a, size * 0.9, 18.0, 0.3, 1.5, 0.5, 0.18);
+    this.addLingeringLight(position, length * 2.2, tier, 0xff7a30, 18);
+    this.emitCore(position, size, PALETTES.final, 26);
+    this.emitEmbers(position, size, PALETTES.final, 220, direction);
+    this.emitLongEmbers(position, size, PALETTES.final, 220, direction);
   }
 
   /** 死亡序列里的单个引擎/武器/船体爆炸：不产生残骸，光效规模更小 */
@@ -800,7 +981,7 @@ export class ExplosionVfx {
       const speed = size * (0.4 + Math.random() * 0.9);
       const sign = -1; // 朝船壳外侧（弹丸来向）喷
       const pick = Math.random();
-      this.tmpColorA.copy(pick < 0.25 ? palette.plasma : palette.fire);
+      this.tmpColorA.copy(pick < 0.18 ? palette.plasma : palette.fire);
       this.tmpColorB.copy(palette.smoke);
       this.fire.spawn(
         position.x + right.x * Math.cos(angle) * spread + up.x * Math.sin(angle) * spread,
@@ -872,6 +1053,20 @@ export class ExplosionVfx {
     this.fireGlowPool.spawn(position, color, size, life, delay, grow, power, peak);
   }
 
+  /** 正常混合的烟/尘外层：给火球一层暗色体积，避免只有橙色云 */
+  smokeGlow(
+    position: THREE.Vector3,
+    color: number,
+    size: number,
+    life: number,
+    delay = 0,
+    grow = 1.4,
+    power = 0.85,
+    peak = 0.16,
+  ): void {
+    this.smokeGlowPool.spawn(position, color, size, life, delay, grow, power, peak);
+  }
+
   debris(position: THREE.Vector3, length: number, tier: number, count = 12, final = false): void {
     this.debrisField.spawn(position, length, tier, count, final);
   }
@@ -889,16 +1084,42 @@ export class ExplosionVfx {
     const palette = paletteFor(tier, final);
     this.emitFire(position, size, palette, final ? 2600 : Math.min(220, 30 + tier * 12), final, axis);
     this.emitSparks(position, size, palette, final ? 160 : Math.min(80, 14 + tier * 6), 0xffffff);
-    this.emitSmoke(position, size, palette, final ? 10 : Math.min(8, 2 + tier * 0.5), final);
+    this.emitSmoke(position, size, palette, final ? 28 : Math.min(10, 2 + tier * 0.5), final);
+    if (final) {
+      this.emitCore(position, size, palette, 14);
+      this.emitEmbers(position, size, palette, 120, axis);
+    } else if (size > 80) {
+      this.emitCore(position, size, palette, 8);
+      this.emitEmbers(position, size, palette, 24, axis);
+    }
     this.flash(position, palette.core.getHex(), size * (final ? 0.3 : 0.35), final ? 0.15 : 0.2, 0, 2.2, 1.5, final ? 0.55 : 0.75);
     this.flash(position, palette.fire.getHex(), size * (final ? 0.55 : 0.6), final ? 0.35 : 0.45, final ? 0.02 : 0, 1.8, 1.3, final ? 0.3 : 0.55);
     this.flash(position, palette.fire.getHex(), size * (final ? 0.8 : 0.75), final ? 2.2 : 1.0, 0.06, 1.3, 1.0, final ? 0.3 : 0.38);
-    this.fireGlow(position, palette.fire.getHex(), size * (final ? 0.55 : 0.7), final ? 2.0 : 1.2, 0.03, 1.2, 1.0, final ? 0.38 : 0.55);
-    if (impact && tier >= 4) {
-      this.ringPool.spawn(position, size * 3.0, palette.shock.getHex(), 1.0, 0, 0.28, 0.04);
+    this.fireGlow(position, palette.fire.getHex(), size * (final ? 0.6 : 0.7), final ? 2.2 : 1.2, 0.03, 1.2, 1.0, final ? 0.5 : 0.55);
+    if (!final) {
+      for (let i = 0; i < 3; i += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const radial = Math.sqrt(Math.random()) * size * 0.38;
+        const sx = position.x + Math.cos(angle) * radial;
+        const sy = position.y + (Math.random() - 0.5) * size * 0.25;
+        const sz = position.z + Math.sin(angle) * radial;
+        this.smokeGlow(
+          this.tmpVec.set(sx, sy, sz),
+          i % 2 === 0 ? 0x241b17 : 0x1d2328,
+          size * (0.32 + Math.random() * 0.2),
+          3.2 + Math.random() * 2.4,
+          0.12,
+          1.35,
+          0.8,
+          0.08 + Math.random() * 0.06,
+        );
+      }
     }
-    if (!impact && tier >= 7 && !final) {
-      this.ringPool.spawn(position, size * 3.0, palette.plasma.getHex(), 1.2, 0.04, 0.2, -0.03);
+    if (impact && tier >= 4) {
+      this.ringPool.spawn(position, size * 3.0, palette.shock.getHex(), 1.4, 0, 0.18, 0.035);
+    }
+    if (!impact && allowSecondary && tier >= 7 && !final) {
+      this.ringPool.spawn(position, size * 3.0, palette.plasma.getHex(), 1.6, 0.04, 0.12, -0.025);
     }
     if (tier >= 4 || final) {
       this.debrisField.spawn(position, length, tier, final ? 40 : impact ? 26 : Math.min(16, 3 + tier), final);
@@ -969,16 +1190,16 @@ export class ExplosionVfx {
     const helper = Math.abs(direction.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
     const right = new THREE.Vector3().crossVectors(direction, helper).normalize();
     const up = new THREE.Vector3().crossVectors(direction, right).normalize();
-    const stages = [0.18, 0.34, 0.55, 0.82, 1.15, 1.55, 2.0];
+    const stages = [0.15, 0.3, 0.48, 0.7, 0.95, 1.25, 1.6, 2.0, 2.5, 3.1];
     for (let i = 0; i < stages.length; i += 1) {
-      const along = ((i / (stages.length - 1)) - 0.5) * length * 0.8;
+      const along = ((i / (stages.length - 1)) - 0.5) * length * 0.84;
       const offset = new THREE.Vector3()
         .addScaledVector(direction, along)
         .addScaledVector(right, (Math.random() - 0.5) * length * 0.1)
         .addScaledVector(up, (Math.random() - 0.5) * length * 0.08);
       this.schedule(
         position.clone().add(offset),
-        length * (0.07 + Math.random() * 0.11),
+        length * (0.06 + Math.random() * 0.13),
         tier,
         stages[i],
         false,
@@ -986,7 +1207,7 @@ export class ExplosionVfx {
       );
     }
     // 最后补一轮残骸和冷等离子余烬
-    this.schedule(position.clone(), length * 0.3, tier, 2.35, false, false);
+    this.schedule(position.clone(), length * 0.28, tier, 3.8, false, false);
   }
 
   /** 沿舰体轴线的高速等离子喷流，打破爆炸的完美球形 */
@@ -1070,6 +1291,58 @@ export class ExplosionVfx {
     this.lights[index].intensity = 0;
   }
 
+  /** 长时间低强度余晖，让 7–15 秒后的烟尘和残骸还能被看到 */
+  private addLingeringLight(
+    position: THREE.Vector3,
+    size: number,
+    tier: number,
+    color: number,
+    duration: number,
+  ): void {
+    const lightIndex = this.acquireLight();
+    if (lightIndex < 0) return;
+    const light = this.lights[lightIndex];
+    light.position.copy(position);
+    light.color.setHex(color);
+    light.distance = Math.max(12000, size * 12);
+    light.intensity = Math.min(2.8e6, size * size * 3.0);
+    let blast = this.blasts.find((item) => !item.active);
+    if (!blast) {
+      blast = {
+        position: new THREE.Vector3(),
+        age: 0,
+        life: duration,
+        size,
+        tier,
+        final: false,
+        palette: paletteFor(tier, false),
+        lightIndex,
+        lightLife: duration,
+        seed: Math.random() * 100,
+        emitAcc: 0,
+        emitDuration: 0,
+        axis: new THREE.Vector3(0, 0, 1),
+        useAxis: false,
+        active: true,
+      };
+      this.blasts.push(blast);
+    }
+    blast.position.copy(position);
+    blast.age = 0;
+    blast.life = duration;
+    blast.size = size;
+    blast.tier = tier;
+    blast.final = false;
+    blast.palette = paletteFor(tier, false);
+    blast.lightIndex = lightIndex;
+    blast.lightLife = duration;
+    blast.seed = Math.random() * 100;
+    blast.emitAcc = 0;
+    blast.emitDuration = 0;
+    blast.useAxis = false;
+    blast.active = true;
+  }
+
   private emitFire(
     position: THREE.Vector3,
     size: number,
@@ -1124,7 +1397,7 @@ export class ExplosionVfx {
       if (pick < 0.05) {
         start = palette.core;
         end = palette.fire;
-      } else if (pick < 0.84) {
+      } else if (pick < 0.92) {
         start = palette.fire;
         end = this.hotEnd;
       } else {
@@ -1164,13 +1437,132 @@ export class ExplosionVfx {
     }
   }
 
+  /** 白热/青等离子的核心，保持短寿命和高亮度 */
+  private emitCore(position: THREE.Vector3, size: number, palette: ExplosionPalette, count: number): void {
+    for (let i = 0; i < count; i += 1) {
+      const dir = randomUnit();
+      const distance = Math.random() * size * 0.08;
+      const speed = size * (0.01 + Math.random() * 0.05);
+      this.tmpColorA.copy(i % 3 === 0 ? palette.plasma : palette.core);
+      this.tmpColorB.copy(palette.plasma).lerp(this.hotEnd, 0.4);
+      this.fire.spawn(
+        position.x + dir[0] * distance,
+        position.y + dir[1] * distance,
+        position.z + dir[2] * distance,
+        dir[0] * speed,
+        dir[1] * speed,
+        dir[2] * speed,
+        0.35 + Math.random() * 0.9,
+        size * (0.008 + Math.random() * 0.02),
+        1.8,
+        this.tmpColorA, this.tmpColorB,
+        0.22 + Math.random() * 0.14,
+        0.8,
+        Math.random() * Math.PI * 2,
+        (Math.random() - 0.5) * 2,
+      );
+    }
+  }
+
+  /** 冷却余烬：长寿命、慢速、从橙色冷却到暗红，给终末爆炸留出呼吸感 */
+  private emitEmbers(
+    position: THREE.Vector3,
+    size: number,
+    palette: ExplosionPalette,
+    count: number,
+    axis?: THREE.Vector3,
+  ): void {
+    for (let i = 0; i < count; i += 1) {
+      const dir = randomUnit();
+      const distance = Math.random() * size * 0.48;
+      const speed = size * (0.01 + Math.random() * 0.06);
+      let ox = position.x + dir[0] * distance;
+      let oy = position.y + dir[1] * distance;
+      let oz = position.z + dir[2] * distance;
+      let vx = dir[0] * speed;
+      let vy = dir[1] * speed;
+      let vz = dir[2] * speed;
+      if (axis) {
+        const along = (Math.random() * 2 - 1) * size * 0.45;
+        ox += axis.x * along;
+        oy += axis.y * along;
+        oz += axis.z * along;
+        const drift = size * (Math.random() - 0.5) * 0.02;
+        vx += axis.x * drift;
+        vy += axis.y * drift;
+        vz += axis.z * drift;
+      }
+      this.tmpColorA.copy(i % 4 === 0 ? palette.core : palette.fire).lerp(this.tmpWhite, Math.random() * 0.15);
+      this.tmpColorB.copy(this.hotEnd);
+      this.fire.spawn(
+        ox, oy, oz,
+        vx, vy, vz,
+        4.0 + Math.random() * 8.0,
+        size * (0.006 + Math.random() * 0.018),
+        1.3,
+        this.tmpColorA, this.tmpColorB,
+        0.14 + Math.random() * 0.12,
+        0.5,
+        Math.random() * Math.PI * 2,
+        (Math.random() - 0.5) * 0.8,
+      );
+    }
+  }
+
+  /** 长寿命冷却余烬：用火花场呈现，和火球粒子分开，保证 7–15 秒后仍有亮点 */
+  private emitLongEmbers(
+    position: THREE.Vector3,
+    size: number,
+    palette: ExplosionPalette,
+    count: number,
+    axis?: THREE.Vector3,
+  ): void {
+    for (let i = 0; i < count; i += 1) {
+      const dir = randomUnit();
+      const distance = Math.random() * size * 0.5;
+      const speed = size * (0.004 + Math.random() * 0.03);
+      let ox = position.x + dir[0] * distance;
+      let oy = position.y + dir[1] * distance;
+      let oz = position.z + dir[2] * distance;
+      let vx = dir[0] * speed;
+      let vy = dir[1] * speed;
+      let vz = dir[2] * speed;
+      if (axis) {
+        const along = (Math.random() * 2 - 1) * size * 0.48;
+        ox += axis.x * along;
+        oy += axis.y * along;
+        oz += axis.z * along;
+        const drift = size * (Math.random() - 0.5) * 0.015;
+        vx += axis.x * drift;
+        vy += axis.y * drift;
+        vz += axis.z * drift;
+      }
+      this.tmpColorA.copy(i % 3 === 0 ? palette.core : palette.fire).lerp(this.tmpWhite, Math.random() * 0.12);
+      this.tmpColorB.copy(this.hotEnd);
+      this.sparks.spawn(
+        ox, oy, oz,
+        vx, vy, vz,
+        8.0 + Math.random() * 10.0,
+        size * (0.008 + Math.random() * 0.024),
+        -0.15,
+        this.tmpColorA, this.tmpColorB,
+        0.42 + Math.random() * 0.18,
+        0.25,
+        Math.random() * Math.PI * 2,
+        (Math.random() - 0.5) * 0.5,
+      );
+    }
+  }
+
   private emitSmoke(position: THREE.Vector3, size: number, palette: ExplosionPalette, count: number, final: boolean): void {
     const capped = Math.min(count, 20);
     for (let i = 0; i < capped; i += 1) {
       const dir = randomUnit();
       const distance = Math.random() * size * 0.32;
       const speed = size * (0.01 + Math.random() * 0.06);
-      this.tmpColorA.copy(palette.smoke).multiplyScalar(0.9 + Math.random() * 0.7);
+      const warm = 0.42 + Math.random() * 0.12;
+      if (final) this.tmpColorA.setRGB(warm * 1.05, warm * 0.9, warm * 0.8);
+      else this.tmpColorA.copy(palette.smoke).multiplyScalar(0.9 + Math.random() * 0.7);
       this.tmpColorB.copy(palette.smoke).multiplyScalar(0.25);
       this.smoke.spawn(
         position.x + dir[0] * distance,
@@ -1179,11 +1571,11 @@ export class ExplosionVfx {
         dir[0] * speed,
         dir[1] * speed,
         dir[2] * speed,
-        2.4 + Math.random() * (final ? 5.0 : 3.5),
-        size * (0.04 + Math.random() * (final ? 0.08 : 0.08)),
-        final ? 2.2 : 2.6,
+        6.0 + Math.random() * (final ? 12.0 : 3.5),
+        size * (0.05 + Math.random() * (final ? 0.14 : 0.08)),
+        final ? 2.4 : 2.6,
         this.tmpColorA, this.tmpColorB,
-        0.05 + Math.random() * 0.06,
+        final ? (0.12 + Math.random() * 0.08) : (0.05 + Math.random() * 0.06),
         0.35,
         Math.random() * Math.PI * 2,
         (Math.random() - 0.5) * 0.25,
@@ -1319,6 +1711,7 @@ export class ExplosionVfx {
 
     this.flashPool.update(dt);
     this.fireGlowPool.update(dt);
+    this.smokeGlowPool.update(dt);
     this.ringPool.update(dt);
     this.debrisField.update(dt);
     this.fire.update(dt);
@@ -1341,6 +1734,7 @@ export class ExplosionVfx {
   dispose(): void {
     this.flashPool.dispose();
     this.fireGlowPool.dispose();
+    this.smokeGlowPool.dispose();
     this.ringPool.dispose();
     this.debrisField.dispose();
     this.fire.dispose();

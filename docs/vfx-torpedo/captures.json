@@ -166,52 +166,32 @@
   },
   {
     "scene": "finale",
-    "time": 0.03,
-    "file": "docs/vfx-torpedo/finale-01-t0.03.jpg"
+    "time": 0.05,
+    "file": "docs/vfx-torpedo/finale-01-t0.05.jpg"
   },
   {
     "scene": "finale",
-    "time": 0.1,
-    "file": "docs/vfx-torpedo/finale-02-t0.10.jpg"
+    "time": 0.3,
+    "file": "docs/vfx-torpedo/finale-02-t0.30.jpg"
   },
   {
     "scene": "finale",
-    "time": 0.22,
-    "file": "docs/vfx-torpedo/finale-03-t0.22.jpg"
+    "time": 1,
+    "file": "docs/vfx-torpedo/finale-03-t1.00.jpg"
   },
   {
     "scene": "finale",
-    "time": 0.4,
-    "file": "docs/vfx-torpedo/finale-04-t0.40.jpg"
-  },
-  {
-    "scene": "finale",
-    "time": 0.7,
-    "file": "docs/vfx-torpedo/finale-05-t0.70.jpg"
-  },
-  {
-    "scene": "finale",
-    "time": 1.15,
-    "file": "docs/vfx-torpedo/finale-06-t1.15.jpg"
-  },
-  {
-    "scene": "finale",
-    "time": 1.8,
-    "file": "docs/vfx-torpedo/finale-07-t1.80.jpg"
-  },
-  {
-    "scene": "finale",
-    "time": 2.8,
-    "file": "docs/vfx-torpedo/finale-08-t2.80.jpg"
+    "time": 2.5,
+    "file": "docs/vfx-torpedo/finale-04-t2.50.jpg"
   },
   {
     "scene": "finale",
     "time": 4.5,
-    "file": "docs/vfx-torpedo/finale-09-t4.50.jpg"
+    "file": "docs/vfx-torpedo/finale-05-t4.50.jpg"
   },
   {
     "scene": "finale",
     "time": 7.5,
-    "file": "docs/vfx-torpedo/finale-10-t7.50.jpg"
+    "file": "docs/vfx-torpedo/finale-06-t7.50.jpg"
   }
 ]
