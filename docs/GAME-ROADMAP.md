@@ -1,7 +1,7 @@
 # 夜航 · 游戏路线图
 
 **更新：** 2026-11-16  
-**当前提交：** `3485f77`  
+**当前提交：** `bea79f7`  
 **目标：** 从静态个人站升级为可飞行、可下船、可探索六组织母星的 Three.js 太空游戏。
 
 ---
@@ -153,6 +153,52 @@ Anvil Landing 切片：600 × 600 m、1 个 S pad、1 个 hero shop、3 个 NPC�
 
 ---
 
+## 3.5 资产与工具选型（2026-11-16 研究）
+
+### 本地资产优先级
+
+| 用途 | 首选 | 说明 |
+|---|---|---|
+| 200 m 级 hero 塔楼 | **K032 NeoShanghai** 220 m / 7.6M tris / 4K | 最完整的本地 hero 建筑 |
+| 高效 hero 塔楼 | **K038 Neo Tokyo 2** 238 m / 3.7M tris / 4K | 面数更省，适合多栋 |
+| 工业细节/堆叠 | **K046 Heavy Metal** 98 m / 183–332k tris / 4K | 堆 2–3 层做 200–300 m |
+| 中景/近景基座 | **K039 Sci-Fi Industrial** | 建筑壳过 5k；props 平均仅 158 tris，近景需换 kit |
+| 街道/店面 | **CityStreets 209** | 421 objects / 5.53M / 4K |
+| 角色 | **Modelshop Greebles** posed/rig | 155–177k tris/角色 |
+| greebles/管线 | K014 / K034 / Modelshop KitObjects | K039 props 不够近景 |
+
+**不要用**：K043 / K022（无贴图）、K021（无贴图 massing）、K015（1K 远景）、K025（无材质）。
+
+### Blender 插件
+
+- 先装 **Cargo（免费）**。
+- 可选付费：SCIFI Flex 2（$19.50）、MESHmachine（$44.99）、KIT OPS 4 Pro（$35）、True Terrain 5（$49）。
+- Blender 5.3 刚发布，部分插件只支持 5.2；建议 **5.2 LTS 建模 + 5.3 导出/验证**。
+- 不为 hero 购买城市生成器：Nodee Buildings 只适合现代背景；SceneCity 在 Apple Silicon 不可用；City Builder 3D 已停更；The City Generator 在 5.3 UI 损坏且面数爆炸。
+
+### 网上资产
+
+如果以后愿意买：
+
+- **Kitbash3D Lunar Base $145**：78 models / 3.2M polys / 28 PBR，最贴近航天港。
+- **BMS Modelshop Greebles $175**：近景 greeble/pipe/cable 最佳补充。
+- **BMS Cyberpunk $175**：2 hero + 2 mega + 37 modular + 67 neon；crowd 面数太高，不能全量进 WebGL。
+- **BMS AstroNova $175**：岩石/悬崖/陨石坑 + 200–250k hero astronaut/rover。
+
+但当前本地库已经有 K032/K038/K046/Modelshop，**不需要先买新建筑包**。
+
+### 公开 Web 许可红线
+
+Kitbash3D / BMS / Fab / ArtStation 等标准 EULA 禁止 standalone redistribution；Three.js 公开构建的 GLB 可被用户提取。保守做法：
+
+- 私有/离线 / 内部质量演示：可使用已购买本地资产。
+- 公开 Web 构建：只用 CC0 / CC-BY（带署名）/ 项目自有，或购买明确的再分发许可。
+- 公开版可把购买资产用于 Blender 参考渲染，游戏内替换为自建/CC0 资产。
+
+**当前本地方案：** 继续用 K032/K038/K046 做 hero 质量验证；公开版资产策略单独决策。
+
+---
+
 ## 4. 工作流
 
 | 工作流 | 内容 | 主要文件/资产 |
@@ -250,6 +296,9 @@ M1 具体交付：
 - `15-free-terrain-toolchain.md` — 免费地形工具链与许可/性能实测
 - `16-free-assets.md` — 免费资产与许可
 - `17-quality-assets.md` — 高质量 CC0 材质/植被/角色/工业道具、实测面数与下载链接
+- `18-blender-addons-generators.md` — Blender 插件/生成器选型与 5k 面数规则
+- `19-local-asset-audit.md` — 本地 3D 资产审计（K032/K038/K046/Modelshop 等）
+- `20-online-sci-fi-assets.md` — 网上高质量资产与许可
 
 已有设计底稿：
 
