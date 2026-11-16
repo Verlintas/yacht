@@ -297,8 +297,6 @@ export async function startGame(system: SystemData): Promise<void> {
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  // 座舱 pass：世界之后、hdr 钳制/bloom 之前；只在第一人称绘制
-  composer.addPass(new CockpitPass(cockpit.scene, cockpit.camera, () => cockpit.visible));
 
   // HDR 安全钳制：太阳/镜面高光偶尔会产生 NaN/Inf，bloom 会把一个坏像素扩散成整块黑屏
   const hdrClamp = new ShaderPass({
@@ -411,6 +409,9 @@ export async function startGame(system: SystemData): Promise<void> {
     `,
   });
   composer.addPass(warpPass);
+  // 座舱 pass 放在世界 warp 拖影之后：warp 只存在于座舱外的世界，
+  // 由 cockpit 几何/不透明 dash 正确遮挡，避免第一人称像透明玻璃。
+  composer.addPass(new CockpitPass(cockpit.scene, cockpit.camera, () => cockpit.visible));
   composer.addPass(new OutputPass());
 
   await step('编译着色器', 0.82);
@@ -707,7 +708,7 @@ export async function startGame(system: SystemData): Promise<void> {
   }
   if (params.get('debug') === '1') {
     (window as unknown as { __game?: Record<string, unknown> }).__game = {
-      renderer, scene, camera, flight: ctx.flight, cockpit, world: ctx.world, combat: ctx.combat, hud, player: playerState,
+      renderer, scene, camera, flight: ctx.flight, cockpit, world: ctx.world, combat: ctx.combat, hud, player: playerState, THREE,
     };
   }
 
@@ -2197,8 +2198,11 @@ function setupHud(
         projected.copy(position).project(ctx.camera);
         const behind = projected.z >= 1;
         const onScreen = !behind && Math.abs(projected.x) <= 1.02 && Math.abs(projected.y) <= 1.02;
-        const rawX = THREE.MathUtils.clamp((projected.x * 0.5 + 0.5) * viewportW, 38, viewportW - 38);
-        const rawY = THREE.MathUtils.clamp((-projected.y * 0.5 + 0.5) * viewportH, 86, viewportH - 148);
+        // 左右保留给 HUD 栏 / radar，避免目标框、标签和红条被裁切
+        const safeLeft = viewportW <= 1280 ? 260 : 300;
+        const safeRight = viewportW - (viewportW * 0.03 + 212 + 54);
+        const rawX = THREE.MathUtils.clamp((projected.x * 0.5 + 0.5) * viewportW, safeLeft, safeRight);
+        const rawY = THREE.MathUtils.clamp((-projected.y * 0.5 + 0.5) * viewportH, 150, viewportH - 170);
         if (!smooth.init) {
           smooth.x = rawX;
           smooth.y = rawY;
@@ -2212,6 +2216,7 @@ function setupHud(
         el.style.setProperty('--y', `${smooth.y.toFixed(1)}px`);
         el.dataset.offscreen = String(!onScreen);
         el.dataset.kind = kind;
+        el.dataset.side = smooth.x > viewportW * 0.58 ? 'right' : 'center';
         el.classList.add('is-on');
         writeText(nameEl, `${kind}-name-${label}`, label);
         writeText(distEl, `${kind}-dist-${label}`, distance);

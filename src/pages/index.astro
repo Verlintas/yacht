@@ -1300,6 +1300,7 @@ const systemData = {
   #cockpit {
     position: absolute;
     inset: 0;
+    z-index: 2;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.28s ease;
@@ -3179,7 +3180,7 @@ const systemData = {
   .ck-weapons {
     position: absolute;
     right: 3vw;
-    top: 12.6vh;
+    top: 14.2vh;
     width: 224px;
     display: flex;
     flex-direction: column;
@@ -3561,7 +3562,8 @@ const systemData = {
   .ck-radar-legend .is-neutral { color: rgba(134, 200, 213, 0.8); }
 
   .ck-enemy-card {
-    width: 212px;
+    width: 100%;
+    max-width: 212px;
     padding-top: 5px;
     border-top: 1px solid var(--ck-hairline);
     opacity: 0;
@@ -3876,6 +3878,23 @@ const systemData = {
     align-items: center;
     gap: 1px;
     white-space: nowrap;
+    max-width: 190px;
+    overflow: hidden;
+  }
+
+  .ck-target[data-side="right"] .ck-target-label {
+    left: auto;
+    right: 0;
+    transform: none;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .ck-target-label b,
+  .ck-target-label em {
+    max-width: 190px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .ck-target-label b {
@@ -3905,6 +3924,12 @@ const systemData = {
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+
+  .ck-target[data-side="right"] .ck-target-bars {
+    left: auto;
+    right: 0;
+    transform: none;
   }
 
   .ck-target-bars i {
@@ -4196,7 +4221,7 @@ const systemData = {
     .ck-right { width: 184px; }
     .ck-radar { width: 168px; }
     .ck-radar-wrap { width: 168px; height: 168px; }
-    .ck-weapons { width: 196px; }
+    .ck-weapons { width: 196px; top: 15.2vh; }
     .ck-alt-value b { font-size: 24px; }
     .ck-ladder { width: 520px; height: 340px; }
     .ck-warp { width: 208px; height: 208px; }

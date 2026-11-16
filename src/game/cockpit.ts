@@ -131,6 +131,21 @@ const DECAL_LABELS = [
   ['HULL', '#ffb45f'],
   ['GRAV', '#9ff5e3'],
   ['O2', '#9ff5e3'],
+  ['MASTER ARM', '#ffb45f'],
+  ['ECM', '#9ff5e3'],
+  ['LIGHTS', '#9ff5e3'],
+  ['GEAR', '#9ff5e3'],
+  ['FUEL', '#ffb45f'],
+  ['AUX', '#d8b36c'],
+  ['SYS', '#9ff5e3'],
+  ['PANEL A', '#c9d9d4'],
+  ['POWER', '#9ff5e3'],
+  ['BRAKE', '#ffb45f'],
+  ['TRIM', '#d8b36c'],
+  ['RCS', '#9ff5e3'],
+  ['DATA', '#9ff5e3'],
+  ['ENGINE', '#ffb45f'],
+  ['CANOPY', '#9ff5e3'],
 ] as const;
 
 function makeDecalAtlas(): { texture: THREE.CanvasTexture; uv: Map<string, [number, number, number, number]> } {
@@ -313,173 +328,237 @@ function drawMfd(
   const { ctx, canvas } = screen;
   const w = canvas.width;
   const h = canvas.height;
+  const pad = 22;
   ctx.clearRect(0, 0, w, h);
   const bg = ctx.createLinearGradient(0, 0, 0, h);
-  bg.addColorStop(0, '#061416');
-  bg.addColorStop(1, '#020a0b');
+  bg.addColorStop(0, '#07191b');
+  bg.addColorStop(0.55, '#041012');
+  bg.addColorStop(1, '#02090a');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);
   panelLines(ctx, w, h);
 
-  const dim = 0.35 + boot * 0.65;
+  const dim = 0.28 + boot * 0.72;
+  const muted = 'rgba(159,245,227,0.66)';
+  const bright = '#e6f7f1';
+  const brass = 'rgba(216,179,108,0.95)';
+  const ice = 'rgba(143,216,255,0.95)';
+  const amber = 'rgba(255,180,95,0.95)';
+  const red = 'rgba(255,95,69,0.96)';
+  const formatAlt = (alt: number | null): string => {
+    if (alt == null) return '—';
+    if (alt >= 100_000_000) return 'ORBIT';
+    if (alt >= 100_000) return `${Math.round(alt / 1000)} km`;
+    return `${Math.round(alt)} m`;
+  };
+
   ctx.save();
   ctx.globalAlpha = dim;
-  ctx.font = `600 18px ${MONO}`;
-  ctx.fillStyle = 'rgba(159,245,227,0.86)';
-  ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
+  ctx.font = `600 28px ${MONO}`;
+  ctx.fillStyle = bright;
+  ctx.shadowColor = 'rgba(89,224,200,0.45)';
+  ctx.shadowBlur = 6;
 
   if (screen.role === 'flight') {
-    ctx.fillText('FLIGHT / ATTITUDE', 22, 18);
+    ctx.fillText('FLIGHT / ATTITUDE', pad, 14);
+    ctx.shadowBlur = 0;
     ctx.textAlign = 'right';
-    ctx.fillStyle = 'rgba(159,245,227,0.54)';
-    ctx.font = `500 14px ${MONO}`;
-    ctx.fillText(`${t.shipCode}  ·  NAV`, w - 22, 20);
+    ctx.fillStyle = muted;
+    ctx.font = `500 20px ${MONO}`;
+    ctx.fillText(`${t.shipCode} · NAV`, w - pad, 18);
 
-    // 姿态球/地平线
-    const cx = w / 2;
-    const cy = h / 2 + 8;
+    // Left data: SPD / ALT / V/S
+    ctx.textAlign = 'left';
+    ctx.font = `600 22px ${MONO}`;
+    ctx.fillStyle = muted;
+    ctx.fillText('SPD', pad, 64);
+    ctx.font = `600 54px ${MONO}`;
+    ctx.fillStyle = bright;
+    ctx.fillText(t.speed > 9999 ? (t.speed / 1000).toFixed(1) : String(Math.round(t.speed)), pad, 84);
+    ctx.font = `500 20px ${MONO}`;
+    ctx.fillStyle = muted;
+    ctx.fillText(t.speed > 9999 ? 'km/s' : 'm/s', pad, 136);
+    ctx.font = `600 22px ${MONO}`;
+    ctx.fillStyle = muted;
+    ctx.fillText('ALT', pad, 168);
+    ctx.font = `600 46px ${MONO}`;
+    ctx.fillStyle = bright;
+    ctx.fillText(formatAlt(t.altitude), pad, 188);
+    ctx.font = `500 20px ${MONO}`;
+    ctx.fillStyle = muted;
+    ctx.fillText(`V/S ${t.vs == null ? '—' : `${t.vs >= 0 ? '+' : ''}${Math.round(t.vs)} m/s`}`, pad, 234);
+
+    // Attitude ball
+    const cx = w * 0.57;
+    const cy = h * 0.52;
     ctx.save();
     ctx.translate(cx, cy);
+    ctx.strokeStyle = 'rgba(159,245,227,0.24)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0, 0, Math.min(w, h) * 0.34, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.rotate(-THREE.MathUtils.degToRad(t.rollDeg));
-    const pitchPx = THREE.MathUtils.clamp(t.pitchDeg * 5.6, -h * 0.58, h * 0.58);
+    const pitchPx = THREE.MathUtils.clamp(t.pitchDeg * 6.2, -h * 0.52, h * 0.52);
     ctx.translate(0, pitchPx);
-    ctx.strokeStyle = 'rgba(159,245,227,0.75)';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(159,245,227,0.88)';
+    ctx.lineWidth = 2.4;
     ctx.beginPath();
     ctx.moveTo(-150, 0);
-    ctx.lineTo(-46, 0);
-    ctx.moveTo(46, 0);
+    ctx.lineTo(-38, 0);
+    ctx.moveTo(38, 0);
     ctx.lineTo(150, 0);
     ctx.stroke();
-    ctx.strokeStyle = 'rgba(159,245,227,0.36)';
-    ctx.lineWidth = 1;
-    for (const deg of [-20, -10, 10, 20]) {
-      const y = -deg * 5.6;
-      const len = deg % 20 === 0 ? 74 : 46;
+    ctx.strokeStyle = 'rgba(159,245,227,0.42)';
+    ctx.lineWidth = 1.2;
+    for (const deg of [-30, -20, -10, 10, 20, 30]) {
+      const y = -deg * 6.2;
+      const len = deg % 20 === 0 ? 88 : 54;
       ctx.beginPath();
       ctx.moveTo(-len, y);
-      ctx.lineTo(-26, y);
-      ctx.moveTo(26, y);
+      ctx.lineTo(-30, y);
+      ctx.moveTo(30, y);
       ctx.lineTo(len, y);
       ctx.stroke();
       if (deg % 20 === 0) {
-        ctx.font = `500 13px ${MONO}`;
-        ctx.fillStyle = 'rgba(159,245,227,0.5)';
-        ctx.fillText(String(deg), 34, y - 7);
+        ctx.font = `500 19px ${MONO}`;
+        ctx.fillStyle = 'rgba(159,245,227,0.62)';
+        ctx.textAlign = 'right';
+        ctx.fillText(String(deg), -len - 8, y - 8);
       }
     }
     ctx.restore();
     // boresight
-    ctx.strokeStyle = 'rgba(159,245,227,0.95)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(230,247,241,0.95)';
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
-    ctx.arc(cx, cy, 17, 0, Math.PI * 2);
-    ctx.moveTo(cx - 30, cy);
-    ctx.lineTo(cx - 22, cy);
-    ctx.moveTo(cx + 22, cy);
-    ctx.lineTo(cx + 30, cy);
-    ctx.moveTo(cx, cy - 30);
-    ctx.lineTo(cx, cy - 22);
-    ctx.moveTo(cx, cy + 22);
-    ctx.lineTo(cx, cy + 30);
+    ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+    ctx.moveTo(cx - 28, cy);
+    ctx.lineTo(cx - 20, cy);
+    ctx.moveTo(cx + 20, cy);
+    ctx.lineTo(cx + 28, cy);
+    ctx.moveTo(cx, cy - 28);
+    ctx.lineTo(cx, cy - 20);
+    ctx.moveTo(cx, cy + 20);
+    ctx.lineTo(cx, cy + 28);
     ctx.stroke();
 
+    // Bottom: throttle / warp / heading
     ctx.textAlign = 'left';
-    ctx.font = `600 15px ${MONO}`;
-    ctx.fillStyle = 'rgba(159,245,227,0.7)';
-    ctx.fillText('HDG', 22, h - 82);
-    ctx.font = `600 25px ${MONO}`;
-    ctx.fillStyle = '#e6f7f1';
-    ctx.fillText(String(Math.round(t.headingDeg)).padStart(3, '0') + '°', 22, h - 62);
+    ctx.font = `600 22px ${MONO}`;
+    ctx.fillStyle = muted;
+    ctx.fillText('THR', pad, h - 54);
+    drawBar(ctx, 76, h - 50, 150, 8, t.throttle, 'rgba(159,245,227,0.9)');
+    ctx.fillStyle = bright;
+    ctx.font = `600 22px ${MONO}`;
+    ctx.fillText(`${Math.round(t.throttle * 100)}%`, 238, h - 56);
+    ctx.fillStyle = ice;
+    ctx.font = `600 17px ${MONO}`;
+    ctx.fillText(t.warpPhase === 'idle' ? 'WARP STANDBY' : `WARP ${t.warpPhase.toUpperCase()}`, pad, h - 30);
+    drawBar(ctx, 182, h - 26, 130, 6, t.warpPhase === 'idle' ? 0 : Math.max(0.02, t.warpChargeRatio), 'rgba(143,216,255,0.92)');
     ctx.textAlign = 'right';
-    ctx.font = `600 15px ${MONO}`;
-    ctx.fillStyle = 'rgba(159,245,227,0.7)';
-    ctx.fillText('THR', w - 22, h - 82);
-    ctx.font = `600 25px ${MONO}`;
-    ctx.fillStyle = '#e6f7f1';
-    ctx.fillText(`${Math.round(t.throttle * 100)}%`, w - 22, h - 62);
-
-    // warp 细条
-    const warp = t.warpPhase === 'idle' ? 0 : Math.max(0.02, t.warpChargeRatio);
-    ctx.textAlign = 'left';
-    ctx.font = `500 13px ${MONO}`;
-    ctx.fillStyle = 'rgba(143,216,255,0.75)';
-    ctx.fillText(t.warpPhase === 'idle' ? 'WARP STANDBY' : `WARP ${t.warpPhase.toUpperCase()}`, 22, h - 36);
-    drawBar(ctx, 132, h - 33, 160, 5, warp, 'rgba(143,216,255,0.9)');
+    ctx.font = `600 22px ${MONO}`;
+    ctx.fillStyle = muted;
+    ctx.fillText('HDG', w - pad, h - 54);
+    ctx.font = `600 32px ${MONO}`;
+    ctx.fillStyle = bright;
+    ctx.fillText(`${String(Math.round(t.headingDeg) % 360).padStart(3, '0')}°`, w - pad, h - 36);
   } else if (screen.role === 'systems') {
-    ctx.fillText('SYSTEMS / DAMAGE', 22, 18);
-    ctx.fillStyle = 'rgba(159,245,227,0.54)';
-    ctx.font = `500 14px ${MONO}`;
+    ctx.fillText('SYSTEMS / DAMAGE', pad, 14);
+    ctx.shadowBlur = 0;
     ctx.textAlign = 'right';
-    ctx.fillText(`${t.shipCode}  ·  ${t.shipClass.toUpperCase()}`, w - 22, 20);
+    ctx.fillStyle = muted;
+    ctx.font = `500 20px ${MONO}`;
+    ctx.fillText(`${t.shipCode} · ${t.shipClass.toUpperCase()}`, w - pad, 18);
 
-    // 舰体轮廓
-    const cx = w * 0.5;
-    const cy = 120;
+    // Ship schematic
+    const cx = w * 0.29;
+    const cy = h * 0.42;
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.strokeStyle = 'rgba(159,245,227,0.72)';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(159,245,227,0.82)';
+    ctx.lineWidth = 2.2;
     ctx.beginPath();
-    ctx.moveTo(0, -62);
-    ctx.lineTo(22, -30);
-    ctx.lineTo(66, -4);
-    ctx.lineTo(38, 12);
-    ctx.lineTo(22, 46);
-    ctx.lineTo(0, 34);
-    ctx.lineTo(-22, 46);
-    ctx.lineTo(-38, 12);
-    ctx.lineTo(-66, -4);
-    ctx.lineTo(-22, -30);
+    ctx.moveTo(0, -70);
+    ctx.lineTo(24, -34);
+    ctx.lineTo(72, -5);
+    ctx.lineTo(42, 14);
+    ctx.lineTo(24, 52);
+    ctx.lineTo(0, 38);
+    ctx.lineTo(-24, 52);
+    ctx.lineTo(-42, 14);
+    ctx.lineTo(-72, -5);
+    ctx.lineTo(-24, -34);
     ctx.closePath();
     ctx.stroke();
-    ctx.strokeStyle = 'rgba(159,245,227,0.24)';
+    ctx.strokeStyle = 'rgba(159,245,227,0.26)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(0, -62);
-    ctx.lineTo(0, 34);
-    ctx.moveTo(-38, 12);
-    ctx.lineTo(38, 12);
+    ctx.moveTo(0, -70);
+    ctx.lineTo(0, 38);
+    ctx.moveTo(-42, 14);
+    ctx.lineTo(42, 14);
+    ctx.moveTo(-24, -34);
+    ctx.lineTo(24, -34);
     ctx.stroke();
-    ctx.fillStyle = 'rgba(255,180,95,0.7)';
-    ctx.fillRect(-4, -42, 8, 24);
+    // engines / damage highlights
+    ctx.fillStyle = t.parts.engine < 0.5 ? red : 'rgba(255,180,95,0.82)';
+    ctx.fillRect(-42, 28, 12, 18);
+    ctx.fillRect(30, 28, 12, 18);
+    ctx.fillStyle = t.parts.weapon < 0.5 ? red : 'rgba(159,245,227,0.6)';
+    ctx.fillRect(-72, -7, 16, 5);
+    ctx.fillRect(56, -7, 16, 5);
+    ctx.fillStyle = t.parts.cockpit < 0.5 ? red : 'rgba(143,216,255,0.7)';
+    ctx.fillRect(-5, -58, 10, 20);
     ctx.restore();
 
     const items: Array<[string, number, string]> = [
-      ['HULL', t.hullRatio, t.hullRatio < 0.3 ? 'rgba(255,95,69,0.95)' : 'rgba(159,245,227,0.9)'],
-      ['SHIELD', t.shieldRatio, t.shieldRatio <= 0 ? 'rgba(255,95,69,0.9)' : 'rgba(143,216,255,0.95)'],
-      ['ENGINE', t.parts.engine, 'rgba(255,180,95,0.9)'],
-      ['WEAPON', t.parts.weapon, 'rgba(159,245,227,0.9)'],
-      ['CANOPY', t.parts.cockpit, 'rgba(159,245,227,0.9)'],
+      ['HULL', t.hullRatio, t.hullRatio < 0.3 ? red : 'rgba(159,245,227,0.92)'],
+      ['SHIELD', t.shieldRatio, t.shieldRatio <= 0 ? red : 'rgba(143,216,255,0.95)'],
+      ['ENGINE', t.parts.engine, t.parts.engine < 0.5 ? amber : 'rgba(159,245,227,0.9)'],
+      ['WEAPON', t.parts.weapon, t.parts.weapon < 0.5 ? amber : 'rgba(159,245,227,0.9)'],
+      ['CANOPY', t.parts.cockpit, t.parts.cockpit < 0.5 ? amber : 'rgba(159,245,227,0.9)'],
     ];
-    let y = h - 168;
+    let y = 70;
     for (const [label, ratio, color] of items) {
       ctx.textAlign = 'left';
-      ctx.font = `600 13px ${MONO}`;
-      ctx.fillStyle = 'rgba(202,242,234,0.76)';
-      ctx.fillText(label, 22, y);
-      drawBar(ctx, 108, y + 2, w - 160, 7, ratio, color);
+      ctx.font = `600 22px ${MONO}`;
+      ctx.fillStyle = muted;
+      ctx.fillText(label, w * 0.53, y);
+      drawBar(ctx, w * 0.53, y + 22, w * 0.34, 8, ratio, color);
       ctx.textAlign = 'right';
-      ctx.fillStyle = 'rgba(230,247,241,0.9)';
-      ctx.font = `600 13px ${MONO}`;
-      ctx.fillText(`${Math.round(ratio * 100)}%`, w - 22, y);
-      y += 26;
+      ctx.fillStyle = bright;
+      ctx.font = `600 22px ${MONO}`;
+      ctx.fillText(`${Math.round(ratio * 100)}%`, w - pad, y);
+      y += 36;
     }
-  } else {
-    ctx.fillText('NAV / CONTACTS', 22, 18);
+    const caution = t.hullRatio < 0.3 || t.shieldRatio <= 0.001 || t.parts.engine < 0.5 || t.parts.cockpit < 0.5;
+    ctx.textAlign = 'left';
+    ctx.font = `600 22px ${MONO}`;
+    ctx.fillStyle = caution ? amber : 'rgba(159,245,227,0.82)';
+    ctx.fillText(caution ? 'CAUTION · CHECK SYSTEMS' : 'SYSTEMS NOMINAL', pad, h - 34);
     ctx.textAlign = 'right';
-    ctx.fillStyle = 'rgba(159,245,227,0.54)';
-    ctx.font = `500 14px ${MONO}`;
-    ctx.fillText(`HDG ${String(Math.round(t.headingDeg)).padStart(3, '0')}°`, w - 22, 20);
+    ctx.fillStyle = muted;
+    ctx.font = `500 20px ${MONO}`;
+    ctx.fillText(`ENG ${Math.round(t.parts.engine * 100)} · WPN ${Math.round(t.parts.weapon * 100)} · CPT ${Math.round(t.parts.cockpit * 100)}`, w - pad, h - 32);
+  } else {
+    ctx.fillText('NAV / CONTACTS', pad, 14);
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'right';
+    ctx.fillStyle = muted;
+    ctx.font = `500 20px ${MONO}`;
+    ctx.fillText(`HDG ${String(Math.round(t.headingDeg) % 360).padStart(3, '0')}°`, w - pad, 18);
 
-    const cx = w * 0.5;
-    const cy = h * 0.52;
-    const r = Math.min(w, h) * 0.37;
+    // Radar plot
+    const cx = w * 0.34;
+    const cy = h * 0.48;
+    const r = Math.min(w * 0.3, h * 0.34);
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.strokeStyle = 'rgba(159,245,227,0.24)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(159,245,227,0.28)';
+    ctx.lineWidth = 1.2;
     for (const p of [0.34, 0.67, 1]) {
       ctx.beginPath();
       ctx.arc(0, 0, r * p, 0, Math.PI * 2);
@@ -491,64 +570,97 @@ function drawMfd(
     ctx.moveTo(0, -r);
     ctx.lineTo(0, r);
     ctx.stroke();
-    // 前方扇区
-    ctx.fillStyle = 'rgba(159,245,227,0.045)';
+    ctx.fillStyle = 'rgba(159,245,227,0.05)';
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.arc(0, 0, r, -Math.PI / 2 - 0.42, -Math.PI / 2 + 0.42);
     ctx.closePath();
     ctx.fill();
+    ctx.strokeStyle = 'rgba(159,245,227,0.18)';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.sin(0.7) * r, -Math.cos(0.7) * r);
+    ctx.stroke();
 
-    const place = (bearing: number | null, distance: number | null, kind: 'target' | 'enemy' | 'body'): void => {
+    const place = (bearing: number | null, distance: number | null, kind: 'target' | 'enemy'): void => {
       if (bearing == null || distance == null) return;
       const a = THREE.MathUtils.degToRad(bearing);
       const rad = Math.min(1, distance / 60000) * r;
       const x = Math.sin(a) * rad;
       const y = -Math.cos(a) * rad;
-      ctx.strokeStyle = kind === 'enemy' ? 'rgba(255,95,69,0.9)' : 'rgba(216,179,108,0.9)';
-      ctx.fillStyle = kind === 'enemy' ? 'rgba(255,95,69,0.9)' : 'rgba(216,179,108,0.95)';
-      ctx.lineWidth = 1.2;
+      ctx.fillStyle = kind === 'enemy' ? red : brass;
+      ctx.strokeStyle = kind === 'enemy' ? red : brass;
+      ctx.lineWidth = 1.5;
       if (kind === 'enemy') {
         ctx.beginPath();
-        ctx.moveTo(x, y - 5);
-        ctx.lineTo(x + 5, y + 4);
-        ctx.lineTo(x - 5, y + 4);
+        ctx.moveTo(x, y - 6);
+        ctx.lineTo(x + 6, y + 5);
+        ctx.lineTo(x - 6, y + 5);
         ctx.closePath();
         ctx.fill();
       } else {
         ctx.beginPath();
-        ctx.moveTo(x, y - 5);
-        ctx.lineTo(x + 5, y);
-        ctx.lineTo(x, y + 5);
-        ctx.lineTo(x - 5, y);
+        ctx.moveTo(x, y - 6);
+        ctx.lineTo(x + 6, y);
+        ctx.lineTo(x, y + 6);
+        ctx.lineTo(x - 6, y);
         ctx.closePath();
         ctx.stroke();
       }
     };
     place(t.targetBearing, t.targetDistance, 'target');
     place(t.enemyBearing, t.enemyDistance, 'enemy');
-    ctx.fillStyle = 'rgba(230,247,241,0.95)';
+    ctx.fillStyle = bright;
     ctx.beginPath();
-    ctx.moveTo(0, -8);
-    ctx.lineTo(-4.5, 6);
-    ctx.lineTo(0, 3);
-    ctx.lineTo(4.5, 6);
+    ctx.moveTo(0, -9);
+    ctx.lineTo(-5, 7);
+    ctx.lineTo(0, 4);
+    ctx.lineTo(5, 7);
     ctx.closePath();
     ctx.fill();
     ctx.restore();
 
+    // Contact list
+    const lx = w * 0.68;
     ctx.textAlign = 'left';
-    ctx.font = `600 14px ${MONO}`;
-    ctx.fillStyle = 'rgba(216,179,108,0.9)';
-    ctx.fillText('PRIMARY', 22, h - 58);
-    ctx.fillStyle = 'rgba(230,247,241,0.92)';
-    ctx.font = `600 18px ${MONO}`;
-    ctx.fillText(t.targetName ?? 'NO TARGET', 22, h - 38, w - 170);
-    ctx.textAlign = 'right';
-    ctx.fillStyle = 'rgba(216,179,108,0.9)';
-    ctx.font = `600 15px ${MONO}`;
-    ctx.fillText(t.targetDistance == null ? '—' : `${(t.targetDistance / 1000).toFixed(1)} km`, w - 22, h - 38);
+    ctx.font = `600 19px ${MONO}`;
+    ctx.fillStyle = muted;
+    ctx.fillText('RANGE 60 KM', lx, 66);
+    ctx.font = `600 22px ${MONO}`;
+    ctx.fillStyle = brass;
+    ctx.fillText('◆ PRIMARY', lx, 102);
+    ctx.font = `600 28px ${MONO}`;
+    ctx.fillStyle = bright;
+    ctx.fillText(t.targetName ?? 'NO TARGET', lx, 124, w - lx - pad);
+    ctx.font = `500 20px ${MONO}`;
+    ctx.fillStyle = brass;
+    ctx.fillText(t.targetDistance == null ? '—' : `${(t.targetDistance / 1000).toFixed(1)} km · BRG ${String(Math.round(((t.targetBearing ?? 0) + 360) % 360) % 360).padStart(3, '0')}°`, lx, 154);
+    ctx.font = `600 22px ${MONO}`;
+    ctx.fillStyle = red;
+    ctx.fillText('▲ HOSTILE', lx, 198);
+    ctx.font = `600 24px ${MONO}`;
+    ctx.fillStyle = 'rgba(255,154,130,0.95)';
+    ctx.fillText(t.enemyName ?? '—', lx, 218, w - lx - pad);
+    ctx.font = `500 20px ${MONO}`;
+    ctx.fillStyle = red;
+    ctx.fillText(t.enemyDistance == null ? '—' : `${(t.enemyDistance / 1000).toFixed(1)} km · BRG ${String(Math.round(((t.enemyBearing ?? 0) + 360) % 360) % 360).padStart(3, '0')}°`, lx, 246);
+    ctx.fillStyle = 'rgba(159,245,227,0.55)';
+    ctx.font = `500 19px ${MONO}`;
+    ctx.fillText('SENSOR ACTIVE · 2.5D', pad, h - 30);
   }
+
+  // scanlines + edge vignette（不盖住文字，只做玻璃屏质感）
+  ctx.restore();
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  for (let y = 0; y < h; y += 4) ctx.fillRect(0, y, w, 1);
+  const vignette = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.2, w / 2, h / 2, Math.max(w, h) * 0.7);
+  vignette.addColorStop(0, 'rgba(0,0,0,0)');
+  vignette.addColorStop(1, 'rgba(0,0,0,0.34)');
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, w, h);
   ctx.restore();
   screen.texture.needsUpdate = true;
 }
@@ -607,7 +719,7 @@ export class CockpitInterior {
 
     this.materials.add(this.decalMaterial);
     this.tealGlow = new THREE.MeshBasicMaterial({ color: 0x59e0c8, toneMapped: false });
-    this.tealDim = new THREE.MeshBasicMaterial({ color: 0x2f8f83, toneMapped: false });
+    this.tealDim = new THREE.MeshBasicMaterial({ color: 0x1c5a53 });
     this.amberGlow = new THREE.MeshBasicMaterial({ color: 0xffb45f, toneMapped: false });
     this.redGlow = new THREE.MeshBasicMaterial({ color: 0xff5f45, toneMapped: false });
     this.materials.add(this.tealGlow);
@@ -915,6 +1027,44 @@ export class CockpitInterior {
       const geometry = new THREE.LatheGeometry(points, 14);
       return addMesh(geometry, material, x, y, z, parent, Math.PI / 2, 0, 0);
     };
+    const barBetween = (
+      a: THREE.Vector3,
+      b: THREE.Vector3,
+      width: number,
+      depth: number,
+      material: THREE.Material,
+      parent: THREE.Object3D = root,
+    ): THREE.Mesh | null => {
+      const delta = b.clone().sub(a);
+      const length = delta.length();
+      if (length < 1e-6) return null;
+      const geometry = new RoundedBoxGeometry(width, depth, length, 2, Math.min(width, depth) * 0.18);
+      const mesh = addMesh(geometry, material, (a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2, parent);
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), delta.normalize());
+      return mesh;
+    };
+    const controlKnob = (
+      x: number,
+      y: number,
+      z: number,
+      size: number,
+      parent: THREE.Object3D = root,
+    ): void => {
+      // 黄铜底座 + 深色滚花旋钮 + 奶油色指示线，替代一排黑球
+      cyl(size * 0.78, size * 0.82, 0.005, brass, x, y, z - 0.003, parent, Math.PI / 2, 0, 0, 14);
+      cyl(size * 0.64, size * 0.64, 0.009, dark, x, y, z + 0.006, parent, Math.PI / 2, 0, 0, 14);
+      const points = [
+        new THREE.Vector2(0.001, 0),
+        new THREE.Vector2(size * 0.6, 0),
+        new THREE.Vector2(size * 0.68, size * 0.22),
+        new THREE.Vector2(size * 0.62, size * 0.48),
+        new THREE.Vector2(size * 0.48, size * 0.72),
+        new THREE.Vector2(size * 0.22, size * 0.84),
+        new THREE.Vector2(0.001, size * 0.84),
+      ];
+      addMesh(new THREE.LatheGeometry(points, 14), rubber, x, y, z + 0.012, parent, Math.PI / 2, 0, 0);
+      box(size * 0.07, size * 0.5, 0.0015, cream, x, y + size * 0.18, z + 0.012 + size * 0.82, parent, 0.0004, 1);
+    };
 
     /* ── 地板 / 膝部 ───────────────────────────────────── */
     box(1.62, 0.025, 1.65, black, 0, -0.82, -0.25, root, 0.008, 2);
@@ -930,8 +1080,8 @@ export class CockpitInterior {
     box(0.98, 0.15, 0.34, titanium, 0, -0.375, -0.82, root, 0.022, 3);
     box(0.9, 0.32, 0.3, titaniumDark, 0, -0.55, -0.79, root, 0.026, 3);
     box(1.03, 0.05, 0.42, titaniumDark, 0, -0.255, -0.80, root, 0.016, 3, -0.105);
-    // 前缘遮光板：压住顶部反光，形成深色仪表檐
-    box(1.005, 0.014, 0.15, black, 0, -0.226, -0.645, root, 0.004, 2, -0.1);
+    // 前缘遮光板：压住顶部反光，形成深色仪表檐；放低避免切掉 MFD 顶部
+    box(1.005, 0.014, 0.15, black, 0, -0.248, -0.645, root, 0.004, 2, -0.1);
     box(1.01, 0.004, 0.018, cream, 0, -0.218, -0.575, root, 0.0015, 1, -0.1);
     // 左右翼面 + 中央 binnacle：打破一整块平板
     for (const side of [-1, 1]) {
@@ -966,7 +1116,7 @@ export class CockpitInterior {
     decal('VX-9', 0.014, -0.4, -0.415, -0.6465, root, 0, 0, 0, 4.2);
     decal('NIGHT FERRY', 0.008, -0.4, -0.397, -0.6465, root, 0, 0, 0, 7.8);
     // 缝隙/灯带
-    box(0.84, 0.006, 0.008, this.tealGlow, 0, -0.505, -0.652, root, 0.002, 1);
+    box(0.84, 0.004, 0.006, this.tealDim, 0, -0.505, -0.652, root, 0.0015, 1);
     box(0.55, 0.004, 0.006, this.amberGlow, 0, -0.475, -0.653, root, 0.001, 1);
     // 下沿通风口
     for (const side of [-1, 1]) {
@@ -996,8 +1146,13 @@ export class CockpitInterior {
       }
     }
     for (let i = 0; i < 4; i += 1) {
-      knob(-0.27 + i * 0.055, -0.445, -0.641, 0.021, root);
-      knob(0.15 + i * 0.055, -0.445, -0.641, 0.021, root);
+      controlKnob(-0.27 + i * 0.055, -0.445, -0.641, 0.021, root);
+      controlKnob(0.15 + i * 0.055, -0.445, -0.641, 0.021, root);
+    }
+    // 旋钮下方的小标签
+    for (let i = 0; i < 4; i += 1) {
+      decal(i % 2 === 0 ? 'PWR' : 'SYS', 0.0045, -0.27 + i * 0.055, -0.472, -0.647, root, 0, 0, 0, 4.6);
+      decal(i % 2 === 0 ? 'AUX' : 'ECM', 0.0045, 0.15 + i * 0.055, -0.472, -0.647, root, 0, 0, 0, 4.6);
     }
     for (let i = 0; i < 7; i += 1) {
       const x = -0.32 + i * 0.107;
@@ -1005,6 +1160,58 @@ export class CockpitInterior {
       box(0.006, 0.026, 0.007, i === 1 || i === 5 ? this.amberGlow : cream, x, -0.212, -0.716, root, 0.001, 1, 0.42, 0, 0);
       box(0.032, 0.003, 0.023, brass, x, -0.221, -0.724, root, 0.001, 1, 0.08, 0, 0);
     }
+    // 面板接缝 / 磨损边 / 铆钉
+    for (const y of [-0.335, -0.49, -0.535]) {
+      box(0.93, 0.0025, 0.005, black, 0, y, -0.652, root, 0.001, 1);
+    }
+    for (const x of [-0.49, -0.16, 0.16, 0.49]) {
+      box(0.0025, 0.2, 0.005, black, x, -0.43, -0.652, root, 0.001, 1);
+    }
+    for (const [x, y, w] of [
+      [-0.36, -0.315, 0.11],
+      [0.27, -0.318, 0.09],
+      [-0.12, -0.525, 0.14],
+      [0.38, -0.525, 0.08],
+    ] as const) {
+      box(w, 0.003, 0.006, cream, x, y, -0.648, root, 0.001, 1);
+    }
+    for (let i = 0; i < 10; i += 1) {
+      sphere(0.0026, i % 3 === 0 ? brass : titaniumDark, -0.44 + i * 0.098, -0.518, -0.649, root, 6);
+    }
+    // 左右 rocker switch banks
+    for (const side of [-1, 1]) {
+      const bankX = side * 0.43;
+      box(0.09, 0.13, 0.012, black, bankX, -0.43, -0.649, root, 0.004, 2);
+      for (let row = 0; row < 3; row += 1) {
+        for (let i = 0; i < 2; i += 1) {
+          const x = bankX + (i - 0.5) * 0.032;
+          const y = -0.39 - row * 0.038;
+          box(0.018, 0.012, 0.008, titaniumDark, x, y, -0.641, root, 0.002, 1);
+          box(0.012, 0.007, 0.006, row === 1 ? this.amberGlow : cream, x, y + 0.004, -0.636, root, 0.0015, 1, 0.25, 0, 0);
+        }
+      }
+      decal(side < 0 ? 'MASTER ARM' : 'LIGHTS', 0.0042, bankX, -0.512, -0.643, root, 0, 0, 0, 8.2);
+      decal(side < 0 ? 'ECM' : 'GEAR', 0.0042, bankX, -0.352, -0.643, root, 0, 0, 0, 5.4);
+    }
+    // 侧台 breaker rows（顶面）
+    for (const side of [-1, 1]) {
+      const bankX = side * 0.595;
+      box(0.2, 0.008, 0.1, black, bankX, 0.122, -0.13, root, 0.003, 2, 0, -side * 0.05, 0);
+      for (let row = 0; row < 2; row += 1) {
+        for (let i = 0; i < 5; i += 1) {
+          const x = bankX + (i - 2) * 0.034;
+          const z = -0.16 + row * 0.045;
+          box(0.018, 0.01, 0.016, dark, x, 0.128, z, root, 0.002, 1);
+          box(0.005, 0.014, 0.006, i % 2 === 0 ? cream : this.amberGlow, x, 0.136, z + 0.002, root, 0.001, 1, 0.3, 0, 0);
+        }
+      }
+      decal('PANEL A', 0.004, bankX, 0.12, -0.19, root, -Math.PI / 2, 0, 0, 7.2);
+    }
+    // 小 stencil：throttle / stick / checklist
+    decal('CHECKLIST', 0.0042, -0.43, -0.55, -0.643, root, 0, 0, 0, 7.4);
+    decal('RCS', 0.0042, 0.43, -0.55, -0.643, root, 0, 0, 0, 4.8);
+    decal('TRIM', 0.0042, 0.43, -0.315, -0.643, root, 0, 0, 0, 4.8);
+    decal('DATA', 0.0042, -0.43, -0.315, -0.643, root, 0, 0, 0, 4.8);
     // dash 上沿螺栓 / 标签
     for (let i = 0; i < 19; i += 1) {
       sphere(0.0036, i % 5 === 0 ? brass : titaniumDark, -0.45 + i * 0.05, -0.228, -0.685, root, 8);
@@ -1019,48 +1226,49 @@ export class CockpitInterior {
 
     /* ── 中央 MFD ─────────────────────────────────────── */
     const centerMfd = new THREE.Group();
-    centerMfd.position.set(0, -0.302, -0.66);
-    centerMfd.rotation.x = -0.105;
+    // 稍微向 pilot 前移，避免被 dash 前缘/遮光檐挡住屏幕顶部
+    centerMfd.position.set(0, -0.302, -0.625);
+    centerMfd.rotation.x = -0.06;
     root.add(centerMfd);
-    box(0.34, 0.19, 0.075, dark, 0, 0, 0, centerMfd, 0.018, 3);
-    box(0.318, 0.168, 0.03, black, 0, 0, 0.038, centerMfd, 0.01, 2);
-    box(0.355, 0.018, 0.11, titaniumDark, 0, 0.102, 0.01, centerMfd, 0.007, 2, 0.18);
-    box(0.32, 0.01, 0.01, this.tealGlow, 0, 0.064, 0.047, centerMfd, 0.002, 1);
+    box(0.37, 0.21, 0.078, dark, 0, 0, 0, centerMfd, 0.018, 3);
+    box(0.346, 0.185, 0.03, black, 0, 0, 0.039, centerMfd, 0.01, 2);
+    box(0.385, 0.02, 0.12, titaniumDark, 0, 0.112, 0.01, centerMfd, 0.007, 2, 0.18);
+    box(0.35, 0.01, 0.012, this.tealGlow, 0, 0.071, 0.048, centerMfd, 0.002, 1);
     for (const sx of [-1, 1]) {
       for (const sy of [-1, 1]) {
-        cyl(0.0045, 0.0045, 0.006, brass, sx * 0.148, sy * 0.077, 0.047, centerMfd, Math.PI / 2, 0, 0, 8);
+        cyl(0.0045, 0.0045, 0.006, brass, sx * 0.162, sy * 0.086, 0.048, centerMfd, Math.PI / 2, 0, 0, 8);
       }
     }
-    decal('MFD · FLIGHT', 0.009, 0, -0.096, 0.046, centerMfd, 0, 0, 0, 7.8);
+    decal('MFD · FLIGHT', 0.009, 0, -0.108, 0.047, centerMfd, 0, 0, 0, 7.8);
     const centerScreenMaterial = new THREE.MeshBasicMaterial({ toneMapped: false });
-    const centerScreen = addMesh(new THREE.PlaneGeometry(0.282, 0.132), centerScreenMaterial, 0, 0.002, 0.054, centerMfd);
+    const centerScreen = addMesh(new THREE.PlaneGeometry(0.31, 0.15), centerScreenMaterial, 0, 0.002, 0.068, centerMfd);
     centerScreen.userData.dynamic = true;
     this.materials.add(centerScreenMaterial);
     screens.push(this.createMfd('flight', 768, 384, centerScreen, centerMfd));
-    addMesh(new THREE.PlaneGeometry(0.282, 0.132), this.mfdGlassMaterial(), 0, 0.002, 0.059, centerMfd).userData.dynamic = true;
+    addMesh(new THREE.PlaneGeometry(0.31, 0.15), this.mfdGlassMaterial(), 0, 0.002, 0.073, centerMfd).userData.dynamic = true;
 
     /* ── 左右 MFD + 侧台 ─────────────────────────────── */
     for (const side of [-1, 1]) {
       const mfd = new THREE.Group();
-      mfd.position.set(side * 0.347, -0.322, -0.615);
-      mfd.rotation.set(-0.06, side * 0.34, side * 0.015);
+      mfd.position.set(side * 0.347, -0.322, -0.60);
+      mfd.rotation.set(-0.03, side * 0.34, side * 0.015);
       root.add(mfd);
-      box(0.218, 0.158, 0.06, dark, 0, 0, 0, mfd, 0.014, 3);
-      box(0.198, 0.137, 0.024, black, 0, 0, 0.031, mfd, 0.008, 2);
-      box(0.228, 0.014, 0.085, titaniumDark, 0, 0.084, 0.008, mfd, 0.005, 2, 0.18);
-      box(0.195, 0.008, 0.008, side < 0 ? this.tealGlow : this.amberGlow, 0, 0.056, 0.038, mfd, 0.0015, 1);
+      box(0.235, 0.17, 0.062, dark, 0, 0, 0, mfd, 0.014, 3);
+      box(0.215, 0.15, 0.024, black, 0, 0, 0.032, mfd, 0.008, 2);
+      box(0.245, 0.014, 0.09, titaniumDark, 0, 0.09, 0.008, mfd, 0.005, 2, 0.18);
+      box(0.21, 0.008, 0.008, side < 0 ? this.tealGlow : this.amberGlow, 0, 0.061, 0.039, mfd, 0.0015, 1);
       for (const sx of [-1, 1]) {
         for (const sy of [-1, 1]) {
-          cyl(0.0035, 0.0035, 0.005, brass, sx * 0.092, sy * 0.062, 0.038, mfd, Math.PI / 2, 0, 0, 8);
+          cyl(0.0035, 0.0035, 0.005, brass, sx * 0.1, sy * 0.068, 0.039, mfd, Math.PI / 2, 0, 0, 8);
         }
       }
       const screenMaterial = new THREE.MeshBasicMaterial({ toneMapped: false });
-      const screen = addMesh(new THREE.PlaneGeometry(0.174, 0.105), screenMaterial, 0, 0.001, 0.043, mfd);
+      const screen = addMesh(new THREE.PlaneGeometry(0.19, 0.115), screenMaterial, 0, 0.001, 0.052, mfd);
       screen.userData.dynamic = true;
       this.materials.add(screenMaterial);
       screens.push(this.createMfd(side < 0 ? 'systems' : 'nav', 512, 320, screen, mfd));
-      addMesh(new THREE.PlaneGeometry(0.174, 0.105), this.mfdGlassMaterial(), 0, 0.001, 0.047, mfd).userData.dynamic = true;
-      decal(side < 0 ? 'MFD · SYSTEMS' : 'MFD · NAV', 0.0062, 0, -0.083, 0.043, mfd, 0, 0, 0, 8);
+      addMesh(new THREE.PlaneGeometry(0.19, 0.115), this.mfdGlassMaterial(), 0, 0.001, 0.056, mfd).userData.dynamic = true;
+      decal(side < 0 ? 'MFD · SYSTEMS' : 'MFD · NAV', 0.0062, 0, -0.092, 0.044, mfd, 0, 0, 0, 8);
 
       // 侧台
       const consoleGroup = new THREE.Group();
@@ -1073,7 +1281,7 @@ export class CockpitInterior {
       box(0.2, 0.012, 0.36, black, 0, 0.116, 0.01, consoleGroup, 0.005, 2, 0, 0, side * 0.015);
       box(0.12, 0.038, 0.28, leather, 0, 0.132, 0.08, consoleGroup, 0.012, 3);
       box(0.125, 0.006, 0.285, dark, 0, 0.153, 0.08, consoleGroup, 0.003, 2);
-      box(0.235, 0.012, 0.008, this.tealGlow, 0, 0.079, 0.225, consoleGroup, 0.002, 1);
+      box(0.235, 0.006, 0.005, this.tealDim, 0, 0.079, 0.225, consoleGroup, 0.0015, 1);
       // 8 个按钮 + 2 个旋钮（装在顶面）
       for (let row = 0; row < 2; row += 1) {
         for (let i = 0; i < 4; i += 1) {
@@ -1087,13 +1295,33 @@ export class CockpitInterior {
       cyl(0.011, 0.014, 0.014, dark, 0.075, 0.125, 0.205, consoleGroup, 0, 0, 0, 12);
       cyl(0.005, 0.005, 0.018, brass, -0.075, 0.133, 0.205, consoleGroup, 0, 0, 0, 8);
       cyl(0.005, 0.005, 0.018, brass, 0.075, 0.133, 0.205, consoleGroup, 0, 0, 0, 8);
-      // 油门 / 摇杆
+      // 油门：底座 + 黄铜 collar + 深色橡胶/皮革 grip + trigger + cable
       if (side < 0) {
         box(0.06, 0.014, 0.18, black, 0, 0.072, 0.02, consoleGroup, 0.005, 2);
-        box(0.042, 0.13, 0.048, dark, 0, 0.14, 0.03, consoleGroup, 0.012, 3, -0.28, 0, -0.08);
-        box(0.05, 0.02, 0.055, brass, 0, 0.205, 0.018, consoleGroup, 0.006, 2, -0.28, 0, -0.08);
-        sphere(0.008, this.redGlow, 0, 0.219, 0.017, consoleGroup, 10);
-        box(0.056, 0.012, 0.012, rubber, 0, 0.155, 0.06, consoleGroup, 0.003, 2);
+        cyl(0.022, 0.028, 0.018, dark, 0, 0.085, 0.02, consoleGroup, 0, 0, 0, 16);
+        cyl(0.024, 0.024, 0.004, brass, 0, 0.096, 0.02, consoleGroup, 0, 0, 0, 16);
+        cyl(0.011, 0.013, 0.07, titaniumDark, 0, 0.132, 0.02, consoleGroup, 0, 0, 0, 12);
+        box(0.038, 0.095, 0.05, rubber, 0, 0.178, 0.03, consoleGroup, 0.012, 3, -0.22, 0, -0.06);
+        for (const gx of [-1, 1]) {
+          box(0.006, 0.072, 0.038, leather, gx * 0.018, 0.178, 0.03, consoleGroup, 0.003, 2, -0.22, 0, -0.06);
+        }
+        box(0.042, 0.012, 0.052, titaniumDark, 0, 0.226, 0.016, consoleGroup, 0.005, 2, -0.22, 0, -0.06);
+        box(0.012, 0.014, 0.006, this.amberGlow, 0.012, 0.222, 0.047, consoleGroup, 0.002, 1, -0.22, 0, -0.06);
+        box(0.014, 0.022, 0.005, this.redGlow, 0.004, 0.196, 0.061, consoleGroup, 0.002, 1, -0.22, 0, -0.06);
+        box(0.006, 0.05, 0.008, brass, -0.024, 0.155, 0.052, consoleGroup, 0.002, 1, -0.22, 0, -0.06);
+        tube(
+          [
+            new THREE.Vector3(0, 0.085, -0.07),
+            new THREE.Vector3(0.01, 0.078, -0.13),
+            new THREE.Vector3(0.02, 0.072, -0.2),
+          ],
+          0.0035,
+          rubber,
+          consoleGroup,
+          5,
+        );
+        decal('THR', 0.0048, -0.09, 0.105, 0.12, consoleGroup, -Math.PI / 2, 0, 0, 4.6);
+        decal('FUEL', 0.0048, 0.08, 0.105, 0.12, consoleGroup, -Math.PI / 2, 0, 0, 5.2);
       }
       // 侧台后部线束
       tube(
@@ -1128,11 +1356,33 @@ export class CockpitInterior {
     }
 
     /* ── 中央操纵杆 / 脚踏 ─────────────────────────────── */
-    cyl(0.017, 0.023, 0.08, dark, 0, -0.68, -0.58, root, 0, 0, 0, 12);
-    box(0.048, 0.12, 0.052, rubber, 0, -0.55, -0.61, root, 0.015, 3, 0.18, 0, 0);
-    box(0.038, 0.03, 0.06, dark, 0, -0.5, -0.585, root, 0.01, 2, 0.18, 0, 0);
-    sphere(0.007, this.redGlow, 0, -0.488, -0.62, root, 10);
-    box(0.035, 0.01, 0.01, black, 0, -0.522, -0.635, root, 0.002, 1);
+    cyl(0.032, 0.04, 0.045, rubber, 0, -0.715, -0.58, root, 0, 0, 0, 16);
+    cyl(0.022, 0.026, 0.014, brass, 0, -0.688, -0.58, root, 0, 0, 0, 16);
+    cyl(0.009, 0.011, 0.11, titaniumDark, 0, -0.625, -0.585, root, 0, 0, 0, 12);
+    box(0.044, 0.10, 0.056, rubber, 0, -0.545, -0.605, root, 0.014, 3, 0.15, 0, 0);
+    for (const side of [-1, 1]) {
+      box(0.006, 0.078, 0.04, leather, side * 0.02, -0.545, -0.605, root, 0.0025, 2, 0.15, 0, 0);
+      box(0.004, 0.05, 0.006, brass, side * 0.014, -0.59, -0.577, root, 0.001, 1, 0.15, 0, 0);
+    }
+    box(0.046, 0.014, 0.056, titaniumDark, 0, -0.49, -0.615, root, 0.006, 2, 0.15, 0, 0);
+    box(0.008, 0.012, 0.008, this.amberGlow, -0.012, -0.485, -0.59, root, 0.002, 1, 0.15, 0, 0);
+    box(0.008, 0.012, 0.008, this.tealGlow, 0.012, -0.485, -0.59, root, 0.002, 1, 0.15, 0, 0);
+    // trigger guard + trigger
+    box(0.006, 0.032, 0.006, dark, -0.018, -0.556, -0.635, root, 0.0015, 1, 0.15, 0, 0);
+    box(0.006, 0.032, 0.006, dark, 0.018, -0.556, -0.635, root, 0.0015, 1, 0.15, 0, 0);
+    box(0.03, 0.006, 0.006, dark, 0, -0.538, -0.635, root, 0.0015, 1, 0.15, 0, 0);
+    box(0.009, 0.02, 0.007, this.redGlow, 0, -0.55, -0.628, root, 0.002, 1, 0.15, 0, 0);
+    tube(
+      [
+        new THREE.Vector3(0, -0.71, -0.62),
+        new THREE.Vector3(0.02, -0.7, -0.68),
+        new THREE.Vector3(0.05, -0.69, -0.75),
+      ],
+      0.0035,
+      rubber,
+      root,
+      5,
+    );
     for (const side of [-1, 1]) {
       box(0.075, 0.018, 0.14, dark, side * 0.18, -0.765, -0.56, root, 0.006, 2, 0.12, side * 0.06, 0);
       box(0.065, 0.006, 0.1, brass, side * 0.18, -0.75, -0.55, root, 0.002, 1, 0.12, side * 0.06, 0);
@@ -1148,51 +1398,62 @@ export class CockpitInterior {
     box(0.06, 0.035, 0.03, brass, 0, -0.53, -0.2, root, 0.006, 2);
     box(0.04, 0.026, 0.018, black, 0, -0.54, -0.18, root, 0.004, 1);
 
-    /* ── 顶部 overhead ─────────────────────────────────── */
+    /* ── 顶部 overhead：贴 canopy header 的窄条，默认在视野外 ── */
     const overhead = new THREE.Group();
-    overhead.position.set(0, 0.485, -0.58);
-    overhead.rotation.x = 0.08;
+    overhead.position.set(0, 0.55, -0.58);
+    overhead.rotation.x = 0.2;
     root.add(overhead);
-    box(0.47, 0.11, 0.21, titaniumDark, 0, 0, 0, overhead, 0.014, 3);
-    box(0.42, 0.018, 0.18, dark, 0, -0.06, 0, overhead, 0.005, 2);
+    // 只有一条浅窄的 breaker rail，不再是一整块深色板
+    box(0.36, 0.03, 0.10, titaniumDark, 0, 0, 0, overhead, 0.008, 2);
+    box(0.34, 0.012, 0.085, black, 0, -0.018, 0, overhead, 0.004, 2);
+    box(0.365, 0.006, 0.008, this.tealDim, 0, -0.034, 0.036, overhead, 0.0015, 1);
     for (let row = 0; row < 2; row += 1) {
-      for (let i = 0; i < 9; i += 1) {
-        const x = -0.17 + i * 0.0425;
-        const y = -0.065;
-        const z = -0.045 + row * 0.09;
-        box(0.016, 0.012, 0.02, black, x, y, z, overhead, 0.002, 1);
-        box(0.006, 0.022, 0.007, row === 0 && i % 3 === 0 ? this.amberGlow : cream, x, y + 0.012, z + 0.003, overhead, 0.001, 1, 0.35, 0, 0);
+      for (let i = 0; i < 5; i += 1) {
+        const x = -0.12 + i * 0.06;
+        const z = -0.018 + row * 0.046;
+        box(0.016, 0.012, 0.016, black, x, -0.024, z, overhead, 0.002, 1);
+        box(0.005, 0.016, 0.006, i % 2 === 0 ? this.amberGlow : cream, x, -0.012, z + 0.002, overhead, 0.001, 1, 0.3, 0, 0);
       }
     }
-    // 顶部灯 + 拉手
-    sphere(0.028, this.amberGlow, 0, -0.07, 0.06, overhead, 12);
+    // 小号 dome light 与深色 grab rail
+    sphere(0.012, this.amberGlow, 0, -0.034, 0.052, overhead, 10);
     tube(
       [
-        new THREE.Vector3(-0.18, -0.07, 0.09),
-        new THREE.Vector3(-0.09, -0.096, 0.105),
-        new THREE.Vector3(0.09, -0.096, 0.105),
-        new THREE.Vector3(0.18, -0.07, 0.09),
+        new THREE.Vector3(-0.15, -0.042, 0.044),
+        new THREE.Vector3(-0.075, -0.058, 0.05),
+        new THREE.Vector3(0.075, -0.058, 0.05),
+        new THREE.Vector3(0.15, -0.042, 0.044),
       ],
-      0.006,
+      0.004,
       rubber,
       overhead,
       6,
     );
-    for (const x of [-0.18, 0.18]) {
-      cyl(0.01, 0.01, 0.014, brass, x, -0.062, 0.088, overhead, Math.PI / 2, 0, 0, 8);
+    for (const x of [-0.15, 0.15]) {
+      cyl(0.007, 0.007, 0.012, brass, x, -0.038, 0.044, overhead, Math.PI / 2, 0, 0, 8);
     }
-    decal('LIFE SUPPORT', 0.0048, -0.15, 0.018, 0.106, overhead, 0, 0, 0, 8);
-    decal('G-LIMIT 12', 0.0048, 0.12, 0.018, 0.106, overhead, 0, 0, 0, 8);
+    for (const side of [-1, 1]) {
+      box(0.018, 0.08, 0.06, titaniumDark, side * 0.185, 0.015, 0.01, overhead, 0.005, 2, 0, 0, side * 0.12);
+    }
 
     /* ── 遮光罩 / 顶部框架 ─────────────────────────────── */
-    box(0.86, 0.045, 0.08, dark, 0, 0.36, -0.91, root, 0.012, 2, -0.18);
-    box(0.9, 0.010, 0.010, this.tealDim, 0, 0.335, -0.87, root, 0.002, 1);
+    // 不再放横跨视野的深色 header slab；顶部结构由 canopy bow 自己承担
+    box(0.07, 0.018, 0.05, titanium, 0, 0.438, -1.14, root, 0.004, 2);
+    box(0.024, 0.012, 0.04, black, 0, 0.43, -1.17, root, 0.003, 1);
+    for (const x of [-0.045, 0.045]) {
+      sphere(0.0032, brass, x, 0.445, -1.12, root, 7);
+    }
     for (const side of [-1, 1]) {
-      // 细 A 柱：保留近景视差，但不遮挡中心视野
-      box(0.024, 0.34, 0.055, titaniumDark, side * 0.79, 0.055, -0.92, root, 0.008, 2, 0, 0, side * 0.12);
-      box(0.006, 0.28, 0.005, this.tealDim, side * 0.775, 0.055, -0.893, root, 0.002, 1, 0, 0, side * 0.12);
-      box(0.032, 0.02, 0.07, brass, side * 0.79, 0.225, -0.915, root, 0.005, 2);
-      box(0.018, 0.16, 0.03, titaniumDark, side * 0.83, -0.1, -0.87, root, 0.006, 2, 0, 0, side * 0.18);
+      // 细 A 柱：硬表面金属框 + 嵌板 + 接缝 + 螺栓，避免橡胶管感
+      box(0.021, 0.33, 0.045, titanium, side * 0.79, 0.055, -0.92, root, 0.007, 2, 0, 0, side * 0.12);
+      box(0.015, 0.30, 0.03, titaniumDark, side * 0.785, 0.055, -0.895, root, 0.004, 2, 0, 0, side * 0.12);
+      box(0.004, 0.27, 0.004, this.tealDim, side * 0.772, 0.055, -0.878, root, 0.001, 1, 0, 0, side * 0.12);
+      for (const y of [-0.065, 0.055, 0.175]) {
+        box(0.023, 0.006, 0.047, black, side * 0.79, y, -0.92, root, 0.0015, 1, 0, 0, side * 0.12);
+        sphere(0.0032, y > 0 ? brass : titaniumDark, side * 0.772, y, -0.943, root, 7);
+      }
+      box(0.026, 0.016, 0.06, brass, side * 0.79, 0.228, -0.915, root, 0.004, 2);
+      box(0.016, 0.14, 0.026, titaniumDark, side * 0.83, -0.1, -0.87, root, 0.005, 2, 0, 0, side * 0.18);
     }
 
     /* ── canopy bow / 侧轨 / 玻璃 ─────────────────────── */
@@ -1208,13 +1469,27 @@ export class CockpitInterior {
       bowGasketPoints.push(new THREE.Vector3(x, y + 0.006, z + 0.016));
       bowTrimPoints.push(new THREE.Vector3(x * 0.995, y - 0.02, z + 0.012));
     }
-    tube(bowPoints, 0.028, titanium, root, 8, 72);
-    tube(bowGasketPoints, 0.037, rubber, root, 7, 64);
-    tube(bowTrimPoints, 0.006, brass, root, 5, 56);
-    // bow 螺栓
-    for (let i = 0; i < 26; i += 1) {
-      const p = bowPoints[Math.round((i / 25) * 48)];
-      sphere(0.0048, i % 4 === 0 ? brass : titaniumDark, p.x, p.y + 0.03, p.z + 0.006, root, 8);
+    // bow 主结构：分段 beveled 金属框，而不是一整根圆管
+    for (let i = 0; i < 48; i += 2) {
+      const a = bowPoints[i];
+      const b = bowPoints[i + 2];
+      barBetween(a, b, 0.042, 0.022, i % 4 === 0 ? titanium : titaniumDark, root);
+      if (i % 8 === 0) {
+        const dir = b.clone().sub(a).normalize().multiplyScalar(0.0018);
+        const mid = a.clone().lerp(b, 0.5);
+        barBetween(mid.clone().sub(dir), mid.clone().add(dir), 0.045, 0.025, black, root);
+      }
+      if (i % 4 === 0) {
+        const p = a.clone().lerp(b, 0.5);
+        sphere(0.0034, i % 8 === 0 ? brass : titaniumDark, p.x, p.y + 0.013, p.z + 0.005, root, 7);
+      }
+    }
+    // 内圈 gasket lip 与细 trim，半径比主框小
+    tube(bowGasketPoints, 0.011, rubber, root, 6, 64);
+    tube(bowTrimPoints, 0.0025, titanium, root, 5, 56);
+    for (let i = 0; i < 13; i += 1) {
+      const p = bowPoints[Math.round((i / 12) * 48)];
+      sphere(0.0034, i % 4 === 0 ? brass : titaniumDark, p.x, p.y + 0.022, p.z + 0.004, root, 7);
     }
     for (const side of [-1, 1]) {
       const rail = [
@@ -1224,30 +1499,30 @@ export class CockpitInterior {
         new THREE.Vector3(side * 0.68, -0.31, 0.1),
         new THREE.Vector3(side * 0.6, -0.33, 0.38),
       ];
-      tube(rail, 0.019, titaniumDark, root, 7, 28);
-      tube(rail.map((p) => p.clone().add(new THREE.Vector3(0, 0.008, 0.008))), 0.009, brass, root, 5, 28);
-      for (let i = 1; i < rail.length; i += 1) {
-        const a = rail[i - 1];
-        const b = rail[i];
-        const n = 3;
-        for (let k = 1; k < n; k += 1) {
-          const p = a.clone().lerp(b, k / n);
-          sphere(0.004, i % 2 === 0 ? brass : titaniumDark, p.x, p.y + 0.012, p.z + 0.006, root, 8);
-        }
+      for (let i = 0; i < rail.length - 1; i += 1) {
+        const a = rail[i];
+        const b = rail[i + 1];
+        barBetween(a, b, 0.03, 0.017, i % 2 === 0 ? titaniumDark : titanium, root);
+        const p = a.clone().lerp(b, 0.5);
+        sphere(0.0032, i % 2 === 0 ? brass : titaniumDark, p.x, p.y + 0.011, p.z + 0.005, root, 7);
       }
-      // 斜撑
+      tube(rail.map((p) => p.clone().add(new THREE.Vector3(0, 0.005, 0.006))), 0.007, rubber, root, 5, 28);
+      tube(rail.map((p) => p.clone().add(new THREE.Vector3(0, 0.012, 0.009))), 0.002, titanium, root, 4, 28);
+      // 斜撑：细硬表面杆
       const braceA = [
         new THREE.Vector3(side * 0.93, -0.22, -1.04),
         new THREE.Vector3(side * 0.84, -0.08, -0.92),
         new THREE.Vector3(side * 0.72, 0.12, -0.83),
       ];
-      tube(braceA, 0.009, titanium, root, 6, 16);
+      barBetween(braceA[0], braceA[1], 0.012, 0.008, titanium, root);
+      barBetween(braceA[1], braceA[2], 0.012, 0.008, titaniumDark, root);
       const braceB = [
         new THREE.Vector3(side * 0.9, -0.255, -0.84),
         new THREE.Vector3(side * 0.84, -0.15, -0.55),
         new THREE.Vector3(side * 0.78, -0.05, -0.4),
       ];
-      tube(braceB, 0.006, dark, root, 5, 16);
+      barBetween(braceB[0], braceB[1], 0.009, 0.006, dark, root);
+      barBetween(braceB[1], braceB[2], 0.009, 0.006, dark, root);
       // 侧窗锁扣
       box(0.045, 0.022, 0.035, brass, side * 0.69, -0.29, 0.25, root, 0.006, 2);
     }
@@ -1397,9 +1672,7 @@ export class CockpitInterior {
         root.add(flank);
         box(0.32, 0.24, 0.34, titaniumDark, 0, 0, 0, flank, 0.02, 3);
         box(0.27, 0.16, 0.02, black, 0, 0.02, 0.18, flank, 0.008, 2);
-        const mfdMaterial = new THREE.MeshBasicMaterial({ toneMapped: false, color: 0x0d2528 });
-        this.materials.add(mfdMaterial);
-        addMesh(new THREE.PlaneGeometry(0.23, 0.13), mfdMaterial, 0, 0.02, 0.194, flank).userData.dynamic = true;
+        addMesh(new THREE.PlaneGeometry(0.23, 0.13), black, 0, 0.02, 0.194, flank);
         box(0.3, 0.012, 0.012, this.amberGlow, 0, 0.105, 0.19, flank, 0.002, 1);
         // 舰桥栏杆
         tube(
