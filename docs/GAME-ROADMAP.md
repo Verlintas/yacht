@@ -163,6 +163,7 @@ Anvil Landing 切片：600 × 600 m、1 个 S pad、1 个 hero shop、3 个 NPC�
 | 高效 hero 塔楼 | **K038 Neo Tokyo 2** 238 m / 3.7M tris / 4K | 面数更省，适合多栋 |
 | 工业细节/堆叠 | **K046 Heavy Metal** 98 m / 183–332k tris / 4K | 堆 2–3 层做 200–300 m |
 | 中景/近景基座 | **K039 Sci-Fi Industrial** | 建筑壳过 5k；props 平均仅 158 tris，近景需换 kit |
+| 100 m 街区/裙房 | **City Generator** | 4×4 155m 真实 unique geo 1.42M；L1 13.4M→L2 6.26M；100m tile L1 3.6M/62 DC/86MB；只做 tile/街道，不做整城 runtime |
 | 街道/店面 | **CityStreets 209** | 421 objects / 5.53M / 4K |
 | 角色 | **Modelshop Greebles** posed/rig | 155–177k tris/角色 |
 | greebles/管线 | K014 / K034 / Modelshop KitObjects | K039 props 不够近景 |
@@ -299,6 +300,9 @@ M1 具体交付：
 - `18-blender-addons-generators.md` — Blender 插件/生成器选型与 5k 面数规则
 - `19-local-asset-audit.md` — 本地 3D 资产审计（K032/K038/K046/Modelshop 等）
 - `20-online-sci-fi-assets.md` — 网上高质量资产与许可
+- `21-tripo-premium-evaluation.md` — Tripo Premium 评估（更新中）
+- `22-city-generator-poly-audit.md` — City Generator 高面数/减面复检
+- `23-hero-asset-decimation-test.md` — K032/K038/K046 hero 资产减面/LOD 测试
 
 已有设计底稿：
 
