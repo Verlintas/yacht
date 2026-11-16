@@ -1756,6 +1756,9 @@ export class Combat {
     name: string;
     code: string;
     position: THREE.Vector3;
+    velocity: THREE.Vector3;
+    hostile: boolean;
+    alerted: boolean;
   } | null {
     let best: Npc | null = null;
     let bestDist = range;
@@ -1779,6 +1782,9 @@ export class Combat {
       name: best.spec.name,
       code: best.spec.code,
       position: best.group.position,
+      velocity: best.velocity,
+      hostile: best.hostile,
+      alerted: best.alerted,
     } : null;
   }
 

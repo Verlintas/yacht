@@ -12,6 +12,7 @@ import { SpeedLines } from './speedlines';
 import { LocalPlume } from './trails';
 import { DamageVisuals } from './damage';
 import { Combat } from './combat';
+import { CockpitInterior, CockpitPass, cockpitArchetype } from './cockpit';
 import { SurfacePatch } from './surface';
 import { SHIPS, getShip, manualWeaponTypes, shiftSpeedMultiplier, tierLabel, WEAPON_LABELS, type ShipSpec, type WeaponMount, type WeaponType } from './ships';
 import type { SystemData } from './data';
@@ -49,8 +50,9 @@ interface GameContext {
   contactShadow: THREE.Mesh;
   surfacePatch: SurfacePatch;
   combat: Combat;
+  cockpit: CockpitInterior;
   weapons: WeaponState;
-  player: { alive: boolean };
+  player: PlayerState;
   spec: { current: ShipSpec };
   autoCooldowns: Map<string, number>;
   speedLines: SpeedLines;
@@ -61,6 +63,24 @@ interface GameContext {
 }
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
+
+/** 第一人称座舱玻璃的安全投影区：目标框只允许落在这块 canopy 玻璃内。 */
+const CANOPY_MASK_POLYGON: ReadonlyArray<readonly [number, number]> = [
+  [0.50, 0.20], [0.62, 0.21], [0.72, 0.25], [0.80, 0.34], [0.83, 0.44],
+  [0.80, 0.53], [0.68, 0.56], [0.32, 0.56], [0.20, 0.53], [0.17, 0.44],
+  [0.20, 0.34], [0.28, 0.25], [0.38, 0.21],
+];
+
+function insideCanopyMask(nx: number, ny: number): boolean {
+  let inside = false;
+  for (let i = 0, j = CANOPY_MASK_POLYGON.length - 1; i < CANOPY_MASK_POLYGON.length; j = i, i += 1) {
+    const [xi, yi] = CANOPY_MASK_POLYGON[i];
+    const [xj, yj] = CANOPY_MASK_POLYGON[j];
+    const intersect = yi > ny !== yj > ny && nx < ((xj - xi) * (ny - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
 
 const BASE = import.meta.env.BASE_URL.replace(/\/+$/, '');
 const withBase = (path: string): string => `${BASE}/${path.replace(/^\/+/, '')}`;
@@ -227,6 +247,9 @@ export async function startGame(system: SystemData): Promise<void> {
   await step('生成恒星', 0.2);
 
   const world = createWorld(system, scene, renderer);
+
+  // 第一人称座舱独立 scene / camera，near=0.02；世界相机保持 near=0.5。
+  const cockpit = new CockpitInterior(renderer);
 
   await step('投射行星', 0.45);
 
@@ -404,6 +427,9 @@ export async function startGame(system: SystemData): Promise<void> {
     `,
   });
   composer.addPass(warpPass);
+  // 座舱 pass 放在世界 warp 拖影之后：warp 只存在于座舱外的世界，
+  // 由 cockpit 几何/不透明 dash 正确遮挡，避免第一人称像透明玻璃。
+  composer.addPass(new CockpitPass(cockpit.scene, cockpit.camera, () => cockpit.visible));
   composer.addPass(new OutputPass());
 
   await step('编译着色器', 0.82);
@@ -440,13 +466,16 @@ export async function startGame(system: SystemData): Promise<void> {
     onPlayerDamage: (damage: number, position?: THREE.Vector3) => {
       if (!playerState.alive) return;
       const absorbed = Math.min(playerState.shield, damage);
-      if (position) {
-        const local = position.clone().sub(flight.position).applyQuaternion(flight.quaternion.clone().invert());
+      const local = position
+        ? position.clone().sub(flight.position).applyQuaternion(flight.quaternion.clone().invert())
+        : null;
+      if (local) {
         if (absorbed > 0) damageRef.current?.shieldHit(local);
         else damageRef.current?.hullHit(local);
       }
       if (absorbed > 0 && playerState.shield - absorbed <= 0) damageRef.current?.shieldBreak();
-      if (specRef.current.tier < 5) hud?.hit();
+      if (local) cockpit.jolt(local, damage / Math.max(1, specRef.current.hull) * 1.6);
+      if (specRef.current.tier < 5) hud?.hit(local ?? undefined);
       playerState.shieldDelay = 3.5;
       playerState.shield -= absorbed;
       const rest = damage - absorbed;
@@ -482,7 +511,7 @@ export async function startGame(system: SystemData): Promise<void> {
   });
 
   combat.setTemplates(npcTemplates);
-  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, warpPass, contactShadow, surfacePatch, combat, weapons, player: playerState, spec: specRef, autoCooldowns, speedLines, trail: trailRef, damage: damageRef, switchShip: async () => false, requestWarp: () => {} };
+  const ctx: GameContext = { renderer, scene, camera, composer, world, flight, ship, audio, motionBlur, warpPass, contactShadow, surfacePatch, combat, cockpit, weapons, player: playerState, spec: specRef, autoCooldowns, speedLines, trail: trailRef, damage: damageRef, switchShip: async () => false, requestWarp: () => {} };
 
   const dock = world.bodies.find((body) => body.id === 'station-dock');
   if (dock) {
@@ -529,6 +558,7 @@ export async function startGame(system: SystemData): Promise<void> {
     }
     shipSpec = spec;
     specRef.current = spec;
+    cockpit.setArchetype(cockpitArchetype(spec.class));
     ctx.flight.configure({
       maxSpeed: spec.maxSpeed,
       boostSpeed: spec.boostSpeed,
@@ -685,12 +715,28 @@ export async function startGame(system: SystemData): Promise<void> {
     window.setTimeout(() => hud.openById(openParam), 600);
   }
 
+  // 调试/截图：?view=first|third|free&target=station-dock
+  const viewParam = params.get('view');
+  if (viewParam === 'first' || viewParam === 'third' || viewParam === 'free') {
+    ctx.flight.cameraMode = viewParam;
+  }
+  const targetParam = params.get('target');
+  if (targetParam) {
+    window.setTimeout(() => hud.setTarget(targetParam), 320);
+  }
+  if (params.get('debug') === '1') {
+    (window as unknown as { __game?: Record<string, unknown> }).__game = {
+      renderer, scene, camera, flight: ctx.flight, cockpit, world: ctx.world, combat: ctx.combat, hud, player: playerState, THREE,
+    };
+  }
+
   // 固定渲染分辨率，避免动态像素比在行星近景触发黑帧/闪屏
   window.addEventListener('resize', () => {
     const width = window.innerWidth;
     const height = window.innerHeight;
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+    cockpit.resize(width / height);
     renderer.setSize(width, height);
     composer.setSize(width, height);
   });
@@ -702,8 +748,9 @@ interface Hud {
   update: (dt: number) => void;
   openById: (id: string) => void;
   toast: (message: string) => void;
-  hit: () => void;
+  hit: (localDirection?: THREE.Vector3) => void;
   explosionFlash: (strength: number) => void;
+  setTarget: (id: string) => void;
   getTarget: () => CelestialBody | null;
 }
 
@@ -964,7 +1011,94 @@ function loop(ctx: GameContext, hud: Hud): void {
       }
     }
     if (ctx.ship.model) ctx.ship.model.visible = ctx.flight.cameraMode !== 'first';
-    if (ctx.ship.cockpitGroup) ctx.ship.cockpitGroup.visible = ctx.flight.cameraMode === 'first';
+
+    // 第一人称座舱：独立 scene 更新（MFD/灯光/头部位移），第三人称完全跳过
+    const firstPerson = ctx.flight.cameraMode === 'first';
+    ctx.cockpit.setVisible(firstPerson);
+    if (firstPerson) {
+      const spec = ctx.spec.current;
+      const player = ctx.player;
+      let planet: CelestialBody | null = null;
+      let planetAltitude: number | null = null;
+      let planetDistance = Infinity;
+      for (const body of ctx.world.bodies) {
+        if (body.type !== 'planet') continue;
+        const distance = ctx.flight.position.distanceTo(body.position);
+        if (distance < planetDistance) {
+          planetDistance = distance;
+          planet = body;
+          planetAltitude = distance - body.radius;
+        }
+      }
+      const forward = ctx.flight.forwardVector;
+      const yaw = Math.atan2(forward.x, forward.z);
+      const right = new THREE.Vector3(1, 0, 0).applyQuaternion(ctx.flight.quaternion);
+      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(ctx.flight.quaternion);
+      const headingDeg = ((yaw * 180) / Math.PI + 360) % 360;
+      const pitchDeg = (Math.asin(THREE.MathUtils.clamp(forward.y, -1, 1)) * 180) / Math.PI;
+      const rollDeg = (Math.atan2(right.y, up.y) * 180) / Math.PI;
+      const vs = planet
+        ? ctx.flight.velocity.dot(ctx.flight.position.clone().sub(planet.position).normalize())
+        : null;
+      const localVelocity = ctx.flight.velocity.clone().applyQuaternion(ctx.flight.quaternion.clone().invert());
+      const relativeBearing = (position: THREE.Vector3): number => {
+        const rel = position.clone().sub(ctx.flight.position);
+        let angle = Math.atan2(rel.x, rel.z) - yaw;
+        angle = ((angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+        return (angle * 180) / Math.PI;
+      };
+      const selected = hud.getTarget();
+      const targetDistance = selected ? ctx.flight.position.distanceTo(selected.position) : null;
+      const enemy = ctx.combat.nearestNpc(ctx.flight.position, spec.sensorRange);
+      const chargeTime = Math.max(0.1, spec.chargeTime);
+      const chargeRatio = ctx.flight.warpPhase === 'jump'
+        ? ctx.flight.warpProgress
+        : ctx.flight.warpPhase === 'charge'
+          ? Math.min(1, ctx.flight.warpCharge / chargeTime)
+          : 0;
+      const altitudeLabel = planetAltitude == null
+        ? 'DEEP SPACE'
+        : planetAltitude >= 100_000_000
+          ? 'ORBIT'
+          : planetAltitude >= 100_000
+            ? `${Math.round(planetAltitude / 1000)} km`
+            : `${Math.round(planetAltitude)} m`;
+      ctx.cockpit.update(dt, {
+        fov: ctx.camera.fov,
+        aspect: ctx.camera.aspect,
+        speed: ctx.flight.speed,
+        throttle: ctx.flight.throttle,
+        boost: ctx.flight.boost,
+        boostMode: ctx.flight.boostMode,
+        shiftMultiplier: ctx.flight.shiftMultiplier,
+        hullRatio: player.hull / Math.max(1, spec.hull),
+        shieldRatio: player.shield / Math.max(1, spec.shield),
+        shieldDelay: player.shieldDelay,
+        parts: {
+          engine: player.parts.engine / Math.max(1, spec.parts.engine),
+          weapon: player.parts.weapon / Math.max(1, spec.parts.weapon),
+          cockpit: player.parts.cockpit / Math.max(1, spec.parts.cockpit),
+        },
+        warpPhase: ctx.flight.warpPhase,
+        warpChargeRatio: chargeRatio,
+        shipCode: spec.code,
+        shipClass: spec.class,
+        headingDeg,
+        pitchDeg,
+        rollDeg,
+        altitude: planetAltitude,
+        altitudeLabel,
+        bodyName: planet?.planet?.title ?? 'DEEP SPACE',
+        vs,
+        targetName: selected ? (selected.planet?.title ?? selected.station?.title ?? null) : null,
+        targetDistance,
+        targetBearing: selected ? relativeBearing(selected.position) : null,
+        enemyName: enemy ? `${enemy.name} · ${enemy.code}` : null,
+        enemyDistance: enemy?.distance ?? null,
+        enemyBearing: enemy ? relativeBearing(enemy.position) : null,
+        localVelocity,
+      });
+    }
 
     ctx.world.update(dt, elapsed, ctx.camera);
     for (const mixer of ctx.world.mixers) mixer.update(dt);
@@ -1021,10 +1155,75 @@ function setupHud(
   const throttleBar = $('hud-throttle-bar');
   const assistLabel = $('hud-assist');
   const marker = $('nav-marker');
-  const cockpit = $('cockpit');
-  const cockpitSpeed = $('cockpit-speed');
-  const cockpitTarget = $('cockpit-target');
-  const cockpitDist = $('cockpit-dist');
+  const ckRoot = $('cockpit');
+  const ckMode = $('ck-mode');
+  const ckShipCode = $('ck-ship-code');
+  const ckHeading = $('ck-heading');
+  const ckHeadingTicks = $('ck-heading-ticks');
+  const ckHeadingTape = $('ck-heading-tape');
+  const ckHeadingSub = $('ck-heading-sub');
+  const ckBearingTarget = $('ck-bearing-target');
+  const ckBearingEnemy = $('ck-bearing-enemy');
+  const ckTargetCard = $('ck-target-card');
+  const ckTargetState = $('ck-target-state');
+  const ckTargetName = $('ck-target-name');
+  const ckTargetType = $('ck-target-type');
+  const ckTargetDist = $('ck-target-dist');
+  const ckTargetBearing = $('ck-target-bearing');
+  const ckSpeed = $('ck-speed');
+  const ckSpeedUnit = $('ck-speed-unit');
+  const ckClosure = $('ck-closure');
+  const ckThrottle = $('ck-throttle');
+  const ckThrottleFill = $('ck-throttle-fill');
+  const ckShift = $('ck-shift');
+  const ckAssist = $('ck-assist');
+  const ckHull = $('ck-hull');
+  const ckShield = $('ck-shield');
+  const ckHullBar = $('ck-hull-bar');
+  const ckShieldBar = $('ck-shield-bar');
+  const ckPartEngine = $('ck-part-engine');
+  const ckPartWeapon = $('ck-part-weapon');
+  const ckPartCockpit = $('ck-part-cockpit');
+  const ckFaults = $('ck-faults');
+  const ckAlt = $('ck-alt');
+  const ckAltUnit = $('ck-alt-unit');
+  const ckAltSub = $('ck-alt-sub');
+  const ckVs = $('ck-vs');
+  const ckAltZone = $('ck-alt-zone');
+  const ckRadar = $('ck-radar') as unknown as HTMLCanvasElement;
+  const ckRadarRange = $('ck-radar-range');
+  const ckEnemyCard = $('ck-enemy-card');
+  const ckEnemyState = $('ck-enemy-state');
+  const ckEnemyName = $('ck-enemy-name');
+  const ckEnemyDist = $('ck-enemy-dist');
+  const ckEnemyType = $('ck-enemy-type');
+  const ckEnemyHull = $('ck-enemy-hull');
+  const ckEnemyShield = $('ck-enemy-shield');
+  const ckWeapons = $('ck-weapons');
+  const ckLadder = $('ck-ladder');
+  const ckVelocity = $('ck-velocity');
+  const ckDrift = $('ck-drift');
+  const ckDriftLine = $('ck-drift-line');
+  const ckTargetPrimary = $('ck-target-primary');
+  const ckTargetPrimaryName = $('ck-target-primary-name');
+  const ckTargetPrimaryDist = $('ck-target-primary-dist');
+  const ckTargetHostile = $('ck-target-hostile');
+  const ckTargetHostileName = $('ck-target-hostile-name');
+  const ckTargetHostileDist = $('ck-target-hostile-dist');
+  const ckTargetHostileHull = $('ck-target-hostile-hull');
+  const ckTargetHostileShield = $('ck-target-hostile-shield');
+  const ckWarp = $('ck-warp');
+  const ckWarpFill = $('ck-warp-fill');
+  const ckWarpKey = $('ck-warp-key');
+  const ckWarpLabel = $('ck-warp-label');
+  const ckWarpSub = $('ck-warp-sub');
+  const ckCaution = $('ck-caution');
+  const ckCautionText = $('ck-caution-text');
+  const ckPrompt = $('ck-prompt');
+  const ckHit = $('ck-hit');
+  const ckFooterStatus = $('ck-footer-status');
+  const ckFooterMode = $('ck-footer-mode');
+  const ckFps = $('ck-fps');
   const hullFill = $('hull-fill');
   const shieldFill = $('shield-fill');
   const hullText = $('hull-text');
@@ -1039,9 +1238,6 @@ function setupHud(
   const fleetCount = $('fleet-count');
   const fleetDist = $('fleet-dist');
   const fleetComp = $('fleet-comp');
-  const dashHull = $('dash-hull');
-  const dashShield = $('dash-shield');
-  const dashThrottle = $('dash-throttle');
   const boostUi = $('boost-ui');
   const boostRing = $('boost-ring');
   const boostLabel = $('boost-label');
@@ -1066,8 +1262,6 @@ function setupHud(
   const bossDist = $('boss-dist');
   const hitAlert = $('hit-alert');
   const impactFlash = $('impact-flash');
-  const ladder = $('cockpit-ladder');
-  const tapeSpeed = $('tape-speed');
   const heat = $('heat-warning');
   const fade = $('fade');
 
@@ -1082,6 +1276,23 @@ function setupHud(
   let respawning = false;
   let weaponSignature = '';
   const weaponRows = new Map<string, { row: HTMLButtonElement; fill: HTMLElement | null }>();
+  let ckWeaponSignature = '';
+  const ckWeaponRows = new Map<string, { row: HTMLElement; fill: HTMLElement | null }>();
+  let headingWidth = 0;
+  let headingPxPerDeg = 0;
+  let lastCkMode = '';
+  let faultSignature = '';
+  let ckRadarAccum = 0;
+  const targetSmooth = {
+    primary: { x: 0, y: 0, init: false },
+    hostile: { x: 0, y: 0, init: false },
+  };
+  const lastText = new Map<string, string>();
+  const writeText = (el: HTMLElement, key: string, value: string): void => {
+    if (lastText.get(key) === value) return;
+    lastText.set(key, value);
+    el.textContent = value;
+  };
 
   const toast = (message: string): void => {
     const el = $('toast');
@@ -1091,10 +1302,20 @@ function setupHud(
     toastTimer = window.setTimeout(() => el.classList.remove('is-on'), 2400);
   };
 
-  const showHit = (): void => {
+  const showHit = (localDirection?: THREE.Vector3): void => {
     hitAlert.classList.remove('is-on');
     void hitAlert.offsetWidth;
     hitAlert.classList.add('is-on');
+    let angle = 0;
+    if (localDirection && localDirection.lengthSq() > 1e-6) {
+      angle = Math.atan2(localDirection.x, -localDirection.z) * (180 / Math.PI);
+    }
+    const radius = Math.round(Math.min(window.innerWidth, window.innerHeight) * 0.42);
+    ckHit.style.setProperty('--hit-angle', `${angle.toFixed(1)}deg`);
+    ckHit.style.setProperty('--hit-r', `${radius}px`);
+    ckHit.classList.remove('is-on');
+    void ckHit.offsetWidth;
+    ckHit.classList.add('is-on');
   };
 
   const showExplosionFlash = (strength: number): void => {
@@ -1106,6 +1327,48 @@ function setupHud(
       impactFlash.style.opacity = '0';
     });
   };
+
+  /* ── 第一人称 HUD 静态结构 ── */
+  const layoutHeadingTape = (): void => {
+    headingWidth = ckHeadingTape.clientWidth || 560;
+    headingPxPerDeg = headingWidth / 90;
+    ckHeadingTicks.innerHTML = '';
+    for (let deg = -45; deg <= 405; deg += 5) {
+      const tick = document.createElement('i');
+      tick.className = `ck-tick${deg % 10 === 0 ? ' major' : ''}`;
+      tick.style.left = `${(deg + 45) * headingPxPerDeg}px`;
+      if (deg % 10 === 0) {
+        const label = document.createElement('b');
+        label.textContent = String(((deg % 360) + 360) % 360).padStart(3, '0');
+        tick.append(label);
+      }
+      ckHeadingTicks.append(tick);
+    }
+    ckHeadingTicks.style.width = `${450 * headingPxPerDeg}px`;
+  };
+
+  const buildLadder = (): void => {
+    ckLadder.innerHTML = '';
+    for (let deg = -90; deg <= 90; deg += 5) {
+      const line = document.createElement('i');
+      line.className = `ck-ladder-line${deg === 0 ? ' horizon' : deg % 10 === 0 ? ' major' : ''}`;
+      line.style.setProperty('--deg', String(deg));
+      if (deg % 10 === 0 && deg !== 0) {
+        const right = document.createElement('b');
+        right.textContent = `${deg > 0 ? '+' : ''}${deg}`;
+        line.append(right);
+        const left = document.createElement('b');
+        left.className = 'left';
+        left.textContent = `${deg > 0 ? '+' : ''}${deg}`;
+        line.append(left);
+      }
+      ckLadder.append(line);
+    }
+  };
+
+  layoutHeadingTape();
+  buildLadder();
+  window.addEventListener('resize', layoutHeadingTape);
 
   /* ── 星图 ── */
   const map = $('map');
@@ -1367,6 +1630,57 @@ function setupHud(
     }
   };
 
+  const updateCockpitWeapons = (): void => {
+    const spec = ctx.spec.current;
+    const types = manualWeaponTypes(spec);
+    const autoCount = spec.weapons.filter((weapon) => weapon.turret).length;
+    const signature = `${spec.id}:${types.join(',')}:${autoCount}`;
+    if (signature !== ckWeaponSignature) {
+      ckWeaponSignature = signature;
+      ckWeapons.innerHTML = '';
+      ckWeaponRows.clear();
+
+      const addRow = (key: string, type: string, label: string, count: number, auto = false): void => {
+        const row = document.createElement('div');
+        row.className = `ck-weapon-row${auto ? ' is-auto' : ''}`;
+        row.innerHTML = `
+          <span class="ck-wkey">${key}</span>
+          <span class="ck-wname">${label}</span>
+          <span class="ck-wcount">${auto ? 'AUTO' : count}</span>
+          <span class="ck-wbar"><i></i></span>
+        `;
+        ckWeapons.append(row);
+        const fill = row.querySelector('.ck-wbar i') as HTMLElement | null;
+        ckWeaponRows.set(type, { row, fill });
+      };
+
+      if (types.length > 1) {
+        addRow('0', 'all', '全部', spec.weapons.filter((weapon) => !weapon.turret).length);
+      }
+      types.forEach((type, index) => {
+        const count = spec.weapons.filter((weapon) => !weapon.turret && weapon.type === type).length;
+        addRow(String(index + 1), type, WEAPON_LABELS[type], count);
+      });
+      if (autoCount > 0) addRow('A', 'auto', '自动炮', autoCount, true);
+    }
+
+    for (const [type, entry] of ckWeaponRows) {
+      entry.row.classList.toggle('is-on', type === ctx.weapons.selected);
+      if (type === 'auto' || !entry.fill) continue;
+      const weapons = spec.weapons.filter((weapon) =>
+        !weapon.turret && (type === 'all' || weapon.type === type),
+      );
+      let readiness = 0;
+      for (const weapon of weapons) {
+        const key = `${spec.id}:${weapon.id}`;
+        const cd = ctx.weapons.cooldowns.get(key) ?? 0;
+        const max = 1 / Math.max(0.05, weapon.rate);
+        readiness = Math.max(readiness, 1 - Math.min(1, cd / max));
+      }
+      entry.fill.style.width = `${Math.round(readiness * 100)}%`;
+    }
+  };
+
   const openBody = (body: CelestialBody): void => {
       panelOpen = true;
     panel.classList.add('is-open');
@@ -1572,6 +1886,7 @@ function setupHud(
     }
 
     const speed = ctx.flight.speed;
+    const firstPerson = ctx.flight.cameraMode === 'first';
     ctx.flight.shiftMultiplier = shiftSpeedMultiplier(
       ctx.spec.current,
       playerState.hull / Math.max(1, ctx.spec.current.hull),
@@ -1583,17 +1898,26 @@ function setupHud(
     assistLabel.classList.toggle('is-off', !ctx.flight.assist);
 
     coords.textContent = `X ${Math.round(ctx.flight.position.x)}  Y ${Math.round(ctx.flight.position.y)}  Z ${Math.round(ctx.flight.position.z)}`;
-    modeLabel.textContent = ctx.flight.cameraMode === 'first' ? '第一人称' : ctx.flight.cameraMode === 'free' ? '自由视角' : '第三人称';
-    cockpit.classList.toggle('is-on', ctx.flight.cameraMode === 'first');
+    modeLabel.textContent = firstPerson ? '第一人称' : ctx.flight.cameraMode === 'free' ? '自由视角' : '第三人称';
+    ckRoot.classList.toggle('is-on', firstPerson);
+    hudRoot.classList.toggle('is-first', firstPerson);
 
     // 最近天体
     let best: CelestialBody | null = null;
     let bestDist = Infinity;
+    let nearestPlanet: CelestialBody | null = null;
+    let nearestPlanetAlt: number | null = null;
+    let nearestPlanetDist = Infinity;
     for (const body of ctx.world.bodies) {
       const d = body.position.distanceTo(ctx.flight.position);
       if (d < bestDist) {
         bestDist = d;
         best = body;
+      }
+      if (body.type === 'planet' && d < nearestPlanetDist) {
+        nearestPlanetDist = d;
+        nearestPlanet = body;
+        nearestPlanetAlt = d - body.radius;
       }
     }
     nearest = best;
@@ -1607,38 +1931,74 @@ function setupHud(
     if (best && canDock && !panelOpen) {
       prompt.classList.add('is-on');
       prompt.innerHTML = `<b>F</b> ${best.type === 'station' ? '停靠' : '降落'} ${best.planet?.title ?? best.station?.title ?? ''}`;
+      ckPrompt.classList.add('is-on');
+      ckPrompt.innerHTML = `<kbd>F</kbd> ${best.type === 'station' ? '停靠' : '降落'} · <b>${best.planet?.title ?? best.station?.title ?? ''}</b><span>${distanceLabel(bestDist)}</span>`;
     } else {
       prompt.classList.remove('is-on');
+      ckPrompt.classList.remove('is-on');
     }
 
     updateWeaponPanel();
+    updateCockpitWeapons();
+
+    // 目标投影需要最新相机世界矩阵（第一人称相机挂在舰体上）
+    ctx.camera.updateWorldMatrix(true, false);
+    const viewportW = window.innerWidth;
+    const viewportH = window.innerHeight;
+    const forward = ctx.flight.forwardVector;
+    const yaw = Math.atan2(forward.x, forward.z);
+    const headingYawDeg = ((yaw * 180) / Math.PI + 360) % 360;
+    const pitchDeg = (Math.asin(THREE.MathUtils.clamp(forward.y, -1, 1)) * 180) / Math.PI;
+    const rightAxis = new THREE.Vector3(1, 0, 0).applyQuaternion(ctx.flight.quaternion);
+    const upAxis = new THREE.Vector3(0, 1, 0).applyQuaternion(ctx.flight.quaternion);
+    const rollDeg = (Math.atan2(rightAxis.y, upAxis.y) * 180) / Math.PI;
+    const relativeBearing = (position: THREE.Vector3): number => {
+      const rel = tmp.copy(position).sub(ctx.flight.position);
+      let angle = Math.atan2(rel.x, rel.z) - yaw;
+      angle = ((angle + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+      return (angle * 180) / Math.PI;
+    };
+    const nearestEnemy = ctx.combat.nearestNpc(ctx.flight.position, ctx.spec.current.sensorRange);
+    const threatContact = ctx.combat.nearestHostile(ctx.flight.position, ctx.spec.current.sensorRange);
 
     // 目标
     if (target) {
       const dist = target.position.distanceTo(ctx.flight.position);
       targetName.textContent = target.planet?.title ?? target.station?.title ?? '';
       targetDist.textContent = distanceLabel(dist);
-      cockpitTarget.textContent = target.planet?.title ?? target.station?.title ?? '';
-      cockpitDist.textContent = distanceLabel(dist);
+      const bearing = relativeBearing(target.position);
+      writeText(ckTargetName, 'target-name', target.planet?.title ?? target.station?.title ?? '—');
+      writeText(ckTargetType, 'target-type', target.planet ? `PLANET · ${target.planet.subtitle ?? 'BODY'}` : 'STATION · DOCK');
+      writeText(ckTargetDist, 'target-dist', distanceLabel(dist));
+      writeText(ckTargetBearing, 'target-brg', `BRG ${String(Math.round((bearing + 360) % 360) % 360).padStart(3, '0')}°`);
+      writeText(ckTargetState, 'target-state', 'TRACKING');
+      ckTargetCard.classList.add('is-on');
 
       projected.copy(target.position).project(ctx.camera);
       const onScreen = projected.z < 1;
       if (onScreen) {
-        marker.style.transform = `translate(-50%, -50%) translate(${(projected.x * 0.5 + 0.5) * window.innerWidth}px, ${(-projected.y * 0.5 + 0.5) * window.innerHeight}px)`;
+        marker.style.transform = `translate(-50%, -50%) translate(${(projected.x * 0.5 + 0.5) * viewportW}px, ${(-projected.y * 0.5 + 0.5) * viewportH}px)`;
         marker.classList.add('is-on');
       } else {
         marker.classList.remove('is-on');
       }
+      ckBearingTarget.style.left = `${THREE.MathUtils.clamp(50 + (bearing / 90) * 50, 2, 98)}%`;
+      ckBearingTarget.style.opacity = '1';
     } else {
       targetName.textContent = '未设定';
       targetDist.textContent = '按 M 选择';
-      cockpitTarget.textContent = '—';
-      cockpitDist.textContent = '—';
+      writeText(ckTargetName, 'target-name', '—');
+      writeText(ckTargetType, 'target-type', 'NO TARGET');
+      writeText(ckTargetDist, 'target-dist', '—');
+      writeText(ckTargetBearing, 'target-brg', 'BRG —');
+      writeText(ckTargetState, 'target-state', 'STANDBY');
+      ckTargetCard.classList.remove('is-on');
       marker.classList.remove('is-on');
+      ckBearingTarget.style.opacity = '0';
     }
 
-    cockpitSpeed.textContent = Math.round(speed).toString();
     shipLabel.textContent = `${ctx.spec.current.code} · T${ctx.spec.current.tier} ${tierLabel(ctx.spec.current.tier)}`;
+    writeText(ckShipCode, 'ship-code', `${ctx.spec.current.code} · T${ctx.spec.current.tier}`);
 
     // 跃迁充能环 / Shift 次级加速
     const chargeTime = Math.max(0.1, ctx.spec.current.chargeTime);
@@ -1694,28 +2054,292 @@ function setupHud(
     // 结构值
     const hullRatio = Math.max(0, playerState.hull / specRef.current.hull);
     const shieldRatio = Math.max(0, playerState.shield / specRef.current.shield);
+    const partRatios = {
+      engine: playerState.parts.engine / Math.max(1, specRef.current.parts.engine),
+      weapon: playerState.parts.weapon / Math.max(1, specRef.current.parts.weapon),
+      cockpit: playerState.parts.cockpit / Math.max(1, specRef.current.parts.cockpit),
+    };
     hullFill.style.width = `${hullRatio * 100}%`;
     shieldFill.style.width = `${shieldRatio * 100}%`;
     hullGhost.style.width = `${hullRatio * 100}%`;
     shieldGhost.style.width = `${shieldRatio * 100}%`;
     hullVital.classList.toggle('is-critical', hullRatio < 0.3);
     shieldVital.classList.toggle('is-critical', shieldRatio < 0.18);
-    dashHull.style.width = `${hullRatio * 100}%`;
-    dashShield.style.width = `${shieldRatio * 100}%`;
-    dashThrottle.style.width = `${Math.round(ctx.flight.throttle * 100)}%`;
     hullText.textContent = `${Math.max(0, Math.round(playerState.hull))} / ${specRef.current.hull}`;
     shieldText.textContent = `${Math.max(0, Math.round(playerState.shield))} / ${specRef.current.shield}`;
 
+    // ── 第一人称状态/部件 ──
+    const sensorRange = ctx.spec.current.sensorRange;
+    const enemy = nearestEnemy;
+    if (firstPerson) {
+      const speedLabel = speed > 9999 ? `${(speed / 1000).toFixed(1)}` : String(Math.round(speed));
+      writeText(ckSpeed, 'speed', speedLabel);
+      writeText(ckSpeedUnit, 'speed-unit', speed > 9999 ? 'km/s' : 'm/s');
+      writeText(ckThrottle, 'throttle', `${Math.round(ctx.flight.throttle * 100)}%`);
+      ckThrottleFill.style.transform = `scaleX(${THREE.MathUtils.clamp(ctx.flight.throttle, 0, 1)})`;
+      ckAssist.textContent = ctx.flight.assist ? 'ASSIST ON' : 'ASSIST OFF';
+      ckAssist.classList.toggle('is-off', !ctx.flight.assist);
+      ckShift.style.display = shifting ? 'inline-flex' : 'none';
+      ckShift.textContent = `SHIFT ×${ctx.flight.shiftMultiplier.toFixed(1)}`;
+      if (enemy) {
+        const rel = enemy.position.clone().sub(ctx.flight.position);
+        const los = rel.clone().normalize();
+        const relativeVelocity = enemy.velocity.clone().sub(ctx.flight.velocity);
+        const closure = -relativeVelocity.dot(los);
+        writeText(ckClosure, 'closure', `CLOSURE ${closure >= 0 ? '+' : ''}${Math.round(closure)} m/s`);
+      } else {
+        writeText(ckClosure, 'closure', 'CLOSURE —');
+      }
+
+      ckHullBar.style.transform = `scaleX(${THREE.MathUtils.clamp(hullRatio, 0, 1)})`;
+      ckShieldBar.style.transform = `scaleX(${THREE.MathUtils.clamp(shieldRatio, 0, 1)})`;
+      ckHullBar.classList.toggle('is-critical', hullRatio < 0.3);
+      ckShieldBar.classList.toggle('is-critical', shieldRatio < 0.2);
+      writeText(ckHull, 'hull', `${Math.round(hullRatio * 100)}%`);
+      const shieldLabel = shieldRatio <= 0.001
+        ? playerState.shieldDelay > 0
+          ? `DOWN · ${playerState.shieldDelay.toFixed(1)}s`
+          : 'REGEN'
+        : `${Math.round(shieldRatio * 100)}%`;
+      writeText(ckShield, 'shield', shieldLabel);
+      const enginePct = Math.round(partRatios.engine * 100);
+      const weaponPct = Math.round(partRatios.weapon * 100);
+      const cockpitPct = Math.round(partRatios.cockpit * 100);
+      writeText(ckPartEngine, 'eng', String(enginePct));
+      writeText(ckPartWeapon, 'wpn', String(weaponPct));
+      writeText(ckPartCockpit, 'cpt', String(cockpitPct));
+      for (const [el, ratio] of [[ckPartEngine, partRatios.engine], [ckPartWeapon, partRatios.weapon], [ckPartCockpit, partRatios.cockpit]] as const) {
+        el.classList.toggle('is-low', ratio < 0.5 && ratio >= 0.25);
+        el.classList.toggle('is-critical', ratio < 0.25);
+      }
+
+      // 高度/V-S/最近天体
+      const altitudeLabel = nearestPlanetAlt == null
+        ? '—'
+        : nearestPlanetAlt >= 100_000_000
+          ? 'ORBIT'
+          : nearestPlanetAlt >= 100_000
+            ? String(Math.round(nearestPlanetAlt / 1000))
+            : String(Math.round(nearestPlanetAlt));
+      const altitudeUnit = nearestPlanetAlt == null || nearestPlanetAlt >= 100_000_000 ? '' : nearestPlanetAlt >= 100_000 ? 'km' : 'm';
+      writeText(ckAlt, 'alt', altitudeLabel);
+      writeText(ckAltUnit, 'alt-unit', altitudeUnit);
+      writeText(ckAltSub, 'alt-sub', nearestPlanet?.planet?.title ?? 'NO BODY');
+      const vs = nearestPlanet
+        ? ctx.flight.velocity.dot(ctx.flight.position.clone().sub(nearestPlanet.position).normalize())
+        : null;
+      writeText(ckVs, 'vs', vs == null ? '—' : `${vs >= 0 ? '+' : ''}${Math.round(vs)} m/s`);
+      writeText(
+        ckAltZone,
+        'alt-zone',
+        nearestPlanetAlt == null
+          ? 'DEEP SPACE'
+          : nearestPlanetAlt < 100_000
+            ? 'ATMOSPHERE'
+            : nearestPlanetAlt >= 100_000_000
+              ? 'HIGH ORBIT'
+              : 'LOW ORBIT',
+      );
+      writeText(ckRadarRange, 'radar-range', `${Math.round(Math.max(50000, sensorRange * 2) / 1000)} km`);
+
+      // 故障 / caution
+      const faults: Array<{ text: string; critical: boolean }> = [];
+      if (hullRatio < 0.3) faults.push({ text: `HULL ${Math.round(hullRatio * 100)}% · CRITICAL`, critical: true });
+      if (shieldRatio <= 0.001) {
+        faults.push({
+          text: playerState.shieldDelay > 0 ? `SHIELD DOWN · REGEN ${playerState.shieldDelay.toFixed(1)}s` : 'SHIELD DOWN · REGEN',
+          critical: false,
+        });
+      }
+      if (partRatios.cockpit < 0.5) faults.push({ text: `CANOPY ${cockpitPct}% · SEAL`, critical: partRatios.cockpit < 0.25 });
+      if (partRatios.engine < 0.5) faults.push({ text: `ENGINE ${enginePct}% · THRUST LIMITED`, critical: partRatios.engine < 0.25 });
+      if (partRatios.weapon < 0.5) faults.push({ text: `WPN ${weaponPct}% · OFFLINE`, critical: partRatios.weapon < 0.25 });
+      const faultText = faults.slice(0, 3).map((fault) => `${fault.critical ? '1' : '0'}:${fault.text}`).join('|');
+      if (faultText !== faultSignature) {
+        faultSignature = faultText;
+        ckFaults.innerHTML = faults.slice(0, 3)
+          .map((fault) => `<span class="ck-fault${fault.critical ? ' is-critical' : ''}"><i>!</i>${fault.text}</span>`)
+          .join('');
+      }
+      ckCaution.classList.toggle('is-on', faults.length > 0);
+      ckCaution.classList.toggle('is-critical', faults.some((fault) => fault.critical));
+      writeText(ckCautionText, 'caution', faults.slice(0, 2).map((fault) => fault.text).join(' · '));
+
+      // 模式
+      const damageMode = hullRatio < 0.3 || partRatios.cockpit < 0.35 || (shieldRatio <= 0.001 && playerState.shieldDelay > 0);
+      const mode = warpPhase !== 'idle' ? 'warp' : damageMode ? 'damage' : threatContact ? 'combat' : 'nav';
+      if (mode !== lastCkMode) {
+        lastCkMode = mode;
+        ckRoot.dataset.mode = mode;
+        writeText(ckMode, 'mode', mode.toUpperCase());
+        writeText(ckFooterMode, 'footer-mode', mode.toUpperCase());
+      }
+      ckFooterStatus.textContent = faults.length > 0
+        ? `CAUTION — ${faults[0].text}`
+        : `SYSTEMS NOMINAL — AUTO ASSIST ${ctx.flight.assist ? 'ON' : 'OFF'}`;
+      ckFps.textContent = fpsLabel.textContent.replace(' fps', '');
+
+      // 敌机卡片
+      if (enemy) {
+        ckEnemyCard.classList.add('is-on');
+        writeText(ckEnemyState, 'enemy-state', enemy.hostile ? 'HOSTILE' : 'CONTACT');
+        writeText(ckEnemyName, 'enemy-name', enemy.name);
+        writeText(ckEnemyDist, 'enemy-dist', distanceLabel(enemy.distance));
+        writeText(ckEnemyType, 'enemy-type', `T${enemy.tier} · ${enemy.code}`);
+        ckEnemyHull.style.transform = `scaleX(${THREE.MathUtils.clamp(enemy.hull / Math.max(1, enemy.maxHull), 0, 1)})`;
+        ckEnemyShield.style.transform = `scaleX(${THREE.MathUtils.clamp(enemy.shield / Math.max(1, enemy.maxShield), 0, 1)})`;
+        ckEnemyHull.classList.toggle('is-critical', enemy.hull / Math.max(1, enemy.maxHull) < 0.3);
+        const enemyRelBearing = relativeBearing(enemy.position);
+        ckBearingEnemy.style.left = `${THREE.MathUtils.clamp(50 + (enemyRelBearing / 90) * 50, 2, 98)}%`;
+        ckBearingEnemy.style.opacity = '1';
+      } else {
+        ckEnemyCard.classList.remove('is-on');
+        ckBearingEnemy.style.opacity = '0';
+      }
+
+      // 屏幕空间目标框
+      const placeBox = (
+        el: HTMLElement,
+        nameEl: HTMLElement,
+        distEl: HTMLElement,
+        smooth: { x: number; y: number; init: boolean },
+        position: THREE.Vector3 | null,
+        kind: string,
+        label: string,
+        distance: string,
+      ): void => {
+        if (!position) {
+          el.classList.remove('is-on');
+          smooth.init = false;
+          return;
+        }
+        projected.copy(position).project(ctx.camera);
+        const behind = projected.z >= 1;
+        const projectedX = (projected.x * 0.5 + 0.5) * viewportW;
+        const projectedY = (-projected.y * 0.5 + 0.5) * viewportH;
+        // 世界目标框只允许出现在 canopy 玻璃区域内；落在 dash/struts/console 后方则隐藏
+        const onCanopy = !behind && insideCanopyMask(projectedX / viewportW, projectedY / viewportH);
+        if (!onCanopy) {
+          el.classList.remove('is-on');
+          smooth.init = false;
+          return;
+        }
+        // 左右保留给 HUD 栏 / radar，避免目标框、标签和红条被裁切
+        const safeLeft = viewportW <= 1280 ? 260 : 300;
+        const safeRight = viewportW - (viewportW * 0.03 + 212 + 54);
+        const rawX = THREE.MathUtils.clamp(projectedX, safeLeft, safeRight);
+        const rawY = THREE.MathUtils.clamp(projectedY, viewportH * 0.26, viewportH * 0.53);
+        if (!smooth.init) {
+          smooth.x = rawX;
+          smooth.y = rawY;
+          smooth.init = true;
+        } else {
+          const blend = 1 - Math.exp(-14 * dt);
+          smooth.x += (rawX - smooth.x) * blend;
+          smooth.y += (rawY - smooth.y) * blend;
+        }
+        el.style.setProperty('--x', `${smooth.x.toFixed(1)}px`);
+        el.style.setProperty('--y', `${smooth.y.toFixed(1)}px`);
+        el.dataset.offscreen = 'false';
+        el.dataset.kind = kind;
+        el.dataset.side = smooth.x > viewportW * 0.58 ? 'right' : 'center';
+        el.classList.add('is-on');
+        writeText(nameEl, `${kind}-name-${label}`, label);
+        writeText(distEl, `${kind}-dist-${label}`, distance);
+      };
+      placeBox(
+        ckTargetPrimary,
+        ckTargetPrimaryName,
+        ckTargetPrimaryDist,
+        targetSmooth.primary,
+        target ? target.position : null,
+        'body',
+        target?.planet?.title ?? target?.station?.title ?? '',
+        target ? distanceLabel(target.position.distanceTo(ctx.flight.position)) : '',
+      );
+      placeBox(
+        ckTargetHostile,
+        ckTargetHostileName,
+        ckTargetHostileDist,
+        targetSmooth.hostile,
+        enemy ? enemy.position : null,
+        enemy?.hostile ? 'hostile' : 'neutral',
+        enemy ? `${enemy.name} · ${enemy.code}` : '',
+        enemy ? distanceLabel(enemy.distance) : '',
+      );
+      if (enemy) {
+        ckTargetHostileHull.style.setProperty('--v', `${Math.round((enemy.hull / Math.max(1, enemy.maxHull)) * 100)}%`);
+        ckTargetHostileShield.style.setProperty('--v', `${Math.round((enemy.shield / Math.max(1, enemy.maxShield)) * 100)}%`);
+      }
+
+      // 速度矢量 + drift
+      if (speed > 5) {
+        const velocityDir = ctx.flight.velocity.clone().normalize();
+        const projectedAhead = ctx.flight.position.clone().addScaledVector(velocityDir, 1000).project(ctx.camera);
+        const vx = THREE.MathUtils.clamp((projectedAhead.x * 0.5 + 0.5) * viewportW, 28, viewportW - 28);
+        const vy = THREE.MathUtils.clamp((-projectedAhead.y * 0.5 + 0.5) * viewportH, 70, viewportH - 130);
+        ckVelocity.style.transform = `translate3d(${vx.toFixed(1)}px, ${vy.toFixed(1)}px, 0) translate(-50%, -50%)`;
+        ckVelocity.classList.add('is-on');
+        const drift = Math.acos(THREE.MathUtils.clamp(forward.dot(velocityDir), -1, 1)) * (180 / Math.PI);
+        if (drift > 4 && projectedAhead.z < 1) {
+          ckDrift.classList.add('is-on');
+          ckDriftLine.setAttribute('x2', ((vx / viewportW) * 100).toFixed(2));
+          ckDriftLine.setAttribute('y2', ((vy / viewportH) * 100).toFixed(2));
+        } else {
+          ckDrift.classList.remove('is-on');
+        }
+      } else {
+        ckVelocity.classList.remove('is-on');
+        ckDrift.classList.remove('is-on');
+      }
+
+      // 航向带 / 俯仰梯
+      if (headingPxPerDeg > 0) {
+        ckHeadingTicks.style.transform = `translateX(${(headingWidth / 2 - (((headingYawDeg + 45) * headingPxPerDeg))).toFixed(2)}px)`;
+      }
+      writeText(ckHeading, 'heading', String(Math.round(headingYawDeg)).padStart(3, '0'));
+      writeText(ckHeadingSub, 'heading-sub', `${nearestPlanet?.planet?.title ?? 'DEEP SPACE'} · ${nearestPlanetAlt == null ? 'DEEP SPACE' : nearestPlanetAlt < 100_000 ? 'ATMOSPHERE' : 'ORBIT'}`);
+      ckLadder.style.transform = `translate(-50%, -50%) translateY(${(pitchDeg * 8).toFixed(2)}px) rotate(${(-rollDeg).toFixed(2)}deg)`;
+      ckLadder.style.opacity = Math.abs(pitchDeg) > 40 ? '0.3' : '0.68';
+
+      // 跃迁环
+      const warpVisible = warpPhase !== 'idle';
+      ckWarp.classList.toggle('is-on', warpVisible);
+      ckWarp.classList.toggle('is-ready', charging && chargeRatio > 0.98);
+      ckWarp.classList.toggle('is-warping', warping);
+      ckWarp.classList.toggle('is-shift', shifting && !warpVisible);
+      const warpCirc = 2 * Math.PI * 106;
+      ckWarpFill.style.strokeDashoffset = String(warpCirc * (1 - chargeRatio));
+      ckWarpKey.textContent = ctx.spec.current.warpCombo ? 'B+H+N' : 'B';
+      if (warping) {
+        ckWarpLabel.textContent = 'JUMP';
+        ckWarpSub.textContent = `${Math.round(speed)} m/s`;
+      } else if (aligning) {
+        ckWarpLabel.textContent = 'CALIBRATING';
+        ckWarpSub.textContent = 'ALIGNING VECTOR';
+      } else if (charging) {
+        ckWarpLabel.textContent = `WARP ${Math.round(chargeRatio * 100)}%`;
+        ckWarpSub.textContent = `${remaining.toFixed(1)} s · SPOOL`;
+      } else if (shifting) {
+        ckWarpLabel.textContent = 'SHIFT';
+        ckWarpSub.textContent = `×${ctx.flight.shiftMultiplier.toFixed(1)} MAX`;
+      } else {
+        ckWarpLabel.textContent = 'WARP';
+        ckWarpSub.textContent = 'STANDBY';
+      }
+
+      // 2.5D 雷达 30 Hz
+      ckRadarAccum += dt;
+      if (ckRadarAccum >= 1 / 30) {
+        ckRadarAccum = 0;
+        drawCockpitRadar();
+      }
+    }
+
     ctx.damage.current?.setBubbleVisible(playerState.alive && ctx.flight.cameraMode !== 'first');
-    ctx.damage.current?.update(dt, hullRatio, shieldRatio, {
-      engine: playerState.parts.engine / Math.max(1, specRef.current.parts.engine),
-      weapon: playerState.parts.weapon / Math.max(1, specRef.current.parts.weapon),
-      cockpit: playerState.parts.cockpit / Math.max(1, specRef.current.parts.cockpit),
-    });
+    ctx.damage.current?.update(dt, hullRatio, shieldRatio, partRatios);
 
     // 敌机提示
-    const sensorRange = ctx.spec.current.sensorRange;
-    const enemy = ctx.combat.nearestNpc(ctx.flight.position, sensorRange);
     if (enemy) {
       enemyBox.classList.add('is-on');
       enemyHp.style.width = `${Math.max(0, (enemy.hp / enemy.maxHp) * 100)}%`;
@@ -1775,8 +2399,7 @@ function setupHud(
 
     // 护盾再生：受击后 3.5s 延迟；交战中 35% 速率；脱离战斗后 300% 速率
     playerState.shieldDelay = Math.max(0, playerState.shieldDelay - dt);
-    const threat = ctx.combat.nearestHostile(ctx.flight.position, ctx.spec.current.sensorRange);
-    const inCombat = playerState.shieldDelay > 0 || !!threat;
+    const inCombat = playerState.shieldDelay > 0 || !!threatContact;
     if (playerState.alive && playerState.shieldDelay <= 0 && playerState.shield < specRef.current.shield) {
       const regen = specRef.current.shieldRegen * (inCombat ? 0.35 : 3.0);
       playerState.shield = Math.min(specRef.current.shield, playerState.shield + regen * dt);
@@ -1834,25 +2457,12 @@ function setupHud(
         }, 1100);
       }
     }
-    tapeSpeed.textContent = Math.round(speed).toString();
-
-    // 俯仰梯与滚转
-    const forward = ctx.flight.forwardVector;
-    const pitch = Math.asin(THREE.MathUtils.clamp(forward.y, -1, 1));
-    const pitchDeg = (pitch * 180) / Math.PI;
-    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(ctx.flight.quaternion);
-    const upVec = new THREE.Vector3(0, 1, 0).applyQuaternion(ctx.flight.quaternion);
-    const roll = Math.atan2(right.y, upVec.y);
-    if (ladder) {
-      ladder.style.transform = `translate(-50%, -50%) translateY(${pitchDeg * 9}px) rotate(${(-roll * 180) / Math.PI}deg)`;
-    }
-
     // 恒星警告
     const sunDist = ctx.flight.position.length();
     heat.classList.toggle('is-on', sunDist < ctx.world.sunRadius * 2.2);
 
-    // 雷达
-    drawRadar();
+    // 第三人称雷达（第一人称用 ck-radar，避免重复绘制）
+    if (!firstPerson) drawRadar();
     if (radarLabel) radarLabel.textContent = `${Math.round(Math.max(50000, ctx.spec.current.sensorRange * 2) / 1000)} km`;
   };
 
@@ -1944,6 +2554,125 @@ function setupHud(
     rctx.fill();
   };
 
+  /* ── 第一人称 2.5D 雷达 ── */
+  const ckRctx = ckRadar.getContext('2d')!;
+  const drawCockpitRadar = (): void => {
+    const size = ckRadar.width;
+    const half = size / 2;
+    const radarRange = Math.max(50000, ctx.spec.current.sensorRange * 2);
+    ckRctx.clearRect(0, 0, size, size);
+
+    // 背景环 / 十字 / 前方扇区
+    ckRctx.strokeStyle = 'rgba(126,232,213,0.18)';
+    ckRctx.lineWidth = 1;
+    for (const r of [0.34, 0.67, 1]) {
+      ckRctx.beginPath();
+      ckRctx.arc(half, half, half * r - 3, 0, Math.PI * 2);
+      ckRctx.stroke();
+    }
+    ckRctx.beginPath();
+    ckRctx.moveTo(half, 5);
+    ckRctx.lineTo(half, size - 5);
+    ckRctx.moveTo(5, half);
+    ckRctx.lineTo(size - 5, half);
+    ckRctx.stroke();
+    ckRctx.fillStyle = 'rgba(89,224,200,0.045)';
+    ckRctx.beginPath();
+    ckRctx.moveTo(half, half);
+    ckRctx.arc(half, half, half - 6, -Math.PI / 2 - 0.48, -Math.PI / 2 + 0.48);
+    ckRctx.closePath();
+    ckRctx.fill();
+
+    const inverse = ctx.flight.quaternion.clone().invert();
+    const place = (
+      position: THREE.Vector3,
+      kind: 'planet' | 'station' | 'hostile' | 'neutral' | 'target',
+      radius: number,
+    ): void => {
+      const rel = position.clone().sub(ctx.flight.position);
+      const distance = rel.length();
+      if (distance > radarRange) return;
+      const local = rel.applyQuaternion(inverse);
+      const bearing = Math.atan2(local.x, -local.z);
+      const rr = (distance / radarRange) * (half - 12);
+      const x = half + Math.sin(bearing) * rr;
+      const y = half - Math.cos(bearing) * rr;
+      const stem = THREE.MathUtils.clamp(local.y / 5000, -1, 1) * 13;
+      ckRctx.strokeStyle = 'rgba(126,232,213,0.28)';
+      ckRctx.beginPath();
+      ckRctx.moveTo(x, y);
+      ckRctx.lineTo(x, y - stem);
+      ckRctx.stroke();
+
+      if (kind === 'hostile') {
+        ckRctx.fillStyle = 'rgba(255,95,69,0.95)';
+        ckRctx.beginPath();
+        ckRctx.moveTo(x, y - stem - 5);
+        ckRctx.lineTo(x + 5, y - stem + 4);
+        ckRctx.lineTo(x - 5, y - stem + 4);
+        ckRctx.closePath();
+        ckRctx.fill();
+      } else if (kind === 'planet' || kind === 'station') {
+        ckRctx.fillStyle = kind === 'station' ? 'rgba(216,179,108,0.92)' : 'rgba(143,200,213,0.78)';
+        ckRctx.strokeStyle = 'rgba(216,179,108,0.9)';
+        ckRctx.lineWidth = 1;
+        ckRctx.beginPath();
+        if (kind === 'planet') {
+          ckRctx.moveTo(x, y - stem - 4.5);
+          ckRctx.lineTo(x + 4.5, y - stem);
+          ckRctx.lineTo(x, y - stem + 4.5);
+          ckRctx.lineTo(x - 4.5, y - stem);
+          ckRctx.closePath();
+          ckRctx.fill();
+        } else {
+          ckRctx.rect(x - 3.5, y - stem - 3.5, 7, 7);
+          ckRctx.fill();
+        }
+      } else {
+        ckRctx.fillStyle = kind === 'target' ? 'rgba(230,247,241,0.95)' : 'rgba(134,200,213,0.85)';
+        ckRctx.beginPath();
+        ckRctx.arc(x, y - stem, radius, 0, Math.PI * 2);
+        ckRctx.fill();
+      }
+      if (target && position.distanceToSquared(target.position) < 1) {
+        ckRctx.strokeStyle = 'rgba(216,179,108,0.9)';
+        ckRctx.lineWidth = 1.2;
+        ckRctx.beginPath();
+        ckRctx.arc(x, y - stem, 7, 0, Math.PI * 2);
+        ckRctx.stroke();
+      }
+    };
+
+    for (const body of ctx.world.bodies) {
+      place(body.position, body.type === 'station' ? 'station' : 'planet', 2.4);
+    }
+    for (const contact of ctx.combat.contacts) {
+      if (contact.position.distanceTo(ctx.flight.position) > ctx.spec.current.sensorRange) continue;
+      place(contact.position, contact.hostile ? 'hostile' : 'neutral', 2.2);
+    }
+    if (target) place(target.position, 'target', 2.4);
+
+    // 本舰
+    ckRctx.strokeStyle = 'rgba(159,245,227,0.8)';
+    ckRctx.lineWidth = 1.2;
+    ckRctx.beginPath();
+    ckRctx.arc(half, half, 10, 0, Math.PI * 2);
+    ckRctx.stroke();
+    ckRctx.fillStyle = 'rgba(230,247,241,0.98)';
+    ckRctx.beginPath();
+    ckRctx.moveTo(half, half - 6);
+    ckRctx.lineTo(half - 4, half + 5);
+    ckRctx.lineTo(half, half + 2);
+    ckRctx.lineTo(half + 4, half + 5);
+    ckRctx.closePath();
+    ckRctx.fill();
+
+    ckRctx.fillStyle = 'rgba(159,245,227,0.44)';
+    ckRctx.font = '600 11px ui-monospace, Menlo, monospace';
+    ckRctx.textAlign = 'center';
+    ckRctx.fillText(`R ${Math.round(radarRange / 1000)} km`, half, size - 8);
+  };
+
   return {
     update,
     toast,
@@ -1952,6 +2681,10 @@ function setupHud(
     openById: (id: string) => {
       const body = ctx.world.bodies.find((item) => item.id === id);
       if (body) openBody(body);
+    },
+    setTarget: (id: string) => {
+      const body = ctx.world.bodies.find((item) => item.id === id);
+      if (body) target = body;
     },
     getTarget: () => target,
   };

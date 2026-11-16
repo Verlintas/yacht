@@ -99,50 +99,143 @@ const systemData = {
       <div id="impact-flash"></div>
 
       <div id="cockpit" aria-hidden="true">
-        <div class="cockpit-canopy"></div>
-        <div class="cockpit-hud">
-          <div class="cockpit-tile">
-            <span>速度</span>
-            <strong id="cockpit-speed">0</strong>
-            <em>m/s</em>
+        <div class="ck-glass" aria-hidden="true">
+          <span class="ck-scanlines"></span>
+          <span class="ck-reflection"></span>
+          <span class="ck-edge-dirt"></span>
+          <span class="ck-vignette"></span>
+        </div>
+
+        <header class="ck-top">
+          <div class="ck-brand">
+            <span class="ck-mark">V</span>
+            <span class="ck-brand-text"><b>夜航</b><em>VERLINTAS SHIPYARD</em></span>
+            <span class="ck-chip" id="ck-mode">NAV</span>
+            <span class="ck-chip ck-chip-brass" id="ck-ship-code">VX-9 · A-30</span>
           </div>
-          <div class="cockpit-tile cockpit-tile-right">
-            <span>目标</span>
-            <strong id="cockpit-target">—</strong>
-            <em id="cockpit-dist">—</em>
+
+          <div class="ck-heading">
+            <div class="ck-heading-read"><span>HDG</span><b id="ck-heading">000</b><em>°</em></div>
+            <div class="ck-heading-tape" id="ck-heading-tape">
+              <div class="ck-heading-ticks" id="ck-heading-ticks"></div>
+              <i class="ck-heading-center"></i>
+              <span class="ck-bearing ck-bearing-target" id="ck-bearing-target">◆</span>
+              <span class="ck-bearing ck-bearing-enemy" id="ck-bearing-enemy">▲</span>
+            </div>
+            <div class="ck-heading-sub" id="ck-heading-sub">DEEP SPACE</div>
+          </div>
+
+          <div class="ck-target-card" id="ck-target-card">
+            <div class="ck-tc-head"><span>PRIMARY</span><b id="ck-target-state">TRACKING</b></div>
+            <div class="ck-tc-name" id="ck-target-name">—</div>
+            <div class="ck-tc-type" id="ck-target-type">NO TARGET</div>
+            <div class="ck-tc-meta"><span id="ck-target-dist">—</span><span id="ck-target-bearing">BRG —</span></div>
+          </div>
+        </header>
+
+        <aside class="ck-weapons" id="ck-weapons"></aside>
+
+        <aside class="ck-left">
+          <div class="ck-speed-block">
+            <div class="ck-label">SPD</div>
+            <div class="ck-speed-value"><b id="ck-speed">0</b><em id="ck-speed-unit">m/s</em></div>
+            <div class="ck-speed-scale" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="ck-sub" id="ck-closure">CLOSURE —</div>
+            <div class="ck-throttle">
+              <div class="ck-row"><span>THR</span><b id="ck-throttle">0%</b></div>
+              <div class="ck-track"><i id="ck-throttle-fill"></i></div>
+              <div class="ck-row ck-row-small">
+                <span class="ck-chip ck-chip-ice" id="ck-shift">SHIFT ×0.0</span>
+                <span id="ck-assist">ASSIST ON</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ck-status">
+            <div class="ck-row"><span>HULL</span><b id="ck-hull">100%</b></div>
+            <div class="ck-seg ck-hull-seg"><i id="ck-hull-bar"></i></div>
+            <div class="ck-row"><span>SHIELD</span><b id="ck-shield">100%</b></div>
+            <div class="ck-seg ck-shield-seg"><i id="ck-shield-bar"></i></div>
+            <div class="ck-parts" id="ck-parts">
+              <span>ENG <b id="ck-part-engine">100</b></span>
+              <span>WPN <b id="ck-part-weapon">100</b></span>
+              <span>CPT <b id="ck-part-cockpit">100</b></span>
+            </div>
+          </div>
+
+          <div class="ck-faults" id="ck-faults"></div>
+        </aside>
+
+        <aside class="ck-right">
+          <div class="ck-alt">
+            <div class="ck-label">ALT</div>
+            <div class="ck-alt-value"><b id="ck-alt">—</b><span id="ck-alt-unit"></span></div>
+            <div class="ck-sub" id="ck-alt-sub">NO BODY</div>
+            <div class="ck-alt-row"><span>V/S</span><b id="ck-vs">—</b><span id="ck-alt-zone">DEEP SPACE</span></div>
+          </div>
+
+          <div class="ck-radar">
+            <div class="ck-row ck-row-small"><span>SENSOR</span><b id="ck-radar-range">— km</b></div>
+            <div class="ck-radar-wrap">
+              <canvas id="ck-radar" width="256" height="256"></canvas>
+              <i class="ck-radar-sweep" aria-hidden="true"></i>
+            </div>
+            <div class="ck-radar-legend"><span class="is-hostile">▲ HOSTILE</span><span class="is-body">◆ BODY</span><span class="is-neutral">● CONTACT</span></div>
+          </div>
+
+          <div class="ck-enemy-card" id="ck-enemy-card">
+            <div class="ck-row ck-row-small"><span>NEAREST</span><b id="ck-enemy-state">CONTACT</b></div>
+            <div class="ck-enemy-name" id="ck-enemy-name">—</div>
+            <div class="ck-row ck-row-small"><span id="ck-enemy-dist">—</span><span id="ck-enemy-type">—</span></div>
+            <div class="ck-seg ck-enemy-hull"><i id="ck-enemy-hull"></i></div>
+            <div class="ck-seg ck-enemy-shield"><i id="ck-enemy-shield"></i></div>
+          </div>
+        </aside>
+
+        <div class="ck-center">
+          <div class="ck-ladder" id="ck-ladder"></div>
+          <div class="ck-reticle" aria-hidden="true">
+            <i class="ck-reticle-ring"></i>
+            <i class="ck-reticle-tick t"></i>
+            <i class="ck-reticle-tick b"></i>
+            <i class="ck-reticle-tick l"></i>
+            <i class="ck-reticle-tick r"></i>
+            <i class="ck-reticle-dot"></i>
+          </div>
+          <div class="ck-velocity" id="ck-velocity"><i></i><span>VECTOR</span></div>
+          <svg class="ck-drift" id="ck-drift" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <line id="ck-drift-line" x1="50" y1="50" x2="50" y2="50" vector-effect="non-scaling-stroke" />
+          </svg>
+          <div class="ck-targets">
+            <div class="ck-target" id="ck-target-primary" data-kind="body">
+              <i class="ck-corner tl"></i><i class="ck-corner tr"></i><i class="ck-corner bl"></i><i class="ck-corner br"></i>
+              <span class="ck-target-label"><b id="ck-target-primary-name">—</b><em id="ck-target-primary-dist">—</em></span>
+            </div>
+            <div class="ck-target" id="ck-target-hostile" data-kind="hostile">
+              <i class="ck-corner tl"></i><i class="ck-corner tr"></i><i class="ck-corner bl"></i><i class="ck-corner br"></i>
+              <span class="ck-target-label"><b id="ck-target-hostile-name">—</b><em id="ck-target-hostile-dist">—</em></span>
+              <span class="ck-target-bars"><i id="ck-target-hostile-hull"></i><i id="ck-target-hostile-shield"></i></span>
+            </div>
+          </div>
+          <div class="ck-warp" id="ck-warp">
+            <svg viewBox="0 0 240 240" aria-hidden="true">
+              <circle class="ck-warp-outer" cx="120" cy="120" r="114" />
+              <circle class="ck-warp-track" cx="120" cy="120" r="106" />
+              <circle class="ck-warp-fill" id="ck-warp-fill" cx="120" cy="120" r="106" />
+            </svg>
+            <div class="ck-warp-text"><span id="ck-warp-key">B</span><b id="ck-warp-label">WARP</b><em id="ck-warp-sub">—</em></div>
           </div>
         </div>
-        <div class="cockpit-ladder" id="cockpit-ladder">
-          <i data-deg="-30" style="--deg:-30"><b>-30</b></i>
-          <i data-deg="-20" style="--deg:-20"><b>-20</b></i>
-          <i data-deg="-10" style="--deg:-10"><b>-10</b></i>
-          <i data-deg="0" style="--deg:0"><b>0</b></i>
-          <i data-deg="10" style="--deg:10"><b>10</b></i>
-          <i data-deg="20" style="--deg:20"><b>20</b></i>
-          <i data-deg="30" style="--deg:30"><b>30</b></i>
+
+        <div class="ck-caution" id="ck-caution">
+          <span class="ck-caution-icon">▲</span><b>MASTER CAUTION</b><em id="ck-caution-text">—</em>
         </div>
-        <div class="cockpit-crosshair">
-          <span class="ch-wing"></span>
+        <div class="ck-hit" id="ck-hit" aria-hidden="true"><i class="ck-hit-wedge"></i></div>
+        <div class="ck-prompt" id="ck-prompt"></div>
+        <div class="ck-footer">
+          <span id="ck-footer-status">SYSTEMS NOMINAL — AUTO ASSIST ON</span>
+          <span><b id="ck-fps">--</b> FPS · <span id="ck-footer-mode">NAV</span></span>
         </div>
-        <div class="cockpit-tape cockpit-tape-left">
-          <b id="tape-speed">0</b>
-          <span>m/s</span>
-        </div>
-        <div class="cockpit-dash">
-          <div class="dash-panel">
-            <span class="dash-label">HULL</span>
-            <i id="dash-hull"></i>
-          </div>
-          <div class="dash-panel">
-            <span class="dash-label">SHLD</span>
-            <i id="dash-shield"></i>
-          </div>
-          <div class="dash-panel dash-panel-wide">
-            <span class="dash-label">THR</span>
-            <i id="dash-throttle"></i>
-          </div>
-        </div>
-        <div class="cockpit-visor"></div>
       </div>
 
       <div class="hud-reticle" aria-hidden="true">
@@ -1207,6 +1300,7 @@ const systemData = {
   #cockpit {
     position: absolute;
     inset: 0;
+    z-index: 2;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.28s ease;
@@ -2726,5 +2820,1436 @@ const systemData = {
     border-color: rgba(255, 80, 60, 0.9);
     color: #ff7a64;
     box-shadow: 0 0 12px rgba(255, 60, 40, 0.35);
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     VX-9 COCKPIT HUD · DOM 面罩投影
+     ══════════════════════════════════════════════════════════ */
+  #cockpit {
+    --ck-void: #020508;
+    --ck-glass: #071318;
+    --ck-ink: #e6f7f1;
+    --ck-mint: #9ff5e3;
+    --ck-teal: #59e0c8;
+    --ck-ice: #8fd8ff;
+    --ck-brass: #d8b36c;
+    --ck-amber: #ffb45f;
+    --ck-red: #ff5f45;
+    --ck-neutral: #86c8d5;
+    --ck-muted: rgba(202, 242, 234, 0.7);
+    --ck-faint: rgba(172, 216, 208, 0.46);
+    --ck-hairline: rgba(126, 232, 213, 0.24);
+    --ck-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    font-family: var(--ck-mono);
+    color: var(--ck-ink);
+    text-shadow: 0 0 8px rgba(89, 224, 200, 0.16);
+    contain: layout paint style;
+  }
+
+  #hud.is-first .hud-top,
+  #hud.is-first #bearing-strip,
+  #hud.is-first .hud-vitals,
+  #hud.is-first #enemy-box,
+  #hud.is-first #fleet-box,
+  #hud.is-first #weapon-panel,
+  #hud.is-first .hud-bottom,
+  #hud.is-first .hud-meta,
+  #hud.is-first #boost-ui,
+  #hud.is-first #nav-marker,
+  #hud.is-first .hud-reticle,
+  #hud.is-first #hud-prompt,
+  #hud.is-first #hit-alert,
+  #hud.is-first #boss-bar,
+  #hud.is-first #help-hint {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .ck-glass {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .ck-scanlines,
+  .ck-reflection,
+  .ck-edge-dirt,
+  .ck-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .ck-scanlines {
+    background: repeating-linear-gradient(0deg, rgba(120, 220, 255, 0.03) 0 1px, transparent 1px 3px);
+    mix-blend-mode: screen;
+    opacity: 0.65;
+  }
+
+  .ck-reflection {
+    background:
+      radial-gradient(42% 28% at 73% 11%, rgba(150, 228, 255, 0.075), transparent 72%),
+      radial-gradient(34% 22% at 24% 6%, rgba(255, 190, 120, 0.035), transparent 76%);
+  }
+
+  .ck-edge-dirt {
+    background:
+      linear-gradient(90deg, rgba(1, 4, 6, 0.5), transparent 8%, transparent 92%, rgba(1, 4, 6, 0.5)),
+      linear-gradient(0deg, rgba(1, 4, 6, 0.62), transparent 18%, transparent 86%, rgba(1, 4, 6, 0.42));
+  }
+
+  .ck-vignette {
+    box-shadow:
+      inset 0 0 130px rgba(0, 0, 0, 0.52),
+      inset 0 0 26px rgba(0, 0, 0, 0.35);
+    border-radius: 3px;
+  }
+
+  /* ── 顶部 ───────────────────────────────── */
+  .ck-top {
+    position: absolute;
+    left: 3vw;
+    right: 3vw;
+    top: 2.6vh;
+    display: grid;
+    grid-template-columns: 1fr minmax(340px, 560px) 1fr;
+    gap: 22px;
+    align-items: start;
+    pointer-events: none;
+  }
+
+  .ck-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding-top: 3px;
+    white-space: nowrap;
+  }
+
+  .ck-mark {
+    display: grid;
+    place-items: center;
+    width: 23px;
+    height: 23px;
+    border: 1px solid rgba(216, 179, 108, 0.6);
+    border-radius: 50%;
+    color: var(--ck-brass);
+    font-family: var(--serif);
+    font-size: 12px;
+    box-shadow: inset 0 0 12px rgba(216, 179, 108, 0.12);
+  }
+
+  .ck-brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1;
+  }
+
+  .ck-brand-text b {
+    font-family: var(--serif);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: var(--ck-ink);
+  }
+
+  .ck-brand-text em {
+    font-style: normal;
+    font-size: 7px;
+    letter-spacing: 0.24em;
+    color: var(--ck-faint);
+  }
+
+  .ck-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+    padding: 0 6px;
+    border: 1px solid rgba(89, 224, 200, 0.3);
+    color: var(--ck-teal);
+    font-size: 8px;
+    letter-spacing: 0.16em;
+    background: rgba(6, 24, 26, 0.35);
+  }
+
+  .ck-chip-brass {
+    border-color: rgba(216, 179, 108, 0.38);
+    color: var(--ck-brass);
+    background: rgba(24, 18, 8, 0.3);
+  }
+
+  .ck-chip-ice {
+    border-color: rgba(143, 216, 255, 0.34);
+    color: var(--ck-ice);
+    background: rgba(6, 18, 30, 0.32);
+  }
+
+  .ck-heading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .ck-heading-read {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    line-height: 1;
+  }
+
+  .ck-heading-read span {
+    font-size: 8.5px;
+    letter-spacing: 0.2em;
+    color: var(--ck-muted);
+  }
+
+  .ck-heading-read b {
+    font-size: 21px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ck-ink);
+    text-shadow: 0 0 10px rgba(159, 245, 227, 0.22);
+  }
+
+  .ck-heading-read em {
+    font-style: normal;
+    font-size: 10px;
+    color: var(--ck-faint);
+  }
+
+  .ck-heading-tape {
+    position: relative;
+    width: 100%;
+    height: 24px;
+    margin-top: 2px;
+    overflow: hidden;
+    border-top: 1px solid rgba(126, 232, 213, 0.18);
+    border-bottom: 1px solid rgba(126, 232, 213, 0.1);
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  }
+
+  .ck-heading-ticks {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    will-change: transform;
+  }
+
+  .ck-tick {
+    position: absolute;
+    bottom: 0;
+    width: 1px;
+    height: 5px;
+    background: rgba(159, 245, 227, 0.32);
+  }
+
+  .ck-tick.major {
+    height: 9px;
+    background: rgba(159, 245, 227, 0.58);
+  }
+
+  .ck-tick b {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 7px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--ck-faint);
+  }
+
+  .ck-heading-center {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 1px;
+    height: 11px;
+    transform: translateX(-50%);
+    background: var(--ck-brass);
+    box-shadow: 0 0 8px rgba(216, 179, 108, 0.45);
+  }
+
+  .ck-heading-center::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -1px;
+    width: 0;
+    height: 0;
+    transform: translateX(-50%);
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 4px solid var(--ck-brass);
+  }
+
+  .ck-bearing {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    opacity: 0;
+    transition: opacity 0.15s;
+    line-height: 1;
+  }
+
+  .ck-bearing-target {
+    color: var(--ck-brass);
+    text-shadow: 0 0 7px rgba(216, 179, 108, 0.55);
+  }
+
+  .ck-bearing-enemy {
+    color: var(--ck-red);
+    text-shadow: 0 0 7px rgba(255, 95, 69, 0.6);
+  }
+
+  .ck-heading-sub {
+    margin-top: 3px;
+    font-size: 7.5px;
+    letter-spacing: 0.2em;
+    color: var(--ck-faint);
+    white-space: nowrap;
+  }
+
+  .ck-target-card {
+    justify-self: end;
+    width: 224px;
+    padding: 5px 0 0;
+    border-top: 1px solid var(--ck-hairline);
+    text-align: right;
+    opacity: 0.45;
+    transition: opacity 0.25s;
+  }
+
+  .ck-target-card.is-on {
+    opacity: 1;
+  }
+
+  .ck-tc-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 7.5px;
+    letter-spacing: 0.18em;
+    color: var(--ck-faint);
+  }
+
+  .ck-tc-head b {
+    color: var(--ck-brass);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+  }
+
+  .ck-tc-name {
+    margin-top: 2px;
+    font-size: 17px;
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+    color: var(--ck-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ck-tc-type {
+    margin-top: 1px;
+    font-size: 7.5px;
+    letter-spacing: 0.16em;
+    color: var(--ck-faint);
+  }
+
+  .ck-tc-meta {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 3px;
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    color: var(--ck-brass);
+  }
+
+  /* ── 第一人称武器组 ─────────────────────── */
+  .ck-weapons {
+    position: absolute;
+    right: 3vw;
+    top: 14.2vh;
+    width: 224px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    pointer-events: none;
+  }
+
+  .ck-weapon-row {
+    display: grid;
+    grid-template-columns: 19px 1fr auto;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 5px 4px;
+    border-left: 2px solid transparent;
+    background: linear-gradient(90deg, rgba(5, 18, 20, 0.4), rgba(3, 9, 12, 0.12));
+    font-size: 8.5px;
+    letter-spacing: 0.1em;
+    color: var(--ck-faint);
+  }
+
+  .ck-weapon-row.is-on {
+    border-left-color: var(--ck-teal);
+    background: linear-gradient(90deg, rgba(18, 76, 70, 0.35), rgba(3, 9, 12, 0.1));
+    color: var(--ck-muted);
+  }
+
+  .ck-weapon-row.is-auto {
+    opacity: 0.56;
+  }
+
+  .ck-wkey {
+    display: grid;
+    place-items: center;
+    width: 17px;
+    height: 15px;
+    border: 1px solid rgba(126, 232, 213, 0.24);
+    color: var(--ck-mint);
+    font-size: 7.5px;
+  }
+
+  .ck-wcount {
+    color: var(--ck-muted);
+    font-size: 8px;
+  }
+
+  .ck-wbar {
+    grid-column: 1 / -1;
+    height: 2px;
+    background: rgba(126, 232, 213, 0.12);
+    overflow: hidden;
+  }
+
+  .ck-wbar i {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--ck-teal);
+    transform-origin: left;
+    transition: width 0.1s linear;
+  }
+
+  /* ── 左列 ───────────────────────────────── */
+  .ck-left {
+    position: absolute;
+    left: 3vw;
+    top: 24.5vh;
+    width: 196px;
+    display: flex;
+    flex-direction: column;
+    gap: 19px;
+    pointer-events: none;
+  }
+
+  .ck-label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--ck-muted);
+  }
+
+  .ck-label span {
+    color: var(--ck-faint);
+  }
+
+  .ck-speed-value {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    line-height: 0.95;
+    margin-top: 2px;
+  }
+
+  .ck-speed-value b {
+    font-size: 56px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ck-ink);
+    text-shadow: 0 0 14px rgba(159, 245, 227, 0.22);
+  }
+
+  .ck-speed-value em {
+    font-style: normal;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--ck-faint);
+  }
+
+  .ck-speed-scale {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    width: 158px;
+    height: 9px;
+    margin-top: 5px;
+    border-bottom: 1px solid rgba(126, 232, 213, 0.16);
+  }
+
+  .ck-speed-scale i {
+    width: 1px;
+    height: 4px;
+    background: rgba(159, 245, 227, 0.34);
+  }
+
+  .ck-speed-scale i:nth-child(3n) {
+    height: 8px;
+    background: rgba(159, 245, 227, 0.6);
+  }
+
+  .ck-sub {
+    margin-top: 4px;
+    font-size: 8px;
+    letter-spacing: 0.16em;
+    color: var(--ck-faint);
+  }
+
+  .ck-throttle {
+    margin-top: 12px;
+  }
+
+  .ck-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--ck-muted);
+  }
+
+  .ck-row b {
+    font-weight: 500;
+    color: var(--ck-mint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ck-row-small {
+    font-size: 7.5px;
+    letter-spacing: 0.11em;
+    color: var(--ck-faint);
+  }
+
+  .ck-track {
+    height: 3px;
+    margin: 5px 0 7px;
+    background: rgba(126, 232, 213, 0.13);
+    overflow: hidden;
+  }
+
+  .ck-track i {
+    display: block;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #2f9d8d, var(--ck-mint));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.1s linear;
+    box-shadow: 0 0 7px rgba(89, 224, 200, 0.4);
+  }
+
+  .ck-status {
+    padding-top: 2px;
+    border-top: 1px solid var(--ck-hairline);
+  }
+
+  .ck-seg {
+    position: relative;
+    height: 8px;
+    margin: 5px 0 9px;
+    background: repeating-linear-gradient(90deg, rgba(126, 232, 213, 0.14) 0 8px, transparent 8px 11px);
+    overflow: hidden;
+  }
+
+  .ck-seg i {
+    display: block;
+    height: 100%;
+    width: 100%;
+    transform: scaleX(1);
+    transform-origin: left;
+    transition: transform 0.16s ease;
+    mask: repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 11px);
+    -webkit-mask: repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 11px);
+  }
+
+  .ck-hull-seg i {
+    background: linear-gradient(90deg, #2f9d8d, var(--ck-mint));
+    box-shadow: 0 0 8px rgba(89, 224, 200, 0.28);
+  }
+
+  .ck-shield-seg i {
+    background: linear-gradient(90deg, #2f7f9a, var(--ck-ice));
+    box-shadow: 0 0 8px rgba(143, 216, 255, 0.28);
+  }
+
+  .ck-hull-seg i.is-critical,
+  .ck-enemy-hull i.is-critical {
+    background: linear-gradient(90deg, #8f1a12, var(--ck-red)) !important;
+    animation: ck-critical 0.8s ease-in-out infinite;
+  }
+
+  .ck-parts {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    color: var(--ck-faint);
+  }
+
+  .ck-parts b {
+    font-weight: 500;
+    color: var(--ck-mint);
+  }
+
+  .ck-parts b.is-low {
+    color: var(--ck-amber);
+  }
+
+  .ck-parts b.is-critical {
+    color: var(--ck-red);
+  }
+
+  .ck-faults {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    color: var(--ck-amber);
+  }
+
+  .ck-fault {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-left: 6px;
+    border-left: 2px solid rgba(255, 180, 95, 0.65);
+  }
+
+  .ck-fault.is-critical {
+    border-left-color: var(--ck-red);
+    color: #ff9a82;
+  }
+
+  .ck-fault i {
+    font-style: normal;
+    font-size: 7px;
+  }
+
+  /* ── 右列 ───────────────────────────────── */
+  .ck-right {
+    position: absolute;
+    right: 3vw;
+    top: 23.5vh;
+    width: 212px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 15px;
+    text-align: right;
+    pointer-events: none;
+  }
+
+  .ck-alt-value {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 6px;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  .ck-alt-value b {
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ck-ink);
+  }
+
+  .ck-alt-value span {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--ck-faint);
+  }
+
+  .ck-alt-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 5px;
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    color: var(--ck-faint);
+  }
+
+  .ck-alt-row b {
+    font-weight: 500;
+    color: var(--ck-mint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ck-alt-row span:last-child {
+    color: var(--ck-muted);
+  }
+
+  .ck-radar {
+    width: 190px;
+    padding-top: 4px;
+    border-top: 1px solid var(--ck-hairline);
+  }
+
+  .ck-radar .ck-row {
+    margin-bottom: 4px;
+  }
+
+  .ck-radar-wrap {
+    position: relative;
+    width: 190px;
+    height: 190px;
+    border: 1px solid rgba(126, 232, 213, 0.18);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(10, 40, 42, 0.32), rgba(2, 7, 10, 0.58) 68%, rgba(2, 7, 10, 0.2) 100%);
+    box-shadow:
+      inset 0 0 30px rgba(89, 224, 200, 0.06),
+      0 0 20px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+  }
+
+  .ck-radar-wrap canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .ck-radar-sweep {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0deg 286deg, rgba(89, 224, 200, 0.2) 332deg, rgba(89, 224, 200, 0.04) 358deg, transparent 360deg);
+    mask: radial-gradient(circle, #000 0 67%, transparent 100%);
+    -webkit-mask: radial-gradient(circle, #000 0 67%, transparent 100%);
+    animation: ck-sweep 4.2s linear infinite;
+    pointer-events: none;
+  }
+
+  .ck-radar-legend {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    margin-top: 5px;
+    font-size: 6.5px;
+    letter-spacing: 0.08em;
+    color: var(--ck-faint);
+  }
+
+  .ck-radar-legend .is-hostile { color: rgba(255, 95, 69, 0.85); }
+  .ck-radar-legend .is-body { color: rgba(216, 179, 108, 0.85); }
+  .ck-radar-legend .is-neutral { color: rgba(134, 200, 213, 0.8); }
+
+  .ck-enemy-card {
+    width: 100%;
+    max-width: 212px;
+    padding-top: 5px;
+    border-top: 1px solid var(--ck-hairline);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .ck-enemy-card.is-on {
+    opacity: 1;
+  }
+
+  .ck-enemy-name {
+    margin: 2px 0;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    color: var(--ck-red);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ck-enemy-hull,
+  .ck-enemy-shield {
+    height: 4px;
+    margin: 3px 0;
+  }
+
+  .ck-enemy-hull i {
+    background: linear-gradient(90deg, #7e1b12, var(--ck-red));
+  }
+
+  .ck-enemy-shield i {
+    background: linear-gradient(90deg, #2f7f9a, var(--ck-ice));
+  }
+
+  /* ── 中心区 ─────────────────────────────── */
+  .ck-center {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .ck-ladder {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 620px;
+    height: 400px;
+    transform: translate(-50%, -50%);
+    transform-origin: 50% 50%;
+    mask-image: radial-gradient(70% 78% at 50% 50%, #000 24%, transparent 100%);
+    -webkit-mask-image: radial-gradient(70% 78% at 50% 50%, #000 24%, transparent 100%);
+    opacity: 0.68;
+    will-change: transform;
+  }
+
+  .ck-ladder-line {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 230px;
+    height: 1px;
+    margin-left: -115px;
+    transform: translateY(calc(var(--deg) * -8px));
+    background: linear-gradient(90deg, transparent 0 22%, rgba(159, 245, 227, 0.38) 22% 41%, transparent 41% 59%, rgba(159, 245, 227, 0.38) 59% 78%, transparent 78% 100%);
+  }
+
+  .ck-ladder-line.major {
+    width: 286px;
+    margin-left: -143px;
+    background: linear-gradient(90deg, transparent 0 18%, rgba(159, 245, 227, 0.62) 18% 42%, transparent 42% 58%, rgba(159, 245, 227, 0.62) 58% 82%, transparent 82% 100%);
+  }
+
+  .ck-ladder-line.horizon {
+    width: 380px;
+    margin-left: -190px;
+    background: linear-gradient(90deg, transparent 0 12%, rgba(159, 245, 227, 0.9) 12% 43%, transparent 43% 57%, rgba(159, 245, 227, 0.9) 57% 88%, transparent 88% 100%);
+    box-shadow: 0 0 8px rgba(89, 224, 200, 0.2);
+  }
+
+  .ck-ladder-line b {
+    position: absolute;
+    right: -31px;
+    top: -5px;
+    font-size: 7px;
+    font-weight: 500;
+    color: rgba(159, 245, 227, 0.58);
+  }
+
+  .ck-ladder-line b.left {
+    left: -31px;
+    right: auto;
+  }
+
+  .ck-reticle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 84px;
+    height: 84px;
+    transform: translate(-50%, -50%);
+    opacity: 0.8;
+  }
+
+  .ck-reticle-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 38px;
+    height: 38px;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(159, 245, 227, 0.62);
+    border-radius: 50%;
+    box-shadow:
+      inset 0 0 14px rgba(89, 224, 200, 0.1),
+      0 0 10px rgba(89, 224, 200, 0.08);
+  }
+
+  .ck-reticle-tick {
+    position: absolute;
+    background: rgba(159, 245, 227, 0.72);
+  }
+
+  .ck-reticle-tick.t,
+  .ck-reticle-tick.b {
+    left: 50%;
+    width: 1px;
+    height: 9px;
+    transform: translateX(-50%);
+  }
+
+  .ck-reticle-tick.t { top: 12px; }
+  .ck-reticle-tick.b { bottom: 12px; }
+
+  .ck-reticle-tick.l,
+  .ck-reticle-tick.r {
+    top: 50%;
+    height: 1px;
+    width: 9px;
+    transform: translateY(-50%);
+  }
+
+  .ck-reticle-tick.l { left: 12px; }
+  .ck-reticle-tick.r { right: 12px; }
+
+  .ck-reticle-dot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2px;
+    height: 2px;
+    transform: translate(-50%, -50%);
+    background: var(--ck-brass);
+    box-shadow: 0 0 5px rgba(216, 179, 108, 0.85);
+  }
+
+  .ck-velocity {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(159, 245, 227, 0.72);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.16s;
+    will-change: transform;
+  }
+
+  .ck-velocity.is-on {
+    opacity: 0.82;
+  }
+
+  .ck-velocity::before,
+  .ck-velocity::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 7px;
+    height: 1px;
+    background: rgba(159, 245, 227, 0.62);
+    transform: translateY(-50%);
+  }
+
+  .ck-velocity::before { left: -9px; }
+  .ck-velocity::after { right: -9px; }
+
+  .ck-velocity i {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 3px;
+    height: 3px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: var(--ck-mint);
+  }
+
+  .ck-velocity span {
+    position: absolute;
+    left: 50%;
+    top: 22px;
+    transform: translateX(-50%);
+    font-size: 6px;
+    letter-spacing: 0.14em;
+    color: var(--ck-faint);
+    white-space: nowrap;
+  }
+
+  .ck-drift {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .ck-drift.is-on {
+    opacity: 0.3;
+  }
+
+  .ck-drift line {
+    stroke: var(--ck-mint);
+    stroke-width: 1;
+    stroke-dasharray: 3 6;
+  }
+
+  .ck-targets {
+    position: absolute;
+    inset: 0;
+  }
+
+  .ck-target {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 84px;
+    height: 84px;
+    transform: translate3d(var(--x, 50vw), var(--y, 50vh), 0) translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    will-change: transform;
+  }
+
+  .ck-target.is-on {
+    opacity: 1;
+  }
+
+  .ck-target[data-offscreen="true"] {
+    opacity: 0.55;
+  }
+
+  .ck-corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--ck-brass);
+    border-style: solid;
+    filter: drop-shadow(0 0 4px rgba(216, 179, 108, 0.38));
+  }
+
+  .ck-corner.tl { left: 0; top: 0; border-width: 1px 0 0 1px; }
+  .ck-corner.tr { right: 0; top: 0; border-width: 1px 1px 0 0; }
+  .ck-corner.bl { left: 0; bottom: 0; border-width: 0 0 1px 1px; }
+  .ck-corner.br { right: 0; bottom: 0; border-width: 0 1px 1px 0; }
+
+  .ck-target[data-kind="hostile"] .ck-corner {
+    border-color: var(--ck-red);
+    filter: drop-shadow(0 0 5px rgba(255, 95, 69, 0.4));
+  }
+
+  .ck-target[data-kind="neutral"] .ck-corner {
+    border-color: var(--ck-neutral);
+    filter: none;
+  }
+
+  .ck-target[data-kind="neutral"] .ck-target-bars {
+    display: none;
+  }
+
+  #ck-target-hostile .ck-target-label {
+    top: calc(100% + 23px);
+  }
+
+  #ck-target-hostile .ck-target-bars {
+    top: calc(100% + 41px);
+  }
+
+  #cockpit[data-mode="nav"] .ck-weapons,
+  #cockpit[data-mode="nav"] .ck-faults {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  #cockpit[data-mode="warp"] .ck-weapons,
+  #cockpit[data-mode="warp"] .ck-targets {
+    opacity: 0.25;
+  }
+
+  #cockpit[data-mode="damage"] .ck-targets {
+    opacity: 0.5;
+  }
+
+  .ck-target-label {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 6px);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    white-space: nowrap;
+    max-width: 190px;
+    overflow: hidden;
+  }
+
+  .ck-target[data-side="right"] .ck-target-label {
+    left: auto;
+    right: 0;
+    transform: none;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .ck-target-label b,
+  .ck-target-label em {
+    max-width: 190px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ck-target-label b {
+    font-size: 8.5px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--ck-brass);
+  }
+
+  .ck-target[data-kind="hostile"] .ck-target-label b {
+    color: var(--ck-red);
+  }
+
+  .ck-target-label em {
+    font-style: normal;
+    font-size: 7.5px;
+    letter-spacing: 0.08em;
+    color: var(--ck-faint);
+  }
+
+  .ck-target-bars {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 25px);
+    transform: translateX(-50%);
+    width: 62px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .ck-target[data-side="right"] .ck-target-bars {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+
+  .ck-target-bars i {
+    display: block;
+    height: 2px;
+    width: 100%;
+    background: rgba(255, 95, 69, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ck-target-bars i::after {
+    content: '';
+    display: block;
+    height: 100%;
+    width: var(--v, 1);
+    background: currentColor;
+  }
+
+  #ck-target-hostile-hull { color: var(--ck-red); }
+  #ck-target-hostile-shield { color: var(--ck-ice); }
+
+  .ck-warp {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 240px;
+    height: 240px;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.24s;
+  }
+
+  .ck-warp.is-on {
+    opacity: 1;
+  }
+
+  .ck-warp svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    transform: rotate(-90deg);
+  }
+
+  .ck-warp-outer {
+    fill: none;
+    stroke: rgba(143, 216, 255, 0.16);
+    stroke-width: 1;
+    stroke-dasharray: 2 7;
+  }
+
+  .ck-warp-track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.09);
+    stroke-width: 2;
+  }
+
+  .ck-warp-fill {
+    fill: none;
+    stroke: var(--ck-ice);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-dasharray: 666.02;
+    stroke-dashoffset: 666.02;
+    transition: stroke-dashoffset 0.1s linear, stroke 0.2s;
+    filter: drop-shadow(0 0 6px rgba(143, 216, 255, 0.62));
+  }
+
+  .ck-warp.is-ready .ck-warp-fill {
+    stroke: #f0fbff;
+    filter: drop-shadow(0 0 12px rgba(185, 235, 255, 0.95));
+    animation: ck-warp-breathe 0.75s ease-in-out infinite;
+  }
+
+  .ck-warp.is-warping .ck-warp-outer {
+    stroke: rgba(220, 248, 255, 0.65);
+    animation: ck-warp-pulse 0.38s ease-in-out infinite;
+  }
+
+  .ck-warp-text {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .ck-warp-text span {
+    font-size: 7px;
+    letter-spacing: 0.18em;
+    color: var(--ck-ice);
+  }
+
+  .ck-warp-text b {
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    color: var(--ck-ink);
+  }
+
+  .ck-warp-text em {
+    font-style: normal;
+    font-size: 7px;
+    letter-spacing: 0.12em;
+    color: var(--ck-faint);
+  }
+
+  .ck-warp.is-ready .ck-warp-text b {
+    color: #e8fbff;
+  }
+
+  .ck-warp.is-shift .ck-warp-fill {
+    stroke: var(--ck-ice);
+  }
+
+  /* ── 警告 / 受击 ────────────────────────── */
+  .ck-caution {
+    position: absolute;
+    left: 50%;
+    top: 15.2vh;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    border: 1px solid rgba(255, 180, 95, 0.45);
+    background: linear-gradient(90deg, rgba(36, 20, 4, 0.72), rgba(20, 12, 4, 0.36));
+    color: var(--ck-amber);
+    font-size: 8.5px;
+    letter-spacing: 0.16em;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    animation: ck-caution 1.6s ease-in-out infinite;
+  }
+
+  .ck-caution.is-on {
+    opacity: 0.92;
+    visibility: visible;
+  }
+
+  .ck-caution.is-critical {
+    border-color: rgba(255, 95, 69, 0.65);
+    background: linear-gradient(90deg, rgba(52, 8, 4, 0.8), rgba(24, 6, 4, 0.4));
+    color: #ff9a82;
+  }
+
+  .ck-caution b {
+    font-weight: 500;
+    color: inherit;
+  }
+
+  .ck-caution em {
+    font-style: normal;
+    color: var(--ck-muted);
+    letter-spacing: 0.1em;
+  }
+
+  .ck-caution-icon {
+    font-size: 8px;
+  }
+
+  .ck-hit {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .ck-hit.is-on {
+    animation: ck-hit 0.55s ease-out;
+  }
+
+  .ck-hit-wedge {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 18px;
+    height: 34px;
+    margin: -17px 0 0 -9px;
+    transform: rotate(var(--hit-angle, 0deg)) translateY(calc(-1 * var(--hit-r, 40vh)));
+    transform-origin: 50% 50%;
+    background: linear-gradient(to top, rgba(255, 95, 69, 0), rgba(255, 95, 69, 0.88));
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    filter: drop-shadow(0 0 8px rgba(255, 95, 69, 0.6));
+  }
+
+  .ck-prompt {
+    position: absolute;
+    left: 3vw;
+    bottom: 5.2vh;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 11px;
+    border: 1px solid rgba(216, 179, 108, 0.36);
+    background: rgba(5, 12, 14, 0.55);
+    color: var(--ck-muted);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+  }
+
+  .ck-prompt.is-on {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .ck-prompt kbd {
+    display: inline-grid;
+    place-items: center;
+    width: 17px;
+    height: 17px;
+    border: 1px solid var(--ck-brass);
+    color: var(--ck-brass);
+    font-family: var(--ck-mono);
+    font-size: 9px;
+  }
+
+  .ck-prompt b {
+    color: var(--ck-ink);
+    font-weight: 500;
+  }
+
+  .ck-footer {
+    position: absolute;
+    left: 3vw;
+    right: 3vw;
+    bottom: 1.7vh;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    font-size: 7.5px;
+    letter-spacing: 0.16em;
+    color: var(--ck-faint);
+  }
+
+  .ck-footer b {
+    font-weight: 500;
+    color: var(--ck-muted);
+  }
+
+  @keyframes ck-sweep {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes ck-caution {
+    0%, 100% { filter: brightness(0.86); }
+    50% { filter: brightness(1.12); }
+  }
+
+  @keyframes ck-critical {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  @keyframes ck-warp-breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  @keyframes ck-warp-pulse {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 0.9; }
+  }
+
+  @keyframes ck-hit {
+    0% { opacity: 0; }
+    12% { opacity: 1; }
+    70% { opacity: 0.9; }
+    100% { opacity: 0; }
+  }
+
+  @media (max-width: 1280px) {
+    .ck-top { grid-template-columns: 1fr minmax(300px, 460px) 1fr; gap: 14px; }
+    .ck-target-card { width: 196px; }
+    .ck-tc-name { font-size: 15px; }
+    .ck-left { width: 168px; }
+    .ck-speed-value b { font-size: 44px; }
+    .ck-right { width: 184px; }
+    .ck-radar { width: 168px; }
+    .ck-radar-wrap { width: 168px; height: 168px; }
+    .ck-weapons { width: 196px; top: 15.2vh; }
+    .ck-alt-value b { font-size: 24px; }
+    .ck-ladder { width: 520px; height: 340px; }
+    .ck-warp { width: 208px; height: 208px; }
+    .ck-speed-scale { width: 138px; }
+  }
+
+  @media (max-width: 900px) {
+    .ck-top { top: 1.8vh; }
+    .ck-brand-text em, .ck-chip { display: none; }
+    .ck-target-card { display: none; }
+    .ck-weapons { display: none; }
+    .ck-left { top: 22vh; width: 140px; }
+    .ck-right { top: 20vh; width: 150px; }
+    .ck-radar { width: 138px; }
+    .ck-radar-wrap { width: 138px; height: 138px; }
+    .ck-enemy-card { display: none; }
+    .ck-speed-value b { font-size: 36px; }
+    .ck-parts { gap: 3px; font-size: 7px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ck-caution,
+    .ck-radar-sweep,
+    .ck-warp.is-ready .ck-warp-fill,
+    .ck-warp.is-warping .ck-warp-outer,
+    .ck-hull-seg i.is-critical {
+      animation: none !important;
+    }
+    .ck-scanlines { display: none; }
   }
 </style>

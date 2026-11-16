@@ -16,7 +16,6 @@ export interface Ship {
   engineCore: THREE.Mesh[];
   /** 驾驶舱在模型局部坐标里的位置（第一人称相机用） */
   cockpit: THREE.Vector3;
-  cockpitGroup?: THREE.Group;
   /** 舰体模型：第一人称时隐藏，避免船体挡住视野 */
   model?: THREE.Object3D;
   /** 逐三角碰撞体（位于 group 局部坐标） */
@@ -453,55 +452,8 @@ export async function loadShipModel(
   const group = new THREE.Group();
   group.add(model);
 
-  // 3D 座舱框：第一人称时提供真实的边缘视差
+  // 第一人称座舱由 cockpit.ts 的独立 scene 提供，舰体本身不再生成黑色框。
   const cockpit = new THREE.Vector3(...(cockpitPos ?? [0, size.y * 0.22, -size.z * 0.24]));
-  // 用 Basic 材质，避免被机舱补光灯洗白
-  const frameMat = new THREE.MeshBasicMaterial({ color: 0x05090c });
-  const rimMat = new THREE.MeshBasicMaterial({ color: 0x1b514b });
-
-  const cockpitGroup = new THREE.Group();
-  cockpitGroup.position.copy(cockpit).add(new THREE.Vector3(0, 0, -1.0));
-  // 座舱框按人眼尺度固定在 1.2 米级，不随舰长缩放
-  const f = 1.2;
-
-  // 上缘：接近满屏宽，但很薄
-  const topBar = new THREE.Mesh(new THREE.BoxGeometry(f * 4.2, f * 0.09, f * 0.3), frameMat);
-  topBar.position.set(0, f * 1.05, -f * 0.55);
-  cockpitGroup.add(topBar);
-
-  // 左右立柱：贴近屏幕边缘
-  for (const side of [-1, 1]) {
-    const post = new THREE.Mesh(new THREE.BoxGeometry(f * 0.1, f * 1.8, f * 0.3), frameMat);
-    post.position.set(side * f * 2.1, f * 0.1, -f * 0.5);
-    post.rotation.z = side * 0.06;
-    cockpitGroup.add(post);
-
-    // 内侧的一条暗色舱框灯
-    const edge = new THREE.Mesh(new THREE.BoxGeometry(f * 0.008, f * 1.62, f * 0.02), rimMat);
-    edge.position.set(side * f * 2.045, f * 0.1, -f * 0.36);
-    edge.rotation.z = side * 0.06;
-    cockpitGroup.add(edge);
-  }
-
-  // 顶框下沿的灯带：让座舱框在黑暗里也能看清
-  const topEdge = new THREE.Mesh(new THREE.BoxGeometry(f * 4.1, f * 0.008, f * 0.02), rimMat);
-  topEdge.position.set(0, f * 1.0, -f * 0.4);
-  cockpitGroup.add(topEdge);
-
-  // 仪表台：压到屏幕下缘的一条窄檐
-  const dash = new THREE.Mesh(new THREE.BoxGeometry(f * 3.0, f * 0.09, f * 0.7), frameMat);
-  dash.position.set(0, -f * 1.4, -f * 1.0);
-  cockpitGroup.add(dash);
-
-  // 仪表灯：三小段，避免 bloom 糊成一片
-  for (const offset of [-f * 0.34, 0, f * 0.34]) {
-    const indicator = new THREE.Mesh(new THREE.BoxGeometry(f * 0.22, f * 0.01, f * 0.12), rimMat);
-    indicator.position.set(offset, -f * 1.26, -f * 1.25);
-    cockpitGroup.add(indicator);
-  }
-
-  cockpitGroup.visible = false;
-  group.add(cockpitGroup);
 
   // 自动补引擎光：放在包围盒尾端
   const glowTexture = (() => {
@@ -584,5 +536,5 @@ export async function loadShipModel(
 
   };
 
-  return { group, engineGlow, engineCore, cockpit, cockpitGroup, model, collision, update };
+  return { group, engineGlow, engineCore, cockpit, model, collision, update };
 }
