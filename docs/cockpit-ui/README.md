@@ -13,15 +13,19 @@ Worktree：`/Users/apple/.local/share/opencode/worktree/e0f2de/cockpit-ui`
 - 3D MFD 显示真实二级信息（FLIGHT/SYSTEMS/NAV），8 Hz 更新；DOM HUD 为飞行主信息，不重复 speed/hull。
 - 保留第三人称/自由视角：cockpit pass 只在第一人称启用，第三人称 HUD 与舰体模型不受影响。
 
-## v2 polish
+## v2/v3 polish
 
 - 移除横跨视野的顶部 overhead slab：只保留贴 canopy header 的窄 breaker rail（默认在视野外），不再挡 HDG ribbon，也没有被近裁剪切掉的文字。
 - canopy 顶部横梁移除，只保留 bow 顶部的中央 latch；bow/侧轨改为分段 beveled 金属框（宽 20–30% 更窄），增加接缝、螺栓、gasket lip、细 trim 和明暗材质变化。
 - 顶部/大尺寸 cyan 灯带降为低强度 teal edge（`tealDim`），不再是最亮物体；dash glare shield 改为哑光深色。
+- AR10 不再绘制舰桥顶部 5-toggle 仪表条；避免任何 free-floating overhead bar 出现在玻璃上。
 - Dash 增加面板接缝、rocker banks、breaker rows、vent/screw、worn edge、stencil 标签；把黑色球状旋钮替换成 brass base + 橡胶 knurled cap + 指示线。
 - 油门/操纵杆重做：底座、brass collar、橡胶/皮革 grip、trigger、按钮、cable；去掉金色 ingot。
 - MFD 屏幕加大并前移，避免被 dash 前缘/遮光檐切掉顶部；FLIGHT 显示 attitude + SPD/ALT/V-S/THR/WARP/HDG，SYSTEMS 显示舰体示意 + 5 条损伤条，NAV 显示 2.5D radar + primary/hostile 列表。字号加大，1280×720 可读。
 - 目标框/标签/右侧卡片加入 safe margin：目标框中心 clamp 到左右 HUD 之间；右侧 HUD 固定留出 radar/card 区域；右侧目标标签改为向内对齐，避免裁切。
+- 世界目标框只允许出现在 canopy glass 投影多边形内；投影落在 dash/struts/throttle/MFD 上或玻璃外时直接隐藏，避免目标框压在仪表台上。
+- Canopy 损伤改为局部撞击裂纹：2 个边缘/角落 impact zone，细亮裂纹 + 暗色压碎核心，alpha 0.3–0.5，不跨中心 reticle 与 caution banner。
+- A 柱/侧轨增加可见的 dash mount、bow clamp 和侧台支架，左右两侧都做。
 - 第一人称仍然只显示 `#cockpit`，第三人称面板隐藏；第三人称截图回归通过。
 
 ## 数据接线
@@ -44,8 +48,8 @@ HUD 使用现有状态：
 
 | kit | triangles | parts | mesh draw calls |
 |---|---:|---:|---:|
-| light (A-30) | 98,174 | 618 | 31 |
-| capital (AR10) | 106,866 | 662 | 31 |
+| light (A-30) | 103,014 | 640 | 31 |
+| capital (AR10) | 108,370 | 658 | 31 |
 
 统计为场景内 mesh 数（含独立屏幕/玻璃/裂纹/灯），不是 renderer 实际 draw call；静态几何已按材质合并。三角形高于设计的 45–65k，优先保留细节；draw call 保持 31。
 

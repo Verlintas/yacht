@@ -64,6 +64,24 @@ interface GameContext {
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 
+/** 第一人称座舱玻璃的安全投影区：目标框只允许落在这块 canopy 玻璃内。 */
+const CANOPY_MASK_POLYGON: ReadonlyArray<readonly [number, number]> = [
+  [0.50, 0.20], [0.62, 0.21], [0.72, 0.25], [0.80, 0.34], [0.83, 0.44],
+  [0.80, 0.53], [0.68, 0.56], [0.32, 0.56], [0.20, 0.53], [0.17, 0.44],
+  [0.20, 0.34], [0.28, 0.25], [0.38, 0.21],
+];
+
+function insideCanopyMask(nx: number, ny: number): boolean {
+  let inside = false;
+  for (let i = 0, j = CANOPY_MASK_POLYGON.length - 1; i < CANOPY_MASK_POLYGON.length; j = i, i += 1) {
+    const [xi, yi] = CANOPY_MASK_POLYGON[i];
+    const [xj, yj] = CANOPY_MASK_POLYGON[j];
+    const intersect = yi > ny !== yj > ny && nx < ((xj - xi) * (ny - yi)) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
 const BASE = import.meta.env.BASE_URL.replace(/\/+$/, '');
 const withBase = (path: string): string => `${BASE}/${path.replace(/^\/+/, '')}`;
 
@@ -2197,12 +2215,20 @@ function setupHud(
         }
         projected.copy(position).project(ctx.camera);
         const behind = projected.z >= 1;
-        const onScreen = !behind && Math.abs(projected.x) <= 1.02 && Math.abs(projected.y) <= 1.02;
+        const projectedX = (projected.x * 0.5 + 0.5) * viewportW;
+        const projectedY = (-projected.y * 0.5 + 0.5) * viewportH;
+        // 世界目标框只允许出现在 canopy 玻璃区域内；落在 dash/struts/console 后方则隐藏
+        const onCanopy = !behind && insideCanopyMask(projectedX / viewportW, projectedY / viewportH);
+        if (!onCanopy) {
+          el.classList.remove('is-on');
+          smooth.init = false;
+          return;
+        }
         // 左右保留给 HUD 栏 / radar，避免目标框、标签和红条被裁切
         const safeLeft = viewportW <= 1280 ? 260 : 300;
         const safeRight = viewportW - (viewportW * 0.03 + 212 + 54);
-        const rawX = THREE.MathUtils.clamp((projected.x * 0.5 + 0.5) * viewportW, safeLeft, safeRight);
-        const rawY = THREE.MathUtils.clamp((-projected.y * 0.5 + 0.5) * viewportH, 150, viewportH - 170);
+        const rawX = THREE.MathUtils.clamp(projectedX, safeLeft, safeRight);
+        const rawY = THREE.MathUtils.clamp(projectedY, viewportH * 0.26, viewportH * 0.53);
         if (!smooth.init) {
           smooth.x = rawX;
           smooth.y = rawY;
@@ -2214,7 +2240,7 @@ function setupHud(
         }
         el.style.setProperty('--x', `${smooth.x.toFixed(1)}px`);
         el.style.setProperty('--y', `${smooth.y.toFixed(1)}px`);
-        el.dataset.offscreen = String(!onScreen);
+        el.dataset.offscreen = 'false';
         el.dataset.kind = kind;
         el.dataset.side = smooth.x > viewportW * 0.58 ? 'right' : 'center';
         el.classList.add('is-on');

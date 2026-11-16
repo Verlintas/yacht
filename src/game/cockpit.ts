@@ -254,28 +254,64 @@ function makeCrackTexture(seed: number): THREE.CanvasTexture {
     state = (state * 9301 + 49297) % 233280;
     return state / 233280;
   };
-  const branch = (x: number, y: number, angle: number, len: number, depth: number): void => {
-    if (depth <= 0 || len < 8) return;
+  const cx = 256;
+  const cy = 256;
+  // 撞击点：深色玻璃压碎区 + 细亮裂纹，不是长树枝
+  const pit = ctx.createRadialGradient(cx, cy, 0, cx, cy, 64);
+  pit.addColorStop(0, 'rgba(4,18,22,0.78)');
+  pit.addColorStop(0.34, 'rgba(8,28,34,0.42)');
+  pit.addColorStop(1, 'rgba(8,28,34,0)');
+  ctx.fillStyle = pit;
+  ctx.fillRect(cx - 70, cy - 70, 140, 140);
+  ctx.strokeStyle = 'rgba(198,240,250,0.42)';
+  ctx.lineWidth = 1.2;
+  for (let i = 0; i < 9; i += 1) {
+    const a = (i / 9) * Math.PI * 2 + rand() * 0.16;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 10 + rand() * 7, a, a + 0.16 + rand() * 0.2);
+    ctx.stroke();
+  }
+  const branch = (x: number, y: number, angle: number, len: number, width: number, depth: number): void => {
+    if (depth <= 0 || len < 5) return;
     const ex = x + Math.cos(angle) * len;
     const ey = y + Math.sin(angle) * len;
-    ctx.strokeStyle = `rgba(214,248,255,${0.18 + depth * 0.06})`;
-    ctx.lineWidth = Math.max(0.8, depth * 0.8);
+    // dark inner shadow then thin bright fracture
+    ctx.strokeStyle = 'rgba(0,18,24,0.55)';
+    ctx.lineWidth = width + 2.2;
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineTo(ex, ey);
     ctx.stroke();
-    ctx.strokeStyle = 'rgba(255,255,255,0.24)';
-    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = `rgba(218,250,255,${0.52 + depth * 0.08})`;
+    ctx.lineWidth = width;
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineTo(ex, ey);
     ctx.stroke();
-    branch(ex, ey, angle + (rand() - 0.5) * 0.8, len * (0.55 + rand() * 0.22), depth - 1);
-    if (rand() > 0.45) branch(ex, ey, angle + (rand() - 0.5) * 1.4, len * (0.4 + rand() * 0.25), depth - 1);
+    branch(ex, ey, angle + (rand() - 0.5) * 0.85, len * (0.4 + rand() * 0.2), Math.max(0.6, width * 0.72), depth - 1);
+    if (rand() > 0.55) {
+      branch(ex, ey, angle + (rand() - 0.5) * 1.7, len * (0.28 + rand() * 0.2), 0.7, depth - 1);
+    }
   };
-  branch(256, 260, -Math.PI / 2 + 0.3, 120, 5);
-  branch(256, 260, -Math.PI / 2 - 0.4, 96, 4);
-  branch(256, 260, Math.PI / 2 + 0.2, 80, 4);
+  const arms = 7;
+  for (let i = 0; i < arms; i += 1) {
+    const a = (i / arms) * Math.PI * 2 + (rand() - 0.5) * 0.28;
+    const len = 34 + rand() * 46;
+    branch(cx + Math.cos(a) * 9, cy + Math.sin(a) * 9, a, len, 1.35, 3);
+  }
+  // 少量玻璃碎屑/短裂纹
+  ctx.strokeStyle = 'rgba(210,248,255,0.34)';
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i < 12; i += 1) {
+    const a = rand() * Math.PI * 2;
+    const r = 24 + rand() * 70;
+    const x = cx + Math.cos(a) * r;
+    const y = cy + Math.sin(a) * r;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + (rand() - 0.5) * 12, y + (rand() - 0.5) * 12);
+    ctx.stroke();
+  }
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
@@ -875,11 +911,11 @@ export class CockpitInterior {
       lamp.material.opacity = 0.5 + value * 0.5;
     }
     const cockpitDamage = 1 - t.parts.cockpit;
-    const visibleCracks = cockpitDamage > 0.42 ? Math.min(2, Math.floor((cockpitDamage - 0.42) * 5) + 1) : 0;
+    const visibleCracks = cockpitDamage > 0.62 ? 2 : cockpitDamage > 0.4 ? 1 : 0;
     variant.cracks.forEach((crack, index) => {
       const material = crack.material as THREE.MeshBasicMaterial;
       const on = index < visibleCracks;
-      material.opacity = on ? THREE.MathUtils.clamp((cockpitDamage - 0.35) * 0.8, 0, 0.42) : 0;
+      material.opacity = on ? THREE.MathUtils.clamp(0.3 + Math.max(0, cockpitDamage - 0.4) * 0.45, 0.3, 0.5) : 0;
       crack.visible = on;
     });
     // 座舱受损时，底部一条红色应急灯呼吸
@@ -1454,6 +1490,21 @@ export class CockpitInterior {
       }
       box(0.026, 0.016, 0.06, brass, side * 0.79, 0.228, -0.915, root, 0.004, 2);
       box(0.016, 0.14, 0.026, titaniumDark, side * 0.83, -0.1, -0.87, root, 0.005, 2, 0, 0, side * 0.18);
+      // 可见连接件：A 柱上端接 canopy bow，下端接 dash 翼面
+      barBetween(
+        new THREE.Vector3(side * 0.79, 0.228, -0.92),
+        new THREE.Vector3(side * 0.82, 0.255, -1.12),
+        0.016, 0.010, titaniumDark, root,
+      );
+      barBetween(
+        new THREE.Vector3(side * 0.79, -0.08, -0.93),
+        new THREE.Vector3(side * 0.63, -0.205, -0.755),
+        0.014, 0.009, titaniumDark, root,
+      );
+      box(0.045, 0.02, 0.055, dark, side * 0.79, 0.228, -0.92, root, 0.005, 2);
+      box(0.05, 0.018, 0.045, dark, side * 0.63, -0.205, -0.755, root, 0.005, 2);
+      sphere(0.0035, brass, side * 0.79, 0.238, -0.925, root, 8);
+      sphere(0.0035, brass, side * 0.63, -0.195, -0.76, root, 8);
     }
 
     /* ── canopy bow / 侧轨 / 玻璃 ─────────────────────── */
@@ -1525,6 +1576,20 @@ export class CockpitInterior {
       barBetween(braceB[1], braceB[2], 0.009, 0.006, dark, root);
       // 侧窗锁扣
       box(0.045, 0.022, 0.035, brass, side * 0.69, -0.29, 0.25, root, 0.006, 2);
+      // 侧轨与侧台/座椅的实体支架，避免像悬空管
+      barBetween(
+        new THREE.Vector3(side * 0.82, -0.285, -0.38),
+        new THREE.Vector3(side * 0.63, -0.405, -0.49),
+        0.013, 0.008, titaniumDark, root,
+      );
+      barBetween(
+        new THREE.Vector3(side * 0.60, -0.33, 0.30),
+        new THREE.Vector3(side * 0.55, -0.44, 0.18),
+        0.012, 0.008, titaniumDark, root,
+      );
+      box(0.04, 0.026, 0.06, dark, side * 0.60, -0.335, 0.29, root, 0.005, 2);
+      sphere(0.0032, brass, side * 0.63, -0.415, -0.49, root, 8);
+      sphere(0.0032, brass, side * 0.58, -0.40, -0.50, root, 8);
     }
 
     // 玻璃：低透明度 + 边缘 fresnel，不用 transmission
@@ -1631,7 +1696,16 @@ export class CockpitInterior {
         side: THREE.DoubleSide,
       });
       this.materials.add(crackMaterial);
-      const crack = addMesh(new THREE.PlaneGeometry(0.72, 0.6), crackMaterial, i === 0 ? 0.34 : -0.32, i === 0 ? 0.1 : 0.26, -1.0, root, 0, 0, i === 0 ? 0.22 : -0.35);
+      const crack = addMesh(
+        i === 0 ? new THREE.PlaneGeometry(0.34, 0.3) : new THREE.PlaneGeometry(0.27, 0.25),
+        crackMaterial,
+        i === 0 ? -0.60 : 0.58,
+        i === 0 ? -0.05 : 0.30,
+        i === 0 ? -1.01 : -1.02,
+        root,
+        0, 0,
+        i === 0 ? 0.30 : -0.28,
+      );
       crack.renderOrder = 18;
       crack.visible = false;
       crack.userData.dynamic = true;
@@ -1689,17 +1763,6 @@ export class CockpitInterior {
         );
         for (let i = 0; i < 4; i += 1) {
           box(0.055, 0.012, 0.18, dark, side * (0.72 + i * 0.08), -0.62, -0.54 + i * 0.02, root, 0.004, 2, 0, side * 0.16, 0);
-        }
-      }
-      // 舰桥额外顶部仪表：暗色基座 + 内嵌灯条，不做过亮的色块
-      box(0.8, 0.082, 0.13, titaniumDark, 0, 0.35, -0.89, root, 0.01, 2);
-      box(0.76, 0.06, 0.018, black, 0, 0.35, -0.823, root, 0.004, 2);
-      for (let i = 0; i < 6; i += 1) {
-        const x = -0.3 + i * 0.12;
-        box(0.062, 0.036, 0.012, dark, x, 0.35, -0.812, root, 0.003, 2);
-        box(0.046, 0.008, 0.008, i < 2 ? this.amberGlow : this.tealDim, x, 0.35, -0.805, root, 0.002, 1);
-        for (const sx of [-1, 1]) {
-          cyl(0.0035, 0.0035, 0.004, brass, x + sx * 0.028, 0.35, -0.805, root, Math.PI / 2, 0, 0, 6);
         }
       }
     }
