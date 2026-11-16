@@ -195,6 +195,14 @@ Anvil Landing 切片：600 × 600 m、1 个 S pad、1 个 hero shop、3 个 NPC�
 - 付费输出许可较宽：可商用/可分发/可做 asset pack；免费档输出公开且 Tripo 拥有权利。
 - 现阶段更值得：本地 K032/K038/K046；若要买，Lunar Base + BMS Modelshop Greebles。
 
+### 渲染/光影
+
+- 当前最大提升不是继续加 bloom/SSR，而是：1.7 m 人眼机位、35/50/85 mm 镜头、HDR 天空、4:1–8:1 主辅光比、fog/体积、hero 2K + tangent normal + AO + 玻璃分流。
+- 后处理最后做；不要用 bloom 掩盖材质/光照问题。
+- Blender hero 用 Cycles + denoise + AgX；EEVEE 只做迭代。
+- Three.js 用 PMREM HDR 环境、Sun + CSM、GTAO、适度 bloom、Fog/aerial perspective、contact shadows、AgX/ACES；MSAA/SMAA 保底。
+- 1080p 先保 60 fps；1440p 降一档阴影/GTAO。
+
 ### 网上资产
 
 如果以后愿意买：
@@ -318,6 +326,8 @@ M1 具体交付：
 - `18-blender-addons-generators.md` — Blender 插件/生成器选型与 5k 面数规则
 - `19-local-asset-audit.md` — 本地 3D 资产审计（K032/K038/K046/Modelshop 等）
 - `20-online-sci-fi-assets.md` — 网上高质量资产与许可
+- `24-rendering-lighting-realism.md` — Blender/Three.js 真实感渲染与光影
+- `25-visual-helper-tools.md` — 视觉辅助工具/插件
 - `21-tripo-premium-evaluation.md` — Tripo Premium 评估（更新中）
 - `22-city-generator-poly-audit.md` — City Generator 高面数/减面复检
 - `23-hero-asset-decimation-test.md` — K032/K038/K046 hero 资产减面/LOD 测试（原生 200–360k 已够，纹理才是瓶颈）
