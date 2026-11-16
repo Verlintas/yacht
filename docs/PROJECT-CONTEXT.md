@@ -412,6 +412,7 @@ npm run build
 
 ## 12. 最近提交
 
+- `1da9467` — TM5/TG6/RH7 硬点 annotation length 修正；舰船贴图 anisotropy/emissive；新增本文件
 - `ce44db0` — BHN 3 秒、NPC 全图多敌对、护盾简化/静态、爆炸随机殉死、第三人称动态、7 艘候选舰接入
 - `85b6d77` — Nautilus Reach hero 样本
 - `cc2cf01` — 路线图记录 Nautilus Reach
