@@ -3,26 +3,26 @@ import Base from '../layouts/Base.astro';
 import { url } from '../lib/url';
 
 const shots = [
-  { src: url('/city-hero/renders/01_wide_port.jpg'), label: '01 · Port wide / three native towers' },
-  { src: url('/city-hero/renders/02_pad_closeup.jpg'), label: '02 · 60 m TLOF / A-30' },
-  { src: url('/city-hero/renders/03_aerial_skyline.jpg'), label: '03 · Skyline aerial' },
-  { src: url('/city-hero/renders/04_terminal_detail.jpg'), label: '04 · T2 arrival hall' },
-  { src: url('/city-hero/renders/05_hero_facade.jpg'), label: '05 · K038 LargeJ facade' },
-  { src: url('/city-hero/renders/06_city_platform.jpg'), label: '06 · 1200 m city platform' },
-  { src: url('/city-hero/renders/07_terminal_approach.jpg'), label: '07 · T2 terminal approach' },
+  { src: url('/city-hero/renders/01_port_wide.jpg'), label: '01 · Port wide / T2 approach' },
+  { src: url('/city-hero/renders/02_street_canyon.jpg'), label: '02 · Street canyon / A-30' },
+  { src: url('/city-hero/renders/03_pad_closeup.jpg'), label: '03 · 60 m TLOF / A-30' },
+  { src: url('/city-hero/renders/04_dense_aerial.jpg'), label: '04 · Dense district aerial' },
+  { src: url('/city-hero/renders/05_platform_aerial.jpg'), label: '05 · 1200 m platform aerial' },
+  { src: url('/city-hero/renders/06_terminal_detail.jpg'), label: '06 · T2 terminal detail' },
 ];
 ---
 
 <Base title="Nautilus Reach · 城市样本 v2" description="Nautilus Reach v2 — 1200 m 城市平台、三栋原生单塔、CommunityCentre 到港厅、K015 远景剪影">
   <main class="city-hero">
     <header class="hero-head">
-      <p class="eyebrow">Kitbash3D K032 / K038 / K046 / K015 · private authored sample</p>
+      <p class="eyebrow">Kitbash3D K032 / K038 / K039 / K015 · authored port district</p>
       <h1>Nautilus Reach</h1>
       <p class="lede">
         1200 × 1200 m 平坦城市平台，40 m 挡土墙，60 m TLOF，25 m A-30。
         三栋原生单塔 <strong>220.3 / 222.7 / 240.7 m</strong>，一栋一个 mesh、scale 1.0；
-        K038 不再上下叠成 563 m 巨构。650M1 <strong>CommunityCentre</strong> 103 m
-        作为 T2 到港厅；K015 只作为 1.3 km 外的暗色远景剪影。
+        街区加入近 90 个单栋 K039/K032/K038 模块、连续店面、雨棚、霓虹、车流、
+        市场、集装箱场和人群。650M1 <strong>CommunityCentre</strong> 103 m 作为 T2
+        到港厅；K015 只作为 1.3 km 外的暗色远景剪影。
       </p>
       <div class="actions">
         <a class="primary" href={url('/city-hero/renders/01_wide_port.jpg')}>打开全尺寸 01 →</a>
@@ -31,7 +31,7 @@ const shots = [
       <dl class="stats">
         <div><dt>英雄塔</dt><dd>K032 A 220.3 m / K038 J 222.7 m / K038 I 240.7 m</dd></div>
         <div><dt>原生三角面</dt><dd>275,250 / 357,771 / 206,982 native</dd></div>
-        <div><dt>场景总量</dt><dd>15.35 M tris · 1,200 m deck</dd></div>
+        <div><dt>场景总量</dt><dd>34.38 M tris · 1,200 m deck</dd></div>
         <div><dt>渲染</dt><dd>Cycles 1920×1080 · 160 samples · AgX/OIDN</dd></div>
       </dl>
     </header>
@@ -48,19 +48,22 @@ const shots = [
     <section class="notes">
       <p>
         <strong>不叠楼：</strong>K032 BldgLG_A、K038 LargeJ、K038 LargeI 各只出现一次，
-        原生 220–241 m，无 uniform giant scaling、无垂直堆叠。K039 只做 1:1 的
-        10–28 m 低层/中景；K015 以 100× 单位修正放在城市平台外 1.3 km，
-        仅作远景剪影和背景城市 massing。
+        原生 220–241 m，无 uniform giant scaling、无垂直堆叠。街区扩展使用近 90 个
+        单栋 K039/K032/K038 模块，沿街低层/中景全部 1:1；K015 以 100× 单位修正
+        放在城市平台外 1.3 km，仅作暗色远景剪影和背景城市 massing。
       </p>
       <p>
-        <strong>1:1 港口：</strong>CommunityCentre 到港厅、60 m TLOF、25 m A-30、
-        龙门架、储罐、管线、集装箱、C2184 面板墙、K014/K034 greeble、Modelshop
-        角色。近景细节来自 authored 几何，不靠程序化拉伸。
+        <strong>1:1 港口：</strong>CommunityCentre 到港厅（门厅/门扇/室内灯/到港屏/
+        雨棚桁架/排队栏杆/行李车/出租车）、60 m TLOF、25 m A-30、龙门架、储罐、
+        管线、集装箱场、C2184 面板墙、K014/K034 greeble、Modelshop 人群。
+        近景细节来自 authored 几何，不靠程序化拉伸。
       </p>
       <p>
-        <strong>限制：</strong>这是离线 Cycles 质量样本，未重建实时 GLB/preview；
-        Kitbash3D / Modelshop 资产只用于私有/离线渲染，公开 Web 前需单独评估授权。
-        K015 的 1K 贴图不作为近景细节，只提供远景轮廓。
+        <strong>背景/地形：</strong>K015 塔楼基座改为 600 m authored 城市底盘，
+        周围是单栋 K032/K039 模块而不是无贴图蓝盒子；外环加入岩石山脊、环城道路、
+        道路灯和雾。K015 的 1K 贴图只做暗色剪影，不作为近景细节。
+        这是离线 Cycles 质量样本，未重建实时 GLB/preview；Kitbash3D / Modelshop
+        资产只用于私有/离线渲染，公开 Web 前需单独评估授权。
       </p>
     </section>
   </main>
@@ -145,7 +148,7 @@ const shots = [
     background: #0a1016;
     border: 1px solid rgba(255, 255, 255, 0.12);
   }
-  .shot:first-child { grid-column: 1 / -1; }
+  .shot:first-child, .shot:last-child { grid-column: 1 / -1; }
   .shot img {
     display: block;
     width: 100%;
@@ -177,6 +180,6 @@ const shots = [
   @media (max-width: 800px) {
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .shot-grid { grid-template-columns: 1fr; }
-    .shot:first-child { grid-column: auto; }
+    .shot:first-child, .shot:last-child { grid-column: auto; }
   }
 </style>

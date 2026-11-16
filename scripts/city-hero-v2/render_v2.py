@@ -16,7 +16,7 @@ argv = sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
 def arg(name, default=None):
     return argv[argv.index(name)+1] if name in argv else default
 
-shots = arg('--shots', 'wide,pad,aerial,detail').split(',')
+shots = arg('--shots', 'wide,street,pad,aerial_low,aerial,detail').split(',')
 res = arg('--res', '960x600')
 rx, ry = [int(v) for v in res.lower().split('x')]
 samples = int(arg('--samples', '48'))
@@ -38,6 +38,7 @@ sc.render.image_settings.compression = 10
 # Keep the authored camera set, but allow quick iteration overrides.
 CAM = {
     'wide': 'Cam_Wide',
+    'street': 'Cam_Street',
     'termwide': 'Cam_TermWide',
     'pad': 'Cam_Pad',
     'aerial': 'Cam_Aerial',
@@ -47,12 +48,13 @@ CAM = {
 }
 OVERRIDES = {
     # name: (loc, target, lens, fstop)
-    'wide': ((-100, -595, 4.0), (-50, -350, 45), 24, 8.0),
-    'termwide': ((-170, -575, 4.8), (-100, -430, 38), 35, 8.0),
+    'wide': ((-100, -590, 4.5), (-45, -320, 55), 24, 8.0),
+    'street': ((0, -470, 1.7), (0, -140, 110), 20, 8.0),
+    'termwide': ((-170, -575, 5.5), (-100, -430, 40), 32, 8.0),
     'pad': ((-45, -520, 3.0), (4, -420, 6.5), 50, 7.1),
-    'aerial': ((-800, -1100, 600), (0, 80, 110), 35, 11.0),
-    'aerial_low': ((-600, -950, 480), (-30, 80, 160), 35, 11.0),
-    'detail': ((-110, -560, 4.0), (-145, -485, 8), 45, 6.3),
+    'aerial': ((-950, -1200, 600), (0, 0, 80), 34, 11.0),
+    'aerial_low': ((-700, -900, 300), (0, -100, 40), 35, 11.0),
+    'detail': ((-80, -580, 4.5), (-145, -500, 7.5), 38, 6.3),
     'hero': ((245, -270, 2.2), (245, -160, 110), 35, 8.0),
 }
 for s, (loc, tgt, lens, fs) in OVERRIDES.items():
