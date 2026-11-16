@@ -18,7 +18,7 @@
 - 已有多个视觉样本：
   - `/yacht/terrain-sample/` — 1 km authored terrain + 420×260 m 港区 + 60 m TLOF
   - `/yacht/kitbash-port/` — K039 kitbash 英雄港区实时预览
-  - `/yacht/city-hero/` — K032/K038 + 563 m 堆叠巨构 + 1200 m 城市平台（WIP，**不是最终质量**）
+  - `/yacht/city-hero/` — city-hero v4：单栋 K032/K038 hero + 港口街区 + T2 到港厅 + 1200 m 平台（离线 Cycles 样本，不是最终城市系统）
 - 护盾已改为舰体三角面壳；BHN 跃迁、NPC 舰队、爆炸、第三人称相机已做一轮实机修复。
 - TM-5 / TG-6 / RH-7 硬点已用 setup 截图验收：`docs/hardpoints/`。
 - 第一人称座舱 v3 已合并：独立 `Scene`/`CockpitPass`、VX-9 HUD、canopy mask、伤害裂纹、warp 遮挡；A-30 103k tris / AR10 108k tris，31 draw calls。截图在 `docs/cockpit-ui/`。
@@ -386,7 +386,7 @@ npm run build
 
 - `/yacht/terrain-sample/` — authored terrain + 港区尺度样本
 - `/yacht/kitbash-port/` — K039 英雄港口实时预览
-- `/yacht/city-hero/` — K032/K038 + 城市平台 WIP
+- `/yacht/city-hero/` — city-hero v4 港口街区 + 单栋 K032/K038 hero + T2 到港厅；5 张 Cycles renders
 
 ### 已知问题
 
@@ -396,7 +396,7 @@ npm run build
 - 第一人称座舱 v3 已合并；仍是程序化 authored kit，不是 Blender 45–65k GLB + 2K PBR atlas；AR10 是 light kit 放大 + 桥楼附加件，不是独立 capital 舰桥。
 - 座舱 103k/108k tris，高于设计 45–65k；draw call 保持 31。
 - 爆炸、护盾、相机已经做了一轮实机修复，但仍需真机验收。
-- 城市 hero 样本仍是 WIP；不要把 K038 叠成巨构。
+- city-hero v4 已合并：单栋 K032/K038 hero、45 个街区模块、品牌清理、工业边缘；仍是离线 Cycles stills + 1200 m 工程平台，不是最终城市系统。K015 只做远景。
 - 行星真实地形/城市/步行/起降仍未接入主游戏。
 - `surfacePatch` 已禁用；地形占位平面会产生黑块/边缘。
 - 大型舰落地规则：AR10 永不落地；2–2.6 km 只 XL cradle/轨道。
@@ -409,7 +409,7 @@ npm run build
 2. **第一人称座舱验收**：已合并 v3；真机检查 A-30/AR10、1280×720、warp/受击/损伤，再决定是否用 Blender GLB 替换程序化 kit。
 3. **Archon 贴图后续**：0 成本 pass 已合并；如需进一步降 VRAM，再接 KTX2Loader 走 2K KTX2（16.8 MB），不要默认 4K。
 4. **候选舰硬点验收**：TM5/TG6/RH7 已在 setup 截图确认，标记落在舰体正确位置；截图在 `docs/hardpoints/`。实机开火/喷口朝向仍待逐舰飞行验收。
-5. **模型重做**：单栋 K032/K038 + authored 构图；不叠楼、不 CLI 拉伸；近景用 C2184/chtazi/K039 detail。
+5. **城市 hero**：v4 已合并为港口街区样本；下一步把已验证的 hero 尺度/街区规则带到 IAC 真实地形，而不是继续堆 1200 m 平台。
 6. **IAC 垂直切片**：16 km authored terrain + Anvil Landing + 1 shop + 3 NPC + player + A-30 landing。
 7. **资产采购决策**：本地优先；若要买，Lunar Base + BMS Greebles；Tripo 不买。
 
@@ -417,6 +417,10 @@ npm run build
 
 ## 12. 最近提交
 
+- `1678c12` — 合并 city-hero v4（单栋 hero、港口街区、品牌清理、工业边缘）
+- `972a759` — city-hero v4：品牌清理、45 个街区模块、T2 门厅、地形/工业边缘
+- `9867539` — city-hero v3：dense port district、T2 facade、terrain/skyline
+- `06eb41f` — city-hero v2：单栋 K032/K038 hero + CommunityCentre T2
 - `4e65086` — 第三人称 HUD：舰队情报框与 boss 血条分层，修复重叠与可读性
 - `a820345` — TM-5/TG-6/RH-7 硬点 setup 验收截图
 - `2dfb79e` — 合并 Archon 贴图 0 成本 pass（AO/ORM、MikkTSpace、anisotropy 16）
