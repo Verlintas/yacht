@@ -177,6 +177,16 @@ Anvil Landing 切片：600 × 600 m、1 个 S pad、1 个 hero shop、3 个 NPC�
 - Blender 5.3 刚发布，部分插件只支持 5.2；建议 **5.2 LTS 建模 + 5.3 导出/验证**。
 - 不为 hero 购买城市生成器：Nodee Buildings 只适合现代背景；SceneCity 在 Apple Silicon 不可用；City Builder 3D 已停更；The City Generator 在 5.3 UI 损坏且面数爆炸。
 
+### Tripo / AI 3D
+
+- Tripo Studio 没有个人 “Premium” 档，实际是 **Free / Pro / Max / Team**；Premium 应核对为 **Max**。
+- 2026-11 香港区：Pro 年付约 US$13/月（3,000 credits），Max 年付约 US$36/月（25,000 credits、8K 纹理、私有+商用）。
+- 实际 H3.1 单次约 55 credits，不是 15；Pro 约 54 次/月，Max 约 454 次/月。
+- 硬表面建筑/太空港不适合：建筑需要拆件生成；quad 上限 150k（P2.0 仅 25k quads）；无 LOD/collision/明确 emissive；社区反馈复杂件修 8 小时。
+- **不要为 hero 建筑/城市买 Tripo。** 想试 AI 最多买 Pro 月付一个月（约 US$20），做 props/rocks/character base，然后取消。
+- 付费输出许可较宽：可商用/可分发/可做 asset pack；免费档输出公开且 Tripo 拥有权利。
+- 现阶段更值得：本地 K032/K038/K046；若要买，Lunar Base + BMS Modelshop Greebles。
+
 ### 网上资产
 
 如果以后愿意买：
