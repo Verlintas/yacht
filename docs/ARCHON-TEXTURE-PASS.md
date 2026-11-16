@@ -3,7 +3,7 @@
 **日期：** 2026-11-16  
 **工作树：** `/Users/apple/.local/share/opencode/worktree/e0f2de/archon-textures`  
 **模型：** `public/models/candidates/rta_archon.glb`  
-**状态：** 已提交到 worktree，**未合并**。主仓库未修改。
+**状态：** 已合并到 main（`2dfb79e`）。
 
 ---
 
