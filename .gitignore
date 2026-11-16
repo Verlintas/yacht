@@ -22,3 +22,6 @@ docs/kitbash-port/glb/texture_paths.json
 # Python bytecode (Blender imports)
 __pycache__/
 *.pyc
+
+# Archon texture pass local workspace (large intermediates)
+work/

@@ -428,12 +428,13 @@ export async function loadShipModel(
     if ('emissiveIntensity' in material) material.emissiveIntensity = Math.min(0.8, material.emissiveIntensity ?? 1);
     if ('metalness' in material) material.metalness = Math.min(material.metalness ?? 1, 0.7);
     if ('roughness' in material) material.roughness = Math.max(material.roughness ?? 0.5, 0.45);
+    if ('aoMapIntensity' in material) material.aoMapIntensity = 1;
     material.envMapIntensity = 1.1;
     // 舰船贴图默认 anisotropy=1，第三人称掠射角会先把细节 mip 糊掉
     for (const key of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap'] as const) {
       const texture = material[key];
       if (texture) {
-        texture.anisotropy = 8;
+        texture.anisotropy = 16;
         texture.needsUpdate = true;
       }
     }

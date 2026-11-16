@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Archon texture compare</title>
+<style>
+  html,body{margin:0;height:100%;background:#02040a;overflow:hidden}
+  canvas{display:block;width:100vw;height:100vh}
+  #label{position:fixed;left:16px;top:12px;color:#cfe8ff;font:13px ui-monospace,monospace;opacity:.8;z-index:2}
+</style>
+</head>
+<body>
+<div id="label"></div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "/node_modules/three/build/three.module.js",
+    "three/addons/": "/node_modules/three/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+
+const params = new URLSearchParams(location.search);
+const modelUrl = params.get('model') ?? '/public/models/candidates/rta_archon.glb';
+const view = params.get('view') ?? 'gameplay';
+const aoParam = params.get('ao') ?? 'runtime';
+const aniso = Number(params.get('aniso') ?? 16);
+document.getElementById('label').textContent = `${modelUrl.split('/').pop()} · ${view}`;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, logarithmicDepthBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x02040a);
+const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.5, 1_800_000_000);
+
+// env: same palette as src/game/world.ts
+const envScene = new THREE.Scene();
+const envSky = new THREE.Mesh(
+  new THREE.SphereGeometry(1, 32, 16),
+  new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    vertexShader: `varying vec3 vDir; void main(){ vDir=normalize(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader: `varying vec3 vDir; void main(){
+      float up=vDir.y*0.5+0.5;
+      vec3 col=mix(vec3(0.008,0.015,0.03),vec3(0.05,0.075,0.11),up);
+      float sun=pow(max(dot(normalize(vDir),normalize(vec3(0.3,0.35,0.9))),0.0),48.0);
+      col+=vec3(1.0,0.78,0.45)*sun*1.6;
+      float band=pow(max(dot(normalize(vDir),normalize(vec3(-0.6,0.1,-0.4))),0.0),6.0);
+      col+=vec3(0.18,0.12,0.28)*band*0.35;
+      gl_FragColor=vec4(col,1.0);
+    }`,
+  }),
+);
+envScene.add(envSky);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+scene.environmentIntensity = 1.0;
+pmrem.dispose();
+
+const sunKey = new THREE.DirectionalLight(0xfff0dd, 3.4);
+sunKey.position.set(6000, 7000, -4000);
+sunKey.target.position.set(0, 0, -1);
+sunKey.castShadow = true;
+sunKey.shadow.mapSize.set(2048, 2048);
+const fillSun = new THREE.DirectionalLight(0x9fc6ff, 1.4);
+fillSun.position.set(-5000, 3000, 9000);
+scene.add(fillSun);
+scene.add(sunKey, sunKey.target);
+scene.add(new THREE.AmbientLight(0x2a3d5c, 0.7));
+const camFill = new THREE.DirectionalLight(0xbcd8ff, 2.2);
+scene.add(camFill, camFill.target);
+
+// camera-attached fill/rim, same spirit as src/game/main.ts
+const fillLight = new THREE.PointLight(0xa8dcff, 1100, 500, 1.6);
+fillLight.position.set(0, 6, 4);
+camera.add(fillLight);
+const rimLight = new THREE.DirectionalLight(0xa8c8e8, 0.55);
+rimLight.position.set(0, 4, 2);
+rimLight.target.position.set(0, 0, -2);
+camera.add(rimLight, rimLight.target);
+scene.add(camera);
+
+const ktx2 = new KTX2Loader().setTranscoderPath('/node_modules/three/examples/jsm/libs/basis/').detectSupport(renderer);
+const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).setKTX2Loader(ktx2);
+let model;
+const box = new THREE.Box3();
+const size = new THREE.Vector3();
+const center = new THREE.Vector3();
+
+function applyRuntimeMaterials(root) {
+  root.traverse((obj) => {
+    if (!(obj instanceof THREE.Mesh)) return;
+    const material = obj.material;
+    if (!material) return;
+    material.side = THREE.DoubleSide;
+    if ('emissiveIntensity' in material) material.emissiveIntensity = Math.min(0.8, material.emissiveIntensity ?? 1);
+    if ('metalness' in material) material.metalness = Math.min(material.metalness ?? 1, 0.7);
+    if ('roughness' in material) material.roughness = Math.max(material.roughness ?? 0.5, 0.45);
+    material.envMapIntensity = 1.1;
+    for (const key of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap']) {
+      const texture = material[key];
+      if (texture) {
+        texture.anisotropy = aniso;
+        texture.needsUpdate = true;
+      }
+    }
+    obj.castShadow = true;
+    obj.receiveShadow = true;
+  });
+}
+
+loader.load(modelUrl, (gltf) => {
+  model = gltf.scene;
+  model.rotation.set(0, Math.PI, 0);
+  model.scale.setScalar(1);
+  model.updateMatrixWorld(true);
+  box.setFromObject(model);
+  box.getSize(size);
+  const rawLength = size.z;
+  model.scale.setScalar(8000 / rawLength);
+  model.updateMatrixWorld(true);
+  applyRuntimeMaterials(model);
+  box.setFromObject(model);
+  box.getCenter(center);
+  model.position.sub(center);
+  scene.add(model);
+  model.updateMatrixWorld(true);
+
+  if (view === 'hull') {
+    const target = new THREE.Vector3(0, 20, 300);
+    camera.position.set(1300, 420, 1150);
+    camera.lookAt(target);
+  } else if (view === 'macro') {
+    const target = new THREE.Vector3(0, 350, -3590);
+    camera.position.set(60, 480, -3540);
+    camera.lookAt(target);
+  } else if (view === 'closeup') {
+    // bridge / bow area, same coordinates as ships.ts cockpit for AR-10
+    const target = new THREE.Vector3(0, 250, -3520);
+    camera.position.set(260, 470, -3000);
+    camera.lookAt(target);
+  } else {
+    // match third-person distance: back = L*1.25+8, height = L*0.26+2.5
+    const back = 8000 * 1.25 + 8;
+    const height = 8000 * 0.26 + 2.5;
+    camera.position.set(back * 0.58, height, back * 0.72);
+    camera.lookAt(0, -80, 0);
+  }
+  camera.updateMatrixWorld(true);
+  camFill.position.copy(camera.position);
+  camFill.target.position.set(0, 0, 0);
+
+  const grid = new THREE.GridHelper(20000, 40, 0x163246, 0x0a1822);
+  grid.position.y = -500;
+  grid.material.transparent = true;
+  grid.material.opacity = 0.12;
+  scene.add(grid);
+
+  renderer.compile(scene, camera);
+  renderer.render(scene, camera);
+  window.__renderer = renderer;
+  window.__model = model;
+  window.__materials = [];
+  model.traverse((o) => { if (o.isMesh) window.__materials.push(o.material); });
+  document.title = 'READY';
+  const mm = window.__materials[0];
+  if (params.get('metal') === '0') {
+    for (const material of window.__materials) { if ('metalness' in material) { material.metalness = 0; material.needsUpdate = true; } }
+  }
+  if (params.get('em') === 'off') {
+    for (const material of window.__materials) { if ('emissiveIntensity' in material) { material.emissiveIntensity = 0; material.needsUpdate = true; } }
+  }
+  if (params.get('ao') === 'off') {
+    for (const material of window.__materials) { if (material.aoMap) { material.aoMap = null; material.needsUpdate = true; } }
+  }
+  const uniqueTex = new Set([mm.map, mm.normalMap, mm.roughnessMap, mm.metalnessMap, mm.aoMap, mm.emissiveMap].filter(Boolean)).size;
+  document.getElementById('label').textContent += ` · model tex ${uniqueTex} · aoShared ${mm.aoMap === mm.roughnessMap} · metal ${mm.metalness} · rough ${mm.roughness} · em ${mm.emissiveIntensity} · ao ${!!mm.aoMap} · renderer tex ${renderer.info.memory.textures}`;
+  window.__ready = true;
+}, undefined, (err) => {
+  console.error(err);
+  document.getElementById('label').textContent = 'LOAD ERROR: ' + err.message;
+});
+
+let frames = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  if (!model) return;
+  renderer.render(scene, camera);
+  frames++;
+  window.__frames = frames;
+}
+animate();
+</script>
+</body>
+</html>
