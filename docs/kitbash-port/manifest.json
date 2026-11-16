@@ -1,265 +1,423 @@
 {
- "project": "Anvil Landing \u2014 Kitbash3D Sci-Fi Industrial hero port",
+ "project": "Anvil Landing \u2014 authored city deck with Kitbash3D scale tiers",
  "date": "2026-11-16",
- "status": "private quality proof, not merged to main",
+ "status": "private quality proof; branch kitbash-port; not merged to main",
  "sources": {
   "kitbash_fbx": "/tmp/kb3d_fbx/asset_1.fbx",
   "kitbash_textures": "/tmp/kb3d_tex/Textures",
+  "k014_greebles": "/tmp/kb3d_greebles/Kitbash3d_Greebles.FBX",
+  "k034_rooftops": "/tmp/kb3d_rooftops/Kitbash3D Props Rooftops.fbx",
   "a30_ship": "public/models/thunderbolt.glb",
-  "additional_packs_audited": [
-   "K014 Greebles (FBX)",
-   "K025 Industrial (factories/crane audit)"
-  ],
   "license": "user-purchased assets; private sample, no redistribution"
  },
  "audit": {
-  "mesh_count": 359,
-  "tris": 4990134,
-  "materials": 12,
-  "material_sets": [
-   "Floor",
-   "Glass",
-   "Iron",
-   "Metal",
-   "MetalSilver",
-   "Panels2",
-   "PanelsBlack",
-   "PanelsBrown",
-   "PanelsLightBlue",
-   "PanelsWhite",
-   "Tech",
-   "lights"
+  "kitbash_fbx": {
+   "meshes": 359,
+   "tris": 4990134,
+   "materials": 12,
+   "building_modules": 30,
+   "props": 32
+  },
+  "k014_greebles": {
+   "meshes": 30,
+   "tris": 548954,
+   "file": "asset_audit_greebles.json"
+  },
+  "k034_rooftops": {
+   "meshes": 262,
+   "tris": 909500,
+   "file": "asset_audit_rooftops.json"
+  },
+  "source_hero_dims_1x_m": {
+   "G": [
+    15.9,
+    8.6,
+    28.1
+   ],
+   "H": [
+    13.0,
+    6.6,
+    25.3
+   ],
+   "I": [
+    22.2,
+    11.1,
+    17.1
+   ],
+   "J": [
+    14.0,
+    4.8,
+    16.1
+   ]
+  }
+ },
+ "scale_analysis": {
+  "fbx_unit_scale_factor": 0.1,
+  "fbx_original_unit_scale_factor": 0.1,
+  "blender_import_object_scale": 0.001,
+  "raw_vertex_extent_units": 28566.69,
+  "file_true_1x_height_m": 28.57,
+  "human_scale_reference": "https://kitbash3d.com/a/blog/sci-fi-industial (1.8 m figures vs 1x fa\u00e7ades)",
+  "study_images": [
+   {
+    "file": "scale_study/study_1x.png",
+    "resolution": [
+     1400,
+     900
+    ],
+    "bytes": 1187128
+   },
+   {
+    "file": "scale_study/study_3x.png",
+    "resolution": [
+     1400,
+     900
+    ],
+    "bytes": 1368078
+   },
+   {
+    "file": "scale_study/study_5x.png",
+    "resolution": [
+     1400,
+     900
+    ],
+    "bytes": 1445059
+   }
   ],
-  "building_modules": 30,
-  "props": 32,
-  "hero_modules": [
+  "study_result": "1x sheds; 3x towers; 5x ship/pad implausible; uniform 10x rejected",
+  "selected": "tiered: 1:1 custom foreground, 4-5x K039 midground, 16-25x K039 LG background"
+ },
+ "deck": {
+  "dimensions_m": [
+   1200,
+   1200
+  ],
+  "top_elevation_m": 0.0,
+  "slab_m": 16,
+  "retaining_wall_m": 40,
+  "buttress_spacing_m": 60,
+  "terrain_ring_size_m": 3200,
+  "terrain_under_deck": false,
+  "surface": "40 m panel joints, plaza, painted labels, approach road, boulevard, three north avenues",
+  "building_intersections": "none; all placed at z=0 on deck, footprints inside 1200x1200 m"
+ },
+ "tiers": {
+  "foreground_1to1": {
+   "terminal_m": [
+    104,
+    56,
+    38.4
+   ],
+   "terminal_hangar_door_m": [
+    26,
+    15
+   ],
+   "warehouse_m": [
+    60,
+    34,
+    22.5
+   ],
+   "control_tower_top_m": 62,
+   "gantry_span_height_m": [
+    56,
+    30
+   ],
+   "a30_length_m": 25.0,
+   "tlof_m": [
+    60,
+    60
+   ],
+   "crew_height_m": 1.86,
+   "dressing": "custom panels/glass/signage + K014 panels + K034 AC/dishes/antennas/billboards/fire escapes"
+  },
+  "midground_k039_4to5x": [
    {
+    "label": "G",
     "module": "BldgLG_G",
-    "role": "terminal / control tower",
-    "tris": 904013,
-    "dims_m": [
-     15.9,
-     8.57,
-     28.12
-    ]
+    "scale": 5.0,
+    "pos": [
+     -330,
+     430
+    ],
+    "height_m": 140.6
    },
    {
+    "label": "H",
     "module": "BldgLG_H",
-    "role": "terminal + skybridge",
-    "tris": 1503264,
-    "dims_m": [
-     12.97,
-     6.64,
-     25.34
-    ]
+    "scale": 4.5,
+    "pos": [
+     -120,
+     400
+    ],
+    "height_m": 114.0
    },
    {
+    "label": "I",
     "module": "BldgLG_I",
-    "role": "hangar / warehouse",
-    "tris": 526387,
-    "dims_m": [
-     22.19,
-     11.07,
-     17.11
-    ]
+    "scale": 5.0,
+    "pos": [
+     120,
+     440
+    ],
+    "height_m": 85.5
    },
    {
+    "label": "J",
     "module": "BldgLG_J",
-    "role": "city block backdrop",
-    "tris": 226893,
-    "dims_m": [
-     14.04,
-     4.77,
-     16.13
-    ]
+    "scale": 5.0,
+    "pos": [
+     340,
+     430
+    ],
+    "height_m": 80.6
+   },
+   {
+    "label": "C",
+    "module": "BldgLG_C",
+    "scale": 3.5,
+    "pos": [
+     -520,
+     440
+    ],
+    "height_m": 39.0
+   },
+   {
+    "label": "D",
+    "module": "BldgLG_D",
+    "scale": 4.0,
+    "pos": [
+     520,
+     450
+    ],
+    "height_m": 66.5
+   }
+  ],
+  "background_mega_16to25x": [
+   {
+    "label": "M1",
+    "base": "BldgLG_G x20",
+    "upper": "BldgLG_G x8",
+    "pos": [
+     -380,
+     650
+    ],
+    "height_m": 744.7,
+    "height_with_spire_m": 808.6
+   },
+   {
+    "label": "M2",
+    "base": "BldgLG_H x20",
+    "upper": "BldgLG_H x8",
+    "pos": [
+     -40,
+     700
+    ],
+    "height_m": 671.0,
+    "height_with_spire_m": 734.9
+   },
+   {
+    "label": "M3",
+    "base": "BldgLG_I x18",
+    "upper": "BldgLG_J x12",
+    "pos": [
+     300,
+     680
+    ],
+    "height_m": 475.3,
+    "height_with_spire_m": 539.2
+   },
+   {
+    "label": "M4",
+    "base": "BldgLG_D x25",
+    "upper": "BldgLG_G x8",
+    "pos": [
+     450,
+     740
+    ],
+    "height_m": 606.9,
+    "height_with_spire_m": 670.8
+   },
+   {
+    "label": "M5",
+    "base": "BldgLG_G x16",
+    "upper": "BldgLG_J x8",
+    "pos": [
+     -150,
+     700
+    ],
+    "height_m": 546.8,
+    "height_with_spire_m": 610.7
    }
   ]
- },
- "scene": {
-  "units": "metres",
-  "coordinate_system": "Z-up in Blender / Y-up in glTF",
-  "apron_m": [
-   210,
-   140
-  ],
-  "tlof_m": [
-   60,
-   60
-  ],
-  "gantry_span_m": 56,
-  "gantry_height_m": 24,
-  "ship": {
-   "name": "A-30 Thunderbolt",
-   "length_m": 25.0,
-   "source_length_m": 30.0,
-   "scale": 0.833333,
-   "yaw_deg": 72,
-   "landing_gear": "custom 3-point skids"
-  },
-  "humans": 4,
-  "hero_buildings": 4,
-  "city_edge_buildings": 6,
-  "cameras": {
-   "Cam_Wide": {
-    "loc": [
-     -38,
-     -76,
-     17
-    ],
-    "target": [
-     3,
-     10,
-     12
-    ],
-    "lens_mm": 26
-   },
-   "Cam_Close": {
-    "loc": [
-     -38,
-     -54,
-     6.2
-    ],
-    "target": [
-     -6,
-     1,
-     4.5
-    ],
-    "lens_mm": 42
-   },
-   "Cam_Aerial": {
-    "loc": [
-     -120,
-     -145,
-     82
-    ],
-    "target": [
-     5,
-     40,
-     12
-    ],
-    "lens_mm": 55
-   }
-  },
-  "lighting": "warm sun 6.3, custom equirect sky, facade fill, gantry/mast spots, emissive strips, EEVEE AO/raytracing"
  },
  "materials": {
-  "mapping": {
-   "Metal": "KB3D_SF_Metal_{basecolor,normal,roughness,metallic,ao}",
-   "MetalSilver": "KB3D_SF_MetalSilver_*",
-   "PanelsWhite": "KB3D_SF_PanelsWhite_*",
-   "PanelsBlack": "KB3D_SF_PanelsBlack_*",
-   "PanelsBrown": "KB3D_SF_PanelsBrown_*",
-   "Panels2": "KB3D_SF_Panels2_*",
-   "PanelsLightBlue": "KB3D_SF_PanelsLightBlue_*",
-   "Iron": "KB3D_SF_Iron_*",
-   "Glass": "KB3D_SF_Glass_* (transmission)",
-   "Tech": "KB3D_SF_Tech_* + emissive",
-   "lights": "KB3D_SF_Lights_* emissive",
-   "Floor": "KB3D_SF_Floor_*"
-  },
-  "glb": "2K basecolour / 1K normal / 512 metal-rough-emissive WebP; AO + tint baked",
+  "kb3d_sets": [
+   "Metal",
+   "MetalSilver",
+   "PanelsWhite",
+   "PanelsBlack",
+   "PanelsBrown",
+   "Panels2",
+   "PanelsLightBlue",
+   "Iron",
+   "Glass",
+   "Tech",
+   "lights",
+   "Floor",
+   "Floor"
+  ],
+  "mapping": "KB3D_SF_<set>_{basecolor,normal,roughness,metallic,ao,emissive}",
+  "blender": "full PBR + AO, glass transmission, emissive lights/tech, EEVEE AgX Punchy",
+  "glb": "1K WebP base/normal/metal-rough/emissive; AO+tint baked; glass opaque reflective",
   "custom": [
-   "concrete",
-   "terrain",
-   "cliff",
+   "deck concrete",
+   "plaza",
+   "retaining wall",
+   "asphalt",
    "hazard",
    "paint",
-   "neon",
-   "suit/visor"
+   "neon/sign",
+   "suit"
   ]
  },
- "renders": [
-  {
-   "file": "renders/01_wide_port.png",
-   "camera": "Cam_Wide",
-   "resolution": [
-    1920,
-    1200
+ "renders": {
+  "engine": "Blender 5.3 EEVEE",
+  "resolution": [
+   1920,
+   1200
+  ],
+  "samples": 64,
+  "cameras": {
+   "wide": [
+    -65,
+    -110,
+    12
    ],
-   "bytes": 2702310
+   "close": [
+    -35,
+    -65,
+    7.5
+   ],
+   "aerial": [
+    -600,
+    -900,
+    500
+   ]
   },
-  {
-   "file": "renders/02_pad_closeup.png",
-   "camera": "Cam_Close",
-   "resolution": [
-    1920,
-    1200
-   ],
-   "bytes": 2917465
-  },
-  {
-   "file": "renders/03_elevated_city.png",
-   "camera": "Cam_Aerial",
-   "resolution": [
-    1920,
-    1200
-   ],
-   "bytes": 3541503
-  }
- ],
+  "files": [
+   {
+    "file": "renders/01_wide_port.png",
+    "resolution": [
+     1920,
+     1200
+    ],
+    "bytes": 3115135
+   },
+   {
+    "file": "renders/02_pad_closeup.png",
+    "resolution": [
+     1920,
+     1200
+    ],
+    "bytes": 3072543
+   },
+   {
+    "file": "renders/03_elevated_city.png",
+    "resolution": [
+     1920,
+     1200
+    ],
+    "bytes": 2730881
+   }
+  ]
+ },
  "glb": {
   "file": "glb/anvil_landing_port.glb",
-  "bytes": 25660288,
-  "size_mb": 25.66,
-  "tris": 1186399,
-  "groups": {
-   "RT_Ground": 62268,
-   "RT_Buildings": 674395,
-   "RT_City": 306772,
-   "RT_Port": 88992,
-   "RT_Ship": 44196,
-   "RT_People": 9776
+  "bytes": 44171880,
+  "size_mb": 44.17,
+  "tris": 2893888,
+  "materials_threejs": 35,
+  "textures_webp": 44,
+  "meshes": 5,
+  "groups_raw_tris": {
+   "RT_Ground": 114140,
+   "RT_City": 2376089,
+   "RT_Port": 353981,
+   "RT_Ship": 41857,
+   "RT_People": 8376
   },
-  "threejs_materials": 40,
-  "kit_materials": 38,
-  "textures": 12,
   "extensions": [
    "EXT_meshopt_compression",
    "EXT_texture_webp",
    "KHR_mesh_quantization",
-   "KHR_materials_clearcoat"
+   "KHR_materials_clearcoat",
+   "KHR_materials_emissive_strength"
   ],
   "decimation": {
-   "BldgLG_G": 0.22,
-   "BldgLG_H": 0.2,
-   "BldgLG_I": 0.32,
-   "BldgLG_J": 0.4,
-   "city_duplicates": 0.1,
-   "port_gantry": 0.55,
-   "terrain": 0.35,
-   "cliff": 0.42,
-   "ship": 0.9
+   "midground_G_H": 0.1,
+   "midground_I_J": 0.15,
+   "mega_background": 0.5,
+   "greebles": 0.25,
+   "port": 0.45,
+   "gantry": 0.45,
+   "ship": 0.85,
+   "deck_terrain": "0.8 / 0.45"
   },
-  "texture_formats": {
-   "basecolor": "WebP 2048",
-   "normal": "WebP 1024",
-   "metal_rough_emissive": "WebP 512"
-  },
-  "optimizer": "gltf-transform 4.5.1 optimize (meshopt, webp, join, weld, prune; simplify/palette disabled)"
+  "texture_cap": "1024",
+  "optimizer": "gltf-transform 4.5.1 optimize (meshopt + webp, join, weld, prune)"
  },
  "preview": {
   "page": "preview/index.html",
-  "screenshot": "preview/preview_web.png",
-  "screenshot_bytes": 1573860,
+  "screenshots": [
+   {
+    "file": "preview/preview_web.png",
+    "resolution": [
+     1600,
+     1000
+    ],
+    "bytes": 1658378
+   },
+   {
+    "file": "preview/preview_web_pad.png",
+    "resolution": [
+     1600,
+     1000
+    ],
+    "bytes": 1784482
+   },
+   {
+    "file": "preview/preview_web_aerial.png",
+    "resolution": [
+     1600,
+     1000
+    ],
+    "bytes": 1468240
+   }
+  ],
   "serve": "cd docs/kitbash-port && python3 -m http.server 8765",
   "url": "http://localhost:8765/preview/",
-  "dependencies": "Three.js r187 via jsDelivr; MeshoptDecoder for EXT_meshopt_compression"
+  "dependencies": "vendored Three.js r187 + MeshoptDecoder + postprocessing in preview/vendor (no CDN)"
  },
  "files": {
-  "blend_local_only": "anvil_landing.blend (122 MB, not committed)",
+  "blend_local_only": "docs/kitbash-port/anvil_landing.blend (753 MB, git-ignored)",
   "scripts": [
-   "audit_fbx.py",
-   "audit_industrial.py",
-   "build_architecture.py",
+   "build_scene.py",
+   "build_deck.py",
+   "build_terminal.py",
+   "build_greebles.py",
+   "build_tiers.py",
    "build_port.py",
    "build_props.py",
-   "build_scene.py",
-   "export_glb.py",
-   "gen_textures.py",
-   "grade_renders.py",
+   "build_architecture.py",
    "lib_kb3d.py",
+   "gen_textures.py",
+   "render.py",
+   "grade_renders.py",
    "make_rt_textures.py",
-   "render.py"
+   "export_glb.py",
+   "audit_fbx.py",
+   "audit_industrial.py",
+   "audit_greebles.py"
   ],
   "generated_textures": [
    "concrete_albedo.jpg",
@@ -271,15 +429,51 @@
    "terrain_albedo.jpg",
    "terrain_normal.png",
    "terrain_roughness.jpg"
+  ],
+  "scale_study": [
+   {
+    "file": "scale_study/study_1x.png",
+    "resolution": [
+     1400,
+     900
+    ],
+    "bytes": 1187128
+   },
+   {
+    "file": "scale_study/study_3x.png",
+    "resolution": [
+     1400,
+     900
+    ],
+    "bytes": 1368078
+   },
+   {
+    "file": "scale_study/study_5x.png",
+    "resolution": [
+     1400,
+     900
+    ],
+    "bytes": 1445059
+   }
   ]
  },
+ "v2_terrain_sample": {
+  "route": "/yacht/terrain-sample/",
+  "files": [
+   "src/pages/terrain-sample.astro",
+   "src/scripts/terrain-sample.ts"
+  ],
+  "finding": "heightmap-only terrain demo; no Kitbash3D buildings, so no K039 scale issue"
+ },
  "limitations": [
-  "GLB glass is opaque reflective; Blender uses transmission",
-  "GLB is decimated from 6.1M to 1.19M tris for real-time",
-  "A-30 source has no landing gear; custom skids/stair authored",
-  "Humans are minimal custom suited figures, not scanned characters",
-  "City edge/cliff are backdrop elements, not full interior city",
-  "Preview needs HTTP + CDN for Three.js",
-  "The full .blend is local-only due to size; rebuild with the documented scripts"
+  "K039 is not hero close-up detail; custom terminal/gantry carry the near field, K039 starts at 400 m",
+  "Background mega-towers are 16-25x K039 LG with large roof plates; silhouette/mass, not fine skyscraper detail",
+  "Deck is 1200x1000 m within the requested range; 809 m background tops crop in wide/close-up",
+  "GLB glass is opaque reflective; GLB textures 1K to meet the 50 MB ceiling",
+  "1x file scale is 28 m; 4-5x/16-25x tiers are art direction, documented in scale_study",
+  "Full 789 MB .blend is local-only; scripts rebuild it",
+  "K014/K034 low-res source textures were replaced with the scene KB3D PBR sets",
+  "Modelshop Greebles is only partially downloaded and was not used",
+  "Preview screenshots are SwiftShader/WebGL captures at 1600x1000"
  ]
 }

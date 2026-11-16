@@ -8,11 +8,10 @@ os.makedirs(RAW, exist_ok=True)
 files = ["01_wide_port.png", "02_pad_closeup.png", "03_elevated_city.png"]
 for f in files:
     src = os.path.join(BASE, f)
-    if os.path.exists(src) and not os.path.exists(os.path.join(RAW, f)):
-        shutil.copy2(src, os.path.join(RAW, f))
-    if not os.path.exists(os.path.join(RAW, f)):
+    raw = os.path.join(RAW, f)
+    if not os.path.exists(raw):
         continue
-    im = Image.open(os.path.join(RAW, f)).convert("RGB")
+    im = Image.open(raw).convert("RGB")
     a = np.asarray(im).astype(np.float32) / 255.0
     lum = (0.2126 * a[..., 0] + 0.7152 * a[..., 1] + 0.0722 * a[..., 2])[..., None]
     # gentle S-curve / contrast

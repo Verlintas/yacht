@@ -5,8 +5,10 @@ import bpy, sys, os
 
 BLEND = "/Users/apple/.local/share/opencode/worktree/e0f2de/kitbash-port/docs/kitbash-port/anvil_landing.blend"
 OUT = "/Users/apple/.local/share/opencode/worktree/e0f2de/kitbash-port/docs/kitbash-port/renders"
+RAW = OUT + "/raw"
 FINAL = "--final" in sys.argv
 os.makedirs(OUT, exist_ok=True)
+os.makedirs(RAW, exist_ok=True)
 
 bpy.ops.wm.open_mainfile(filepath=BLEND)
 sc = bpy.context.scene
@@ -49,6 +51,6 @@ shots = [("01_wide_port", "Cam_Wide"),
          ("03_elevated_city", "Cam_Aerial")]
 for name, cam in shots:
     sc.camera = bpy.data.objects[cam]
-    sc.render.filepath = f"{OUT}/{name}.png"
+    sc.render.filepath = f"{RAW}/{name}.png"
     bpy.ops.render.render(write_still=True)
     print("RENDERED", sc.render.filepath)

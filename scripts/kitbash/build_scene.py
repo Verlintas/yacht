@@ -11,9 +11,6 @@ from lib_kb3d import *
 WORK = "/Users/apple/.local/share/opencode/worktree/e0f2de/kitbash-port"
 OUT_BLEND = f"{WORK}/docs/kitbash-port/anvil_landing.blend"
 random.seed(12)
-HERO_SCALE = 10.0
-CITY_SCALE = 6.0
-SKY_SCALE = 6.0
 
 # ================================================================ scene
 sc = reset()
@@ -28,6 +25,7 @@ C_SHIP = collection("07_SHIP")
 C_PEOPLE = collection("08_PEOPLE")
 C_LIGHT = collection("09_LIGHTS")
 C_CAM = collection("10_CAMERAS")
+C_PROTO = collection("00_PROTO")
 
 # fonts
 FONT = bpy.data.fonts.load("/System/Library/Fonts/Avenir Next Condensed.ttc")
@@ -136,90 +134,10 @@ tt.location = (330, 560)
 nt.links.new(slopemix.outputs[2], tt.inputs[7])
 nt.links.new(tt.outputs[2], bsdf.inputs['Base Color'])
 
-# ================================================================ terrain
-def smoothstep(a, b, x):
-    t = max(0.0, min(1.0, (x - a) / (b - a)))
-    return t * t * (3 - 2 * t)
-
-def terrain_h(x, y):
-    d = math.sqrt((x * 1.0) ** 2 + ((y - 30) * 0.95) ** 2)
-    flat = smoothstep(235, 330, d)
-    n1 = noise.noise(Vector((x * 0.004, y * 0.004, 0.5)))
-    n2 = noise.noise(Vector((x * 0.013, y * 0.013, 1.7)))
-    n3 = noise.noise(Vector((x * 0.031, y * 0.031, 4.2)))
-    ridged = 1.0 - abs(noise.noise(Vector((x * 0.007, y * 0.007, 2.3))))
-    ridged = ridged * ridged
-    hills = (n1 * 0.42 + n2 * 0.26 + n3 * 0.10 + ridged * 0.38 + 0.55) * 26.0
-    # mesa / cliff wall behind the city — deliberately not flattened by the port mask
-    mesa_n = noise.noise(Vector((x * 0.0035, y * 0.002, 6.1)))
-    mesa_y0 = 202 + mesa_n * 22
-    mesa = smoothstep(mesa_y0, mesa_y0 + 14, y) * (1.0 - smoothstep(520, 600, y))
-    mesa_h = 44.0 * (0.50 + 0.50 * noise.noise(Vector((x * 0.006, 0, 9.2))))
-    ridge = mesa * mesa_h
-    ridge += 8.0 * math.sin(x * 0.02) * smoothstep(230, 260, y) * (1 - flat)
-    ridge += 95.0 * math.exp(-((y - 620) / 130.0) ** 2) * (0.55 + 0.45 * noise.noise(Vector((x * 0.003, 0, 3.7))))
-    ridge += 55.0 * math.exp(-((x + 450) / 110.0) ** 2) * (0.6 + 0.4 * noise.noise(Vector((0, y * 0.004, 5.1))))
-    ridge += 50.0 * math.exp(-((x - 470) / 120.0) ** 2) * (0.6 + 0.4 * noise.noise(Vector((0, y * 0.005, 8.2))))
-    return hills * flat + ridge - 0.38
-
-SIZE = 1300
-SEG = 200
-verts = []
-for j in range(SEG + 1):
-    y = -SIZE / 2 + SIZE * j / SEG
-    for i in range(SEG + 1):
-        x = -SIZE / 2 + SIZE * i / SEG
-        z = terrain_h(x, y)
-        # tiny undulation on flat apron surroundings
-        if z < -0.35:
-            z += 0.06 * noise.noise(Vector((x * 0.12, y * 0.12, 0.1)))
-        verts.append((x, y, z))
-faces = []
-for j in range(SEG):
-    for i in range(SEG):
-        a = j * (SEG + 1) + i
-        faces.append((a, a + 1, a + SEG + 2, a + SEG + 1))
-me = bpy.data.meshes.new("Terrain"); me.from_pydata(verts, [], faces); me.update()
-for p in me.polygons: p.use_smooth = True
-uv = me.uv_layers.new(name="UVMap")
-for poly in me.polygons:
-    for li in poly.loop_indices:
-        v = me.vertices[me.loops[li].vertex_index].co
-        uv.data[li].uv = (v.x / 75.0 + 0.5, v.y / 75.0 + 0.5)
-terrain = bpy.data.objects.new("Terrain", me); link(terrain, C_GROUND)
-terrain.data.materials.append(M_TERRAIN)
-
-# scattered boulders — sunk into the terrain, dark rock face
-M_ROCK = surface_mat("Rock", bpy.data.images.load(f"{GEN_TEX}/terrain_albedo.jpg"),
-                     bpy.data.images.load(f"{GEN_TEX}/terrain_normal.png"),
-                     bpy.data.images.load(f"{GEN_TEX}/terrain_roughness.jpg"),
-                     tint=(0.42, 0.40, 0.37), rough_scale=1.0)
-rng_r = random.Random(23)
-for i in range(16):
-    ang = rng_r.uniform(0, math.tau)
-    rad = rng_r.uniform(210, 540)
-    x = math.cos(ang) * rad
-    y = math.sin(ang) * rad + 40
-    if abs(x) < 155 and -95 < y < 130:
-        continue
-    z = terrain_h(x, y)
-    r = rng_r.uniform(3.0, 8.5)
-    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=r, location=(x, y, z - r * 0.42))
-    rock = bpy.context.object; rock.name = f"Rock_{i}"
-    rock.scale = (rng_r.uniform(0.9, 1.9), rng_r.uniform(0.8, 1.6), rng_r.uniform(0.45, 0.9))
-    bpy.ops.object.transform_apply(scale=True)
-    md = rock.modifiers.new("disp", 'DISPLACE'); md.strength = r * 0.35
-    md.texture = bpy.data.textures.new(f"rockT{i}", 'CLOUDS')
-    md.texture.noise_scale = r * 0.35
-    bpy.context.view_layer.objects.active = rock
-    bpy.ops.object.modifier_apply(modifier=md.name)
-    for p in rock.data.polygons: p.use_smooth = True
-    if not rock.data.uv_layers:
-        rock.data.uv_layers.new(name="UVMap")
-        box_uv(rock.data, 0.06)
-    rock.data.materials.append(M_ROCK)
-    for c in list(rock.users_collection): c.objects.unlink(rock)
-    C_GROUND.objects.link(rock)
+# ================================================================ authored city deck
+from build_deck import deck as build_city_deck
+build_city_deck(C_GROUND, M_TERRAIN, M_DARK, M_WHITE, M_YELLOW, M_HAZARD, M_EDGE, M_EDGE_WARM,
+                M_METAL, M_PANEL_B, M_PANEL_W, FONT)
 
 # ================================================================ apron
 APRON_Z = 0.0
@@ -345,65 +263,6 @@ for o in mods.values():
     hide_render(o)
 assign_kb_materials([o for o in mods.values()])
 
-# ================================================================ hero buildings
-HERO = [
-    # Kitbash3D modules are authored at 1/10 scale; 10x gives 160-280 m towers.
-    # Ship / pad / humans / gantry stay 1:1.
-    ("BldgLG_G", -330, 120, 4, 10.0),
-    ("BldgLG_H", -100, 150, -3, 10.0),
-    ("BldgLG_I", 150, 140, 0, 10.0),
-    ("BldgLG_J", 400, 110, 7, 10.0),
-]
-placed = {}
-for key, x, y, rz, s in HERO:
-    ob = mods[key]
-    ob.hide_render = False; ob.hide_set(False)
-    place(ob, (x, y, 0), rz, s, C_BLDG)
-    placed[key] = ob
-    print("HERO", key, "dims", [round(v, 1) for v in ob.dimensions])
-
-# hero foundations (ground the towers on apron / terrain)
-def foundation(ob, key):
-    mn, mx = bbox(ob)
-    w = (mx.x - mn.x) + 16.0
-    d = (mx.y - mn.y) + 16.0
-    box(f"Foundation_{key}", (w, d, 0.7),
-        ((mn.x + mx.x) / 2, (mn.y + mx.y) / 2, -0.31),
-        M_PAD, coll=C_BLDG, bevel=0.15)
-for _key, _ob in placed.items():
-    if _key.startswith('BldgLG_'):
-        foundation(_ob, _key)
-
-# secondary backdrop buildings at port edge
-SEC = []
-for key, x, y, rz, s in SEC:
-    if key not in mods: continue
-    ob = mods[key]; ob.hide_render = False; ob.hide_set(False)
-    place(ob, (x, y, 0), rz, s, C_BLDG)
-    placed[key] = ob
-
-# ================================================================ background city
-city_pool = [k for k in mods if k.startswith(("BldgMD_", "BldgSM_"))]
-random.shuffle(city_pool)
-city_spots = []
-for i in range(18):
-    x = random.uniform(-600, 600)
-    y = random.uniform(440, 640)
-    city_spots.append((x, y))
-for i, (x, y) in enumerate(city_spots):
-    key = city_pool[i % len(city_pool)]
-    ob = mods[key]
-    dup = ob.copy(); dup.data = ob.data  # linked mesh data
-    dup.name = f"CITY_{i}_{key}"
-    dup.hide_render = False
-    link(dup, C_CITY)
-    base_scale = random.uniform(1.5, 3.2) * CITY_SCALE
-    place(dup, (x, y, -0.38), random.uniform(-180, 180), base_scale, C_CITY)
-    # some vertical extension
-    if random.random() < 0.3:
-        h = random.uniform(1.2, 2.0)
-        dup.scale.z *= h
-
 # ================================================================ ship + gantry
 from build_port import build_ship, build_gantry, build_light_mast
 
@@ -460,7 +319,7 @@ base = ship.matrix_world @ Vector((-10.5, -2.5, 0.0))
 boarding_stairs(C_PORT, "Boarding_Stairs", (base.x, base.y), 72 + 90, ship_mw=ship.matrix_world, top=2.15)
 build_person(C_PEOPLE, "Crew_A", (-16, -21, 0.02), 36, 'stand')
 build_person(C_PEOPLE, "Crew_B", (-3.0, -12.5, 0.02), 220, 'stand')
-build_person(C_PEOPLE, "Crew_C", (24.7, -22, 21.08), 95, 'stand')
+build_person(C_PEOPLE, "Crew_C", (24.7, -22, 27.12), 95, 'stand')
 build_person(C_PEOPLE, "Crew_D", (57, -31, 0.02), 200, 'stand')
 
 # small port props
@@ -482,152 +341,58 @@ for nm, size, pos in [("PadEdge_S", (61.0, 0.5, 0.03), (0, -30, 0.045)),
     box(nm, size, pos, M_DARK, coll=C_PORT, uv=False)
 pad_edge_lights(C_PORT, size=30, step=5)
 
-# neon facade strips + hangar sign
-def facade_lights(ob, neon, warm):
-    mn, mx = bbox(ob)
-    h = mx.z - mn.z
-    w = mx.x - mn.x
-    cx = (mn.x + mx.x) / 2
-    # base wash of warm light at the entrances
-    box("FacadeBaseBar", (w * 0.70, 0.14, 0.30), (cx, mn.y - 0.12, mn.z + 1.1), M_DARK, coll=C_BLDG, bevel=0.02)
-    box("FacadeBaseGlow", (w * 0.68, 0.05, 0.12), (cx, mn.y - 0.20, mn.z + 1.1), M_FACADE_WARM, coll=C_BLDG, uv=False)
-    for frac in (0.32, 0.60):
-        box("FacadeBandBar", (w * 0.55, 0.14, 0.28), (cx, mn.y - 0.13, mn.z + h * frac), M_DARK, coll=C_BLDG, bevel=0.02)
-        box("FacadeBand", (w * 0.53, 0.05, 0.12), (cx, mn.y - 0.21, mn.z + h * frac), warm, coll=C_BLDG, uv=False)
 
-# big hangar sign on I
-mn, mx = bbox(placed['BldgLG_I'])
-cx = (mn.x + mx.x) / 2; w = mx.x - mn.x; h = mx.z
-sy = mn.y - 0.3
-box("HangarSign_Back", (w * 0.50, 0.36, 5.2), (cx, sy, h * 0.79), M_DARK, coll=C_BLDG, bevel=0.04)
-text_mesh("HangarSign_Main", "ANVIL LANDING", 2.8, (cx, sy - 0.26, h * 0.79 + 0.8),
-          M_SIGN, rot=(math.radians(90), 0, 0), font=FONT, coll=C_BLDG, extrude=0.025, spacing=0.9)
-text_mesh("HangarSign_Sub", "PORT 07   //   HANGAR 3", 0.95, (cx, sy - 0.27, h * 0.79 - 1.55),
-          M_SIGN_WARM, rot=(math.radians(90), 0, 0), font=FONT, coll=C_BLDG, extrude=0.015, spacing=0.95)
-# neon frame around the sign
-for sx in (-1, 1):
-    box(f"HangarSign_FrameV_{sx}", (0.12, 0.08, 5.0), (cx + sx * w * 0.25, sy - 0.30, h * 0.79),
-        M_EDGE, coll=C_BLDG, uv=False)
-for sz in (-1, 1):
-    box(f"HangarSign_FrameH_{sz}", (w * 0.50, 0.08, 0.12), (cx, sy - 0.30, h * 0.79 + sz * 2.5),
-        M_EDGE, coll=C_BLDG, uv=False)
+# ================================================================ hero port foreground
+from build_terminal import hero_terminal
+from build_greebles import Greebles, dress_terminal
+from build_tiers import build_midground, build_background, low_rise
 
-# rooftop antennae / vents / doors from the kit (props are authored at 1/10 scale)
-def place_prop(key, loc, rot=0, scale=10.0, coll=C_PORT, uv_scale=None):
-    ob = mods.get(key)
-    if not ob: return None
-    ob.hide_render = False; ob.hide_set(False)
-    place(ob, loc, rot, scale, coll)
-    if uv_scale is None: uv_scale = scale / 10.0
-    scale_uv(ob, uv_scale)
-    return ob
+term_bb, wh_bb, tw_bb = hero_terminal(
+    C_PORT, C_LIGHT, M_METAL, M_IRON, M_PANEL_W, M_PANEL_B, M_PANEL_BR, M_PANEL_2,
+    M_PANEL_LB, M_GLASS, M_TECH, M_LIGHTS, M_WHITE, M_YELLOW, M_DARK, M_ORANGE,
+    M_HAZARD, M_EDGE, M_EDGE_WARM, M_NEON_RED, M_NEON_WARM, M_SIGN, M_SIGN_WARM, FONT)
+print("TERMINAL BBOX", term_bb[0][:], term_bb[1][:])
 
-hmn, hmx = bbox(placed['BldgLG_H'])
-place_prop('Antenna_A', (hmn.x + 0.7 * (hmx.x - hmn.x), (hmn.y + hmx.y) / 2, hmx.z - 0.2), 8, 10.0)
-place_prop('Vent_A', (hmn.x + 1.8, hmn.y + 2.0, hmx.z - 0.15), 0, 12.0)
-imn, imx = bbox(placed['BldgLG_I'])
-place_prop('Antenna_B', (imn.x + 2.0, (imn.y + imx.y) / 2, imx.z - 0.2), 0, 12.0)
-place_prop('Vent_B', (imn.x + 0.8 * (imx.x - imn.x), (imn.y + imx.y) / 2, imx.z - 0.1), 15, 12.0)
-place_prop('Gate_A', (imn.x + 5.5, imn.y - 0.15, 0.02), 0, 10.0)
-place_prop('Door_B', (hmn.x + 2.4, hmn.y - 0.1, 0.02), 0, 10.0)
-gmn, gmx = bbox(placed['BldgLG_G'])
-place_prop('Door_A', (gmn.x + 0.28 * (gmx.x - gmn.x), gmn.y - 0.15, 0.02), 0, 10.0)
-place_prop('Chest_B', (44, -34, 0.02), 20, 9.0)
-place_prop('Chest_A', (-61, -39, 0.02), -30, 9.0)
-place_prop('Vent_A', (24.2, -28.3, 24.12), 90, 9.0, coll=C_GANTRY)
-place_prop('Antenna_A', (70, -29.5, 0.0), -8, 5.0)
+G = Greebles(C_PROTO)
+dress_terminal(G, term_bb, wh_bb, tw_bb, C_PORT)
 
-# tall city skyline towers (thin silhouettes above the hero buildings)
-skyline = [(-520, 620, 3.6, -12), (-380, 660, 4.0, 8), (-230, 640, 3.4, -6),
-           (-80, 680, 4.2, 14), (90, 630, 3.8, -10), (250, 660, 4.0, 6),
-           (420, 640, 3.5, -8), (580, 680, 3.7, 10)]
-for i, (x, y, scl, rz) in enumerate(skyline):
-    key = ['BldgMD_A', 'BldgMD_D', 'BldgMD_F', 'BldgMD_G', 'BldgSM_C'][i % 5]
-    ob = mods[key]
-    dup = ob.copy(); dup.data = ob.data
-    dup.name = f"SKY_{i}_{key}"; dup.hide_render = False
-    link(dup, C_CITY)
-    place(dup, (x, y, -0.38), rz, scl * SKY_SCALE, C_CITY)
-    bpy.context.view_layer.update()
-    mn, mx = bbox(dup)
-    # vertical edge light + roofline
-    box(f"SKY_Light_{i}", (0.5, 0.2, (mx.z - mn.z) * 0.6), (mn.x + 0.6, mn.y - 0.3, mn.z + (mx.z - mn.z) * 0.38),
-        M_EDGE if i % 2 else M_EDGE_WARM, coll=C_CITY, uv=False)
-    if i % 2 == 0:
-        cyl(f"SKY_Spire_{i}", 0.18, 13*SKY_SCALE, (x, y, mx.z + 6.5*SKY_SCALE), M_METAL, coll=C_CITY, verts=8)
-        sphere(f"SKY_Beacon_{i}", 0.35, (x, y, mx.z + 13.2*SKY_SCALE), M_NEON_RED, segs=10, rings=6, coll=C_CITY)
-
-# ================================================================ architecture
-# main hangar door
-hangar_door(C_BLDG, bbox(placed['BldgLG_I']), M_PANEL_2, M_DARK, M_EDGE, M_FACADE_WARM,
-            C_LIGHT, "HangarDoor")
-# lit windows scattered over the hero fronts
-
-# road, city edge and rock rim
-road(C_CITY, 84.0, -240, 240)
-city_edge(C_CITY, mods, M_METAL, M_EDGE, M_FACADE_WARM, M_NEON_RED, scale=3.0)
-for i, (x, y, scl, rz, key) in enumerate([(-520, 500, 3.4, -10, 'BldgMD_A'),
-                                          (-250, 540, 3.8, 6, 'BldgMD_C'),
-                                          (60, 520, 3.6, -4, 'BldgMD_G'),
-                                          (390, 540, 4.0, 8, 'BldgMD_D')]):
-    if key not in mods: continue
-    ob = mods[key]; dup = ob.copy(); dup.data = ob.data
-    dup.name = f"ROW2_{i}_{key}"; dup.hide_render = False
-    link(dup, C_CITY); place(dup, (x, y, -0.38), rz, scl * SKY_SCALE, C_CITY)
-    bpy.context.view_layer.update(); mn, mx = bbox(dup)
-    box(f"ROW2_Glow_{i}", ((mx.x - mn.x) * 0.5, 0.25, 0.4), ((mn.x + mx.x) / 2, mn.y - 0.3, mn.z + (mx.z - mn.z) * 0.6),
-        M_FACADE_WARM, coll=C_CITY, uv=False)
-M_CLIFF = surface_mat("Cliff_Rock",
-    bpy.data.images.load(f"{GEN_TEX}/terrain_albedo.jpg"),
-    bpy.data.images.load(f"{GEN_TEX}/terrain_normal.png"),
-    bpy.data.images.load(f"{GEN_TEX}/terrain_roughness.jpg"),
-    tint=(0.62, 0.59, 0.54), rough_scale=1.0, normal_strength=1.5)
-cliff_wall(C_GROUND, M_CLIFF, -700, 700, 700.0)
+# ================================================================ city tiers
+mid = build_midground(mods, C_CITY, C_CITY, G, dress=True)
+bg = build_background(mods, C_CITY, C_CITY, G, dress=True)
+low_rise(mods, C_CITY, G)
 
 # ================================================================ lighting
 world = world_image_sky(sc, f"{GEN_TEX}/dusk_sky.jpg", strength=0.46, rot_z=0.0)
-sun = make_light("Sun_Key", 'SUN', (-250, -160, 97), 6.3, (1.0, 0.84, 0.66), coll=C_LIGHT,
-                 angle=math.radians(2.0))
-point_at(sun, (0, 10, 0))
-
-make_light("Sky_Fill", 'AREA', (0, -180, 55), 2500, (0.45, 0.62, 1.0),
-           rot=(math.radians(64), 0, 0), size=(210, 90), coll=C_LIGHT)
-make_light("Rim_Back", 'AREA', (90, 150, 70), 7000, (0.50, 0.70, 1.0),
-           rot=(math.radians(-55), 0, math.radians(160)), size=(150, 60), coll=C_LIGHT)
-make_light("Pad_Key", 'AREA', (0, -5, 34), 18000, (1.0, 0.82, 0.64),
-           rot=(0, 0, 0), size=(46, 36), coll=C_LIGHT)
+sun = make_light("Sun_Key", 'SUN', (-350, -260, 180), 6.4, (1.0, 0.83, 0.63),
+                 coll=C_LIGHT, angle=math.radians(2.0))
+point_at(sun, (0, 220, 0))
+make_light("Sky_Fill", 'AREA', (0, -300, 260), 32000, (0.48, 0.64, 1.0),
+           size=(760, 320), coll=C_LIGHT)
+point_at(bpy.data.objects["Sky_Fill"], (0, 260, 150))
+make_light("City_Fill", 'AREA', (0, 190, 220), 50000, (0.80, 0.86, 1.0),
+           size=(900, 320), coll=C_LIGHT)
+point_at(bpy.data.objects["City_Fill"], (0, 480, 140))
+make_light("City_Rim", 'AREA', (380, 560, 420), 42000, (0.55, 0.72, 1.0),
+           size=(600, 260), coll=C_LIGHT)
+point_at(bpy.data.objects["City_Rim"], (0, 420, 280))
+make_light("Rim_Back", 'AREA', (250, 300, 160), 18000, (0.55, 0.72, 1.0),
+           size=(300, 140), coll=C_LIGHT)
+point_at(bpy.data.objects["Rim_Back"], (0, 120, 100))
+make_light("Pad_Key", 'AREA', (0, -5, 36), 18000, (1.0, 0.84, 0.66),
+           size=(46, 36), coll=C_LIGHT)
 point_at(bpy.data.objects["Pad_Key"], (0, 0, 0))
 make_light("Apron_Bounce", 'AREA', (-25, -45, 22), 9000, (0.58, 0.72, 1.0),
            rot=(math.radians(12), 0, 0), size=(170, 110), coll=C_LIGHT)
 sk = make_light("Ship_Key", 'AREA', (-14, -6, 20), 5500, (1.0, 0.86, 0.70),
-           size=(13, 9), coll=C_LIGHT)
-point_at(sk, (-6, 0, 3))
+                size=(13, 9), coll=C_LIGHT); point_at(sk, (-6, 0, 3))
 rk = make_light("Ship_Rim", 'AREA', (18, 18, 14), 4500, (0.45, 0.70, 1.0),
-           size=(15, 8), coll=C_LIGHT)
-point_at(rk, (-6, 0, 4))
+                size=(15, 8), coll=C_LIGHT); point_at(rk, (-6, 0, 4))
 sf = make_light("Ship_Front", 'AREA', (-23, -23, 6.5), 4200, (1.0, 0.84, 0.66),
-           size=(12, 6), coll=C_LIGHT)
-point_at(sf, (-6, 0, 4))
-for i, (fx, fy, fz, tx, ty, tz, en) in enumerate([
-        (-60, 38, 1.2, -60, 62, 35, 10000),
-        (-18, 38, 1.2, -18, 70, 32, 10000),
-        (62, 40, 1.2, 62, 70, 26, 10000),
-        (110, 80, 1.2, 110, 105, 22, 6000)]):
-    fl = make_light(f"Facade_Up_{i}", 'SPOT', (fx, fy, fz), en, (1.0, 0.78, 0.55),
-                    spot_size=math.radians(55))
-    point_at(fl, (tx, ty, tz))
-# cool east rim and warm west accent
-er = make_light("East_Rim", 'AREA', (145, -10, 45), 6500, (0.40, 0.62, 1.0),
-                size=(70, 35), coll=C_LIGHT); point_at(er, (20, 45, 16))
-wr = make_light("West_Warm", 'AREA', (-150, 12, 32), 5500, (1.0, 0.66, 0.36),
-                size=(60, 30), coll=C_LIGHT); point_at(wr, (-30, 45, 15))
-# broad soft front fill so the hero facades read like a lit port
-ff = make_light("Facade_Fill", 'AREA', (5, 30, 38), 60000, (1.0, 0.86, 0.72),
-                size=(190, 55), coll=C_LIGHT); point_at(ff, (5, 60, 35))
-cf = make_light("Facade_Cool", 'AREA', (-55, 26, 30), 15000, (0.48, 0.66, 1.0),
-                size=(70, 30), coll=C_LIGHT); point_at(cf, (-45, 60, 30))
-tf = make_light("Tower_Fill", 'AREA', (-10, 10, 60), 25000, (0.72, 0.82, 1.0),
-                size=(220, 80), coll=C_LIGHT); point_at(tf, (-10, 60, 30))
+                size=(12, 6), coll=C_LIGHT); point_at(sf, (-6, 0, 4))
+pf = make_light("Port_Fill", 'AREA', (-20, 30, 42), 26000, (1.0, 0.86, 0.70),
+                size=(260, 120), coll=C_LIGHT); point_at(pf, (10, 80, 20))
+cf = make_light("Port_Cool", 'AREA', (-80, 20, 24), 10000, (0.55, 0.72, 1.0),
+                size=(100, 50), coll=C_LIGHT); point_at(cf, (-50, 100, 18))
 
 # ================================================================ render settings
 sc.render.engine = 'BLENDER_EEVEE'
@@ -653,20 +418,20 @@ try:
     sc.view_settings.look = 'AgX - Punchy'
 except Exception:
     sc.view_settings.look = 'AgX - Medium High Contrast'
-sc.view_settings.exposure = 0.70
+sc.view_settings.exposure = 0.68
 sc.render.image_settings.file_format = 'PNG'
 sc.render.image_settings.color_mode = 'RGB'
 sc.render.image_settings.compression = 15
 
-# cameras
+# ================================================================ cameras
 def camera(name, loc, target, lens=42, fstop=8.0):
     cd = bpy.data.cameras.new(name); ob = bpy.data.objects.new(name, cd); link(ob, C_CAM)
-    ob.location = loc; cd.lens = lens; cd.clip_start = 0.2; cd.clip_end = 3000
+    ob.location = loc; cd.lens = lens; cd.clip_start = 0.2; cd.clip_end = 6000
     point_at(ob, target)
     return ob
-cam_wide = camera("Cam_Wide", (-120, -190, 45), (20, 70, 85), 24)
-cam_close = camera("Cam_Close", (-38, -54, 6.2), (-6, 1, 4.5), 42)
-cam_aerial = camera("Cam_Aerial", (-340, -440, 300), (20, 170, 130), 35)
+cam_wide = camera("Cam_Wide", (-65, -110, 12), (0, 8, 30), 32)
+cam_close = camera("Cam_Close", (-35, -65, 7.5), (0, 5, 6), 45)
+cam_aerial = camera("Cam_Aerial", (-650, -1000, 700), (0, 150, 300), 24)
 cam_detail = camera("Cam_Detail", (-17, -30, 3.2), (-4, -2, 4.2), 70)
 sc.camera = cam_wide
 

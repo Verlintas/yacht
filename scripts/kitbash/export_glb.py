@@ -120,6 +120,11 @@ def compact_material(old):
     if name in ('Pad_Concrete',):
         return rt_mat('RT_Pad', base=tex_paths['Pad']['base'], normal=tex_paths['Pad']['normal'],
                       rough=tex_paths['Pad']['rough'])
+    if name in ('Deck_Concrete','Plaza_Concrete','Deck_RetainingWall'):
+        return rt_mat('RT_Deck', base=tex_paths['Apron']['base'], normal=tex_paths['Apron']['normal'],
+                      rough=tex_paths['Apron']['rough'])
+    if name in ('Deck_Asphalt','Deck_Joint'):
+        return rt_mat('RT_DeckAsphalt', color=(0.03,0.031,0.033), rough_v=0.9)
     if name == 'Terrain_PBR':
         return rt_mat('RT_Terrain', base=tex_paths['Terrain']['base'], normal=tex_paths['Terrain']['normal'],
                       rough=tex_paths['Terrain']['rough'])
@@ -169,24 +174,24 @@ print("compact materials", len(mats))
 def ratio_for(o, cname):
     n = o.name
     if cname == '03_CITY':
-        if n.startswith(('CITY_','SKY_','EDGE_','ROW2_')): return 0.10
-        return 0.5
+        if n.startswith('MEGA_'): return 0.50
+        if n.startswith('LOW_'): return 0.30
+        if n.startswith(('K014_','K034_')): return 0.25
+        if n.startswith(('BldgLG_','BldgMD_','BldgSM_')):
+            if n in ('BldgLG_G','BldgLG_H'): return 0.10
+            if n in ('BldgLG_I','BldgLG_J'): return 0.15
+            return 0.20
+        return 0.25
     if cname == '02_BUILDINGS':
-        if n == 'BldgLG_G': return 0.22
-        if n == 'BldgLG_H': return 0.20
-        if n == 'BldgLG_I': return 0.32
-        if n == 'BldgLG_J': return 0.40
-        if n.startswith('BldgSM_'): return 0.40
         return 0.65
     if cname == '01_GROUND':
-        if n == 'Terrain': return 0.35
-        if n == 'CliffWall': return 0.42
+        if n == 'TerrainRing': return 0.45
         if n.startswith('Rock_'): return 0.5
         return 0.8
-    if cname == '05_GANTRY': return 0.55
-    if cname == '04_PORT': return 0.55
-    if cname == '07_SHIP': return 0.9
-    if cname == '08_PEOPLE': return 0.7
+    if cname == '05_GANTRY': return 0.45
+    if cname == '04_PORT': return 0.45
+    if cname == '07_SHIP': return 0.85
+    if cname == '08_PEOPLE': return 0.6
     return 1.0
 
 def tris(o): return sum(len(p.vertices)-2 for p in o.data.polygons)

@@ -1,0 +1,5766 @@
+[
+ {
+  "name": "PipesLow_MetalDark",
+  "tris": 960,
+  "dims": [
+   2.252,
+   0.17,
+   0.385
+  ],
+  "min": [
+   -20.02,
+   -13.38,
+   -0.0
+  ],
+  "max": [
+   -17.76,
+   -13.21,
+   0.38
+  ],
+  "mats": [
+   "MetalDark"
+  ]
+ },
+ {
+  "name": "PipesLow_MetalDark_2",
+  "tris": 672,
+  "dims": [
+   0.359,
+   0.21,
+   0.375
+  ],
+  "min": [
+   -17.79,
+   -13.4,
+   -0.0
+  ],
+  "max": [
+   -17.43,
+   -13.19,
+   0.37
+  ],
+  "mats": [
+   "MetalDark.1"
+  ]
+ },
+ {
+  "name": "PipesLow_MetalDark_3",
+  "tris": 2160,
+  "dims": [
+   0.626,
+   0.628,
+   0.385
+  ],
+  "min": [
+   -20.62,
+   -13.84,
+   -0.0
+  ],
+  "max": [
+   -19.99,
+   -13.21,
+   0.38
+  ],
+  "mats": [
+   "MetalDark.2"
+  ]
+ },
+ {
+  "name": "PipesLow_MetalDark_4",
+  "tris": 672,
+  "dims": [
+   0.21,
+   0.359,
+   0.375
+  ],
+  "min": [
+   -20.64,
+   -16.4,
+   0.0
+  ],
+  "max": [
+   -20.43,
+   -16.04,
+   0.38
+  ],
+  "mats": [
+   "MetalDark.3"
+  ]
+ },
+ {
+  "name": "PipesLow_MetalDark_5",
+  "tris": 960,
+  "dims": [
+   0.17,
+   2.252,
+   0.385
+  ],
+  "min": [
+   -20.62,
+   -16.06,
+   -0.0
+  ],
+  "max": [
+   -20.45,
+   -13.81,
+   0.39
+  ],
+  "mats": [
+   "MetalDark.4"
+  ]
+ },
+ {
+  "name": "VentLG_PlasticWhite",
+  "tris": 1800,
+  "dims": [
+   1.801,
+   1.801,
+   0.447
+  ],
+  "min": [
+   -19.49,
+   -16.12,
+   -0.0
+  ],
+  "max": [
+   -17.69,
+   -14.32,
+   0.45
+  ],
+  "mats": [
+   "PlasticWhite"
+  ]
+ },
+ {
+  "name": "VentLG_PlasticWhite_2",
+  "tris": 184,
+  "dims": [
+   2.141,
+   2.141,
+   0.35
+  ],
+  "min": [
+   -19.66,
+   -16.29,
+   -0.0
+  ],
+  "max": [
+   -17.52,
+   -14.15,
+   0.35
+  ],
+  "mats": [
+   "PlasticWhite.1"
+  ]
+ },
+ {
+  "name": "VentF_MetalLight",
+  "tris": 360,
+  "dims": [
+   0.348,
+   0.348,
+   0.009
+  ],
+  "min": [
+   -7.25,
+   -15.91,
+   0.34
+  ],
+  "max": [
+   -6.9,
+   -15.57,
+   0.35
+  ],
+  "mats": [
+   "MetalLight"
+  ]
+ },
+ {
+  "name": "VentF_MetalLight_2",
+  "tris": 1344,
+  "dims": [
+   1.609,
+   0.601,
+   0.252
+  ],
+  "min": [
+   -6.78,
+   -16.04,
+   -0.0
+  ],
+  "max": [
+   -5.17,
+   -15.44,
+   0.25
+  ],
+  "mats": [
+   "MetalLight.1"
+  ]
+ },
+ {
+  "name": "VentF_PlasticWhite",
+  "tris": 3492,
+  "dims": [
+   1.2,
+   0.84,
+   0.357
+  ],
+  "min": [
+   -7.97,
+   -16.16,
+   -0.0
+  ],
+  "max": [
+   -6.77,
+   -15.32,
+   0.36
+  ],
+  "mats": [
+   "PlasticWhite.2"
+  ]
+ },
+ {
+  "name": "VentD_MetalLight",
+  "tris": 3522,
+  "dims": [
+   0.6,
+   0.6,
+   0.482
+  ],
+  "min": [
+   -11.65,
+   -16.14,
+   0.0
+  ],
+  "max": [
+   -11.05,
+   -15.54,
+   0.48
+  ],
+  "mats": [
+   "MetalLight.2"
+  ]
+ },
+ {
+  "name": "VentC_RoofTar",
+  "tris": 160,
+  "dims": [
+   0.497,
+   0.497,
+   0.015
+  ],
+  "min": [
+   -12.59,
+   -16.11,
+   -0.0
+  ],
+  "max": [
+   -12.1,
+   -15.61,
+   0.01
+  ],
+  "mats": [
+   "RoofTar"
+  ]
+ },
+ {
+  "name": "VentC_PlasticWhite",
+  "tris": 96,
+  "dims": [
+   0.426,
+   0.426,
+   0.141
+  ],
+  "min": [
+   -12.56,
+   -16.07,
+   0.01
+  ],
+  "max": [
+   -12.13,
+   -15.64,
+   0.16
+  ],
+  "mats": [
+   "PlasticWhite.3"
+  ]
+ },
+ {
+  "name": "VentC_PlasticWhite_2",
+  "tris": 304,
+  "dims": [
+   0.583,
+   0.583,
+   0.221
+  ],
+  "min": [
+   -12.64,
+   -16.15,
+   0.11
+  ],
+  "max": [
+   -12.05,
+   -15.57,
+   0.33
+  ],
+  "mats": [
+   "PlasticWhite.4"
+  ]
+ },
+ {
+  "name": "VentB_RoofTar",
+  "tris": 88,
+  "dims": [
+   0.602,
+   0.602,
+   0.021
+  ],
+  "min": [
+   -13.73,
+   -16.16,
+   -0.0
+  ],
+  "max": [
+   -13.13,
+   -15.56,
+   0.02
+  ],
+  "mats": [
+   "RoofTar.1"
+  ]
+ },
+ {
+  "name": "VentB_PlasticWhite",
+  "tris": 72,
+  "dims": [
+   0.503,
+   0.503,
+   0.198
+  ],
+  "min": [
+   -13.68,
+   -16.11,
+   0.02
+  ],
+  "max": [
+   -13.18,
+   -15.61,
+   0.22
+  ],
+  "mats": [
+   "PlasticWhite.5"
+  ]
+ },
+ {
+  "name": "VentB_PlasticWhite_2",
+  "tris": 210,
+  "dims": [
+   0.662,
+   0.662,
+   0.173
+  ],
+  "min": [
+   -13.76,
+   -16.19,
+   0.15
+  ],
+  "max": [
+   -13.1,
+   -15.53,
+   0.32
+  ],
+  "mats": [
+   "PlasticWhite.6"
+  ]
+ },
+ {
+  "name": "VentA_PlasticWhite",
+  "tris": 72,
+  "dims": [
+   1.104,
+   0.503,
+   0.198
+  ],
+  "min": [
+   -15.68,
+   -16.11,
+   0.02
+  ],
+  "max": [
+   -14.58,
+   -15.61,
+   0.22
+  ],
+  "mats": [
+   "PlasticWhite.7"
+  ]
+ },
+ {
+  "name": "VentA_PlasticWhite_2",
+  "tris": 142,
+  "dims": [
+   1.281,
+   0.662,
+   0.221
+  ],
+  "min": [
+   -15.77,
+   -16.19,
+   0.15
+  ],
+  "max": [
+   -14.49,
+   -15.53,
+   0.37
+  ],
+  "mats": [
+   "PlasticWhite.8"
+  ]
+ },
+ {
+  "name": "VentA_RoofTar",
+  "tris": 88,
+  "dims": [
+   1.203,
+   0.602,
+   0.021
+  ],
+  "min": [
+   -15.73,
+   -16.16,
+   -0.0
+  ],
+  "max": [
+   -14.53,
+   -15.56,
+   0.02
+  ],
+  "mats": [
+   "RoofTar.2"
+  ]
+ },
+ {
+  "name": "ChimneyBrickD_ConcretePlain",
+  "tris": 108,
+  "dims": [
+   1.328,
+   0.664,
+   0.1
+  ],
+  "min": [
+   8.78,
+   -12.17,
+   1.5
+  ],
+  "max": [
+   10.11,
+   -11.51,
+   1.6
+  ],
+  "mats": [
+   "ConcretePlain"
+  ]
+ },
+ {
+  "name": "ChimneyBrickD_BrickOld",
+  "tris": 430,
+  "dims": [
+   1.201,
+   0.601,
+   1.349
+  ],
+  "min": [
+   8.85,
+   -12.14,
+   0.15
+  ],
+  "max": [
+   10.05,
+   -11.54,
+   1.5
+  ],
+  "mats": [
+   "BrickOld"
+  ]
+ },
+ {
+  "name": "ChimneyBrickD_RoofTar",
+  "tris": 134,
+  "dims": [
+   1.228,
+   0.64,
+   0.201
+  ],
+  "min": [
+   8.83,
+   -12.16,
+   -0.0
+  ],
+  "max": [
+   10.06,
+   -11.52,
+   0.2
+  ],
+  "mats": [
+   "RoofTar.3"
+  ]
+ },
+ {
+  "name": "ChimneyBrickC_ConcretePlain",
+  "tris": 476,
+  "dims": [
+   1.228,
+   0.428,
+   1.02
+  ],
+  "min": [
+   7.0,
+   -12.05,
+   -0.0
+  ],
+  "max": [
+   8.23,
+   -11.62,
+   1.02
+  ],
+  "mats": [
+   "ConcretePlain.1"
+  ]
+ },
+ {
+  "name": "ChimneyBrickC_BrickOld",
+  "tris": 108,
+  "dims": [
+   1.201,
+   0.402,
+   0.699
+  ],
+  "min": [
+   7.02,
+   -12.04,
+   0.1
+  ],
+  "max": [
+   8.22,
+   -11.64,
+   0.8
+  ],
+  "mats": [
+   "BrickOld.1"
+  ]
+ },
+ {
+  "name": "ChimneyBrickC_MetalRed",
+  "tris": 2400,
+  "dims": [
+   0.936,
+   0.234,
+   0.495
+  ],
+  "min": [
+   7.15,
+   -11.96,
+   1.01
+  ],
+  "max": [
+   8.08,
+   -11.72,
+   1.51
+  ],
+  "mats": [
+   "MetalRed"
+  ]
+ },
+ {
+  "name": "ChimneyBrickB_RoofTar",
+  "tris": 88,
+  "dims": [
+   0.628,
+   0.628,
+   0.151
+  ],
+  "min": [
+   5.76,
+   -12.15,
+   -0.0
+  ],
+  "max": [
+   6.38,
+   -11.52,
+   0.15
+  ],
+  "mats": [
+   "RoofTar.4"
+  ]
+ },
+ {
+  "name": "ChimneyBrickB_ConcretePlain",
+  "tris": 202,
+  "dims": [
+   0.601,
+   0.601,
+   1.849
+  ],
+  "min": [
+   5.77,
+   -12.14,
+   0.15
+  ],
+  "max": [
+   6.37,
+   -11.54,
+   2.0
+  ],
+  "mats": [
+   "ConcretePlain.2"
+  ]
+ },
+ {
+  "name": "ChimneyBrickB_MetalLight",
+  "tris": 1208,
+  "dims": [
+   0.67,
+   0.67,
+   0.586
+  ],
+  "min": [
+   5.73,
+   -12.17,
+   1.86
+  ],
+  "max": [
+   6.4,
+   -11.5,
+   2.45
+  ],
+  "mats": [
+   "MetalLight.3"
+  ]
+ },
+ {
+  "name": "ChimneyBrickA_BrickOld",
+  "tris": 184,
+  "dims": [
+   0.601,
+   0.601,
+   1.349
+  ],
+  "min": [
+   4.44,
+   -12.14,
+   0.15
+  ],
+  "max": [
+   5.04,
+   -11.54,
+   1.5
+  ],
+  "mats": [
+   "BrickOld.2"
+  ]
+ },
+ {
+  "name": "ChimneyBrickA_RoofTar",
+  "tris": 106,
+  "dims": [
+   0.628,
+   0.628,
+   0.501
+  ],
+  "min": [
+   4.42,
+   -12.15,
+   -0.0
+  ],
+  "max": [
+   5.05,
+   -11.52,
+   0.5
+  ],
+  "mats": [
+   "RoofTar.5"
+  ]
+ },
+ {
+  "name": "ExhaustPipes_MetalRed",
+  "tris": 2432,
+  "dims": [
+   0.186,
+   0.186,
+   2.0
+  ],
+  "min": [
+   -2.8,
+   -11.9,
+   -0.0
+  ],
+  "max": [
+   -2.61,
+   -11.72,
+   2.0
+  ],
+  "mats": [
+   "MetalRed.1"
+  ]
+ },
+ {
+  "name": "ExhaustPipes_MetalRed_2",
+  "tris": 1344,
+  "dims": [
+   0.416,
+   0.204,
+   1.064
+  ],
+  "min": [
+   -2.54,
+   -11.91,
+   -0.0
+  ],
+  "max": [
+   -2.12,
+   -11.71,
+   1.06
+  ],
+  "mats": [
+   "MetalRed.2"
+  ]
+ },
+ {
+  "name": "RoundVent_MetalLight",
+  "tris": 832,
+  "dims": [
+   0.511,
+   0.975,
+   0.975
+  ],
+  "min": [
+   -5.02,
+   -12.5,
+   1.5
+  ],
+  "max": [
+   -4.51,
+   -11.53,
+   2.47
+  ],
+  "mats": [
+   "MetalLight.4"
+  ]
+ },
+ {
+  "name": "RoundVent_MetalLight_2",
+  "tris": 800,
+  "dims": [
+   0.511,
+   0.511,
+   1.5
+  ],
+  "min": [
+   -5.02,
+   -12.04,
+   -0.0
+  ],
+  "max": [
+   -4.51,
+   -11.53,
+   1.5
+  ],
+  "mats": [
+   "MetalLight.5"
+  ]
+ },
+ {
+  "name": "RoundVent_MetalLight_3",
+  "tris": 704,
+  "dims": [
+   1.497,
+   0.511,
+   0.511
+  ],
+  "min": [
+   -4.77,
+   -12.04,
+   0.48
+  ],
+  "max": [
+   -3.27,
+   -11.53,
+   0.99
+  ],
+  "mats": [
+   "MetalLight.6"
+  ]
+ },
+ {
+  "name": "RoundVent_MetalLight_4",
+  "tris": 1672,
+  "dims": [
+   0.511,
+   0.029,
+   0.511
+  ],
+  "min": [
+   -5.02,
+   -12.5,
+   1.96
+  ],
+  "max": [
+   -4.51,
+   -12.47,
+   2.47
+  ],
+  "mats": [
+   "MetalLight.7"
+  ]
+ },
+ {
+  "name": "BoxVentTHIN_MetalLight",
+  "tris": 312,
+  "dims": [
+   0.514,
+   0.514,
+   1.5
+  ],
+  "min": [
+   -6.17,
+   -12.04,
+   -0.0
+  ],
+  "max": [
+   -5.66,
+   -11.53,
+   1.5
+  ],
+  "mats": [
+   "MetalLight.8"
+  ]
+ },
+ {
+  "name": "BoxVentTHIN_MetalLight_2",
+  "tris": 996,
+  "dims": [
+   0.514,
+   0.042,
+   0.514
+  ],
+  "min": [
+   -6.17,
+   -12.5,
+   1.96
+  ],
+  "max": [
+   -5.66,
+   -12.46,
+   2.48
+  ],
+  "mats": [
+   "MetalLight.9"
+  ]
+ },
+ {
+  "name": "BoxVentTHIN_MetalLight_3",
+  "tris": 448,
+  "dims": [
+   0.514,
+   0.976,
+   0.976
+  ],
+  "min": [
+   -6.17,
+   -12.5,
+   1.5
+  ],
+  "max": [
+   -5.66,
+   -11.53,
+   2.48
+  ],
+  "mats": [
+   "MetalLight.10"
+  ]
+ },
+ {
+  "name": "BoxVentWIDE_MetalLight",
+  "tris": 448,
+  "dims": [
+   0.764,
+   0.976,
+   0.976
+  ],
+  "min": [
+   -7.66,
+   -12.5,
+   1.5
+  ],
+  "max": [
+   -6.9,
+   -11.53,
+   2.48
+  ],
+  "mats": [
+   "MetalLight.11"
+  ]
+ },
+ {
+  "name": "BoxVentWIDE_MetalLight_2",
+  "tris": 312,
+  "dims": [
+   0.764,
+   0.514,
+   1.5
+  ],
+  "min": [
+   -7.66,
+   -12.04,
+   -0.0
+  ],
+  "max": [
+   -6.9,
+   -11.53,
+   1.5
+  ],
+  "mats": [
+   "MetalLight.12"
+  ]
+ },
+ {
+  "name": "BoxVentWIDE_MetalLight_3",
+  "tris": 996,
+  "dims": [
+   0.764,
+   0.042,
+   0.514
+  ],
+  "min": [
+   -7.66,
+   -12.5,
+   1.96
+  ],
+  "max": [
+   -6.9,
+   -12.46,
+   2.48
+  ],
+  "mats": [
+   "MetalLight.13"
+  ]
+ },
+ {
+  "name": "BoxVentLOW_MetalLight",
+  "tris": 1152,
+  "dims": [
+   0.993,
+   0.994,
+   0.551
+  ],
+  "min": [
+   -21.06,
+   -12.59,
+   0.44
+  ],
+  "max": [
+   -20.06,
+   -11.59,
+   1.0
+  ],
+  "mats": [
+   "MetalLight.14"
+  ]
+ },
+ {
+  "name": "BoxVentLOW_MetalLight_2",
+  "tris": 1008,
+  "dims": [
+   1.5,
+   0.549,
+   0.548
+  ],
+  "min": [
+   -20.06,
+   -12.14,
+   0.45
+  ],
+  "max": [
+   -18.56,
+   -11.6,
+   0.99
+  ],
+  "mats": [
+   "MetalLight.15"
+  ]
+ },
+ {
+  "name": "BoxVentLOW_MetalLight_3",
+  "tris": 1148,
+  "dims": [
+   2.0,
+   0.55,
+   0.551
+  ],
+  "min": [
+   -18.56,
+   -12.15,
+   0.44
+  ],
+  "max": [
+   -16.56,
+   -11.6,
+   1.0
+  ],
+  "mats": [
+   "MetalLight.16"
+  ]
+ },
+ {
+  "name": "BoxVentLOW_MetalLight_4",
+  "tris": 1216,
+  "dims": [
+   0.814,
+   0.038,
+   0.47
+  ],
+  "min": [
+   -17.97,
+   -12.16,
+   0.48
+  ],
+  "max": [
+   -17.16,
+   -12.12,
+   0.96
+  ],
+  "mats": [
+   "MetalLight.17"
+  ]
+ },
+ {
+  "name": "BoxVentLOW_MetalLight_5",
+  "tris": 1152,
+  "dims": [
+   0.994,
+   0.551,
+   0.993
+  ],
+  "min": [
+   -16.56,
+   -12.15,
+   -0.0
+  ],
+  "max": [
+   -15.57,
+   -11.59,
+   0.99
+  ],
+  "mats": [
+   "MetalLight.18"
+  ]
+ },
+ {
+  "name": "BoxVentLOW_MetalLight_6",
+  "tris": 1392,
+  "dims": [
+   0.15,
+   0.697,
+   1.036
+  ],
+  "min": [
+   -18.64,
+   -12.22,
+   -0.0
+  ],
+  "max": [
+   -18.49,
+   -11.52,
+   1.04
+  ],
+  "mats": [
+   "MetalLight.19"
+  ]
+ },
+ {
+  "name": "BoxVentLOW_MetalLight_7",
+  "tris": 1260,
+  "dims": [
+   0.514,
+   0.042,
+   0.514
+  ],
+  "min": [
+   -21.04,
+   -12.59,
+   0.46
+  ],
+  "max": [
+   -20.53,
+   -12.55,
+   0.98
+  ],
+  "mats": [
+   "MetalLight.20"
+  ]
+ },
+ {
+  "name": "FuseBoxMD_ConcretePlain",
+  "tris": 66,
+  "dims": [
+   1.312,
+   0.47,
+   0.537
+  ],
+  "min": [
+   -9.9,
+   -12.24,
+   -0.0
+  ],
+  "max": [
+   -8.59,
+   -11.77,
+   0.54
+  ],
+  "mats": [
+   "ConcretePlain.3"
+  ]
+ },
+ {
+  "name": "FuseBoxMD_MetalDark",
+  "tris": 4516,
+  "dims": [
+   1.264,
+   0.423,
+   1.833
+  ],
+  "min": [
+   -9.88,
+   -12.22,
+   -0.0
+  ],
+  "max": [
+   -8.62,
+   -11.8,
+   1.83
+  ],
+  "mats": [
+   "MetalDark.5"
+  ]
+ },
+ {
+  "name": "FuseBoxSM_MetalLight",
+  "tris": 320,
+  "dims": [
+   0.253,
+   0.094,
+   0.713
+  ],
+  "min": [
+   -9.01,
+   -15.89,
+   0.0
+  ],
+  "max": [
+   -8.76,
+   -15.79,
+   0.71
+  ],
+  "mats": [
+   "MetalLight.21"
+  ]
+ },
+ {
+  "name": "FuseBoxSM_MetalLight_2",
+  "tris": 1740,
+  "dims": [
+   0.493,
+   0.05,
+   1.208
+  ],
+  "min": [
+   -9.25,
+   -16.04,
+   0.62
+  ],
+  "max": [
+   -8.76,
+   -15.99,
+   1.83
+  ],
+  "mats": [
+   "MetalLight.22"
+  ]
+ },
+ {
+  "name": "FuseBoxSM_MetalDark",
+  "tris": 2266,
+  "dims": [
+   0.582,
+   0.376,
+   1.587
+  ],
+  "min": [
+   -9.28,
+   -16.02,
+   0.35
+  ],
+  "max": [
+   -8.7,
+   -15.64,
+   1.94
+  ],
+  "mats": [
+   "MetalDark.6"
+  ]
+ },
+ {
+  "name": "FuseBoxLG_MetalDark",
+  "tris": 7994,
+  "dims": [
+   2.374,
+   0.399,
+   2.358
+  ],
+  "min": [
+   -13.22,
+   -12.2,
+   0.16
+  ],
+  "max": [
+   -10.85,
+   -11.8,
+   2.52
+  ],
+  "mats": [
+   "MetalDark.7"
+  ]
+ },
+ {
+  "name": "FuseBoxLG_MetalLight",
+  "tris": 6280,
+  "dims": [
+   2.309,
+   0.035,
+   1.788
+  ],
+  "min": [
+   -13.19,
+   -12.2,
+   0.34
+  ],
+  "max": [
+   -10.88,
+   -12.16,
+   2.12
+  ],
+  "mats": [
+   "MetalLight.23"
+  ]
+ },
+ {
+  "name": "FuseBoxLG_ConcretePlain",
+  "tris": 66,
+  "dims": [
+   2.402,
+   0.47,
+   0.16
+  ],
+  "min": [
+   -13.23,
+   -12.24,
+   -0.0
+  ],
+  "max": [
+   -10.83,
+   -11.77,
+   0.16
+  ],
+  "mats": [
+   "ConcretePlain.4"
+  ]
+ },
+ {
+  "name": "FuseBoxTRI_MetalDark",
+  "tris": 616,
+  "dims": [
+   0.448,
+   0.37,
+   0.798
+  ],
+  "min": [
+   -15.0,
+   -12.17,
+   2.18
+  ],
+  "max": [
+   -14.55,
+   -11.8,
+   2.98
+  ],
+  "mats": [
+   "MetalDark.8"
+  ]
+ },
+ {
+  "name": "FuseBoxTRI_MetalLight",
+  "tris": 1870,
+  "dims": [
+   0.376,
+   0.398,
+   0.72
+  ],
+  "min": [
+   -14.96,
+   -12.2,
+   2.22
+  ],
+  "max": [
+   -14.59,
+   -11.8,
+   2.94
+  ],
+  "mats": [
+   "MetalLight.24"
+  ]
+ },
+ {
+  "name": "FuseBoxTRI_MetalDark_2",
+  "tris": 724,
+  "dims": [
+   0.448,
+   0.37,
+   0.486
+  ],
+  "min": [
+   -15.01,
+   -12.17,
+   1.51
+  ],
+  "max": [
+   -14.56,
+   -11.8,
+   2.0
+  ],
+  "mats": [
+   "MetalDark.9"
+  ]
+ },
+ {
+  "name": "FuseBoxTRI_MetalLight_2",
+  "tris": 1250,
+  "dims": [
+   0.346,
+   0.035,
+   0.338
+  ],
+  "min": [
+   -14.97,
+   -12.2,
+   1.59
+  ],
+  "max": [
+   -14.63,
+   -12.16,
+   1.92
+  ],
+  "mats": [
+   "MetalLight.25"
+  ]
+ },
+ {
+  "name": "FuseBoxTRI_MetalLight_3",
+  "tris": 544,
+  "dims": [
+   1.0,
+   0.03,
+   0.53
+  ],
+  "min": [
+   -14.83,
+   -12.03,
+   2.38
+  ],
+  "max": [
+   -13.83,
+   -12.0,
+   2.91
+  ],
+  "mats": [
+   "MetalLight.26"
+  ]
+ },
+ {
+  "name": "FuseBoxTRI_MetalLight_4",
+  "tris": 32,
+  "dims": [
+   1.0,
+   0.03,
+   0.03
+  ],
+  "min": [
+   -14.83,
+   -12.03,
+   2.32
+  ],
+  "max": [
+   -13.83,
+   -12.0,
+   2.35
+  ],
+  "mats": [
+   "MetalLight.27"
+  ]
+ },
+ {
+  "name": "FuseBoxTRI_MetalLight_5",
+  "tris": 288,
+  "dims": [
+   0.803,
+   0.03,
+   0.258
+  ],
+  "min": [
+   -14.83,
+   -12.03,
+   1.36
+  ],
+  "max": [
+   -14.03,
+   -12.0,
+   1.62
+  ],
+  "mats": [
+   "MetalLight.28"
+  ]
+ },
+ {
+  "name": "FuseBoxTRI_MetalLight_6",
+  "tris": 288,
+  "dims": [
+   0.803,
+   0.03,
+   0.258
+  ],
+  "min": [
+   -14.83,
+   -12.03,
+   1.88
+  ],
+  "max": [
+   -14.03,
+   -12.0,
+   2.14
+  ],
+  "mats": [
+   "MetalLight.29"
+  ]
+ },
+ {
+  "name": "FuseBoxTRI_MetalDark_3",
+  "tris": 1156,
+  "dims": [
+   0.448,
+   0.37,
+   1.042
+  ],
+  "min": [
+   -15.0,
+   -12.17,
+   0.28
+  ],
+  "max": [
+   -14.55,
+   -11.8,
+   1.32
+  ],
+  "mats": [
+   "MetalDark.10"
+  ]
+ },
+ {
+  "name": "FuseBoxTRI_MetalLight_7",
+  "tris": 2990,
+  "dims": [
+   0.376,
+   0.066,
+   0.923
+  ],
+  "min": [
+   -14.96,
+   -12.2,
+   0.31
+  ],
+  "max": [
+   -14.59,
+   -12.13,
+   1.24
+  ],
+  "mats": [
+   "MetalLight.30"
+  ]
+ },
+ {
+  "name": "AirHandlerXL_PlasticWhite",
+  "tris": 58168,
+  "dims": [
+   3.531,
+   2.04,
+   2.53
+  ],
+  "min": [
+   -8.52,
+   -6.38,
+   0.02
+  ],
+  "max": [
+   -4.98,
+   -4.34,
+   2.55
+  ],
+  "mats": [
+   "PlasticWhite.9"
+  ]
+ },
+ {
+  "name": "AirHandlerXL_PlasticWhite_2",
+  "tris": 474,
+  "dims": [
+   0.8,
+   0.05,
+   2.1
+  ],
+  "min": [
+   -7.15,
+   -6.39,
+   0.02
+  ],
+  "max": [
+   -6.35,
+   -6.34,
+   2.12
+  ],
+  "mats": [
+   "PlasticWhite.10"
+  ]
+ },
+ {
+  "name": "AirHandlerXL_MetalLight",
+  "tris": 4402,
+  "dims": [
+   3.4,
+   1.96,
+   3.564
+  ],
+  "min": [
+   -8.45,
+   -6.34,
+   -0.0
+  ],
+  "max": [
+   -5.05,
+   -4.38,
+   3.56
+  ],
+  "mats": [
+   "MetalLight.31"
+  ]
+ },
+ {
+  "name": "AirHandlerXL_MetalDark",
+  "tris": 704,
+  "dims": [
+   1.272,
+   1.465,
+   0.013
+  ],
+  "min": [
+   -7.39,
+   -6.09,
+   3.53
+  ],
+  "max": [
+   -6.11,
+   -4.62,
+   3.54
+  ],
+  "mats": [
+   "MetalDark.11"
+  ]
+ },
+ {
+  "name": "AirHandlerXL_MetalDark_2",
+  "tris": 3382,
+  "dims": [
+   3.216,
+   2.164,
+   1.997
+  ],
+  "min": [
+   -8.4,
+   -6.47,
+   0.81
+  ],
+  "max": [
+   -5.18,
+   -4.3,
+   2.81
+  ],
+  "mats": [
+   "MetalDark.12"
+  ]
+ },
+ {
+  "name": "AirHandlerXL_MetalDark_3",
+  "tris": 1560,
+  "dims": [
+   0.507,
+   0.362,
+   2.971
+  ],
+  "min": [
+   -8.36,
+   -4.43,
+   0.06
+  ],
+  "max": [
+   -7.85,
+   -4.07,
+   3.03
+  ],
+  "mats": [
+   "MetalDark.13"
+  ]
+ },
+ {
+  "name": "AirHandlerXL_RoofTar",
+  "tris": 74,
+  "dims": [
+   3.783,
+   2.283,
+   0.02
+  ],
+  "min": [
+   -8.64,
+   -6.5,
+   -0.0
+  ],
+  "max": [
+   -4.86,
+   -4.22,
+   0.02
+  ],
+  "mats": [
+   "RoofTar.6"
+  ]
+ },
+ {
+  "name": "AirHandlerLG_MetalDark",
+  "tris": 5970,
+  "dims": [
+   2.655,
+   2.539,
+   1.218
+  ],
+  "min": [
+   0.47,
+   -6.41,
+   0.25
+  ],
+  "max": [
+   3.13,
+   -3.87,
+   1.46
+  ],
+  "mats": [
+   "MetalDark.14"
+  ]
+ },
+ {
+  "name": "AirHandlerLG_MetalLight",
+  "tris": 28672,
+  "dims": [
+   2.347,
+   1.027,
+   0.576
+  ],
+  "min": [
+   0.62,
+   -5.95,
+   1.1
+  ],
+  "max": [
+   2.97,
+   -4.92,
+   1.68
+  ],
+  "mats": [
+   "MetalLight.32"
+  ]
+ },
+ {
+  "name": "AirHandlerLG_MetalLight_2",
+  "tris": 2560,
+  "dims": [
+   2.234,
+   0.913,
+   0.065
+  ],
+  "min": [
+   0.68,
+   -5.89,
+   1.47
+  ],
+  "max": [
+   2.92,
+   -4.98,
+   1.53
+  ],
+  "mats": [
+   "MetalLight.33"
+  ]
+ },
+ {
+  "name": "AirHandlerLG_MetalDark_2",
+  "tris": 24,
+  "dims": [
+   2.5,
+   2.0,
+   0.1
+  ],
+  "min": [
+   0.55,
+   -5.95,
+   -0.0
+  ],
+  "max": [
+   3.05,
+   -3.95,
+   0.1
+  ],
+  "mats": [
+   "MetalDark.15"
+  ]
+ },
+ {
+  "name": "AirHandlerLG_PlasticBrown",
+  "tris": 600,
+  "dims": [
+   0.801,
+   2.035,
+   1.054
+  ],
+  "min": [
+   2.29,
+   -5.99,
+   0.27
+  ],
+  "max": [
+   3.09,
+   -3.96,
+   1.33
+  ],
+  "mats": [
+   "PlasticBrown"
+  ]
+ },
+ {
+  "name": "AirHandlerLG_PlasticWhite",
+  "tris": 24980,
+  "dims": [
+   2.641,
+   2.575,
+   1.5
+  ],
+  "min": [
+   0.48,
+   -6.45,
+   -0.0
+  ],
+  "max": [
+   3.12,
+   -3.88,
+   1.5
+  ],
+  "mats": [
+   "PlasticWhite.11"
+  ]
+ },
+ {
+  "name": "AirHandlerMD_PlasticWhite",
+  "tris": 2560,
+  "dims": [
+   0.914,
+   2.141,
+   0.065
+  ],
+  "min": [
+   5.34,
+   -6.34,
+   1.92
+  ],
+  "max": [
+   6.25,
+   -4.2,
+   1.98
+  ],
+  "mats": [
+   "PlasticWhite.12"
+  ]
+ },
+ {
+  "name": "AirHandlerMD_PlasticWhite_2",
+  "tris": 4660,
+  "dims": [
+   1.214,
+   2.52,
+   1.85
+  ],
+  "min": [
+   5.19,
+   -6.53,
+   0.1
+  ],
+  "max": [
+   6.4,
+   -4.01,
+   1.95
+  ],
+  "mats": [
+   "PlasticWhite.13"
+  ]
+ },
+ {
+  "name": "AirHandlerMD_PlasticBrown",
+  "tris": 178,
+  "dims": [
+   1.2,
+   2.5,
+   0.1
+  ],
+  "min": [
+   5.19,
+   -6.52,
+   -0.0
+  ],
+  "max": [
+   6.39,
+   -4.02,
+   0.1
+  ],
+  "mats": [
+   "PlasticBrown.1"
+  ]
+ },
+ {
+  "name": "AirHandlerMD_MetalLight",
+  "tris": 1656,
+  "dims": [
+   1.016,
+   2.48,
+   1.58
+  ],
+  "min": [
+   5.28,
+   -6.51,
+   0.16
+  ],
+  "max": [
+   6.3,
+   -4.03,
+   1.74
+  ],
+  "mats": [
+   "MetalLight.34"
+  ]
+ },
+ {
+  "name": "AirHandlerMD_MetalLight_2",
+  "tris": 16320,
+  "dims": [
+   1.028,
+   2.255,
+   0.486
+  ],
+  "min": [
+   5.28,
+   -6.4,
+   1.55
+  ],
+  "max": [
+   6.31,
+   -4.14,
+   2.04
+  ],
+  "mats": [
+   "MetalLight.35"
+  ]
+ },
+ {
+  "name": "AirHandlerSM_PlasticWhite",
+  "tris": 4122,
+  "dims": [
+   2.071,
+   1.611,
+   1.5
+  ],
+  "min": [
+   8.31,
+   -6.55,
+   -0.0
+  ],
+  "max": [
+   10.39,
+   -4.94,
+   1.5
+  ],
+  "mats": [
+   "PlasticWhite.14"
+  ]
+ },
+ {
+  "name": "AirHandlerSM_MetalLight",
+  "tris": 784,
+  "dims": [
+   1.9,
+   1.4,
+   0.2
+  ],
+  "min": [
+   8.4,
+   -6.44,
+   -0.0
+  ],
+  "max": [
+   10.3,
+   -5.04,
+   0.2
+  ],
+  "mats": [
+   "MetalLight.36"
+  ]
+ },
+ {
+  "name": "AirHandlerSM_PlasticBrown",
+  "tris": 4,
+  "dims": [
+   1.991,
+   1.411,
+   0.94
+  ],
+  "min": [
+   8.35,
+   -6.45,
+   0.38
+  ],
+  "max": [
+   10.35,
+   -5.04,
+   1.32
+  ],
+  "mats": [
+   "PlasticBrown.2"
+  ]
+ },
+ {
+  "name": "AirHandlerSM_PlasticWhite_2",
+  "tris": 40,
+  "dims": [
+   0.712,
+   1.591,
+   0.176
+  ],
+  "min": [
+   8.49,
+   -6.54,
+   0.87
+  ],
+  "max": [
+   9.21,
+   -4.95,
+   1.05
+  ],
+  "mats": [
+   "PlasticWhite.15"
+  ]
+ },
+ {
+  "name": "AirHandlerSM_PlasticRed",
+  "tris": 224,
+  "dims": [
+   0.067,
+   1.607,
+   0.028
+  ],
+  "min": [
+   8.51,
+   -6.55,
+   0.89
+  ],
+  "max": [
+   8.58,
+   -4.94,
+   0.91
+  ],
+  "mats": [
+   "PlasticRed"
+  ]
+ },
+ {
+  "name": "AirHandlerSM_MetalLight_2",
+  "tris": 8968,
+  "dims": [
+   1.603,
+   1.37,
+   0.614
+  ],
+  "min": [
+   8.5,
+   -6.41,
+   1.26
+  ],
+  "max": [
+   10.1,
+   -5.04,
+   1.87
+  ],
+  "mats": [
+   "MetalLight.37"
+  ]
+ },
+ {
+  "name": "AirHandlerXS_MetalLight",
+  "tris": 21840,
+  "dims": [
+   0.581,
+   0.131,
+   1.239
+  ],
+  "min": [
+   -2.59,
+   -6.53,
+   0.06
+  ],
+  "max": [
+   -2.01,
+   -6.4,
+   1.3
+  ],
+  "mats": [
+   "MetalLight.38"
+  ]
+ },
+ {
+  "name": "AirHandlerXS_PlasticBrown",
+  "tris": 186,
+  "dims": [
+   0.0,
+   0.27,
+   1.114
+  ],
+  "min": [
+   -2.69,
+   -6.43,
+   0.11
+  ],
+  "max": [
+   -2.69,
+   -6.16,
+   1.22
+  ],
+  "mats": [
+   "PlasticBrown.3"
+  ]
+ },
+ {
+  "name": "AirHandlerXS_PlasticWhite",
+  "tris": 7912,
+  "dims": [
+   1.059,
+   0.409,
+   1.421
+  ],
+  "min": [
+   -2.71,
+   -6.5,
+   -0.0
+  ],
+  "max": [
+   -1.65,
+   -6.09,
+   1.42
+  ],
+  "mats": [
+   "PlasticWhite.16"
+  ]
+ },
+ {
+  "name": "SkylightLG_GLASS",
+  "tris": 48,
+  "dims": [
+   2.646,
+   2.646,
+   0.826
+  ],
+  "min": [
+   24.39,
+   -13.21,
+   0.53
+  ],
+  "max": [
+   27.03,
+   -10.57,
+   1.36
+  ],
+  "mats": [
+   "GLASS"
+  ]
+ },
+ {
+  "name": "SkylightLG_BrickOld",
+  "tris": 72,
+  "dims": [
+   2.921,
+   2.921,
+   0.299
+  ],
+  "min": [
+   24.25,
+   -13.35,
+   0.1
+  ],
+  "max": [
+   27.17,
+   -10.43,
+   0.4
+  ],
+  "mats": [
+   "BrickOld.3"
+  ]
+ },
+ {
+  "name": "SkylightLG_RoofTar",
+  "tris": 88,
+  "dims": [
+   3.0,
+   3.0,
+   0.101
+  ],
+  "min": [
+   24.21,
+   -13.39,
+   -0.0
+  ],
+  "max": [
+   27.21,
+   -10.39,
+   0.1
+  ],
+  "mats": [
+   "RoofTar.7"
+  ]
+ },
+ {
+  "name": "SkylightLG_MetalDark",
+  "tris": 4912,
+  "dims": [
+   2.991,
+   2.991,
+   1.1
+  ],
+  "min": [
+   24.22,
+   -13.38,
+   0.4
+  ],
+  "max": [
+   27.21,
+   -10.39,
+   1.5
+  ],
+  "mats": [
+   "MetalDark.16"
+  ]
+ },
+ {
+  "name": "SkylightLONG_RoofTar",
+  "tris": 88,
+  "dims": [
+   5.001,
+   2.501,
+   0.101
+  ],
+  "min": [
+   17.48,
+   -13.39,
+   -0.0
+  ],
+  "max": [
+   22.48,
+   -10.89,
+   0.1
+  ],
+  "mats": [
+   "RoofTar.8"
+  ]
+ },
+ {
+  "name": "SkylightLONG_GLASS",
+  "tris": 40,
+  "dims": [
+   4.654,
+   2.233,
+   0.777
+  ],
+  "min": [
+   17.65,
+   -13.31,
+   0.56
+  ],
+  "max": [
+   22.31,
+   -11.07,
+   1.34
+  ],
+  "mats": [
+   "GLASS"
+  ]
+ },
+ {
+  "name": "SkylightLONG_MetalDark",
+  "tris": 4576,
+  "dims": [
+   4.991,
+   2.491,
+   1.107
+  ],
+  "min": [
+   17.48,
+   -13.38,
+   0.4
+  ],
+  "max": [
+   22.47,
+   -10.89,
+   1.51
+  ],
+  "mats": [
+   "MetalDark.17"
+  ]
+ },
+ {
+  "name": "SkylightLONG_BrickOld",
+  "tris": 72,
+  "dims": [
+   4.922,
+   2.422,
+   0.299
+  ],
+  "min": [
+   17.52,
+   -13.35,
+   0.1
+  ],
+  "max": [
+   22.44,
+   -10.93,
+   0.4
+  ],
+  "mats": [
+   "BrickOld.4"
+  ]
+ },
+ {
+  "name": "SkylightSM_RoofTar",
+  "tris": 88,
+  "dims": [
+   2.503,
+   2.501,
+   0.101
+  ],
+  "min": [
+   13.34,
+   -13.39,
+   -0.0
+  ],
+  "max": [
+   15.84,
+   -10.89,
+   0.1
+  ],
+  "mats": [
+   "RoofTar.9"
+  ]
+ },
+ {
+  "name": "SkylightSM_BrickOld",
+  "tris": 72,
+  "dims": [
+   2.424,
+   2.422,
+   0.299
+  ],
+  "min": [
+   13.38,
+   -13.35,
+   0.1
+  ],
+  "max": [
+   15.8,
+   -10.93,
+   0.4
+  ],
+  "mats": [
+   "BrickOld.5"
+  ]
+ },
+ {
+  "name": "SkylightSM_GLASS",
+  "tris": 24,
+  "dims": [
+   2.159,
+   2.13,
+   0.777
+  ],
+  "min": [
+   13.51,
+   -13.2,
+   0.56
+  ],
+  "max": [
+   15.67,
+   -11.07,
+   1.33
+  ],
+  "mats": [
+   "GLASS"
+  ]
+ },
+ {
+  "name": "SkylightSM_MetalDark",
+  "tris": 3140,
+  "dims": [
+   2.494,
+   2.491,
+   1.107
+  ],
+  "min": [
+   13.35,
+   -13.38,
+   0.4
+  ],
+  "max": [
+   15.84,
+   -10.89,
+   1.51
+  ],
+  "mats": [
+   "MetalDark.18"
+  ]
+ },
+ {
+  "name": "RoofAccessSM_PlasticWhite",
+  "tris": 42,
+  "dims": [
+   0.8,
+   0.074,
+   2.1
+  ],
+  "min": [
+   18.42,
+   -6.41,
+   0.05
+  ],
+  "max": [
+   19.22,
+   -6.33,
+   2.15
+  ],
+  "mats": [
+   "PlasticWhite.17"
+  ]
+ },
+ {
+  "name": "RoofAccessSM_MetalLight",
+  "tris": 2536,
+  "dims": [
+   0.745,
+   0.098,
+   1.836
+  ],
+  "min": [
+   18.42,
+   -6.48,
+   0.2
+  ],
+  "max": [
+   19.17,
+   -6.38,
+   2.04
+  ],
+  "mats": [
+   "MetalLight.39"
+  ]
+ },
+ {
+  "name": "RoofAccessSM_MetalLight_2",
+  "tris": 300,
+  "dims": [
+   2.225,
+   3.291,
+   2.722
+  ],
+  "min": [
+   17.71,
+   -6.57,
+   0.46
+  ],
+  "max": [
+   19.93,
+   -3.28,
+   3.18
+  ],
+  "mats": [
+   "MetalLight.40"
+  ]
+ },
+ {
+  "name": "RoofAccessSM_ConcretePlain",
+  "tris": 134,
+  "dims": [
+   1.99,
+   3.0,
+   2.995
+  ],
+  "min": [
+   17.83,
+   -6.47,
+   -0.0
+  ],
+  "max": [
+   19.82,
+   -3.47,
+   2.99
+  ],
+  "mats": [
+   "ConcretePlain.5"
+  ]
+ },
+ {
+  "name": "RoofAccessLG_RoofTar",
+  "tris": 256,
+  "dims": [
+   4.031,
+   4.031,
+   0.176
+  ],
+  "min": [
+   12.17,
+   -6.49,
+   2.83
+  ],
+  "max": [
+   16.2,
+   -2.46,
+   3.01
+  ],
+  "mats": [
+   "RoofTar.10"
+  ]
+ },
+ {
+  "name": "RoofAccessLG_RoofTar_2",
+  "tris": 2,
+  "dims": [
+   3.5,
+   3.5,
+   0.0
+  ],
+  "min": [
+   12.43,
+   -6.22,
+   2.85
+  ],
+  "max": [
+   15.93,
+   -2.72,
+   2.85
+  ],
+  "mats": [
+   "RoofTar.11"
+  ]
+ },
+ {
+  "name": "RoofAccessLG_PlasticWhite",
+  "tris": 42,
+  "dims": [
+   0.8,
+   0.074,
+   2.1
+  ],
+  "min": [
+   13.78,
+   -6.41,
+   0.05
+  ],
+  "max": [
+   14.58,
+   -6.33,
+   2.15
+  ],
+  "mats": [
+   "PlasticWhite.18"
+  ]
+ },
+ {
+  "name": "RoofAccessLG_MetalLight",
+  "tris": 2536,
+  "dims": [
+   0.745,
+   0.098,
+   1.836
+  ],
+  "min": [
+   13.79,
+   -6.48,
+   0.2
+  ],
+  "max": [
+   14.53,
+   -6.38,
+   2.04
+  ],
+  "mats": [
+   "MetalLight.41"
+  ]
+ },
+ {
+  "name": "RoofAccessLG_GLASS",
+  "tris": 24,
+  "dims": [
+   3.775,
+   1.88,
+   0.38
+  ],
+  "min": [
+   12.3,
+   -5.41,
+   1.71
+  ],
+  "max": [
+   16.07,
+   -3.53,
+   2.09
+  ],
+  "mats": [
+   "GLASS"
+  ]
+ },
+ {
+  "name": "RoofAccessLG_MetalDark",
+  "tris": 144,
+  "dims": [
+   0.04,
+   2.0,
+   0.5
+  ],
+  "min": [
+   16.13,
+   -5.47,
+   1.65
+  ],
+  "max": [
+   16.17,
+   -3.47,
+   2.15
+  ],
+  "mats": [
+   "MetalDark.19"
+  ]
+ },
+ {
+  "name": "RoofAccessLG_MetalDark_2",
+  "tris": 1104,
+  "dims": [
+   3.85,
+   2.0,
+   0.5
+  ],
+  "min": [
+   12.26,
+   -5.47,
+   1.65
+  ],
+  "max": [
+   16.11,
+   -3.47,
+   2.15
+  ],
+  "mats": [
+   "MetalDark.20"
+  ]
+ },
+ {
+  "name": "RoofAccessLG_ConcretePlain",
+  "tris": 524,
+  "dims": [
+   4.0,
+   4.0,
+   3.0
+  ],
+  "min": [
+   12.18,
+   -6.47,
+   -0.0
+  ],
+  "max": [
+   16.18,
+   -2.47,
+   3.0
+  ],
+  "mats": [
+   "ConcretePlain.6"
+  ]
+ },
+ {
+  "name": "AntWireE_MetalLight",
+  "tris": 216,
+  "dims": [
+   0.055,
+   0.773,
+   0.074
+  ],
+  "min": [
+   -15.73,
+   -5.22,
+   2.48
+  ],
+  "max": [
+   -15.68,
+   -4.45,
+   2.56
+  ],
+  "mats": [
+   "MetalLight.42"
+  ]
+ },
+ {
+  "name": "AntWireE_MetalLight_2",
+  "tris": 2232,
+  "dims": [
+   0.705,
+   0.761,
+   0.706
+  ],
+  "min": [
+   -16.06,
+   -5.21,
+   2.15
+  ],
+  "max": [
+   -15.35,
+   -4.45,
+   2.86
+  ],
+  "mats": [
+   "MetalLight.43"
+  ]
+ },
+ {
+  "name": "AntWireD_MetalLight",
+  "tris": 324,
+  "dims": [
+   0.033,
+   1.014,
+   0.072
+  ],
+  "min": [
+   -16.56,
+   -5.74,
+   2.64
+  ],
+  "max": [
+   -16.53,
+   -4.72,
+   2.71
+  ],
+  "mats": [
+   "MetalLight.44"
+  ]
+ },
+ {
+  "name": "AntWireD_MetalLight_2",
+  "tris": 1816,
+  "dims": [
+   0.762,
+   1.0,
+   0.067
+  ],
+  "min": [
+   -16.93,
+   -5.73,
+   2.64
+  ],
+  "max": [
+   -16.17,
+   -4.73,
+   2.71
+  ],
+  "mats": [
+   "MetalLight.45"
+  ]
+ },
+ {
+  "name": "AntWireC_MetalLight",
+  "tris": 324,
+  "dims": [
+   0.027,
+   1.018,
+   0.072
+  ],
+  "min": [
+   -17.44,
+   -5.74,
+   2.64
+  ],
+  "max": [
+   -17.41,
+   -4.72,
+   2.71
+  ],
+  "mats": [
+   "MetalLight.46"
+  ]
+ },
+ {
+  "name": "AntWireC_MetalLight_2",
+  "tris": 2444,
+  "dims": [
+   0.576,
+   1.0,
+   0.067
+  ],
+  "min": [
+   -17.71,
+   -5.73,
+   2.64
+  ],
+  "max": [
+   -17.14,
+   -4.73,
+   2.71
+  ],
+  "mats": [
+   "MetalLight.47"
+  ]
+ },
+ {
+  "name": "AntWireB_MetalLight",
+  "tris": 324,
+  "dims": [
+   0.055,
+   1.517,
+   0.074
+  ],
+  "min": [
+   -18.12,
+   -5.97,
+   2.48
+  ],
+  "max": [
+   -18.07,
+   -4.45,
+   2.56
+  ],
+  "mats": [
+   "MetalLight.48"
+  ]
+ },
+ {
+  "name": "AntWireB_MetalLight_2",
+  "tris": 4888,
+  "dims": [
+   0.705,
+   1.5,
+   0.707
+  ],
+  "min": [
+   -18.45,
+   -5.95,
+   2.15
+  ],
+  "max": [
+   -17.74,
+   -4.45,
+   2.86
+  ],
+  "mats": [
+   "MetalLight.49"
+  ]
+ },
+ {
+  "name": "AntDishB_MetalLight",
+  "tris": 2546,
+  "dims": [
+   0.222,
+   0.998,
+   0.902
+  ],
+  "min": [
+   -13.05,
+   -5.67,
+   2.05
+  ],
+  "max": [
+   -12.83,
+   -4.67,
+   2.95
+  ],
+  "mats": [
+   "MetalLight.50"
+  ]
+ },
+ {
+  "name": "AntDishB_PlasticBrown",
+  "tris": 478,
+  "dims": [
+   0.106,
+   0.135,
+   0.111
+  ],
+  "min": [
+   -12.99,
+   -5.8,
+   2.68
+  ],
+  "max": [
+   -12.89,
+   -5.67,
+   2.79
+  ],
+  "mats": [
+   "PlasticBrown.4"
+  ]
+ },
+ {
+  "name": "AntDishB_PlasticWhite",
+  "tris": 3328,
+  "dims": [
+   1.51,
+   0.166,
+   1.51
+  ],
+  "min": [
+   -13.7,
+   -5.01,
+   2.06
+  ],
+  "max": [
+   -12.19,
+   -4.85,
+   3.57
+  ],
+  "mats": [
+   "PlasticWhite.19"
+  ]
+ },
+ {
+  "name": "AntDishA_MetalLight",
+  "tris": 2258,
+  "dims": [
+   0.821,
+   0.925,
+   0.988
+  ],
+  "min": [
+   -14.97,
+   -5.6,
+   2.4
+  ],
+  "max": [
+   -14.15,
+   -4.67,
+   3.39
+  ],
+  "mats": [
+   "MetalLight.51"
+  ]
+ },
+ {
+  "name": "AntDishA_MetalDark",
+  "tris": 480,
+  "dims": [
+   0.086,
+   0.207,
+   0.086
+  ],
+  "min": [
+   -14.6,
+   -5.78,
+   2.77
+  ],
+  "max": [
+   -14.51,
+   -5.58,
+   2.86
+  ],
+  "mats": [
+   "MetalDark.21"
+  ]
+ },
+ {
+  "name": "AntDishA_PlasticWhite",
+  "tris": 3840,
+  "dims": [
+   1.47,
+   0.218,
+   1.47
+  ],
+  "min": [
+   -15.29,
+   -5.07,
+   2.08
+  ],
+  "max": [
+   -13.82,
+   -4.85,
+   3.55
+  ],
+  "mats": [
+   "PlasticWhite.20"
+  ]
+ },
+ {
+  "name": "AntDrumB_MetalDark",
+  "tris": 1750,
+  "dims": [
+   0.284,
+   0.356,
+   0.598
+  ],
+  "min": [
+   -13.25,
+   -5.07,
+   4.42
+  ],
+  "max": [
+   -12.97,
+   -4.71,
+   5.02
+  ],
+  "mats": [
+   "MetalDark.22"
+  ]
+ },
+ {
+  "name": "AntDrumB_PlasticWhite",
+  "tris": 1376,
+  "dims": [
+   1.664,
+   0.572,
+   1.664
+  ],
+  "min": [
+   -13.94,
+   -5.64,
+   3.89
+  ],
+  "max": [
+   -12.28,
+   -5.06,
+   5.55
+  ],
+  "mats": [
+   "PlasticWhite.21"
+  ]
+ },
+ {
+  "name": "AntDrumB_PlasticWhite_2",
+  "tris": 480,
+  "dims": [
+   1.712,
+   0.064,
+   1.712
+  ],
+  "min": [
+   -13.97,
+   -5.7,
+   3.87
+  ],
+  "max": [
+   -12.26,
+   -5.64,
+   5.58
+  ],
+  "mats": [
+   "PlasticWhite.22"
+  ]
+ },
+ {
+  "name": "AntDrumA_MetalDark",
+  "tris": 1750,
+  "dims": [
+   0.284,
+   0.356,
+   0.598
+  ],
+  "min": [
+   -14.92,
+   -5.07,
+   4.38
+  ],
+  "max": [
+   -14.63,
+   -4.71,
+   4.98
+  ],
+  "mats": [
+   "MetalDark.23"
+  ]
+ },
+ {
+  "name": "AntDrumA_PlasticWhite",
+  "tris": 1376,
+  "dims": [
+   1.169,
+   0.402,
+   1.169
+  ],
+  "min": [
+   -15.38,
+   -5.46,
+   4.09
+  ],
+  "max": [
+   -14.21,
+   -5.06,
+   5.26
+  ],
+  "mats": [
+   "PlasticWhite.23"
+  ]
+ },
+ {
+  "name": "AntDrumA_PlasticWhite_2",
+  "tris": 480,
+  "dims": [
+   1.203,
+   0.045,
+   1.203
+  ],
+  "min": [
+   -15.4,
+   -5.51,
+   4.07
+  ],
+  "max": [
+   -14.19,
+   -5.46,
+   5.28
+  ],
+  "mats": [
+   "PlasticWhite.24"
+  ]
+ },
+ {
+  "name": "AntBarB_PlasticWhite",
+  "tris": 296,
+  "dims": [
+   0.274,
+   0.206,
+   0.566
+  ],
+  "min": [
+   -16.29,
+   -5.02,
+   4.37
+  ],
+  "max": [
+   -16.02,
+   -4.82,
+   4.94
+  ],
+  "mats": [
+   "PlasticWhite.25"
+  ]
+ },
+ {
+  "name": "AntBarB_PlasticBrown",
+  "tris": 96,
+  "dims": [
+   0.148,
+   0.09,
+   0.53
+  ],
+  "min": [
+   -16.23,
+   -4.83,
+   4.39
+  ],
+  "max": [
+   -16.08,
+   -4.74,
+   4.92
+  ],
+  "mats": [
+   "PlasticBrown.5"
+  ]
+ },
+ {
+  "name": "AntBarB_PlasticWhite_2",
+  "tris": 132,
+  "dims": [
+   0.254,
+   0.191,
+   1.76
+  ],
+  "min": [
+   -16.28,
+   -5.01,
+   3.77
+  ],
+  "max": [
+   -16.03,
+   -4.82,
+   5.53
+  ],
+  "mats": [
+   "PlasticWhite.26"
+  ]
+ },
+ {
+  "name": "AntBarA_PlasticWhite",
+  "tris": 296,
+  "dims": [
+   0.498,
+   0.213,
+   1.583
+  ],
+  "min": [
+   -17.3,
+   -5.02,
+   3.81
+  ],
+  "max": [
+   -16.8,
+   -4.8,
+   5.39
+  ],
+  "mats": [
+   "PlasticWhite.27"
+  ]
+ },
+ {
+  "name": "AntBarA_PlasticBrown",
+  "tris": 96,
+  "dims": [
+   0.286,
+   0.09,
+   1.52
+  ],
+  "min": [
+   -17.19,
+   -4.82,
+   3.84
+  ],
+  "max": [
+   -16.91,
+   -4.73,
+   5.36
+  ],
+  "mats": [
+   "PlasticBrown.6"
+  ]
+ },
+ {
+  "name": "AntBarA_PlasticWhite_2",
+  "tris": 132,
+  "dims": [
+   0.478,
+   0.198,
+   2.3
+  ],
+  "min": [
+   -17.29,
+   -5.01,
+   3.5
+  ],
+  "max": [
+   -16.81,
+   -4.81,
+   5.8
+  ],
+  "mats": [
+   "PlasticWhite.28"
+  ]
+ },
+ {
+  "name": "WireBox_MetalDark",
+  "tris": 722,
+  "dims": [
+   0.39,
+   0.416,
+   0.158
+  ],
+  "min": [
+   -15.56,
+   -14.04,
+   -0.0
+  ],
+  "max": [
+   -15.17,
+   -13.63,
+   0.16
+  ],
+  "mats": [
+   "MetalDark.24"
+  ]
+ },
+ {
+  "name": "WireBox_MetalLight",
+  "tris": 24,
+  "dims": [
+   3.0,
+   0.025,
+   0.025
+  ],
+  "min": [
+   -18.49,
+   -13.75,
+   0.01
+  ],
+  "max": [
+   -15.49,
+   -13.73,
+   0.03
+  ],
+  "mats": [
+   "MetalLight.52"
+  ]
+ },
+ {
+  "name": "WireBox_MetalLight_2",
+  "tris": 408,
+  "dims": [
+   2.0,
+   3.025,
+   0.025
+  ],
+  "min": [
+   -17.49,
+   -16.8,
+   0.01
+  ],
+  "max": [
+   -15.49,
+   -13.78,
+   0.03
+  ],
+  "mats": [
+   "MetalLight.53"
+  ]
+ },
+ {
+  "name": "WireBox_MetalLight_3",
+  "tris": 216,
+  "dims": [
+   1.512,
+   1.513,
+   0.025
+  ],
+  "min": [
+   -17.0,
+   -13.71,
+   0.01
+  ],
+  "max": [
+   -15.49,
+   -12.2,
+   0.03
+  ],
+  "mats": [
+   "MetalLight.54"
+  ]
+ },
+ {
+  "name": "SpireNeedle_MetalDark",
+  "tris": 16436,
+  "dims": [
+   2.021,
+   2.413,
+   12.782
+  ],
+  "min": [
+   -3.62,
+   17.01,
+   0.04
+  ],
+  "max": [
+   -1.59,
+   19.42,
+   12.82
+  ],
+  "mats": [
+   "MetalDark.25"
+  ]
+ },
+ {
+  "name": "SpireNeedle_PlasticWhite",
+  "tris": 1184,
+  "dims": [
+   1.523,
+   1.523,
+   21.67
+  ],
+  "min": [
+   -2.72,
+   17.81,
+   0.04
+  ],
+  "max": [
+   -1.2,
+   19.33,
+   21.71
+  ],
+  "mats": [
+   "PlasticWhite.29"
+  ]
+ },
+ {
+  "name": "SpireNeedle_MetalLight",
+  "tris": 13728,
+  "dims": [
+   3.409,
+   3.409,
+   8.973
+  ],
+  "min": [
+   -3.66,
+   16.86,
+   3.86
+  ],
+  "max": [
+   -0.25,
+   20.27,
+   12.84
+  ],
+  "mats": [
+   "MetalLight.55"
+  ]
+ },
+ {
+  "name": "SatelliteLG_PlasticWhite",
+  "tris": 5518,
+  "dims": [
+   1.646,
+   1.613,
+   6.511
+  ],
+  "min": [
+   -19.69,
+   7.51,
+   -0.0
+  ],
+  "max": [
+   -18.05,
+   9.12,
+   6.51
+  ],
+  "mats": [
+   "PlasticWhite.30"
+  ]
+ },
+ {
+  "name": "SatelliteLG_PlasticWhite_2",
+  "tris": 590,
+  "dims": [
+   2.004,
+   1.638,
+   1.383
+  ],
+  "min": [
+   -19.58,
+   7.76,
+   3.96
+  ],
+  "max": [
+   -17.58,
+   9.4,
+   5.35
+  ],
+  "mats": [
+   "PlasticWhite.31"
+  ]
+ },
+ {
+  "name": "SatelliteLG_MetalLight",
+  "tris": 9376,
+  "dims": [
+   6.474,
+   6.836,
+   4.014
+  ],
+  "min": [
+   -23.21,
+   4.11,
+   5.24
+  ],
+  "max": [
+   -16.74,
+   10.95,
+   9.25
+  ],
+  "mats": [
+   "MetalLight.56"
+  ]
+ },
+ {
+  "name": "SatelliteLG_MetalLight_2",
+  "tris": 512,
+  "dims": [
+   5.875,
+   6.165,
+   3.71
+  ],
+  "min": [
+   -22.94,
+   4.43,
+   5.43
+  ],
+  "max": [
+   -17.07,
+   10.59,
+   9.14
+  ],
+  "mats": [
+   "MetalLight.57"
+  ]
+ },
+ {
+  "name": "SatelliteLG_PlasticWhite_3",
+  "tris": 584,
+  "dims": [
+   5.934,
+   6.342,
+   6.104
+  ],
+  "min": [
+   -23.5,
+   3.96,
+   -0.0
+  ],
+  "max": [
+   -17.57,
+   10.31,
+   6.1
+  ],
+  "mats": [
+   "PlasticWhite.32"
+  ]
+ },
+ {
+  "name": "SatelliteLG_PlasticWhite_4",
+  "tris": 1620,
+  "dims": [
+   2.602,
+   1.987,
+   3.899
+  ],
+  "min": [
+   -19.21,
+   8.04,
+   3.0
+  ],
+  "max": [
+   -16.61,
+   10.03,
+   6.9
+  ],
+  "mats": [
+   "PlasticWhite.33"
+  ]
+ },
+ {
+  "name": "SatelliteLG_MetalDark",
+  "tris": 400,
+  "dims": [
+   2.155,
+   1.595,
+   3.726
+  ],
+  "min": [
+   -18.75,
+   8.36,
+   2.88
+  ],
+  "max": [
+   -16.6,
+   9.96,
+   6.6
+  ],
+  "mats": [
+   "MetalDark.26"
+  ]
+ },
+ {
+  "name": "SatelliteLG_PlasticWhite_5",
+  "tris": 13236,
+  "dims": [
+   7.274,
+   7.694,
+   4.489
+  ],
+  "min": [
+   -23.71,
+   3.61,
+   5.13
+  ],
+  "max": [
+   -16.44,
+   11.3,
+   9.62
+  ],
+  "mats": [
+   "PlasticWhite.34"
+  ]
+ },
+ {
+  "name": "Ladder_MetalDark",
+  "tris": 1088,
+  "dims": [
+   0.657,
+   0.46,
+   1.681
+  ],
+  "min": [
+   26.84,
+   4.15,
+   0.91
+  ],
+  "max": [
+   27.5,
+   4.61,
+   2.6
+  ],
+  "mats": [
+   "MetalDark.27"
+  ]
+ },
+ {
+  "name": "Ladder_MetalDark_2",
+  "tris": 1456,
+  "dims": [
+   0.909,
+   0.78,
+   0.893
+  ],
+  "min": [
+   26.72,
+   3.39,
+   -0.0
+  ],
+  "max": [
+   27.63,
+   4.17,
+   0.89
+  ],
+  "mats": [
+   "MetalDark.28"
+  ]
+ },
+ {
+  "name": "Ladder_MetalDark_3",
+  "tris": 572,
+  "dims": [
+   0.657,
+   0.423,
+   0.915
+  ],
+  "min": [
+   26.84,
+   4.15,
+   -0.0
+  ],
+  "max": [
+   27.5,
+   4.57,
+   0.91
+  ],
+  "mats": [
+   "MetalDark.29"
+  ]
+ },
+ {
+  "name": "Platform_MetalDark",
+  "tris": 162,
+  "dims": [
+   0.145,
+   1.465,
+   1.071
+  ],
+  "min": [
+   24.27,
+   7.1,
+   0.01
+  ],
+  "max": [
+   24.41,
+   8.57,
+   1.08
+  ],
+  "mats": [
+   "MetalDark.30"
+  ]
+ },
+ {
+  "name": "Platform_MetalDark_2",
+  "tris": 2004,
+  "dims": [
+   2.007,
+   2.007,
+   1.115
+  ],
+  "min": [
+   22.31,
+   6.64,
+   1.08
+  ],
+  "max": [
+   24.32,
+   8.64,
+   2.19
+  ],
+  "mats": [
+   "MetalDark.31"
+  ]
+ },
+ {
+  "name": "Platform_MetalDark_3",
+  "tris": 162,
+  "dims": [
+   0.145,
+   1.465,
+   1.071
+  ],
+  "min": [
+   22.41,
+   7.1,
+   0.01
+  ],
+  "max": [
+   22.56,
+   8.57,
+   1.08
+  ],
+  "mats": [
+   "MetalDark.32"
+  ]
+ },
+ {
+  "name": "Platform_MetalDark_4",
+  "tris": 2456,
+  "dims": [
+   3.5,
+   1.931,
+   1.17
+  ],
+  "min": [
+   24.24,
+   6.64,
+   1.02
+  ],
+  "max": [
+   27.74,
+   8.57,
+   2.19
+  ],
+  "mats": [
+   "MetalDark.33"
+  ]
+ },
+ {
+  "name": "Platform_MetalDark_5",
+  "tris": 4704,
+  "dims": [
+   3.853,
+   0.82,
+   6.913
+  ],
+  "min": [
+   27.5,
+   7.55,
+   1.28
+  ],
+  "max": [
+   31.36,
+   8.37,
+   8.19
+  ],
+  "mats": [
+   "MetalDark.34"
+  ]
+ },
+ {
+  "name": "Platform_MetalDark_6",
+  "tris": 162,
+  "dims": [
+   0.145,
+   1.465,
+   1.071
+  ],
+  "min": [
+   27.57,
+   7.1,
+   0.01
+  ],
+  "max": [
+   27.71,
+   8.57,
+   1.08
+  ],
+  "mats": [
+   "MetalDark.35"
+  ]
+ },
+ {
+  "name": "FireEscape_MetalDark",
+  "tris": 3056,
+  "dims": [
+   2.17,
+   0.771,
+   4.307
+  ],
+  "min": [
+   17.42,
+   17.22,
+   9.17
+  ],
+  "max": [
+   19.59,
+   17.99,
+   13.48
+  ],
+  "mats": [
+   "MetalDark.36"
+  ]
+ },
+ {
+  "name": "FireEscape_MetalDark_2",
+  "tris": 4692,
+  "dims": [
+   4.556,
+   1.931,
+   2.151
+  ],
+  "min": [
+   16.6,
+   16.99,
+   11.34
+  ],
+  "max": [
+   21.15,
+   18.92,
+   13.49
+  ],
+  "mats": [
+   "MetalDark.37"
+  ]
+ },
+ {
+  "name": "FireEscape_MetalDark_3",
+  "tris": 3056,
+  "dims": [
+   2.17,
+   0.771,
+   4.307
+  ],
+  "min": [
+   17.42,
+   17.22,
+   12.58
+  ],
+  "max": [
+   19.59,
+   17.99,
+   16.88
+  ],
+  "mats": [
+   "MetalDark.38"
+  ]
+ },
+ {
+  "name": "FireEscape_MetalDark_4",
+  "tris": 4692,
+  "dims": [
+   4.556,
+   1.931,
+   2.151
+  ],
+  "min": [
+   16.6,
+   16.99,
+   14.74
+  ],
+  "max": [
+   21.15,
+   18.92,
+   16.89
+  ],
+  "mats": [
+   "MetalDark.39"
+  ]
+ },
+ {
+  "name": "FireEscape_MetalDark_5",
+  "tris": 3056,
+  "dims": [
+   2.17,
+   0.771,
+   4.307
+  ],
+  "min": [
+   17.42,
+   17.22,
+   15.98
+  ],
+  "max": [
+   19.59,
+   17.99,
+   20.28
+  ],
+  "mats": [
+   "MetalDark.40"
+  ]
+ },
+ {
+  "name": "FireEscape_MetalDark_6",
+  "tris": 4692,
+  "dims": [
+   4.556,
+   1.931,
+   2.151
+  ],
+  "min": [
+   16.6,
+   16.99,
+   18.14
+  ],
+  "max": [
+   21.15,
+   18.92,
+   20.29
+  ],
+  "mats": [
+   "MetalDark.41"
+  ]
+ },
+ {
+  "name": "FireEscape_MetalDark_7",
+  "tris": 10704,
+  "dims": [
+   0.909,
+   1.223,
+   7.48
+  ],
+  "min": [
+   19.9,
+   15.96,
+   3.46
+  ],
+  "max": [
+   20.81,
+   17.18,
+   10.94
+  ],
+  "mats": [
+   "MetalDark.42"
+  ]
+ },
+ {
+  "name": "FireEscape_MetalDark_8",
+  "tris": 4596,
+  "dims": [
+   4.556,
+   1.931,
+   2.168
+  ],
+  "min": [
+   16.6,
+   16.99,
+   7.94
+  ],
+  "max": [
+   21.15,
+   18.92,
+   10.11
+  ],
+  "mats": [
+   "MetalDark.43"
+  ]
+ },
+ {
+  "name": "BillboardShort_MetalDark",
+  "tris": 178,
+  "dims": [
+   8.96,
+   0.15,
+   4.96
+  ],
+  "min": [
+   -3.37,
+   5.71,
+   1.64
+  ],
+  "max": [
+   5.59,
+   5.86,
+   6.6
+  ],
+  "mats": [
+   "MetalDark.44"
+  ]
+ },
+ {
+  "name": "BillboardShort_Gantries",
+  "tris": 2,
+  "dims": [
+   8.92,
+   0.0,
+   4.92
+  ],
+  "min": [
+   -3.35,
+   5.72,
+   1.66
+  ],
+  "max": [
+   5.57,
+   5.72,
+   6.58
+  ],
+  "mats": [
+   "Gantries"
+  ]
+ },
+ {
+  "name": "BillboardShort_MetalDark_2",
+  "tris": 7502,
+  "dims": [
+   8.97,
+   3.388,
+   6.125
+  ],
+  "min": [
+   -3.38,
+   4.75,
+   -0.0
+  ],
+  "max": [
+   5.59,
+   8.14,
+   6.12
+  ],
+  "mats": [
+   "MetalDark.45"
+  ]
+ },
+ {
+  "name": "BillboardShort_MetalLight",
+  "tris": 6128,
+  "dims": [
+   9.711,
+   2.064,
+   5.481
+  ],
+  "min": [
+   -3.45,
+   4.75,
+   -0.0
+  ],
+  "max": [
+   6.26,
+   6.81,
+   5.48
+  ],
+  "mats": [
+   "MetalLight.58"
+  ]
+ },
+ {
+  "name": "BillboardShort_MetalLight_2",
+  "tris": 1164,
+  "dims": [
+   9.694,
+   2.046,
+   5.897
+  ],
+  "min": [
+   -3.45,
+   4.75,
+   0.54
+  ],
+  "max": [
+   6.25,
+   6.8,
+   6.43
+  ],
+  "mats": [
+   "MetalLight.59"
+  ]
+ },
+ {
+  "name": "BillboardShort_MetalDark_3",
+  "tris": 1884,
+  "dims": [
+   0.362,
+   0.657,
+   6.171
+  ],
+  "min": [
+   -3.68,
+   6.06,
+   0.2
+  ],
+  "max": [
+   -3.32,
+   6.72,
+   6.37
+  ],
+  "mats": [
+   "MetalDark.46"
+  ]
+ },
+ {
+  "name": "BillboardShort_MetalDark_4",
+  "tris": 1750,
+  "dims": [
+   9.143,
+   1.714,
+   0.367
+  ],
+  "min": [
+   -3.47,
+   3.05,
+   0.47
+  ],
+  "max": [
+   5.68,
+   4.77,
+   0.84
+  ],
+  "mats": [
+   "MetalDark.47"
+  ]
+ },
+ {
+  "name": "BillboardShort_Light",
+  "tris": 14,
+  "dims": [
+   9.05,
+   0.195,
+   0.127
+  ],
+  "min": [
+   -3.42,
+   3.16,
+   0.67
+  ],
+  "max": [
+   5.63,
+   3.35,
+   0.79
+  ],
+  "mats": [
+   "LIGHT"
+  ]
+ },
+ {
+  "name": "BillboardTall_MetalLight",
+  "tris": 712,
+  "dims": [
+   10.316,
+   5.405,
+   0.965
+  ],
+  "min": [
+   8.75,
+   3.04,
+   4.46
+  ],
+  "max": [
+   19.06,
+   8.44,
+   5.42
+  ],
+  "mats": [
+   "MetalLight.60"
+  ]
+ },
+ {
+  "name": "BillboardTall_MetalDark",
+  "tris": 2648,
+  "dims": [
+   10.542,
+   3.484,
+   6.51
+  ],
+  "min": [
+   8.7,
+   4.0,
+   4.43
+  ],
+  "max": [
+   19.24,
+   7.48,
+   10.94
+  ],
+  "mats": [
+   "MetalDark.48"
+  ]
+ },
+ {
+  "name": "BillboardTall_MetalLight_2",
+  "tris": 6048,
+  "dims": [
+   10.433,
+   5.426,
+   0.08
+  ],
+  "min": [
+   8.75,
+   3.03,
+   4.39
+  ],
+  "max": [
+   19.18,
+   8.45,
+   4.47
+  ],
+  "mats": [
+   "MetalLight.61"
+  ]
+ },
+ {
+  "name": "BillboardTall_MetalDark_2",
+  "tris": 2000,
+  "dims": [
+   9.143,
+   6.8,
+   0.367
+  ],
+  "min": [
+   9.4,
+   2.34,
+   10.34
+  ],
+  "max": [
+   18.54,
+   9.14,
+   10.7
+  ],
+  "mats": [
+   "MetalDark.49"
+  ]
+ },
+ {
+  "name": "BillboardTall_MetalDark_3",
+  "tris": 2880,
+  "dims": [
+   8.201,
+   1.201,
+   0.685
+  ],
+  "min": [
+   9.81,
+   5.14,
+   -0.0
+  ],
+  "max": [
+   18.01,
+   6.34,
+   0.68
+  ],
+  "mats": [
+   "MetalDark.50"
+  ]
+ },
+ {
+  "name": "BillboardTall_ConcretePlain",
+  "tris": 132,
+  "dims": [
+   8.4,
+   1.4,
+   0.1
+  ],
+  "min": [
+   9.71,
+   5.04,
+   -0.0
+  ],
+  "max": [
+   18.11,
+   6.44,
+   0.1
+  ],
+  "mats": [
+   "ConcretePlain.7"
+  ]
+ },
+ {
+  "name": "BillboardTall_MetalDark_4",
+  "tris": 5008,
+  "dims": [
+   10.457,
+   5.512,
+   5.849
+  ],
+  "min": [
+   8.74,
+   2.98,
+   3.99
+  ],
+  "max": [
+   19.2,
+   8.5,
+   9.84
+  ],
+  "mats": [
+   "MetalDark.51"
+  ]
+ },
+ {
+  "name": "BillboardTall_Gantries",
+  "tris": 36,
+  "dims": [
+   10.302,
+   3.464,
+   5.77
+  ],
+  "min": [
+   8.82,
+   4.01,
+   4.55
+  ],
+  "max": [
+   19.12,
+   7.47,
+   10.32
+  ],
+  "mats": [
+   "Gantries.1"
+  ]
+ },
+ {
+  "name": "BillboardTall_Light",
+  "tris": 16,
+  "dims": [
+   9.05,
+   6.597,
+   0.127
+  ],
+  "min": [
+   9.44,
+   2.44,
+   10.39
+  ],
+  "max": [
+   18.49,
+   9.04,
+   10.51
+  ],
+  "mats": [
+   "LIGHT"
+  ]
+ },
+ {
+  "name": "BillboardTall_MetalDark_5",
+  "tris": 1984,
+  "dims": [
+   7.6,
+   0.6,
+   9.315
+  ],
+  "min": [
+   10.11,
+   5.44,
+   0.68
+  ],
+  "max": [
+   17.71,
+   6.04,
+   10.0
+  ],
+  "mats": [
+   "MetalDark.52"
+  ]
+ },
+ {
+  "name": "AntennaTower_PlasticBrown",
+  "tris": 960,
+  "dims": [
+   2.455,
+   1.603,
+   1.544
+  ],
+  "min": [
+   7.52,
+   16.64,
+   14.18
+  ],
+  "max": [
+   9.97,
+   18.24,
+   15.72
+  ],
+  "mats": [
+   "PlasticBrown.7"
+  ]
+ },
+ {
+  "name": "AntennaTower_MetalDark",
+  "tris": 832,
+  "dims": [
+   0.169,
+   0.169,
+   14.704
+  ],
+  "min": [
+   7.92,
+   17.66,
+   15.71
+  ],
+  "max": [
+   8.09,
+   17.82,
+   30.41
+  ],
+  "mats": [
+   "MetalDark.53"
+  ]
+ },
+ {
+  "name": "AntennaTower_MetalLight",
+  "tris": 2328,
+  "dims": [
+   3.012,
+   1.294,
+   19.264
+  ],
+  "min": [
+   6.13,
+   17.59,
+   0.24
+  ],
+  "max": [
+   9.14,
+   18.89,
+   19.5
+  ],
+  "mats": [
+   "MetalLight.62"
+  ]
+ },
+ {
+  "name": "AntennaTower_PlasticWhite",
+  "tris": 2752,
+  "dims": [
+   2.255,
+   2.873,
+   2.897
+  ],
+  "min": [
+   7.63,
+   16.76,
+   14.81
+  ],
+  "max": [
+   9.88,
+   19.63,
+   17.7
+  ],
+  "mats": [
+   "PlasticWhite.35"
+  ]
+ },
+ {
+  "name": "AntennaTower_MetalLight_2",
+  "tris": 2820,
+  "dims": [
+   0.303,
+   0.241,
+   3.263
+  ],
+  "min": [
+   7.76,
+   17.57,
+   15.84
+  ],
+  "max": [
+   8.07,
+   17.81,
+   19.11
+  ],
+  "mats": [
+   "MetalLight.63"
+  ]
+ },
+ {
+  "name": "AntennaTower_MetalLight_3",
+  "tris": 2080,
+  "dims": [
+   2.867,
+   1.175,
+   4.473
+  ],
+  "min": [
+   6.19,
+   17.59,
+   14.89
+  ],
+  "max": [
+   9.06,
+   18.76,
+   19.36
+  ],
+  "mats": [
+   "MetalLight.64"
+  ]
+ },
+ {
+  "name": "AntennaTower_PlasticWhite_2",
+  "tris": 792,
+  "dims": [
+   3.171,
+   1.464,
+   4.915
+  ],
+  "min": [
+   6.03,
+   17.39,
+   14.56
+  ],
+  "max": [
+   9.2,
+   18.86,
+   19.47
+  ],
+  "mats": [
+   "PlasticWhite.36"
+  ]
+ },
+ {
+  "name": "AntennaTower_MetalLight_4",
+  "tris": 3500,
+  "dims": [
+   1.034,
+   1.78,
+   2.078
+  ],
+  "min": [
+   8.32,
+   17.29,
+   15.34
+  ],
+  "max": [
+   9.35,
+   19.07,
+   17.42
+  ],
+  "mats": [
+   "MetalLight.65"
+  ]
+ },
+ {
+  "name": "AntennaTower_PlasticWhite_3",
+  "tris": 7680,
+  "dims": [
+   2.753,
+   1.244,
+   2.928
+  ],
+  "min": [
+   7.03,
+   17.16,
+   13.49
+  ],
+  "max": [
+   9.78,
+   18.4,
+   16.41
+  ],
+  "mats": [
+   "PlasticWhite.37"
+  ]
+ },
+ {
+  "name": "AntennaTower_MetalLight_5",
+  "tris": 4516,
+  "dims": [
+   2.464,
+   1.307,
+   2.446
+  ],
+  "min": [
+   7.35,
+   16.82,
+   13.81
+  ],
+  "max": [
+   9.82,
+   18.13,
+   16.26
+  ],
+  "mats": [
+   "MetalLight.66"
+  ]
+ },
+ {
+  "name": "AntennaTower_PlasticWhite_4",
+  "tris": 960,
+  "dims": [
+   2.309,
+   2.985,
+   2.938
+  ],
+  "min": [
+   7.61,
+   16.71,
+   14.78
+  ],
+  "max": [
+   9.91,
+   19.7,
+   17.72
+  ],
+  "mats": [
+   "PlasticWhite.38"
+  ]
+ },
+ {
+  "name": "AntennaTower_PlasticWhite_5",
+  "tris": 1776,
+  "dims": [
+   3.19,
+   1.481,
+   4.008
+  ],
+  "min": [
+   6.02,
+   17.38,
+   14.87
+  ],
+  "max": [
+   9.21,
+   18.87,
+   18.88
+  ],
+  "mats": [
+   "PlasticWhite.39"
+  ]
+ },
+ {
+  "name": "AntennaTower_MetalDark_2",
+  "tris": 70348,
+  "dims": [
+   12.184,
+   12.184,
+   19.513
+  ],
+  "min": [
+   2.37,
+   11.91,
+   -0.0
+  ],
+  "max": [
+   14.55,
+   24.1,
+   19.51
+  ],
+  "mats": [
+   "MetalDark.54"
+  ]
+ },
+ {
+  "name": "AntennaTower_ConcretePlain",
+  "tris": 1154,
+  "dims": [
+   12.237,
+   12.237,
+   0.123
+  ],
+  "min": [
+   2.34,
+   11.88,
+   -0.0
+  ],
+  "max": [
+   14.58,
+   24.12,
+   0.12
+  ],
+  "mats": [
+   "ConcretePlain.8"
+  ]
+ },
+ {
+  "name": "AntennaTower_MetalDark_3",
+  "tris": 96,
+  "dims": [
+   11.957,
+   11.957,
+   13.402
+  ],
+  "min": [
+   2.48,
+   12.02,
+   0.12
+  ],
+  "max": [
+   14.44,
+   23.98,
+   13.52
+  ],
+  "mats": [
+   "MetalDark.55"
+  ]
+ },
+ {
+  "name": "WaterTank_MetalRed",
+  "tris": 4132,
+  "dims": [
+   1.8,
+   4.298,
+   1.923
+  ],
+  "min": [
+   21.65,
+   -7.32,
+   0.72
+  ],
+  "max": [
+   23.45,
+   -3.02,
+   2.65
+  ],
+  "mats": [
+   "MetalRed.3"
+  ]
+ },
+ {
+  "name": "WaterTank_MetalDark",
+  "tris": 2480,
+  "dims": [
+   0.23,
+   2.447,
+   1.509
+  ],
+  "min": [
+   22.48,
+   -5.17,
+   -0.0
+  ],
+  "max": [
+   22.72,
+   -2.72,
+   1.51
+  ],
+  "mats": [
+   "MetalDark.56"
+  ]
+ },
+ {
+  "name": "WaterTank_MetalLight",
+  "tris": 3524,
+  "dims": [
+   1.57,
+   3.075,
+   1.134
+  ],
+  "min": [
+   21.76,
+   -6.71,
+   -0.0
+  ],
+  "max": [
+   23.33,
+   -3.63,
+   1.13
+  ],
+  "mats": [
+   "MetalLight.67"
+  ]
+ },
+ {
+  "name": "WaterTowerLow_MetalLight",
+  "tris": 10776,
+  "dims": [
+   3.847,
+   3.87,
+   1.761
+  ],
+  "min": [
+   25.61,
+   -6.84,
+   0.13
+  ],
+  "max": [
+   29.46,
+   -2.97,
+   1.89
+  ],
+  "mats": [
+   "MetalLight.68"
+  ]
+ },
+ {
+  "name": "WaterTowerLow_MetalBlue",
+  "tris": 6432,
+  "dims": [
+   4.934,
+   4.639,
+   5.585
+  ],
+  "min": [
+   24.92,
+   -7.23,
+   -0.0
+  ],
+  "max": [
+   29.85,
+   -2.59,
+   5.59
+  ],
+  "mats": [
+   "MetalBlue"
+  ]
+ },
+ {
+  "name": "WaterTowerLow_ConcretePlain",
+  "tris": 264,
+  "dims": [
+   3.805,
+   3.828,
+   0.131
+  ],
+  "min": [
+   25.63,
+   -6.82,
+   -0.0
+  ],
+  "max": [
+   29.43,
+   -2.99,
+   0.13
+  ],
+  "mats": [
+   "ConcretePlain.9"
+  ]
+ },
+ {
+  "name": "WaterTowerTall_ConcretePlain",
+  "tris": 264,
+  "dims": [
+   4.3,
+   4.3,
+   0.15
+  ],
+  "min": [
+   27.16,
+   15.82,
+   0.0
+  ],
+  "max": [
+   31.46,
+   20.12,
+   0.15
+  ],
+  "mats": [
+   "ConcretePlain.10"
+  ]
+ },
+ {
+  "name": "WaterTowerTall_MetalDark",
+  "tris": 40688,
+  "dims": [
+   4.414,
+   4.556,
+   9.253
+  ],
+  "min": [
+   27.1,
+   15.68,
+   0.0
+  ],
+  "max": [
+   31.51,
+   20.24,
+   9.25
+  ],
+  "mats": [
+   "MetalDark.57"
+  ]
+ },
+ {
+  "name": "WaterTowerTall_Wood",
+  "tris": 6620,
+  "dims": [
+   5.067,
+   5.067,
+   1.059
+  ],
+  "min": [
+   26.77,
+   15.43,
+   13.93
+  ],
+  "max": [
+   31.84,
+   20.5,
+   14.99
+  ],
+  "mats": [
+   "WoodWorn"
+  ]
+ },
+ {
+  "name": "WaterTowerTall_MetalDark_2",
+  "tris": 7120,
+  "dims": [
+   4.474,
+   4.478,
+   3.615
+  ],
+  "min": [
+   27.07,
+   15.73,
+   9.52
+  ],
+  "max": [
+   31.54,
+   20.2,
+   13.13
+  ],
+  "mats": [
+   "MetalDark.58"
+  ]
+ },
+ {
+  "name": "WaterTowerTall_MetalDark_3",
+  "tris": 7352,
+  "dims": [
+   0.915,
+   1.192,
+   13.574
+  ],
+  "min": [
+   28.85,
+   19.94,
+   0.37
+  ],
+  "max": [
+   29.77,
+   21.14,
+   13.94
+  ],
+  "mats": [
+   "MetalDark.59"
+  ]
+ },
+ {
+  "name": "WaterTowerTall_MetalDark_4",
+  "tris": 872,
+  "dims": [
+   0.865,
+   2.902,
+   13.411
+  ],
+  "min": [
+   28.53,
+   15.31,
+   -0.0
+  ],
+  "max": [
+   29.39,
+   18.21,
+   13.41
+  ],
+  "mats": [
+   "MetalDark.60"
+  ]
+ },
+ {
+  "name": "WaterTowerTall_Wood_2",
+  "tris": 3226,
+  "dims": [
+   4.451,
+   4.451,
+   5.969
+  ],
+  "min": [
+   27.08,
+   15.74,
+   9.25
+  ],
+  "max": [
+   31.53,
+   20.19,
+   15.22
+  ],
+  "mats": [
+   "WoodWorn.1"
+  ]
+ },
+ {
+  "name": "Spire_MetalDark",
+  "tris": 5280,
+  "dims": [
+   15.0,
+   15.0,
+   7.5
+  ],
+  "min": [
+   -22.67,
+   14.72,
+   -0.0
+  ],
+  "max": [
+   -7.67,
+   29.72,
+   7.5
+  ],
+  "mats": [
+   "MetalDark.61"
+  ]
+ },
+ {
+  "name": "Spire_ConcretePlain",
+  "tris": 848,
+  "dims": [
+   15.2,
+   15.2,
+   4.8
+  ],
+  "min": [
+   -22.77,
+   14.62,
+   3.5
+  ],
+  "max": [
+   -7.57,
+   29.82,
+   8.3
+  ],
+  "mats": [
+   "ConcretePlain.11"
+  ]
+ },
+ {
+  "name": "Spire_GLASS",
+  "tris": 352,
+  "dims": [
+   14.88,
+   14.88,
+   17.952
+  ],
+  "min": [
+   -22.61,
+   14.78,
+   0.12
+  ],
+  "max": [
+   -7.73,
+   29.66,
+   18.07
+  ],
+  "mats": [
+   "GLASS"
+  ]
+ },
+ {
+  "name": "Spire_GLASS_2",
+  "tris": 16,
+  "dims": [
+   15.114,
+   15.114,
+   0.586
+  ],
+  "min": [
+   -22.73,
+   14.66,
+   4.26
+  ],
+  "max": [
+   -7.61,
+   29.78,
+   4.84
+  ],
+  "mats": [
+   "GLASS"
+  ]
+ },
+ {
+  "name": "Spire_MetalLight",
+  "tris": 544,
+  "dims": [
+   15.14,
+   15.14,
+   1.02
+  ],
+  "min": [
+   -22.74,
+   14.65,
+   4.05
+  ],
+  "max": [
+   -7.6,
+   29.79,
+   5.07
+  ],
+  "mats": [
+   "MetalLight.69"
+  ]
+ },
+ {
+  "name": "Spire_ConcretePlain_2",
+  "tris": 426,
+  "dims": [
+   10.688,
+   10.688,
+   3.0
+  ],
+  "min": [
+   -20.51,
+   16.87,
+   8.25
+  ],
+  "max": [
+   -9.82,
+   27.56,
+   11.25
+  ],
+  "mats": [
+   "ConcretePlain.12"
+  ]
+ },
+ {
+  "name": "Spire_MetalLight_2",
+  "tris": 3036,
+  "dims": [
+   7.045,
+   7.045,
+   8.412
+  ],
+  "min": [
+   -18.69,
+   18.7,
+   11.05
+  ],
+  "max": [
+   -11.65,
+   25.74,
+   19.46
+  ],
+  "mats": [
+   "MetalLight.70"
+  ]
+ },
+ {
+  "name": "Spire_MetalLight_3",
+  "tris": 6384,
+  "dims": [
+   11.818,
+   11.818,
+   10.787
+  ],
+  "min": [
+   -21.08,
+   16.31,
+   8.7
+  ],
+  "max": [
+   -9.26,
+   28.13,
+   19.49
+  ],
+  "mats": [
+   "MetalLight.71"
+  ]
+ },
+ {
+  "name": "Spire_MetalLight_4",
+  "tris": 5280,
+  "dims": [
+   8.234,
+   8.234,
+   6.606
+  ],
+  "min": [
+   -19.29,
+   18.1,
+   13.23
+  ],
+  "max": [
+   -11.05,
+   26.34,
+   19.83
+  ],
+  "mats": [
+   "MetalLight.72"
+  ]
+ },
+ {
+  "name": "Spire_MetalLight_5",
+  "tris": 29808,
+  "dims": [
+   3.399,
+   3.399,
+   17.124
+  ],
+  "min": [
+   -16.87,
+   20.52,
+   23.29
+  ],
+  "max": [
+   -13.47,
+   23.92,
+   40.41
+  ],
+  "mats": [
+   "MetalLight.73"
+  ]
+ },
+ {
+  "name": "Spire_MetalDark_2",
+  "tris": 27836,
+  "dims": [
+   2.021,
+   2.516,
+   21.344
+  ],
+  "min": [
+   -16.83,
+   20.56,
+   19.05
+  ],
+  "max": [
+   -14.8,
+   23.07,
+   40.4
+  ],
+  "mats": [
+   "MetalDark.62"
+  ]
+ },
+ {
+  "name": "Spire_MetalLight_6",
+  "tris": 12984,
+  "dims": [
+   2.031,
+   13.436,
+   4.974
+  ],
+  "min": [
+   -21.97,
+   15.8,
+   10.92
+  ],
+  "max": [
+   -19.94,
+   29.24,
+   15.9
+  ],
+  "mats": [
+   "MetalLight.74"
+  ]
+ },
+ {
+  "name": "Spire_PlasticBrown",
+  "tris": 1404,
+  "dims": [
+   1.959,
+   13.139,
+   4.342
+  ],
+  "min": [
+   -21.93,
+   16.12,
+   11.25
+  ],
+  "max": [
+   -19.97,
+   29.25,
+   15.6
+  ],
+  "mats": [
+   "PlasticBrown.8"
+  ]
+ },
+ {
+  "name": "Spire_PlasticBrown_2",
+  "tris": 2398,
+  "dims": [
+   6.947,
+   12.85,
+   1.701
+  ],
+  "min": [
+   -18.14,
+   15.81,
+   9.73
+  ],
+  "max": [
+   -11.2,
+   28.66,
+   11.43
+  ],
+  "mats": [
+   "PlasticBrown.9"
+  ]
+ },
+ {
+  "name": "Spire_PlasticWhite",
+  "tris": 18688,
+  "dims": [
+   7.581,
+   12.264,
+   3.086
+  ],
+  "min": [
+   -18.22,
+   16.1,
+   9.04
+  ],
+  "max": [
+   -10.64,
+   28.36,
+   12.13
+  ],
+  "mats": [
+   "PlasticWhite.40"
+  ]
+ },
+ {
+  "name": "Spire_PlasticWhite_2",
+  "tris": 6880,
+  "dims": [
+   13.828,
+   13.876,
+   4.365
+  ],
+  "min": [
+   -22.26,
+   15.12,
+   9.47
+  ],
+  "max": [
+   -8.43,
+   28.99,
+   13.84
+  ],
+  "mats": [
+   "PlasticWhite.41"
+  ]
+ },
+ {
+  "name": "Spire_MetalLight_7",
+  "tris": 11578,
+  "dims": [
+   7.057,
+   12.478,
+   2.762
+  ],
+  "min": [
+   -18.02,
+   15.99,
+   9.21
+  ],
+  "max": [
+   -10.96,
+   28.47,
+   11.97
+  ],
+  "mats": [
+   "MetalLight.75"
+  ]
+ },
+ {
+  "name": "Spire_PlasticWhite_3",
+  "tris": 2496,
+  "dims": [
+   13.864,
+   13.913,
+   4.668
+  ],
+  "min": [
+   -22.3,
+   15.07,
+   9.45
+  ],
+  "max": [
+   -8.44,
+   28.98,
+   14.12
+  ],
+  "mats": [
+   "PlasticWhite.42"
+  ]
+ },
+ {
+  "name": "Spire_MetalLight_8",
+  "tris": 32810,
+  "dims": [
+   13.314,
+   13.317,
+   6.061
+  ],
+  "min": [
+   -21.83,
+   15.58,
+   7.9
+  ],
+  "max": [
+   -8.52,
+   28.89,
+   13.96
+  ],
+  "mats": [
+   "MetalLight.76"
+  ]
+ },
+ {
+  "name": "Spire_MetalLight_9",
+  "tris": 7428,
+  "dims": [
+   14.47,
+   12.511,
+   8.846
+  ],
+  "min": [
+   -23.77,
+   17.5,
+   8.09
+  ],
+  "max": [
+   -9.3,
+   30.01,
+   16.93
+  ],
+  "mats": [
+   "MetalLight.77"
+  ]
+ },
+ {
+  "name": "Spire_MetalLight_10",
+  "tris": 6912,
+  "dims": [
+   11.458,
+   11.458,
+   11.05
+  ],
+  "min": [
+   -20.9,
+   16.49,
+   8.22
+  ],
+  "max": [
+   -9.44,
+   27.95,
+   19.28
+  ],
+  "mats": [
+   "MetalLight.78"
+  ]
+ },
+ {
+  "name": "Spire_LIGHT",
+  "tris": 120,
+  "dims": [
+   8.167,
+   8.167,
+   6.162
+  ],
+  "min": [
+   -19.25,
+   18.13,
+   13.66
+  ],
+  "max": [
+   -11.09,
+   26.3,
+   19.82
+  ],
+  "mats": [
+   "LIGHT"
+  ]
+ },
+ {
+  "name": "Spire_PlasticWhite_4",
+  "tris": 1184,
+  "dims": [
+   1.523,
+   1.523,
+   38.749
+  ],
+  "min": [
+   -15.93,
+   21.46,
+   19.46
+  ],
+  "max": [
+   -14.41,
+   22.98,
+   58.21
+  ],
+  "mats": [
+   "PlasticWhite.43"
+  ]
+ },
+ {
+  "name": "AntennaSM_MetalDark",
+  "tris": 8092,
+  "dims": [
+   3.119,
+   3.088,
+   5.71
+  ],
+  "min": [
+   -23.21,
+   -6.38,
+   -0.01
+  ],
+  "max": [
+   -20.09,
+   -3.29,
+   5.7
+  ],
+  "mats": [
+   "MetalDark.63"
+  ]
+ },
+ {
+  "name": "AntennaMD_MetalLight",
+  "tris": 1836,
+  "dims": [
+   2.869,
+   2.781,
+   7.557
+  ],
+  "min": [
+   -8.72,
+   4.58,
+   -0.01
+  ],
+  "max": [
+   -5.85,
+   7.36,
+   7.55
+  ],
+  "mats": [
+   "MetalLight.79"
+  ]
+ },
+ {
+  "name": "AntMountE_MetalLight",
+  "tris": 976,
+  "dims": [
+   0.109,
+   0.137,
+   2.48
+  ],
+  "min": [
+   -11.32,
+   -4.72,
+   0.02
+  ],
+  "max": [
+   -11.21,
+   -4.58,
+   2.5
+  ],
+  "mats": [
+   "MetalLight.80"
+  ]
+ },
+ {
+  "name": "AntMountD_MetalLight",
+  "tris": 336,
+  "dims": [
+   0.107,
+   0.107,
+   2.5
+  ],
+  "min": [
+   -11.96,
+   -4.75,
+   0.0
+  ],
+  "max": [
+   -11.85,
+   -4.64,
+   2.5
+  ],
+  "mats": [
+   "MetalLight.81"
+  ]
+ },
+ {
+  "name": "AntWireA_MetalLight",
+  "tris": 1696,
+  "dims": [
+   0.762,
+   0.881,
+   0.026
+  ],
+  "min": [
+   -19.34,
+   -5.67,
+   2.64
+  ],
+  "max": [
+   -18.58,
+   -4.79,
+   2.67
+  ],
+  "mats": [
+   "MetalLight.82"
+  ]
+ },
+ {
+  "name": "AntMountA_MetalLight",
+  "tris": 2112,
+  "dims": [
+   0.187,
+   0.147,
+   2.046
+  ],
+  "min": [
+   -15.03,
+   -4.75,
+   -0.18
+  ],
+  "max": [
+   -14.84,
+   -4.6,
+   1.87
+  ],
+  "mats": [
+   "MetalLight.83"
+  ]
+ },
+ {
+  "name": "AntMountB_MetalLight",
+  "tris": 2032,
+  "dims": [
+   0.187,
+   0.632,
+   1.867
+  ],
+  "min": [
+   -14.24,
+   -4.91,
+   0.0
+  ],
+  "max": [
+   -14.05,
+   -4.27,
+   1.87
+  ],
+  "mats": [
+   "MetalLight.84"
+  ]
+ },
+ {
+  "name": "AntMountC_MetalLight",
+  "tris": 2388,
+  "dims": [
+   1.223,
+   0.933,
+   1.877
+  ],
+  "min": [
+   -13.6,
+   -5.12,
+   -0.01
+  ],
+  "max": [
+   -12.37,
+   -4.19,
+   1.87
+  ],
+  "mats": [
+   "MetalLight.85"
+  ]
+ },
+ {
+  "name": "ChimneyMetalE_PlasticBrown",
+  "tris": 1424,
+  "dims": [
+   0.504,
+   0.504,
+   2.111
+  ],
+  "min": [
+   3.27,
+   -12.1,
+   -0.0
+  ],
+  "max": [
+   3.77,
+   -11.6,
+   2.11
+  ],
+  "mats": [
+   "PlasticBrown.10"
+  ]
+ },
+ {
+  "name": "ChimneyMetalD_PlasticBrown",
+  "tris": 2240,
+  "dims": [
+   0.504,
+   0.504,
+   1.595
+  ],
+  "min": [
+   2.18,
+   -12.1,
+   -0.0
+  ],
+  "max": [
+   2.68,
+   -11.6,
+   1.6
+  ],
+  "mats": [
+   "PlasticBrown.11"
+  ]
+ },
+ {
+  "name": "ChimneyMetalC_MetalRed",
+  "tris": 1824,
+  "dims": [
+   0.599,
+   0.599,
+   1.219
+  ],
+  "min": [
+   1.01,
+   -12.15,
+   -0.0
+  ],
+  "max": [
+   1.6,
+   -11.55,
+   1.22
+  ],
+  "mats": [
+   "MetalRed.4"
+  ]
+ },
+ {
+  "name": "VentE_MetalLight",
+  "tris": 9444,
+  "dims": [
+   0.703,
+   0.703,
+   0.816
+  ],
+  "min": [
+   -10.62,
+   -16.2,
+   -0.0
+  ],
+  "max": [
+   -9.92,
+   -15.49,
+   0.82
+  ],
+  "mats": [
+   "MetalLight.86"
+  ]
+ },
+ {
+  "name": "AntennaLG_MetalLight",
+  "tris": 4932,
+  "dims": [
+   5.993,
+   5.993,
+   8.647
+  ],
+  "min": [
+   -16.1,
+   3.98,
+   -0.0
+  ],
+  "max": [
+   -10.1,
+   9.98,
+   8.65
+  ],
+  "mats": [
+   "MetalLight.87"
+  ]
+ },
+ {
+  "name": "ChimneyMetalA_MetalLight",
+  "tris": 1136,
+  "dims": [
+   0.591,
+   0.591,
+   1.428
+  ],
+  "min": [
+   -1.24,
+   -12.15,
+   -0.0
+  ],
+  "max": [
+   -0.64,
+   -11.56,
+   1.43
+  ],
+  "mats": [
+   "MetalLight.88"
+  ]
+ },
+ {
+  "name": "ChimneyMetalB_MetalDark",
+  "tris": 452,
+  "dims": [
+   0.388,
+   0.385,
+   1.15
+  ],
+  "min": [
+   0.06,
+   -12.05,
+   -0.0
+  ],
+  "max": [
+   0.44,
+   -11.66,
+   1.15
+  ],
+  "mats": [
+   "MetalDark.64"
+  ]
+ },
+ {
+  "name": "Rail_MetalDark",
+  "tris": 516,
+  "dims": [
+   5.404,
+   0.05,
+   0.965
+  ],
+  "min": [
+   22.37,
+   2.69,
+   -0.0
+  ],
+  "max": [
+   27.78,
+   2.74,
+   0.96
+  ],
+  "mats": [
+   "MetalDark.65"
+  ]
+ }
+]

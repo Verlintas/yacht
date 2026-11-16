@@ -5,13 +5,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib_kb3d import *
 from build_port import beam
 
-def control_cab(coll, bbox, glass, metal, dark, warm, light_coll, name="ControlCab"):
+def control_cab(coll, bbox, glass, metal, dark, warm, light_coll, name="ControlCab", scale=2.2):
     mn, mx = bbox
-    cx = (mn.x + mx.x) / 2 - 2.0
+    S = scale
+    cx = (mn.x + mx.x) / 2 - 2.0 * S
     cy = (mn.y + mx.y) / 2
     z0 = mx.z - 0.25
-    cyl(f"{name}_Base", 2.45, 1.4, (cx, cy, z0 + 0.7), dark, coll=coll, verts=24, bevel=0.04)
-    # dark glass drum
+    cyl(f"{name}_Base", 2.45*S, 1.4*S, (cx, cy, z0 + 0.7*S), dark, coll=coll, verts=24, bevel=0.04*S)
     cab = bpy.data.materials.get("Cab_Glass")
     if cab is None:
         cab = glass.copy(); cab.name = "Cab_Glass"
@@ -21,59 +21,53 @@ def control_cab(coll, bbox, glass, metal, dark, warm, light_coll, name="ControlC
             b.inputs['Metallic'].default_value = 0.3
             b.inputs['Roughness'].default_value = 0.16
             b.inputs['Transmission Weight'].default_value = 0.38
-    cyl(f"{name}_Glass", 2.15, 2.0, (cx, cy, z0 + 2.45), cab, coll=coll, verts=24)
-    cyl(f"{name}_Roof", 2.55, 0.3, (cx, cy, z0 + 3.55), metal, coll=coll, verts=24, bevel=0.04)
-    # dim warm core, seen through the glass
-    cyl(f"{name}_Inner", 1.55, 1.35, (cx, cy, z0 + 2.35), warm, coll=coll, verts=20)
+    cyl(f"{name}_Glass", 2.15*S, 2.0*S, (cx, cy, z0 + 2.45*S), cab, coll=coll, verts=24)
+    cyl(f"{name}_Roof", 2.55*S, 0.3*S, (cx, cy, z0 + 3.55*S), metal, coll=coll, verts=24, bevel=0.04*S)
+    cyl(f"{name}_Inner", 1.55*S, 1.35*S, (cx, cy, z0 + 2.35*S), warm, coll=coll, verts=20)
     for i in range(12):
         a = i * math.tau / 12
-        box(f"{name}_Mullion_{i}", (0.08, 0.08, 2.05),
-            (cx + math.cos(a) * 2.17, cy + math.sin(a) * 2.17, z0 + 2.45),
-            dark, rot=(0, 0, a), coll=coll, bevel=0.01)
-    # window band glow at the base of the drum
-    cyl(f"{name}_Strip", 2.18, 0.08, (cx, cy, z0 + 1.55), bpy.data.materials.get('Edge_Glow_Warm'),
-        coll=coll, verts=24)
-    cyl(f"{name}_Mast", 0.08, 6.5, (cx, cy, z0 + 6.8), metal, coll=coll, verts=8)
-    sphere(f"{name}_Beacon", 0.16, (cx, cy, z0 + 10.1), bpy.data.materials.get('Neon_Red'),
-           segs=12, rings=8, coll=coll)
+        box(f"{name}_Mullion_{i}", (0.08*S, 0.08*S, 2.05*S),
+            (cx + math.cos(a) * 2.17*S, cy + math.sin(a) * 2.17*S, z0 + 2.45*S),
+            dark, rot=(0, 0, a), coll=coll, bevel=0.01*S)
+    cyl(f"{name}_Strip", 2.18*S, 0.08*S, (cx, cy, z0 + 1.55*S),
+        bpy.data.materials.get('Edge_Glow_Warm'), coll=coll, verts=24)
+    cyl(f"{name}_Mast", 0.08*S, 6.5*S, (cx, cy, z0 + 6.8*S), metal, coll=coll, verts=8)
+    sphere(f"{name}_Beacon", 0.16*S, (cx, cy, z0 + 10.1*S),
+           bpy.data.materials.get('Neon_Red'), segs=12, rings=8, coll=coll)
     ld = bpy.data.lights.new(f"{name}_Light", 'POINT')
-    ld.energy = 260; ld.color = (1.0, 0.72, 0.40); ld.shadow_soft_size = 1.2
-    lo = bpy.data.objects.new(f"{name}_Light", ld); lo.location = (cx, cy, z0 + 2.5)
+    ld.energy = 260 * S * S; ld.color = (1.0, 0.72, 0.40); ld.shadow_soft_size = 1.2*S
+    lo = bpy.data.objects.new(f"{name}_Light", ld); lo.location = (cx, cy, z0 + 2.5*S)
     link(lo, light_coll)
     return (cx, cy, z0)
 
 def skybridge(coll, h_bbox, i_bbox, glass, metal, dark, warm, light_coll, name="Skybridge"):
     hmn, hmx = h_bbox; imn, imx = i_bbox
     x0, x1 = hmx.x - 0.3, imn.x + 0.3
-    cy = 48.5
-    z0 = 9.6; h = 3.6; w = 4.2
+    cy = 62.0
+    z0 = 20.0; h = 5.0; w = 7.0
     length = x1 - x0; cx = (x0 + x1) / 2
-    box(f"{name}_Floor", (length, w, 0.35), (cx, cy, z0), dark, coll=coll, bevel=0.03)
-    box(f"{name}_Roof", (length + 0.4, w + 0.4, 0.3), (cx, cy, z0 + h), dark, coll=coll, bevel=0.03)
+    box(f"{name}_Floor", (length, w, 0.45), (cx, cy, z0), dark, coll=coll, bevel=0.03)
+    box(f"{name}_Roof", (length + 0.6, w + 0.6, 0.4), (cx, cy, z0 + h), dark, coll=coll, bevel=0.03)
     for sy in (-1, 1):
-        box(f"{name}_Glass_{sy}", (length, 0.06, h - 0.5), (cx, cy + sy * w / 2, z0 + h / 2),
+        box(f"{name}_Glass_{sy}", (length, 0.08, h - 0.6), (cx, cy + sy * w / 2, z0 + h / 2),
             glass, coll=coll, bevel=0.01)
-        for i in range(int(length / 2) + 1):
-            x = x0 + i * 2.0
-            box(f"{name}_Mullion_{sy}_{i}", (0.10, 0.12, h - 0.4), (x, cy + sy * w / 2, z0 + h / 2),
+        for i in range(int(length / 2.5) + 1):
+            x = x0 + i * 2.5
+            box(f"{name}_Mullion_{sy}_{i}", (0.14, 0.16, h - 0.5), (x, cy + sy * w / 2, z0 + h / 2),
                 metal, coll=coll, bevel=0.01)
-    # warm interior strip
-    box(f"{name}_InnerGlow", (length - 1.0, 0.08, 0.1), (cx, cy, z0 + h - 0.35), warm, coll=coll, uv=False)
-    # underside truss
-    for i in range(int(length / 2.5)):
-        x = x0 + 1.0 + i * 2.5
-        beam(f"{name}_TrussA_{i}", (x, cy - w / 2 + 0.2, z0 - 0.6), (x + 2.2, cy + w / 2 - 0.2, z0 - 0.15),
-             0.09, 0.09, metal, coll)
-    beam(f"{name}_BottomChordA", (x0, cy - w / 2 + 0.2, z0 - 0.6), (x1, cy - w / 2 + 0.2, z0 - 0.6), 0.12, 0.12, metal, coll)
-    beam(f"{name}_BottomChordB", (x0, cy + w / 2 - 0.2, z0 - 0.6), (x1, cy + w / 2 - 0.2, z0 - 0.6), 0.12, 0.12, metal, coll)
-    # end portals
+    box(f"{name}_InnerGlow", (length - 1.0, 0.10, 0.14), (cx, cy, z0 + h - 0.45), warm, coll=coll, uv=False)
+    for i in range(int(length / 3.0)):
+        x = x0 + 1.2 + i * 3.0
+        beam(f"{name}_TrussA_{i}", (x, cy - w / 2 + 0.3, z0 - 0.8), (x + 2.8, cy + w / 2 - 0.3, z0 - 0.2),
+             0.12, 0.12, metal, coll)
+    beam(f"{name}_BottomChordA", (x0, cy - w / 2 + 0.3, z0 - 0.8), (x1, cy - w / 2 + 0.3, z0 - 0.8), 0.16, 0.16, metal, coll)
+    beam(f"{name}_BottomChordB", (x0, cy + w / 2 - 0.3, z0 - 0.8), (x1, cy + w / 2 - 0.3, z0 - 0.8), 0.16, 0.16, metal, coll)
     for x in (x0, x1):
-        box(f"{name}_Portal_{x}", (0.35, w + 0.5, h + 0.5), (x, cy, z0 + h / 2), metal, coll=coll, bevel=0.03)
-    # light inside
-    for x in (x0 + 3, cx, x1 - 3):
+        box(f"{name}_Portal_{x}", (0.45, w + 0.6, h + 0.6), (x, cy, z0 + h / 2), metal, coll=coll, bevel=0.03)
+    for x in (x0 + 4, cx, x1 - 4):
         ld = bpy.data.lights.new(f"{name}_Light_{x}", 'POINT')
-        ld.energy = 180; ld.color = (1.0, 0.72, 0.42); ld.shadow_soft_size = 1.2
-        lo = bpy.data.objects.new(f"{name}_Light_{x}", ld); lo.location = (x, cy, z0 + h - 0.4)
+        ld.energy = 500; ld.color = (1.0, 0.72, 0.42); ld.shadow_soft_size = 1.8
+        lo = bpy.data.objects.new(f"{name}_Light_{x}", ld); lo.location = (x, cy, z0 + h - 0.5)
         link(lo, light_coll)
     return (x0, x1, cy, z0)
 
@@ -81,37 +75,49 @@ def hangar_door(coll, i_bbox, metal, dark, edge, warm, light_coll, name="HangarD
     mn, mx = i_bbox
     cx = (mn.x + mx.x) / 2 + 4.0
     fy = mn.y - 0.15
-    W = 11.0; H = 6.4
-    box(f"{name}_Recess", (W, 0.45, H), (cx, fy + 0.05, H / 2 + 0.02), dark, coll=coll, bevel=0.02)
-    # door leaves
-    for i in range(5):
-        x = cx - W / 2 + 1.1 + i * 2.15
-        box(f"{name}_Leaf_{i}", (1.95, 0.12, H - 0.35), (x, fy - 0.12, H / 2 + 0.05), metal, coll=coll, bevel=0.02)
-        box(f"{name}_Rib_{i}", (1.7, 0.07, 0.1), (x, fy - 0.2, H * 0.55), dark, coll=coll, bevel=0.005)
-    # frame
-    for sx in (-1, 1):
-        box(f"{name}_FrameV_{sx}", (0.42, 0.35, H + 0.5), (cx + sx * (W / 2 + 0.2), fy, H / 2), metal, coll=coll, bevel=0.03)
-        box(f"{name}_NeonV_{sx}", (0.08, 0.06, H - 0.2), (cx + sx * (W / 2 - 0.05), fy - 0.25, H / 2), edge, coll=coll, uv=False)
-    box(f"{name}_FrameH", (W + 1.1, 0.35, 0.45), (cx, fy, H + 0.2), metal, coll=coll, bevel=0.03)
-    box(f"{name}_NeonH", (W, 0.06, 0.1), (cx, fy - 0.25, H - 0.15), edge, coll=coll, uv=False)
-    # warm interior glow at top
-    box(f"{name}_InnerGlow", (W - 1.2, 0.1, 0.18), (cx, fy - 0.22, H - 0.55), warm, coll=coll, uv=False)
-    # hazard strips at the base
-    for sx in (-1, 1):
-        box(f"{name}_Hazard_{sx}", (0.6, 0.3, 0.8), (cx + sx * (W / 2 + 0.8), fy, 0.4),
-            bpy.data.materials.get('Hazard_Stripes'), coll=coll, bevel=0.01)
-    # sign over door
-    text_mesh(f"{name}_Sign", "HANGAR 03", 1.05, (cx, fy - 0.28, H + 1.35),
+    W = 26.0; H = 15.0
+    box(f"{name}_Recess", (W, 0.5, H), (cx, fy + 0.08, H / 2 + 0.02), dark, coll=coll, bevel=0.03)
+    n = 8; leaf_w = 2.95; spacing = 3.15
+    for i in range(n):
+        x = cx - (n - 1) * spacing / 2 + i * spacing
+        box(f"{name}_Leaf_{i}", (leaf_w, 0.16, H - 0.5), (x, fy - 0.12, H / 2 + 0.05), metal, coll=coll, bevel=0.025)
+        box(f"{name}_Rib_{i}", (leaf_w*0.85, 0.1, 0.16), (x, fy - 0.24, H * 0.56), dark, coll=coll, bevel=0.005)
+    # horizontal seams, leaf gaps and vehicle-scale stencils
+    for k in range(6):
+        z = 2.3 + k * 2.35
+        box(f"{name}_Seam_{k}", (W - 1.2, 0.16, 0.18), (cx, fy - 0.30, z), dark, coll=coll, bevel=0.01)
+    for i in range(1, 8):
+        x = cx - W/2 + i * (W/8.0)
+        box(f"{name}_Gap_{i}", (0.16, 0.16, H - 1.0), (x, fy - 0.30, H/2), dark, coll=coll, bevel=0.01)
+    box(f"{name}_StencilBack", (5.6, 0.18, 5.6), (cx, fy - 0.38, H * 0.56), dark, coll=coll, bevel=0.02)
+    text_mesh(f"{name}_Number", "03", 4.2, (cx, fy - 0.52, H * 0.56),
               bpy.data.materials.get('Sign_Glow_Warm'), rot=(math.radians(90), 0, 0),
-              font=bpy.data.fonts.get("Avenir Next Condensed Bold"), coll=coll, extrude=0.01)
-    # light spill
+              font=bpy.data.fonts.get("Avenir Next Condensed Bold"), coll=coll, extrude=0.02)
+    box(f"{name}_HazardBase", (W - 1.8, 0.3, 0.8), (cx, fy - 0.36, 1.15),
+        bpy.data.materials.get('Hazard_Stripes'), coll=coll, bevel=0.01)
+    bx = cx - 8.0
+    box(f"{name}_Personnel", (2.4, 0.3, 3.2), (bx, fy - 0.34, 1.65), dark, coll=coll, bevel=0.03)
+    box(f"{name}_PersonnelGlow", (2.0, 0.06, 0.2), (bx, fy - 0.52, 3.0),
+        bpy.data.materials.get('Edge_Glow_Warm'), coll=coll, uv=False)
+    for sx in (-1, 1):
+        box(f"{name}_FrameV_{sx}", (0.6, 0.5, H + 0.8), (cx + sx * (W / 2 + 0.3), fy, H / 2), metal, coll=coll, bevel=0.04)
+        box(f"{name}_NeonV_{sx}", (0.12, 0.08, H - 0.4), (cx + sx * (W / 2 - 0.1), fy - 0.3, H / 2), edge, coll=coll, uv=False)
+    box(f"{name}_FrameH", (W + 1.4, 0.5, 0.7), (cx, fy, H + 0.3), metal, coll=coll, bevel=0.04)
+    box(f"{name}_NeonH", (W, 0.08, 0.16), (cx, fy - 0.3, H - 0.25), edge, coll=coll, uv=False)
+    box(f"{name}_InnerGlow", (W - 2.4, 0.12, 0.3), (cx, fy - 0.28, H - 0.9), warm, coll=coll, uv=False)
+    for sx in (-1, 1):
+        box(f"{name}_Hazard_{sx}", (1.0, 0.4, 1.4), (cx + sx * (W / 2 + 1.0), fy, 0.7),
+            bpy.data.materials.get('Hazard_Stripes'), coll=coll, bevel=0.01)
+    text_mesh(f"{name}_Sign", "HANGAR 03", 2.0, (cx, fy - 0.35, H + 2.6),
+              bpy.data.materials.get('Sign_Glow_Warm'), rot=(math.radians(90), 0, 0),
+              font=bpy.data.fonts.get("Avenir Next Condensed Bold"), coll=coll, extrude=0.02)
     ld = bpy.data.lights.new(f"{name}_Light", 'AREA')
-    ld.energy = 3800; ld.color = (1.0, 0.72, 0.42); ld.size = 9; ld.size_y = 4
-    lo = bpy.data.objects.new(f"{name}_Light", ld); lo.location = (cx, fy - 2.5, 3.2)
+    ld.energy = 9000; ld.color = (1.0, 0.72, 0.42); ld.size = 20; ld.size_y = 8
+    lo = bpy.data.objects.new(f"{name}_Light", ld); lo.location = (cx, fy - 4.0, 7.0)
     lo.rotation_euler = (math.radians(90), 0, 0); link(lo, light_coll)
     return (cx, fy, W, H)
 
-def lit_windows(coll, bbox, seed, name, warm, cyan, dark):
+def lit_windows(coll, bbox, seed, name, warm, cyan, dark, size_scale=2.0):
     mn, mx = bbox
     w = mx.x - mn.x; h = mx.z - mn.z
     rng = random.Random(seed)
@@ -119,7 +125,7 @@ def lit_windows(coll, bbox, seed, name, warm, cyan, dark):
     for i in range(n):
         x = mn.x + rng.uniform(0.14, 0.86) * w
         z = mn.z + rng.uniform(0.22, 0.62) * h
-        sw = rng.uniform(0.7, 1.5); sh = rng.uniform(0.4, 0.65)
+        sw = rng.uniform(0.7, 1.5)*size_scale; sh = rng.uniform(0.4, 0.65)*size_scale
         mat = warm if rng.random() < 0.58 else (cyan if rng.random() < 0.55 else dark)
         box(f"{name}_WinFrame_{i}", (sw + 0.14, 0.09, sh + 0.12), (x, mn.y - 0.14, z), dark, coll=coll, bevel=0.01)
         box(f"{name}_Win_{i}", (sw, 0.035, sh), (x, mn.y - 0.21, z), mat, coll=coll, uv=False)
@@ -152,34 +158,34 @@ def road(coll, y=84.0, x0=-240, x1=240):
         box(f"FenceRail_{z}", (x1 - x0 - 20, 0.05, 0.05), ((x0 + x1) / 2, fence_y, z), metal, coll=coll, uv=False)
     return asphalt
 
-def city_edge(coll, mods, mat_metal, mat_edge, mat_warm, mat_red):
-    blocks = [(-142, 107, 1.55, -8, 'BldgLG_C'),
-              (-104, 114, 1.75, 6, 'BldgLG_B'),
-              (-52, 110, 1.55, -4, 'BldgLG_D'),
-              (8, 118, 1.65, 10, 'BldgLG_C'),
-              (62, 108, 1.6, -6, 'BldgLG_B'),
-              (118, 116, 1.7, 8, 'BldgLG_D')]
+def city_edge(coll, mods, mat_metal, mat_edge, mat_warm, mat_red, scale=1.0):
+    blocks = [(-155, 138, 1.55, -8, 'BldgLG_C'),
+              (-100, 145, 1.75, 6, 'BldgLG_B'),
+              (-42, 140, 1.55, -4, 'BldgLG_D'),
+              (22, 146, 1.65, 10, 'BldgLG_C'),
+              (86, 140, 1.6, -6, 'BldgLG_B'),
+              (148, 146, 1.7, 8, 'BldgLG_D')]
     for i, (x, y, s, rz, key) in enumerate(blocks):
         if key not in mods: continue
         ob = mods[key]
         dup = ob.copy(); dup.data = ob.data
         dup.name = f"EDGE_{i}_{key}"; dup.hide_render = False
-        link(dup, coll); place(dup, (x, y, -0.38), rz, s, coll)
+        link(dup, coll); place(dup, (x, y, -0.38), rz, s*scale, coll)
         bpy.context.view_layer.update()
         mn, mx = bbox(dup)
-        box(f"EDGE_Sign_{i}", ((mx.x - mn.x) * 0.55, 0.25, 1.8), ((mn.x + mx.x) / 2, mn.y - 0.2, mn.z + (mx.z - mn.z) * 0.7),
+        box(f"EDGE_Sign_{i}", ((mx.x - mn.x) * 0.55, 0.3, 1.8*scale*0.8), ((mn.x + mx.x) / 2, mn.y - 0.2, mn.z + (mx.z - mn.z) * 0.7),
             bpy.data.materials.get('Paint_Dark'), coll=coll, bevel=0.02)
-        box(f"EDGE_Glow_{i}", ((mx.x - mn.x) * 0.5, 0.06, 0.12), ((mn.x + mx.x) / 2, mn.y - 0.35, mn.z + (mx.z - mn.z) * 0.7),
+        box(f"EDGE_Glow_{i}", ((mx.x - mn.x) * 0.5, 0.07, 0.18), ((mn.x + mx.x) / 2, mn.y - 0.35, mn.z + (mx.z - mn.z) * 0.7),
             mat_edge, coll=coll, uv=False)
         if i % 2 == 0:
-            cyl(f"EDGE_Silo_{i}", 2.2, 9.5, (x - 12, y - 4, 4.5), mat_metal, coll=coll, verts=20, bevel=0.04)
-            sphere(f"EDGE_SiloCap_{i}", 2.2, (x - 12, y - 4, 9.2), mat_metal, segs=20, rings=10, coll=coll)
-            sphere(f"EDGE_SiloBeacon_{i}", 0.12, (x - 12, y - 4, 11.5), mat_red, segs=8, rings=6, coll=coll)
+            cyl(f"EDGE_Silo_{i}", 2.2*scale*0.8, 9.5*scale*0.8, (x - 12, y - 4, 4.75*scale*0.8), mat_metal, coll=coll, verts=20, bevel=0.04)
+            sphere(f"EDGE_SiloCap_{i}", 2.2*scale*0.8, (x - 12, y - 4, 9.5*scale*0.8), mat_metal, segs=20, rings=10, coll=coll)
+            sphere(f"EDGE_SiloBeacon_{i}", 0.12, (x - 12, y - 4, 11.5*scale*0.8), mat_red, segs=8, rings=6, coll=coll)
     # skyline spires behind the edge blocks
     for i, x in enumerate([-165, -120, -70, -12, 40, 92, 145, 190]):
-        h = 22 + (i * 7) % 18
-        cyl(f"SKY_Spire_{i}", 0.2, h, (x, 158 + (i % 3) * 10, h / 2 + 8), mat_metal, coll=coll, verts=8)
-        sphere(f"SKY_SpireBeacon_{i}", 0.28, (x, 158 + (i % 3) * 10, h + 8.3), mat_red, segs=8, rings=6, coll=coll)
+        h = (22 + (i * 7) % 18) * scale * 0.8
+        cyl(f"SKY_Spire_{i}", 0.2, h, (x, 190 + (i % 3) * 10, h / 2 + 8), mat_metal, coll=coll, verts=8)
+        sphere(f"SKY_SpireBeacon_{i}", 0.28, (x, 190 + (i % 3) * 10, h + 8.3), mat_red, segs=8, rings=6, coll=coll)
 
 def rock_outcrops(coll, mat_rock, terrain_obj, spots):
     """Angular low-poly outcrops sitting on the terrain, for the background rim."""
@@ -212,9 +218,9 @@ def cliff_wall(coll, mat, x0=-380, x1=380, y_base=190.0):
         x = x0 + (x1 - x0) * i / nx
         n = noise.noise(Vector((x * 0.008, 0.3, 0.7)))
         n2 = abs(noise.noise(Vector((x * 0.034, 1.2, 2.1))))
-        h = 24.0 + 19.0 * (0.5 + 0.5 * n) + 8.0 * n2 + 3.5 * math.sin(x * 0.018)
-        h -= 12.0 * max(0.0, math.sin(x * 0.012 + 1.2) - 0.55) / 0.45
-        heights.append(max(10.0, h))
+        h = 36.0 + 27.0 * (0.5 + 0.5 * n) + 12.0 * n2 + 5.0 * math.sin(x * 0.018)
+        h -= 18.0 * max(0.0, math.sin(x * 0.012 + 1.2) - 0.55) / 0.45
+        heights.append(max(16.0, h))
     for j in range(nz + 1):
         t = j / nz
         for i in range(nx + 1):

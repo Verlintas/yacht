@@ -1,138 +1,148 @@
-# Anvil Landing — Kitbash3D Sci-Fi Industrial hero scene
+# Anvil Landing — authored city deck + Kitbash3D tiers
 
-A private, non-commercial quality proof for the **Anvil Landing** port: a 200 m-scale
-sci-fi industrial apron with a 60 × 60 m TLOF, a parked **A-30 Thunderbolt**, a
-56 m-span service gantry, cryo tanks, pipe racks, containers, a terminal/control tower,
-a hangar, a skybridge, a city edge and a rocky desert backdrop.
+Private quality proof for the Anvil Landing port. The district sits on an authored,
+flat **1200 × 1200 m city deck** with a 40 m retaining wall, panel seams, roads,
+plaza and edge lighting. There is **no terrain under the deck**: a terrain ring
+starts at the wall base and forms the rocky desert outside. All buildings are placed
+on the deck at z = 0.
 
-All of the buildings and most of the dressing are the user's purchased **Kitbash3D
-Sci-Fi Industrial** FBX modules, with the original PBR maps. No procedural boxes are
-used as hero buildings.
+The Kitbash3D modules are used in three deliberate tiers so K039 is never asked to
+carry a hero close-up:
 
-## Renders (Blender 5.3, EEVEE, 1920 × 1200)
+| Tier | Contents | Scale / height | Distance from pad |
+|---|---|---|---|
+| **Hero port** | custom terminal, hangar door, warehouse, control tower, 56 m gantry, tanks, pipes, lights, A-30, crew | **1:1** — terminal 34 m, gantry 30 m, ship 25 m, pad 60 m, humans 1.86 m | 0–140 m |
+| **Midground** | K039 G/H/I/J + C/D, dressed with K014/K034 greebles, window bands, pipes, roof plant | **4–5×** — G 140.6 m, H 114.0 m, I 85.5 m, J 80.6 m | 400–450 m |
+| **Background** | 16–25× K039 LG modules, single or 2-stage, with structural collars, service spines and greeble bands | **475–809 m** with spires | 650–740 m |
 
-| | |
-|---|---|
-| ![Wide port](renders/01_wide_port.png) | ![Pad / ship close-up](renders/02_pad_closeup.png) |
-| **01_wide_port** — apron, TLOF, ship, gantry and hero façades | **02_pad_closeup** — A-30 on TLOF-01, crew, GPU, hangar sign |
-| ![Elevated city / terrain](renders/03_elevated_city.png) | |
-| **03_elevated_city** — port layout, city edge, road, cliff rim | |
+![Wide port](renders/01_wide_port.png)
+*01_wide_port — hero terminal, A-30 on TLOF-01, gantry and midground K039 towers.*
 
-Raw renders are in `renders/`; a light post-grade (contrast, warmth, vignette,
-sharpen) was applied. The Blender renders use the full-resolution meshes and 4K
-Kitbash3D maps; the real-time GLB below is a separate, decimated build.
+![Pad close-up](renders/02_pad_closeup.png)
+*02_pad_closeup — port detail and ship, custom terminal rather than a K039 wall.*
+
+![Elevated deck](renders/03_elevated_city.png)
+*03_elevated_city — authored platform, deck edge, retaining wall, mega-tower skyline and terrain ring.*
+
+## City deck
+
+- Deck: **1200 × 1200 m**, chamfered, top at apron elevation, 16 m slab, 40 m
+  retaining wall with 60 m-spaced buttresses, parapet and edge lights.
+- Surface: 40 m panel joints, plaza around the port, painted deck labels, approach
+  road, boulevard (y = 180 m) and three north avenues.
+- Terrain: a 3.2 km ring mesh outside the deck only; deck hole has no terrain under
+  it. Buildings: midground front 400 m, background centers 650–740 m; all footprints fit
+  inside the 1200 × 1200 m deck, so nothing intersects terrain or overhangs the
+  retaining wall.
+- Port: 210 × 140 m apron, 60 × 60 m TLOF, A-30 25 m, custom 34 m terminal with a
+  26 × 15 m hangar door, 20 m warehouse/loading dock, 62 m control tower, 30 m gantry,
+  cryo tanks, pipe rack, containers, GPU, crew and apron lights.
+
+## Scale evidence
+
+The source FBX declares **UnitScaleFactor 0.1** (1 unit = 1 mm); BldgLG_G has raw
+coordinates up to ~28,566 units. Blender applies a 0.001 import scale, giving
+**28.57 m** at 1×. The 1× dimensions are G 15.9 × 8.6 × 28.1 m, H 13.0 × 6.6 × 25.3 m,
+I 22.2 × 11.1 × 17.1 m, J 14.0 × 4.8 × 16.1 m. Kitbash3D's public human-scale
+article confirms these are large industrial structures (~1.8 m people against the
+façades), not 100 m towers.
+
+The study images keep the A-30 at 25 m, the human at 1.86 m and the TLOF at 60 × 60 m:
+
+- [`scale_study/study_1x.png`](scale_study/study_1x.png) — 28/25/17/16 m, reads as sheds
+- [`scale_study/study_3x.png`](scale_study/study_3x.png) — 84/76/51/48 m, reads as towers
+- [`scale_study/study_5x.png`](scale_study/study_5x.png) — 141/127/86/81 m, ship/pad become tiny
+- [`scale_study/README.md`](scale_study/README.md) — unit evidence and decision
+
+A uniform 10× (the earlier review build) scaled doors, windows and greebles, crowded
+the pad and put low-detail K039 façades beside the camera. The final scene is
+**not** a uniform scale-up: heroic foreground is 1:1 custom, midground K039 is 4–5×,
+and only the distant skyline is 16–25×.
+
+## Greeble dressing
+
+`asset_audit_greebles.json` / `asset_audit_rooftops.json` document the extra packs:
+
+- **K014 Greebles** — 30 meshes, 548,954 tris, 1–8 m vent/pipe/panel clusters.
+- **K034 Props Rooftops** — 262 meshes, 909,500 tris; AC handlers, water towers,
+  antennas, dishes, billboards, fire escapes, skylights, vents, gantries.
+- 17 K014 and 29 K034 prototypes were imported, parent transforms cleared,
+  normalized, assigned the scene's KB3D PBR materials, and re-used on the custom
+  terminal, the midground lower 30–100 m, and at background joints/roofs.
+- Modelshop Greebles is only partially downloaded locally and was not needed.
 
 ## Real-time kit
 
-![Three.js preview](preview/preview_web.png)
+`glb/anvil_landing_port.glb` — **44.17 MB / 2,893,888 tris / 35 materials**
+(Three.js count), 44 WebP texture maps, 5 meshes. Under the 50 MB limit.
 
-- `glb/anvil_landing_port.glb` — **25.57 MB / ~1.15 M tris / 40 materials**
-  in Three.js (38 compact kit materials + the A-30's two original materials)
-- 12 WebP textures (2K base colours, 1K normals, 512 metallic/roughness/emissive;
-  AO + material tint baked into base colour)
-- `EXT_meshopt_compression`, `EXT_texture_webp`, `KHR_mesh_quantization`
-- Logical meshes: `RT_Buildings`, `RT_City`, `RT_Ground`, `RT_Port`, `RT_Ship`,
-  `RT_People`; the exporter and gltf-transform collate primitives by material
-- Hero scale: **10×** (Kitbash3D 1/10-scale modules)
-- Decimation: G 0.22, H 0.20, I 0.32, J 0.40, city duplicates 0.10, port/gantry 0.55,
-  terrain 0.35, cliff 0.42, ship 0.90; small props and neon strips skipped
-- Preview: serve the folder over HTTP, e.g.
-  `cd docs/kitbash-port && python3 -m http.server 8765`, then open
-  `http://localhost:8765/preview/`. Three.js r187 is loaded from jsDelivr; the page
-  supplies `MeshoptDecoder` for the compressed kit.
+- Compression: `EXT_meshopt_compression`, `EXT_texture_webp`,
+  `KHR_mesh_quantization`; textures capped at 1K.
+- Groups: RT_Ground 114k, RT_City 2.376M, RT_Port 354k, RT_Ship 42k,
+  RT_People 8k (raw export stats; optimizer joins primitives).
+- Decimation: midground G/H 0.10, I/J 0.15; background MEGA 0.50 (already decimated
+  at build); greebles 0.25; port 0.45; gantry 0.45; ship 0.85; deck/terrain 0.8/0.45.
+- The Blender renders use full-resolution geometry and 4K Kitbash3D maps; the GLB
+  is a separate web build.
 
-## Layout / scale
+## Preview
 
-| Element | Notes |
-|---|---|
-| Apron | 210 × 140 m chamfered slab, taxiway east/west, painted stands and title |
-| TLOF-01 | 60 × 60 m chamfered pad, 42 m ring, H marking, cyan edge lights |
-| A-30 | 25.0 m long (source 30 m, scaled 0.833), yaw 72°, custom landing skids |
-| Gantry 02 | 56 m span × 24 m high; lattice towers, catwalk, trolley/hook, work lights |
-| Hero buildings | Kitbash3D modules authored at 1/10 scale; placed at **10×**: G ≈281 m, H ≈253 m, I ≈171 m, J ≈161 m |
-| Control cab | 4 m glass drum on the terminal roof, warm interior + beacon |
-| Skybridge | enclosed 22 m bridge between H and I at ≈ 12 m |
-| Hangar | 11 m door with warm interior spill and ANVIL LANDING sign |
-| City edge | LG/MD/SM kit duplicates at 0.10 decimation for the GLB, road + fence |
-| Terrain | generated 1.3 km heightfield, cliff escarpment, generated PBR maps |
-| Crew | four 1.86 m suited figures (built from primitives, not scanned) |
+`preview/index.html` is self-contained (vendored Three.js r187, MeshoptDecoder,
+postprocessing); no CDN.
 
-## Asset audit
+```bash
+cd docs/kitbash-port
+python3 -m http.server 8765
+# http://localhost:8765/preview/
+```
 
-`asset_audit.json` (Sci-Fi Industrial FBX):
-
-- 359 meshes, 4,990,134 tris, 12 material sets: Metal, MetalSilver, PanelsWhite,
-  PanelsBlack, PanelsBrown, Panels2, PanelsLightBlue, Iron, Glass, Tech, lights, Floor
-- 30 building modules: 10 LG, 10 MD, 10 SM + 32 prop modules
-  (Vent, Box, Pipe, Tank, Detail, Screw, Railing, Pole, Antenna, Door, Window,
-  Gate, Roof_Panel, Chest, Column, Panel_Big)
-- Hero selection: **G / H / I / J**; secondary SM_C/SM_H; city-edge B/C/D duplicates
-- Props are authored at 1/10 building scale; doors, vents, antennae etc. are scaled
-  ×10 and placed as real dressing.
-
-`asset_audit_industrial.json` is a bonus audit of the local Kitbash3D Industrial
-factory pack (crane/container candidates); it was not needed in the final scene.
-
-## Material mapping
-
-| Kit material | Source maps | Blender treatment | GLB treatment |
-|---|---|---|---|
-| Metal / Iron | `KB3D_SF_Metal_*`, `Iron_*` | full PBR + AO | 2K/1K compact PBR, tint/AO baked |
-| PanelsWhite / Black / Brown / 2 / LightBlue | matching `KB3D_SF_Panels*` | full PBR + AO + cool/warm tint | compact PBR, tint/AO baked |
-| Glass | `Glass_basecolor/normal/roughness/opacity` | transmission 0.12, reflective | opaque dark reflective (real-time approximation) |
-| Tech | `Tech_*`, emissive | PBR + 2.0 emission | compact PBR + emissive |
-| lights | `Lights_*`, emissive | 9.0 emission | compact base + emissive strength |
-| Floor | `Floor_*` | PBR | 1K compact PBR |
-| Custom | hazard, paint, neon, concrete, terrain, cliff, suit | generated/procedural | compact 1K/2K game materials |
-
-The full 4K sources live in `/tmp/kb3d_tex/Textures` (external); the generated
-terrain/concrete/hazard maps are committed in `textures/` for reproducibility.
+Preview screenshots: [`preview/preview_web.png`](preview/preview_web.png) (wide),
+[`preview/preview_web_pad.png`](preview/preview_web_pad.png) (pad),
+[`preview/preview_web_aerial.png`](preview/preview_web_aerial.png) (aerial).
 
 ## Reproduce
 
-Prerequisites: Blender 5.3, Python 3 with Pillow/Numpy, the purchased FBX at
-`/tmp/kb3d_fbx/asset_1.fbx`, Kitbash3D textures at `/tmp/kb3d_tex/Textures`, and
-`public/models/thunderbolt.glb` in the main repo.
+Prerequisites: Blender 5.3, Python 3 + Pillow/Numpy; purchased assets at
+`/tmp/kb3d_fbx/asset_1.fbx`, `/tmp/kb3d_tex/Textures`, the extracted K014
+`/tmp/kb3d_greebles` and K034 `/tmp/kb3d_rooftops`; and
+`public/models/thunderbolt.glb`.
 
 ```bash
-# 1. procedural sky / concrete / terrain maps
 python3 scripts/kitbash/gen_textures.py
-
-# 2. full-detail Blender scene (writes docs/kitbash-port/anvil_landing.blend)
 /Applications/Blender.app/Contents/MacOS/Blender -b -P scripts/kitbash/build_scene.py
-
-# 3. final 1920x1200 renders
 /Applications/Blender.app/Contents/MacOS/Blender -b -P scripts/kitbash/render.py -- --final
-
-# 4. subtle final grade
-python3 scripts/kitbash/grade_renders.py
-
-# 5. compact textures + real-time GLB
+python3 scripts/kitbash/grade_renders.py       # reads renders/raw, writes renders/
 python3 scripts/kitbash/make_rt_textures.py
 /Applications/Blender.app/Contents/MacOS/Blender -b -P scripts/kitbash/export_glb.py
 cd docs/kitbash-port/glb
 /Users/apple/orca/projects/verlins_home/node_modules/.bin/gltf-transform optimize \
   anvil_landing_port_raw.glb anvil_landing_port.glb \
   --compress meshopt --texture-compress webp --simplify false --palette false \
-  --join true --instance false --texture-size 2048
+  --join true --instance false --texture-size 1024
 ```
 
-The 122 MB `anvil_landing.blend` is kept locally for inspection but is not committed
-(the worktree branch carries the scripts, generated textures, renders and GLB). The
-scene can be rebuilt exactly from the steps above. `renders/raw/` is an intermediate
-grade source and is git-ignored.
+`build_scene.py` calls `build_deck.py`, `build_terminal.py`, `build_greebles.py`
+and `build_tiers.py`. The 753 MB full `.blend` is kept locally at
+`docs/kitbash-port/anvil_landing.blend` but is not committed (git-ignored);
+the scripts rebuild it. `renders/raw/` is also git-ignored.
 
 ## Limitations
 
-- The GLB approximates glass as opaque reflective dark glass; Blender uses transmission.
-- The full-detail scene is 6.1 M tris; the real-time kit is 1.19 M tris. Hero
-  façades are decimated in the GLB; the renders use the full geometry.
-- The A-30 asset has no landing gear; three skids and a boarding stair were authored.
-- Humans are minimal custom suited figures for scale, not scanned characters.
-- The city edge / cliff / terrain are backdrop elements; the focal detail is the
-  port, ship and hero façades.
-- EEVEE was used for renders; no Cycles pass. The EEVEE shadow pool is raised to 2048 MB.
-- Preview loads Three.js r187 from jsDelivr and needs an HTTP server (not `file://`).
+- K039 is a midground/background kit here. Its façades are not hero close-up
+  material; the custom terminal, gantry and deck carry the near field. K039 does not
+  appear closer than 400 m.
+- Background mega-towers are 16–25× K039 LG stacks; their large roof plates/overhangs
+  read as megastructure silhouettes, not finely resolved skyscrapers. This is
+  intentional for the 650–740 m distance.
+- The deck is 1.2 × 1.2 km (within the requested 1.2 × 1.2 / 1.0 × 0.9 range). The
+  809 m background tops crop in the wide/close-up; the aerial shows the platform
+  and full depth.
+- GLB glass is opaque reflective; Blender uses transmission. GLB textures are 1K to
+  meet the 50 MB limit.
+- The 1× source interpretation is physically correct; the 4–5×/16–25× tiers are an
+  art-direction decision, documented above.
+- The v2 `/terrain-sample/` route is a heightmap-only terrain demo
+  (`src/scripts/terrain-sample.ts`); it contains no K039 buildings, so the port scale
+  issue does not apply there.
 
-Assets are the user's purchased Kitbash3D / A-30 models; this is a private sample, no
-redistribution or license review is implied.
+Purchased Kitbash3D / A-30 assets; private sample, not merged to main.

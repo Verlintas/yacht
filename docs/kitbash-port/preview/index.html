@@ -48,7 +48,7 @@
 <div class="hud title">
   <div class="eyebrow">Kitbash3D Sci-Fi Industrial · Anvil Landing</div>
   <h1>Anvil Landing</h1>
-  <div class="sub">TLOF-01 · Port 07 · A-30 Thunderbolt</div>
+  <div class="sub">City Deck 01 · TLOF-01 · Port 07 · A-30</div>
   <div class="controls">
     <button data-cam="wide">1 · Wide</button>
     <button data-cam="close">2 · Pad</button>
@@ -58,9 +58,9 @@
 </div>
 <div class="hud meta">
   <div><b>Kitbash3D</b> purchased assets</div>
-  <div>1.19 M tris · 38 materials</div>
-  <div>Meshopt + WebP · 25 MB</div>
-  <div>Three.js r187 · real-time</div>
+  <div>2.89 M tris · 44 MB</div>
+  <div>Meshopt + WebP · 44 MB</div>
+  <div>Three.js r187 vendored · real-time</div>
 </div>
 <div class="hud foot">
   <div class="key"><span>Drag</span> orbit</div>
@@ -78,8 +78,8 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"
+    "three": "./vendor/three.module.js",
+    "three/addons/": "./vendor/jsm/"
   }
 }
 </script>
@@ -100,7 +100,7 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.18;
+renderer.toneMappingExposure = 0.90;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 app.appendChild(renderer.domElement);
 
@@ -118,18 +118,18 @@ ctx.fillStyle = g; ctx.fillRect(0, 0, 1024, 512);
 const bgTex = new THREE.CanvasTexture(bg);
 bgTex.colorSpace = THREE.SRGBColorSpace;
 scene.background = bgTex;
-scene.fog = new THREE.Fog(0x8b9aaa, 260, 1500);
+scene.fog = new THREE.Fog(0x8b9aaa, 500, 2600);
 
 const camera = new THREE.PerspectiveCamera(48, innerWidth/innerHeight, 0.5, 3500);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = 0.06;
-controls.minDistance = 12; controls.maxDistance = 520;
+controls.minDistance = 10; controls.maxDistance = 1800;
 controls.maxPolarAngle = Math.PI * 0.49;
 controls.target.set(0, 8, 0);
 
-const hemi = new THREE.HemisphereLight(0x9dc2ff, 0x6d5942, 1.45);
+const hemi = new THREE.HemisphereLight(0x9dc2ff, 0x6d5942, 0.90);
 scene.add(hemi);
-const sun = new THREE.DirectionalLight(0xffd6a2, 3.5);
+const sun = new THREE.DirectionalLight(0xffd6a2, 2.2);
 sun.position.set(-150, 210, -90);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
@@ -138,9 +138,9 @@ sun.shadow.camera.left = -260; sun.shadow.camera.right = 260;
 sun.shadow.camera.top = 260; sun.shadow.camera.bottom = -260;
 sun.shadow.bias = -0.00035;
 scene.add(sun);
-const fill = new THREE.DirectionalLight(0x8fb6ff, 0.75);
+const fill = new THREE.DirectionalLight(0x8fb6ff, 0.40);
 fill.position.set(180, 90, 160); scene.add(fill);
-const warm = new THREE.DirectionalLight(0xffa35c, 0.55);
+const warm = new THREE.DirectionalLight(0xffa35c, 0.30);
 warm.position.set(-60, 40, 140); scene.add(warm);
 
 // environment for PBR reflections
@@ -155,22 +155,23 @@ envTex.mapping = THREE.EquirectangularReflectionMapping;
 envTex.colorSpace = THREE.SRGBColorSpace;
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromEquirectangular(envTex).texture;
-scene.environmentIntensity = 0.75;
+scene.environmentIntensity = 0.50;
 
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.38, 0.55, 0.88);
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.24, 0.50, 0.90);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
 const presets = {
-  wide:   { pos:[-38, 17, 76],   target:[3, 12, -10] },
-  close:  { pos:[-38, 6.2, 54],  target:[-6, 4.5, -1] },
-  aerial: { pos:[-120, 82, 145], target:[5, 12, -40] },
+  wide:   { pos:[-65, 12, 110],   target:[0, 30, -8],   fov:45 },
+  close:  { pos:[-35, 7.5, 65],   target:[0, 6, -5],    fov:32 },
+  aerial: { pos:[-650, 700, 1000], target:[0, 300, -150], fov:50 },
 };
 let tween = null;
 function setCam(name, instant=false){
   const p = presets[name]; if(!p) return;
+  if(p.fov){ camera.fov = p.fov; camera.updateProjectionMatrix(); }
   if(instant){
     camera.position.set(...p.pos); controls.target.set(...p.target); controls.update();
   } else {
@@ -214,7 +215,7 @@ loader.load('../glb/anvil_landing_port.glb', gltf => {
   document.querySelector('.meta').innerHTML =
     `<div><b>Kitbash3D</b> purchased assets</div>` +
     `<div>${(tris/1e6).toFixed(2)} M tris · ${mats.size} materials</div>` +
-    `<div>Meshopt + WebP · 25 MB</div><div>Three.js r187 · real-time</div>`;
+    `<div>Meshopt + WebP · 44 MB</div><div>Three.js r187 vendored · real-time</div>`;
   modelReady = true;
   window.__ready = true;
   window.__tris = tris; window.__mats = mats.size;

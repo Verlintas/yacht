@@ -1,77 +1,48 @@
 {
  "RT_Ground": {
-  "tris": 62268,
-  "verts": 45085,
+  "tris": 114140,
+  "verts": 91704,
   "materials": [
+   "RT_Deck",
+   "RT_DeckAsphalt",
+   "RT_Paint_Yellow",
+   "RT_Paint_White",
+   "RT_KB3D_PanelsBlack",
+   "RT_Edge_Glow",
+   "RT_KB3D_Metal",
+   "RT_Edge_Glow_Warm",
    "RT_Terrain",
-   "RT_Rock",
    "RT_Apron",
    "RT_Pad",
-   "RT_Paint_White",
-   "RT_Paint_Yellow",
    "RT_Skid_Marks",
-   "RT_Hazard",
-   "RT_Cliff"
-  ]
- },
- "RT_Buildings": {
-  "tris": 674395,
-  "verts": 695458,
-  "materials": [
-   "RT_KB3D_PanelsBrown",
-   "RT_KB3D_Glass",
-   "RT_KB3D_Tech",
-   "RT_KB3D_Metal",
-   "RT_KB3D_Iron",
-   "RT_KB3D_Floor",
-   "RT_KB3D_PanelsWhite",
-   "RT_KB3D_PanelsBlack",
-   "RT_KB3D_Lights",
-   "RT_KB3D_PanelsLightBlue",
-   "RT_KB3D_Panels2",
-   "RT_KB3D_MetalSilver",
-   "RT_Paint_Dark",
-   "RT_Facade_Glow_Warm",
-   "RT_Facade_Glow",
-   "RT_Sign_Glow",
-   "RT_Sign_Glow_Warm",
-   "RT_Edge_Glow",
-   "RT_Hazard",
-   "RT_CabGlass",
-   "RT_Edge_Glow_Warm",
-   "RT_Neon_Red"
+   "RT_Hazard"
   ]
  },
  "RT_City": {
-  "tris": 306772,
-  "verts": 440143,
+  "tris": 2375534,
+  "verts": 2413196,
   "materials": [
+   "RT_KB3D_PanelsBrown",
+   "RT_KB3D_Glass",
+   "RT_KB3D_Tech",
+   "RT_KB3D_Metal",
+   "RT_KB3D_Iron",
+   "RT_KB3D_Floor",
+   "RT_KB3D_PanelsWhite",
    "RT_KB3D_PanelsBlack",
    "RT_KB3D_Lights",
-   "RT_KB3D_Tech",
-   "RT_KB3D_Iron",
-   "RT_KB3D_PanelsWhite",
-   "RT_KB3D_Floor",
-   "RT_KB3D_Glass",
-   "RT_KB3D_Metal",
-   "RT_KB3D_Panels2",
-   "RT_KB3D_PanelsBrown",
-   "RT_KB3D_PanelsLightBlue",
    "RT_KB3D_MetalSilver",
    "RT_Edge_Glow_Warm",
-   "RT_Edge_Glow",
-   "RT_Asphalt",
-   "RT_Paint_Yellow",
-   "RT_Paint_White",
-   "RT_Neon_Warm",
    "RT_Paint_Dark",
-   "RT_Facade_Glow_Warm",
+   "RT_Edge_Glow",
+   "RT_KB3D_PanelsLightBlue",
+   "RT_KB3D_Panels2",
    "RT_Neon_Red"
   ]
  },
  "RT_Port": {
-  "tris": 88992,
-  "verts": 51007,
+  "tris": 353981,
+  "verts": 217511,
   "materials": [
    "RT_Paint_Dark",
    "RT_KB3D_Metal",
@@ -91,15 +62,16 @@
    "RT_KB3D_Glass",
    "RT_Edge_Glow_Warm",
    "RT_Edge_Glow",
-   "RT_KB3D_Tech",
+   "RT_Sign_Glow_Warm",
+   "RT_Sign_Glow",
    "RT_Paint_Yellow",
    "RT_Neon_Red",
    "RT_Rubber"
   ]
  },
  "RT_Ship": {
-  "tris": 44196,
-  "verts": 59489,
+  "tris": 41857,
+  "verts": 57497,
   "materials": [
    "A 30 Thunderbolt Camo [Darkened]",
    "A 30 Glass [Darkened]",
@@ -113,8 +85,8 @@
   ]
  },
  "RT_People": {
-  "tris": 9776,
-  "verts": 5176,
+  "tris": 8376,
+  "verts": 4476,
   "materials": [
    "RT_Suit_Dark",
    "RT_Suit_Fabric",

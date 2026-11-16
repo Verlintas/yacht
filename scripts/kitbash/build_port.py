@@ -104,7 +104,7 @@ def build_gantry(coll, M_METAL, M_IRON, M_HAZARD, M_NEON_WARM, M_NEON_RED, M_NEO
                  M_DARK, M_YELLOW, light_coll=None):
     GX = 24.0
     Y0, Y1 = -28.0, 28.0
-    H = 24.0
+    H = 30.0
     TS = 3.4
     # concrete plinths
     for cy in (Y0, Y1):
