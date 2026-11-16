@@ -1,8 +1,4 @@
-"""Write the public manifest for the v3 Nautilus Reach sample.
-
-Run after build_scene.py/render_v2.py/grade_final.py:
-  python3 scripts/city-hero-v2/make_manifest.py
-"""
+"""Write the public manifest for the v4 Nautilus Reach sample."""
 import json, os
 
 ROOT = "/private/tmp/city-hero-v2"
@@ -37,22 +33,20 @@ def with_asset(rows):
     return out
 
 renders = [
-    {"file": "renders/01_port_wide.jpg", "shot": "termwide", "label": "Port wide / T2 approach",
-     "camera": "Cam_TermWide", "lens_mm": 32, "loc": [-170, -575, 5.5], "target": [-100, -430, 40]},
+    {"file": "renders/01_port_approach.jpg", "shot": "wide", "label": "Port approach / T2 + hero cluster",
+     "camera": "Cam_Wide", "lens_mm": 18, "loc": [-55, -490, 1.7], "target": [0, -180, 110]},
     {"file": "renders/02_street_canyon.jpg", "shot": "street", "label": "Street canyon / A-30",
      "camera": "Cam_Street", "lens_mm": 20, "loc": [0, -470, 1.7], "target": [0, -140, 110]},
-    {"file": "renders/03_pad_closeup.jpg", "shot": "pad", "label": "60 m TLOF / A-30",
-     "camera": "Cam_Pad", "lens_mm": 50, "loc": [-45, -520, 3.0], "target": [4, -420, 6.5]},
+    {"file": "renders/03_terminal_detail.jpg", "shot": "detail", "label": "T2 terminal detail",
+     "camera": "Cam_Detail", "lens_mm": 38, "loc": [-80, -580, 4.5], "target": [-145, -500, 7.5]},
     {"file": "renders/04_dense_aerial.jpg", "shot": "aerial_low", "label": "Dense district aerial",
      "camera": "Cam_AerialLow", "lens_mm": 35, "loc": [-700, -900, 300], "target": [0, -100, 40]},
-    {"file": "renders/05_platform_aerial.jpg", "shot": "aerial", "label": "1200 m platform aerial",
-     "camera": "Cam_Aerial", "lens_mm": 34, "loc": [-950, -1200, 600], "target": [0, 0, 80]},
-    {"file": "renders/06_terminal_detail.jpg", "shot": "detail", "label": "T2 terminal detail",
-     "camera": "Cam_Detail", "lens_mm": 38, "loc": [-80, -580, 4.5], "target": [-145, -500, 7.5]},
+    {"file": "renders/05_platform_aerial.jpg", "shot": "aerial", "label": "1200 m platform / industrial edge",
+     "camera": "Cam_Aerial", "lens_mm": 35, "loc": [-600, -1400, 500], "target": [0, 0, 80]},
 ]
 
 manifest = {
-    "sample": "Nautilus Reach v3",
+    "sample": "Nautilus Reach v4",
     "status": "authored offline Cycles city sample",
     "units": "metres",
     "deck": {
@@ -66,19 +60,26 @@ manifest = {
         "district_single_modules": len(report.get("lows", [])),
         "hero_single_meshes": len(report.get("heroes", [])),
         "secondary_single_meshes": len(report.get("mids", [])),
-        "note": "single native K039/K032/K038 modules; no K038 stacking and no facade stretch",
+        "note": "focused 3-4 block district with repeated K032/K039 families; no K038 stacking and no facade stretch",
     },
     "heroes": with_asset(report["heroes"]),
     "secondary_single_buildings": with_asset(report["mids"]),
     "district": with_asset(report.get("lows", [])),
     "background_skyline": [
-        dict(row, asset="K015 Neo Tokyo / 1:100 kit, unit-corrected x100; 600 m authored city base")
+        dict(row, asset="K015 Neo Tokyo / 1:100 kit, x100 unit-corrected; 600 m authored city base")
         for row in report.get("background", [])
     ],
     "terminal": report.get("terminal"),
     "ship": report.get("ship"),
     "stacking": report.get("stacking"),
     "audit": report.get("audit"),
+    "brand": {
+        "materials_replaced": report.get("brand_replaced"),
+        "faces_removed": report.get("brand_faces_removed"),
+        "audit": report.get("brand_audit"),
+        "in_world_signs": report.get("in_world_signs"),
+        "note": "source Ads/Banner/Signs_Lights/Screens/Decals geometry was deleted; in-world numeric/shipping/arrival signage added",
+    },
     "triangles": {
         "total": report.get("total_tris"),
         "by_collection": report.get("by_collection"),
@@ -92,27 +93,27 @@ manifest = {
         "denoiser": "OpenImageDenoise",
         "hdri": "public/terrain-sample/sky.hdr",
         "sun_w_m2": 9.0,
-        "atmosphere": "finite Principled Volume, density 0.00014 /m",
+        "atmosphere": "height-gradient finite volume; extra fog volumes removed for render time",
         "compositing": "disabled in-render; final JPG grade applied in post",
     },
     "terrain": {
         "outer_ring": "authored heights outside the retaining wall; no terrain under the city",
-        "rocks": "authored asteroid-pack rock ridges at the deck perimeter",
-        "roads": "ring/hill service roads with lamps and edge markers",
-        "macro_variation": "Noise-driven terrain colour variation",
+        "rocks": "authored asteroid-pack ridge rocks at the perimeter",
+        "industry": "refinery clusters, wall warehouses, portal cranes, raised edge road, pipe bands",
+        "roads": "ring/hill/foreground service roads with lamps, edge markers, long-exposure traffic lights",
     },
     "port": {
         "tlof_m": 60,
         "a30_length_m": 24.99,
         "a30_span_m": 28.84,
-        "foreground": "CommunityCentre T2, gantry, tanks, pipes, container yards, rail cranes, taxis, market, crowds, C2184 panel banks",
+        "foreground": "CommunityCentre T2, arrival pylon, gantry, tanks, pipes, container yards, rail cranes, taxis, market, crowds, C2184 panel bank",
     },
     "renders": renders,
     "limitations": [
-        "Offline Cycles stills only; the realtime GLB/preview was not rebuilt in this pass.",
+        "Offline Cycles stills only; realtime GLB/preview was not rebuilt.",
         "CommunityCentre terminal uses a 1.03M-tri authored subset of the 1.37M source (shell + interior).",
         "K015 towers are background silhouettes at ~1.3 km; their 1K textures are not close-up detail.",
-        "K046 is used as material/detail reference on the custom port, not as a hero building geometry kit.",
+        "K046 is used as material/detail reference on the custom port, not as a hero building kit; native Heavy Metal modules read as hulls.",
         "Kitbash3D / Modelshop assets are private/offline only; public Web redistribution needs separate licence review.",
         "No K038 vertical stacking, no uniform giant scaling of hero modules, no procedural facade stretch.",
     ],

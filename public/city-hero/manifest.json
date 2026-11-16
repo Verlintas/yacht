@@ -1,5 +1,5 @@
 {
- "sample": "Nautilus Reach v3",
+ "sample": "Nautilus Reach v4",
  "status": "authored offline Cycles city sample",
  "units": "metres",
  "deck": {
@@ -13,10 +13,10 @@
   "note": "flat city platform; terrain ring only outside retaining wall"
  },
  "density": {
-  "district_single_modules": 86,
+  "district_single_modules": 45,
   "hero_single_meshes": 3,
   "secondary_single_meshes": 7,
-  "note": "single native K039/K032/K038 modules; no K038 stacking and no facade stretch"
+  "note": "focused 3-4 block district with repeated K032/K039 families; no K038 stacking and no facade stretch"
  },
  "heroes": [
   {
@@ -227,17 +227,17 @@
    "obj": "Canyon_W3",
    "x": -80,
    "y": -80,
-   "h": 99.13,
-   "w": 45.36,
-   "d": 38.87,
-   "tris": 329106,
+   "h": 96.87,
+   "w": 58.2,
+   "d": 54.75,
+   "tris": 286723,
    "scale": [
     1.0,
     1.0,
     1.0
    ],
    "kind": "mid",
-   "asset_key": "K32_BldgLG_F",
+   "asset_key": "K32_BldgLG_G",
    "asset": "K032 NeoShanghai 1:1"
   },
   {
@@ -245,17 +245,17 @@
    "obj": "Canyon_W4",
    "x": -75,
    "y": -5,
-   "h": 50.68,
-   "w": 33.06,
-   "d": 49.0,
-   "tris": 249384,
+   "h": 60.85,
+   "w": 29.42,
+   "d": 46.57,
+   "tris": 330126,
    "scale": [
     1.0,
     1.0,
     1.0
    ],
    "kind": "mid",
-   "asset_key": "K32_BldgM_D",
+   "asset_key": "K32_BldgM_A",
    "asset": "K032 NeoShanghai 1:1"
   },
   {
@@ -263,17 +263,17 @@
    "obj": "Canyon_W5",
    "x": -85,
    "y": 55,
-   "h": 92.84,
-   "w": 63.61,
-   "d": 44.83,
-   "tris": 284703,
+   "h": 96.87,
+   "w": 58.2,
+   "d": 54.75,
+   "tris": 286723,
    "scale": [
     1.0,
     1.0,
     1.0
    ],
    "kind": "mid",
-   "asset_key": "K32_BldgLG_H",
+   "asset_key": "K32_BldgLG_G",
    "asset": "K032 NeoShanghai 1:1"
   },
   {
@@ -371,17 +371,17 @@
    "obj": "Canyon_E1",
    "x": 72,
    "y": -235,
-   "h": 88.63,
-   "w": 60.1,
-   "d": 52.8,
-   "tris": 462823,
+   "h": 99.13,
+   "w": 38.87,
+   "d": 45.36,
+   "tris": 329106,
    "scale": [
     1.0,
     1.0,
     1.0
    ],
    "kind": "mid",
-   "asset_key": "K32_BldgLG_D",
+   "asset_key": "K32_BldgLG_F",
    "asset": "K032 NeoShanghai 1:1"
   },
   {
@@ -389,17 +389,17 @@
    "obj": "Canyon_E2",
    "x": 75,
    "y": -160,
-   "h": 48.26,
-   "w": 47.17,
-   "d": 34.87,
-   "tris": 200627,
+   "h": 50.68,
+   "w": 49.0,
+   "d": 33.06,
+   "tris": 249384,
    "scale": [
     1.0,
     1.0,
     1.0
    ],
    "kind": "mid",
-   "asset_key": "K32_BldgM_B",
+   "asset_key": "K32_BldgM_D",
    "asset": "K032 NeoShanghai 1:1"
   },
   {
@@ -407,17 +407,17 @@
    "obj": "Canyon_E3",
    "x": 80,
    "y": -80,
-   "h": 96.87,
-   "w": 58.2,
-   "d": 54.75,
-   "tris": 286723,
+   "h": 99.13,
+   "w": 45.36,
+   "d": 38.87,
+   "tris": 329106,
    "scale": [
     1.0,
     1.0,
     1.0
    ],
    "kind": "mid",
-   "asset_key": "K32_BldgLG_G",
+   "asset_key": "K32_BldgLG_F",
    "asset": "K032 NeoShanghai 1:1"
   },
   {
@@ -443,17 +443,17 @@
    "obj": "Canyon_E5",
    "x": 80,
    "y": 55,
-   "h": 65.49,
-   "w": 38.5,
-   "d": 24.5,
-   "tris": 230621,
+   "h": 99.13,
+   "w": 45.36,
+   "d": 38.87,
+   "tris": 329106,
    "scale": [
     1.0,
     1.0,
     1.0
    ],
    "kind": "mid",
-   "asset_key": "K32_BldgM_F",
+   "asset_key": "K32_BldgLG_F",
    "asset": "K032 NeoShanghai 1:1"
   },
   {
@@ -587,17 +587,17 @@
    "obj": "Gate_E1",
    "x": 60,
    "y": -340,
-   "h": 48.26,
-   "w": 47.17,
-   "d": 34.87,
-   "tris": 200627,
+   "h": 60.85,
+   "w": 46.57,
+   "d": 29.42,
+   "tris": 330126,
    "scale": [
     1.0,
     1.0,
     1.0
    ],
    "kind": "mid",
-   "asset_key": "K32_BldgM_B",
+   "asset_key": "K32_BldgM_A",
    "asset": "K032 NeoShanghai 1:1"
   },
   {
@@ -605,17 +605,17 @@
    "obj": "Gate_E2",
    "x": 160,
    "y": -340,
-   "h": 65.49,
-   "w": 38.5,
-   "d": 24.5,
-   "tris": 230621,
+   "h": 50.68,
+   "w": 49.0,
+   "d": 33.06,
+   "tris": 249384,
    "scale": [
     1.0,
     1.0,
     1.0
    ],
    "kind": "mid",
-   "asset_key": "K32_BldgM_F",
+   "asset_key": "K32_BldgM_D",
    "asset": "K032 NeoShanghai 1:1"
   },
   {
@@ -763,618 +763,6 @@
    "asset": "K039 Sci-Fi Industrial 1:1"
   },
   {
-   "name": "WestAve_L1",
-   "obj": "WestAve_L1",
-   "x": -395,
-   "y": -160,
-   "h": 12.88,
-   "w": 8.98,
-   "d": 5.13,
-   "tris": 64119,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_E",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "WestAve_L2",
-   "obj": "WestAve_L2",
-   "x": -395,
-   "y": -10,
-   "h": 10.87,
-   "w": 6.86,
-   "d": 4.7,
-   "tris": 65437,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_F",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "WestAve_L3",
-   "obj": "WestAve_L3",
-   "x": -395,
-   "y": 50,
-   "h": 12.88,
-   "w": 8.98,
-   "d": 5.13,
-   "tris": 64119,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_E",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "WestAve_L4",
-   "obj": "WestAve_L4",
-   "x": -395,
-   "y": 190,
-   "h": 10.87,
-   "w": 6.86,
-   "d": 4.7,
-   "tris": 65437,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_F",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "EastAve_L1",
-   "obj": "EastAve_L1",
-   "x": 395,
-   "y": -160,
-   "h": 12.88,
-   "w": 8.98,
-   "d": 5.13,
-   "tris": 64119,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_E",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "EastAve_L2",
-   "obj": "EastAve_L2",
-   "x": 395,
-   "y": -10,
-   "h": 10.87,
-   "w": 6.86,
-   "d": 4.7,
-   "tris": 65437,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_F",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "EastAve_L3",
-   "obj": "EastAve_L3",
-   "x": 395,
-   "y": 50,
-   "h": 12.88,
-   "w": 8.98,
-   "d": 5.13,
-   "tris": 64119,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_E",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "EastAve_L4",
-   "obj": "EastAve_L4",
-   "x": 395,
-   "y": 290,
-   "h": 10.87,
-   "w": 6.86,
-   "d": 4.7,
-   "tris": 65437,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_F",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "Blvd_L1",
-   "obj": "Blvd_L1",
-   "x": -400,
-   "y": 165,
-   "h": 12.88,
-   "w": 8.98,
-   "d": 5.13,
-   "tris": 64119,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_E",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "Blvd_L2",
-   "obj": "Blvd_L2",
-   "x": -300,
-   "y": 165,
-   "h": 10.87,
-   "w": 6.86,
-   "d": 4.7,
-   "tris": 65437,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_F",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "Blvd_L3",
-   "obj": "Blvd_L3",
-   "x": -150,
-   "y": 165,
-   "h": 12.88,
-   "w": 8.98,
-   "d": 5.13,
-   "tris": 64119,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_E",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "Blvd_L4",
-   "obj": "Blvd_L4",
-   "x": 60,
-   "y": 165,
-   "h": 10.87,
-   "w": 6.86,
-   "d": 4.7,
-   "tris": 65437,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_F",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "Blvd_L5",
-   "obj": "Blvd_L5",
-   "x": 160,
-   "y": 165,
-   "h": 12.88,
-   "w": 8.98,
-   "d": 5.13,
-   "tris": 64119,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_E",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "Blvd_L6",
-   "obj": "Blvd_L6",
-   "x": 300,
-   "y": 165,
-   "h": 10.87,
-   "w": 6.86,
-   "d": 4.7,
-   "tris": 65437,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_F",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "North_L1",
-   "obj": "North_L1",
-   "x": -500,
-   "y": 300,
-   "h": 12.88,
-   "w": 8.98,
-   "d": 5.13,
-   "tris": 64119,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_E",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "North_L2",
-   "obj": "North_L2",
-   "x": -300,
-   "y": 300,
-   "h": 10.87,
-   "w": 6.86,
-   "d": 4.7,
-   "tris": 65437,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_F",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "North_L3",
-   "obj": "North_L3",
-   "x": -150,
-   "y": 300,
-   "h": 12.88,
-   "w": 8.98,
-   "d": 5.13,
-   "tris": 64119,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_E",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "North_L4",
-   "obj": "North_L4",
-   "x": 100,
-   "y": 300,
-   "h": 10.87,
-   "w": 6.86,
-   "d": 4.7,
-   "tris": 65437,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_F",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "North_L5",
-   "obj": "North_L5",
-   "x": 250,
-   "y": 300,
-   "h": 12.88,
-   "w": 8.98,
-   "d": 5.13,
-   "tris": 64119,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_E",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "North_L6",
-   "obj": "North_L6",
-   "x": 400,
-   "y": 300,
-   "h": 10.87,
-   "w": 6.86,
-   "d": 4.7,
-   "tris": 65437,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_F",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "West_M1",
-   "obj": "West_M1",
-   "x": -450,
-   "y": -250,
-   "h": 26.3,
-   "w": 37.6,
-   "d": 28.65,
-   "tris": 206172,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgM_C",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "West_M2",
-   "obj": "West_M2",
-   "x": -450,
-   "y": -100,
-   "h": 36.39,
-   "w": 19.96,
-   "d": 15.78,
-   "tris": 142391,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgS_A",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "West_M3",
-   "obj": "West_M3",
-   "x": -450,
-   "y": 40,
-   "h": 34.7,
-   "w": 49.88,
-   "d": 27.05,
-   "tris": 131561,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgM_E",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "West_M4",
-   "obj": "West_M4",
-   "x": -450,
-   "y": 250,
-   "h": 26.3,
-   "w": 37.6,
-   "d": 28.65,
-   "tris": 206172,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgM_C",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "East_M1",
-   "obj": "East_M1",
-   "x": 440,
-   "y": -250,
-   "h": 26.3,
-   "w": 37.6,
-   "d": 28.65,
-   "tris": 206172,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgM_C",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "East_M2",
-   "obj": "East_M2",
-   "x": 450,
-   "y": -100,
-   "h": 36.39,
-   "w": 19.96,
-   "d": 15.78,
-   "tris": 142391,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgS_A",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "East_M3",
-   "obj": "East_M3",
-   "x": 450,
-   "y": 40,
-   "h": 34.7,
-   "w": 49.88,
-   "d": 27.05,
-   "tris": 131561,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgM_E",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "East_M4",
-   "obj": "East_M4",
-   "x": 450,
-   "y": 300,
-   "h": 26.3,
-   "w": 37.6,
-   "d": 28.65,
-   "tris": 206172,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgM_C",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "CW_M1",
-   "obj": "CW_M1",
-   "x": -220,
-   "y": -250,
-   "h": 60.85,
-   "w": 46.57,
-   "d": 29.42,
-   "tris": 330126,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgM_A",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "CW_M2",
-   "obj": "CW_M2",
-   "x": -200,
-   "y": -60,
-   "h": 36.39,
-   "w": 19.96,
-   "d": 15.78,
-   "tris": 142391,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgS_A",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "CW_M3",
-   "obj": "CW_M3",
-   "x": -250,
-   "y": 20,
-   "h": 48.26,
-   "w": 47.17,
-   "d": 34.87,
-   "tris": 200627,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgM_B",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "CE_M1",
-   "obj": "CE_M1",
-   "x": 150,
-   "y": -250,
-   "h": 26.3,
-   "w": 37.6,
-   "d": 28.65,
-   "tris": 206172,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgM_C",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "CE_M2",
-   "obj": "CE_M2",
-   "x": 160,
-   "y": -60,
-   "h": 36.39,
-   "w": 19.96,
-   "d": 15.78,
-   "tris": 142391,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgS_A",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "CE_M3",
-   "obj": "CE_M3",
-   "x": 160,
-   "y": 20,
-   "h": 48.26,
-   "w": 47.17,
-   "d": 34.87,
-   "tris": 200627,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgM_B",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
    "name": "West_1",
    "obj": "West_1",
    "x": -500,
@@ -1415,72 +803,18 @@
    "obj": "West_3",
    "x": -500,
    "y": -70,
-   "h": 26.3,
-   "w": 37.6,
-   "d": 28.65,
-   "tris": 206172,
+   "h": 60.85,
+   "w": 46.57,
+   "d": 29.42,
+   "tris": 330126,
    "scale": [
     1.0,
     1.0,
     1.0
    ],
    "kind": "mid",
-   "asset_key": "K32_BldgM_C",
+   "asset_key": "K32_BldgM_A",
    "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "West_4",
-   "obj": "West_4",
-   "x": -500,
-   "y": 180,
-   "h": 50.68,
-   "w": 33.06,
-   "d": 49.0,
-   "tris": 249384,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgM_D",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "West_5",
-   "obj": "West_5",
-   "x": -395,
-   "y": -230,
-   "h": 12.88,
-   "w": 8.98,
-   "d": 5.13,
-   "tris": 64119,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_E",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "West_6",
-   "obj": "West_6",
-   "x": -395,
-   "y": -70,
-   "h": 10.87,
-   "w": 6.86,
-   "d": 4.7,
-   "tris": 65437,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_F",
-   "asset": "K039 Sci-Fi Industrial 1:1"
   },
   {
    "name": "East_1",
@@ -1505,17 +839,17 @@
    "obj": "East_2",
    "x": 500,
    "y": -150,
-   "h": 60.85,
-   "w": 46.57,
-   "d": 29.42,
-   "tris": 330126,
+   "h": 50.68,
+   "w": 49.0,
+   "d": 33.06,
+   "tris": 249384,
    "scale": [
     1.0,
     1.0,
     1.0
    ],
    "kind": "mid",
-   "asset_key": "K32_BldgM_A",
+   "asset_key": "K32_BldgM_D",
    "asset": "K032 NeoShanghai 1:1"
   },
   {
@@ -1523,17 +857,17 @@
    "obj": "East_3",
    "x": 500,
    "y": -70,
-   "h": 26.3,
-   "w": 37.6,
-   "d": 28.65,
-   "tris": 206172,
+   "h": 92.84,
+   "w": 63.61,
+   "d": 44.83,
+   "tris": 284703,
    "scale": [
     1.0,
     1.0,
     1.0
    ],
    "kind": "mid",
-   "asset_key": "K32_BldgM_C",
+   "asset_key": "K32_BldgLG_H",
    "asset": "K032 NeoShanghai 1:1"
   },
   {
@@ -1553,42 +887,6 @@
    "kind": "tall",
    "asset_key": "K38_LargeD",
    "asset": "K038 Neo Tokyo 2 1:1"
-  },
-  {
-   "name": "East_5",
-   "obj": "East_5",
-   "x": 395,
-   "y": -230,
-   "h": 12.88,
-   "w": 8.98,
-   "d": 5.13,
-   "tris": 64119,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_E",
-   "asset": "K039 Sci-Fi Industrial 1:1"
-  },
-  {
-   "name": "East_6",
-   "obj": "East_6",
-   "x": 395,
-   "y": -70,
-   "h": 10.87,
-   "w": 6.86,
-   "d": 4.7,
-   "tris": 65437,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "low",
-   "asset_key": "K39_BldgLG_F",
-   "asset": "K039 Sci-Fi Industrial 1:1"
   },
   {
    "name": "North_1",
@@ -1642,42 +940,6 @@
    ],
    "kind": "mid",
    "asset_key": "K32_BldgLG_G",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "North_4",
-   "obj": "North_4",
-   "x": 300,
-   "y": 270,
-   "h": 50.68,
-   "w": 49.0,
-   "d": 33.06,
-   "tris": 249384,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgM_D",
-   "asset": "K032 NeoShanghai 1:1"
-  },
-  {
-   "name": "North_5",
-   "obj": "North_5",
-   "x": -140,
-   "y": 390,
-   "h": 99.13,
-   "w": 45.36,
-   "d": 38.87,
-   "tris": 329106,
-   "scale": [
-    1.0,
-    1.0,
-    1.0
-   ],
-   "kind": "mid",
-   "asset_key": "K32_BldgLG_F",
    "asset": "K032 NeoShanghai 1:1"
   },
   {
@@ -1743,7 +1005,7 @@
    "z": -22.5,
    "h": 690.7,
    "tris": 164436,
-   "asset": "K015 Neo Tokyo / 1:100 kit, unit-corrected x100; 600 m authored city base"
+   "asset": "K015 Neo Tokyo / 1:100 kit, x100 unit-corrected; 600 m authored city base"
   },
   {
    "name": "K015_006_NE",
@@ -1752,7 +1014,7 @@
    "z": -28.9,
    "h": 531.8,
    "tris": 417830,
-   "asset": "K015 Neo Tokyo / 1:100 kit, unit-corrected x100; 600 m authored city base"
+   "asset": "K015 Neo Tokyo / 1:100 kit, x100 unit-corrected; 600 m authored city base"
   },
   {
    "name": "K015_009_E",
@@ -1761,7 +1023,7 @@
    "z": -27.7,
    "h": 665.3,
    "tris": 417714,
-   "asset": "K015 Neo Tokyo / 1:100 kit, unit-corrected x100; 600 m authored city base"
+   "asset": "K015 Neo Tokyo / 1:100 kit, x100 unit-corrected; 600 m authored city base"
   },
   {
    "name": "K015_010_N",
@@ -1770,7 +1032,7 @@
    "z": -29.1,
    "h": 688.3,
    "tris": 214768,
-   "asset": "K015 Neo Tokyo / 1:100 kit, unit-corrected x100; 600 m authored city base"
+   "asset": "K015 Neo Tokyo / 1:100 kit, x100 unit-corrected; 600 m authored city base"
   }
  ],
  "terminal": {
@@ -1780,7 +1042,7 @@
   "w": 103.3,
   "d": 86.7,
   "h": 26.8,
-  "tris": 1033968,
+  "tris": 1032888,
   "note": "1.03M-tri authored subset of the 1.37M source (shell + interior)"
  },
  "ship": {
@@ -1792,15 +1054,36 @@
  },
  "stacking": "none; each hero is one native mesh at scale 1.0",
  "audit": [],
+ "brand": {
+  "materials_replaced": 45,
+  "faces_removed": 338448,
+  "audit": "OK",
+  "in_world_signs": [
+   "NAUTILUS REACH",
+   "PORT 07",
+   "T2 ARRIVALS",
+   "BERTH 07/12",
+   "NAUTILUS FREIGHT",
+   "ORBITAL LINE",
+   "SHIP LINE 09",
+   "NIGHT MARKET",
+   "FUEL DEPOT",
+   "DANGER / NO ENTRY",
+   "\u591c\u822a \u6e2f\u53e3",
+   "\u8d27\u8fd0 07",
+   "\u591c\u5e02 24H"
+  ],
+  "note": "source Ads/Banner/Signs_Lights/Screens/Decals geometry was deleted; in-world numeric/shipping/arrival signage added"
+ },
  "triangles": {
-  "total": 34378548,
+  "total": 28396958,
   "by_collection": {
    "01_GROUND": 227872,
-   "02_BUILDINGS": 4221211,
-   "03_CITY": 15942328,
-   "04_PORT": 3058656,
+   "02_BUILDINGS": 3986801,
+   "03_CITY": 10355272,
+   "04_PORT": 2655428,
    "07_SHIP": 48826,
-   "08_BACKGROUND": 4211596,
+   "08_BACKGROUND": 4454700,
    "05_PROPS": 1605916,
    "06_PEOPLE": 5062131,
    "09_LIGHTS": 12
@@ -1822,37 +1105,37 @@
   "denoiser": "OpenImageDenoise",
   "hdri": "public/terrain-sample/sky.hdr",
   "sun_w_m2": 9.0,
-  "atmosphere": "finite Principled Volume, density 0.00014 /m",
+  "atmosphere": "height-gradient finite volume; extra fog volumes removed for render time",
   "compositing": "disabled in-render; final JPG grade applied in post"
  },
  "terrain": {
   "outer_ring": "authored heights outside the retaining wall; no terrain under the city",
-  "rocks": "authored asteroid-pack rock ridges at the deck perimeter",
-  "roads": "ring/hill service roads with lamps and edge markers",
-  "macro_variation": "Noise-driven terrain colour variation"
+  "rocks": "authored asteroid-pack ridge rocks at the perimeter",
+  "industry": "refinery clusters, wall warehouses, portal cranes, raised edge road, pipe bands",
+  "roads": "ring/hill/foreground service roads with lamps, edge markers, long-exposure traffic lights"
  },
  "port": {
   "tlof_m": 60,
   "a30_length_m": 24.99,
   "a30_span_m": 28.84,
-  "foreground": "CommunityCentre T2, gantry, tanks, pipes, container yards, rail cranes, taxis, market, crowds, C2184 panel banks"
+  "foreground": "CommunityCentre T2, arrival pylon, gantry, tanks, pipes, container yards, rail cranes, taxis, market, crowds, C2184 panel bank"
  },
  "renders": [
   {
-   "file": "renders/01_port_wide.jpg",
-   "shot": "termwide",
-   "label": "Port wide / T2 approach",
-   "camera": "Cam_TermWide",
-   "lens_mm": 32,
+   "file": "renders/01_port_approach.jpg",
+   "shot": "wide",
+   "label": "Port approach / T2 + hero cluster",
+   "camera": "Cam_Wide",
+   "lens_mm": 18,
    "loc": [
-    -170,
-    -575,
-    5.5
+    -55,
+    -490,
+    1.7
    ],
    "target": [
-    -100,
-    -430,
-    40
+    0,
+    -180,
+    110
    ]
   },
   {
@@ -1873,20 +1156,20 @@
    ]
   },
   {
-   "file": "renders/03_pad_closeup.jpg",
-   "shot": "pad",
-   "label": "60 m TLOF / A-30",
-   "camera": "Cam_Pad",
-   "lens_mm": 50,
+   "file": "renders/03_terminal_detail.jpg",
+   "shot": "detail",
+   "label": "T2 terminal detail",
+   "camera": "Cam_Detail",
+   "lens_mm": 38,
    "loc": [
-    -45,
-    -520,
-    3.0
+    -80,
+    -580,
+    4.5
    ],
    "target": [
-    4,
-    -420,
-    6.5
+    -145,
+    -500,
+    7.5
    ]
   },
   {
@@ -1909,43 +1192,26 @@
   {
    "file": "renders/05_platform_aerial.jpg",
    "shot": "aerial",
-   "label": "1200 m platform aerial",
+   "label": "1200 m platform / industrial edge",
    "camera": "Cam_Aerial",
-   "lens_mm": 34,
+   "lens_mm": 35,
    "loc": [
-    -950,
-    -1200,
-    600
+    -600,
+    -1400,
+    500
    ],
    "target": [
     0,
     0,
     80
    ]
-  },
-  {
-   "file": "renders/06_terminal_detail.jpg",
-   "shot": "detail",
-   "label": "T2 terminal detail",
-   "camera": "Cam_Detail",
-   "lens_mm": 38,
-   "loc": [
-    -80,
-    -580,
-    4.5
-   ],
-   "target": [
-    -145,
-    -500,
-    7.5
-   ]
   }
  ],
  "limitations": [
-  "Offline Cycles stills only; the realtime GLB/preview was not rebuilt in this pass.",
+  "Offline Cycles stills only; realtime GLB/preview was not rebuilt.",
   "CommunityCentre terminal uses a 1.03M-tri authored subset of the 1.37M source (shell + interior).",
   "K015 towers are background silhouettes at ~1.3 km; their 1K textures are not close-up detail.",
-  "K046 is used as material/detail reference on the custom port, not as a hero building geometry kit.",
+  "K046 is used as material/detail reference on the custom port, not as a hero building kit; native Heavy Metal modules read as hulls.",
   "Kitbash3D / Modelshop assets are private/offline only; public Web redistribution needs separate licence review.",
   "No K038 vertical stacking, no uniform giant scaling of hero modules, no procedural facade stretch."
  ]

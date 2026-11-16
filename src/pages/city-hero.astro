@@ -3,35 +3,35 @@ import Base from '../layouts/Base.astro';
 import { url } from '../lib/url';
 
 const shots = [
-  { src: url('/city-hero/renders/01_port_wide.jpg'), label: '01 · Port wide / T2 approach' },
+  { src: url('/city-hero/renders/01_port_approach.jpg'), label: '01 · Port approach / T2 + hero cluster' },
   { src: url('/city-hero/renders/02_street_canyon.jpg'), label: '02 · Street canyon / A-30' },
-  { src: url('/city-hero/renders/03_pad_closeup.jpg'), label: '03 · 60 m TLOF / A-30' },
+  { src: url('/city-hero/renders/03_terminal_detail.jpg'), label: '03 · T2 terminal detail' },
   { src: url('/city-hero/renders/04_dense_aerial.jpg'), label: '04 · Dense district aerial' },
-  { src: url('/city-hero/renders/05_platform_aerial.jpg'), label: '05 · 1200 m platform aerial' },
-  { src: url('/city-hero/renders/06_terminal_detail.jpg'), label: '06 · T2 terminal detail' },
+  { src: url('/city-hero/renders/05_platform_aerial.jpg'), label: '05 · 1200 m platform / industrial edge' },
 ];
 ---
 
-<Base title="Nautilus Reach · 城市样本 v2" description="Nautilus Reach v2 — 1200 m 城市平台、三栋原生单塔、CommunityCentre 到港厅、K015 远景剪影">
+<Base title="Nautilus Reach · 城市样本 v4" description="Nautilus Reach v4 — 聚焦港区街区、品牌清理、T2 到港厅、工业外环与 1200 m 城市平台">
   <main class="city-hero">
     <header class="hero-head">
-      <p class="eyebrow">Kitbash3D K032 / K038 / K039 / K015 · authored port district</p>
+      <p class="eyebrow">Kitbash3D K032 / K038 / K039 / K015 · authored Nautilus Reach port</p>
       <h1>Nautilus Reach</h1>
       <p class="lede">
         1200 × 1200 m 平坦城市平台，40 m 挡土墙，60 m TLOF，25 m A-30。
-        三栋原生单塔 <strong>220.3 / 222.7 / 240.7 m</strong>，一栋一个 mesh、scale 1.0；
-        街区加入近 90 个单栋 K039/K032/K038 模块、连续店面、雨棚、霓虹、车流、
-        市场、集装箱场和人群。650M1 <strong>CommunityCentre</strong> 103 m 作为 T2
-        到港厅；K015 只作为 1.3 km 外的暗色远景剪影。
+        三栋原生单塔 <strong>220.3 / 222.7 / 240.7 m</strong>，一栋一个 mesh、scale 1.0。
+        v4 把 86 个随机模块收束成 4 个连续街区 + 重复 facade family；清掉所有
+        Kitbash3D 广告/水印几何，换成 Nautilus Reach / Port 07 / T2 / 航运/夜市
+        的中英文 in-world 招牌。外环加入 refinery、仓库、龙门吊、集装箱、道路灯、
+        岩石山脊与高度雾，遮住平台剖面。
       </p>
       <div class="actions">
-        <a class="primary" href={url('/city-hero/renders/01_wide_port.jpg')}>打开全尺寸 01 →</a>
+        <a class="primary" href={url('/city-hero/renders/01_port_approach.jpg')}>打开全尺寸 01 →</a>
         <a href={url('/city-hero/manifest.json')}>manifest.json</a>
       </div>
       <dl class="stats">
         <div><dt>英雄塔</dt><dd>K032 A 220.3 m / K038 J 222.7 m / K038 I 240.7 m</dd></div>
-        <div><dt>原生三角面</dt><dd>275,250 / 357,771 / 206,982 native</dd></div>
-        <div><dt>场景总量</dt><dd>34.38 M tris · 1,200 m deck</dd></div>
+        <div><dt>品牌清理</dt><dd>45 objects · 338,448 faces removed</dd></div>
+        <div><dt>场景总量</dt><dd>28.40 M tris · 1,200 m deck</dd></div>
         <div><dt>渲染</dt><dd>Cycles 1920×1080 · 160 samples · AgX/OIDN</dd></div>
       </dl>
     </header>
@@ -47,23 +47,24 @@ const shots = [
 
     <section class="notes">
       <p>
-        <strong>不叠楼：</strong>K032 BldgLG_A、K038 LargeJ、K038 LargeI 各只出现一次，
-        原生 220–241 m，无 uniform giant scaling、无垂直堆叠。街区扩展使用近 90 个
-        单栋 K039/K032/K038 模块，沿街低层/中景全部 1:1；K015 以 100× 单位修正
-        放在城市平台外 1.3 km，仅作暗色远景剪影和背景城市 massing。
+        <strong>规则不变：</strong>K032 BldgLG_A、K038 LargeJ、K038 LargeI 各只出现一次，
+        原生 220–241 m，无 uniform giant scaling、无垂直堆叠；所有街区模块 1:1 单栋。
+        v4 只保留 45 个街区模块，围绕 4 个连续 blocks，使用重复 K032/K039 family
+        和统一的 dark-metal + sodium/teal 调色，不再铺 86 个互不相关的资产。
       </p>
       <p>
-        <strong>1:1 港口：</strong>CommunityCentre 到港厅（门厅/门扇/室内灯/到港屏/
-        雨棚桁架/排队栏杆/行李车/出租车）、60 m TLOF、25 m A-30、龙门架、储罐、
-        管线、集装箱场、C2184 面板墙、K014/K034 greeble、Modelshop 人群。
-        近景细节来自 authored 几何，不靠程序化拉伸。
+        <strong>品牌清理：</strong>删除 45 个对象的 338,448 个第三方广告/水印面
+        （Ads / Banner / Signs_Lights / Screens / Decals），没有 KITBASH3D 标识残留。
+        新招牌全部是 in-world：NAUTILUS REACH、PORT 07、T2 ARRIVALS、BERTH 07/12、
+        SHIP LINE 09、NAUTILUS FREIGHT、ORBITAL LINE、NIGHT MARKET、FUEL DEPOT、
+        DANGER / NO ENTRY，以及“夜航/港口/货运/夜市/禁止入内”等中英文霓虹。
       </p>
       <p>
-        <strong>背景/地形：</strong>K015 塔楼基座改为 600 m authored 城市底盘，
-        周围是单栋 K032/K039 模块而不是无贴图蓝盒子；外环加入岩石山脊、环城道路、
-        道路灯和雾。K015 的 1K 贴图只做暗色剪影，不作为近景细节。
-        这是离线 Cycles 质量样本，未重建实时 GLB/preview；Kitbash3D / Modelshop
-        资产只用于私有/离线渲染，公开 Web 前需单独评估授权。
+        <strong>工业外环：</strong>平台四边加入挂墙仓库、管廊、边缘高架路、portal cranes；
+        外围 terrain 有 refinery 塔/储罐/烟囱/火炬、岩石山脊、环城/山道和长曝光车灯，
+        高度雾和工业边缘结构遮住 slab 剖面。K015 仍是 1.3 km 外的暗色剪影，不近看。
+        限制：离线 Cycles stills，未重建实时 GLB/preview；CommunityCentre 为 1.03 M-tri
+        子集；Kitbash3D / Modelshop 资产仅私有/离线，公开 Web 前需单独评估授权。
       </p>
     </section>
   </main>
@@ -148,7 +149,7 @@ const shots = [
     background: #0a1016;
     border: 1px solid rgba(255, 255, 255, 0.12);
   }
-  .shot:first-child, .shot:last-child { grid-column: 1 / -1; }
+  .shot:first-child { grid-column: 1 / -1; }
   .shot img {
     display: block;
     width: 100%;
@@ -180,6 +181,6 @@ const shots = [
   @media (max-width: 800px) {
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .shot-grid { grid-template-columns: 1fr; }
-    .shot:first-child, .shot:last-child { grid-column: auto; }
+    .shot:first-child { grid-column: auto; }
   }
 </style>

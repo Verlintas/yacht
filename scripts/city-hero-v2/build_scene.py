@@ -52,6 +52,19 @@ random.seed(77)
 def log(*a):
     print(*a, flush=True)
 
+def get_cjk_font():
+    for f in bpy.data.fonts:
+        if 'PingFang' in f.name or 'Heiti' in f.name:
+            return f
+    for path in ('/System/Library/Fonts/PingFang.ttc',
+                 '/System/Library/Fonts/STHeiti Medium.ttc'):
+        try:
+            if os.path.exists(path):
+                return bpy.data.fonts.load(path)
+        except Exception:
+            pass
+    return get_font()
+
 # ---------------------------------------------------------------------------
 def make_mats():
     """Dark, cool concrete for the deck; warm paint only where intended."""
@@ -775,22 +788,29 @@ def build():
     log("DENSE DISTRICT")
     district = []
     # Central canyon: low shopfront wall at x ±35 and native mid-rise behind.
+    KEEP = set(
+        [f'Canyon_W{i}' for i in range(1,15)] +
+        [f'Canyon_E{i}' for i in range(1,15)] +
+        ['Gate_W1','Gate_W2','Gate_E1','Gate_E2'] +
+        ['West_1','West_2','West_3','East_1','East_2','East_3','East_4'] +
+        ['North_1','North_2','North_3','Port_W1','Port_E1','Port_E2']
+    )
     for args in [
         ('Canyon_W1', 'K32_BldgLG_G', -72, -235, 90, 'mid', 'E', 'NOODLE'),
         ('Canyon_W2', 'K32_BldgM_A', -75, -160, 0, 'mid', 'E', 'PARTS'),
-        ('Canyon_W3', 'K32_BldgLG_F', -80, -80, 0, 'mid', 'E', 'FUEL'),
-        ('Canyon_W4', 'K32_BldgM_D', -75, -5, 90, 'mid', 'E', 'CAFE'),
-        ('Canyon_W5', 'K32_BldgLG_H', -85, 55, 0, 'mid', 'E', 'HOTEL'),
+        ('Canyon_W3', 'K32_BldgLG_G', -80, -80, 0, 'mid', 'E', 'FUEL'),
+        ('Canyon_W4', 'K32_BldgM_A', -75, -5, 90, 'mid', 'E', 'CAFE'),
+        ('Canyon_W5', 'K32_BldgLG_G', -85, 55, 0, 'mid', 'E', 'HOTEL'),
         ('Canyon_W6', 'K39_BldgLG_E', -35, -235, 0, 'low', 'E', 'TEA'),
         ('Canyon_W7', 'K39_BldgLG_F', -33, -160, 0, 'low', 'E', 'GEAR'),
         ('Canyon_W8', 'K39_BldgLG_E', -35, -80, 0, 'low', 'E', 'FOOD'),
         ('Canyon_W9', 'K39_BldgLG_E', -35, -5, 0, 'low', 'E', 'OPEN'),
         ('Canyon_W10', 'K39_BldgLG_F', -35, 70, 0, 'low', 'E', 'RAMEN'),
-        ('Canyon_E1', 'K32_BldgLG_D', 72, -235, 90, 'mid', 'W', 'RAMEN'),
-        ('Canyon_E2', 'K32_BldgM_B', 75, -160, 0, 'mid', 'W', 'TRADE'),
-        ('Canyon_E3', 'K32_BldgLG_G', 80, -80, 0, 'mid', 'W', 'MARKET'),
+        ('Canyon_E1', 'K32_BldgLG_F', 72, -235, 90, 'mid', 'W', 'RAMEN'),
+        ('Canyon_E2', 'K32_BldgM_D', 75, -160, 0, 'mid', 'W', 'TRADE'),
+        ('Canyon_E3', 'K32_BldgLG_F', 80, -80, 0, 'mid', 'W', 'MARKET'),
         ('Canyon_E4', 'K32_BldgM_D', 75, -5, 0, 'mid', 'W', 'REPAIR'),
-        ('Canyon_E5', 'K32_BldgM_F', 80, 55, 0, 'mid', 'W', 'BAR'),
+        ('Canyon_E5', 'K32_BldgLG_F', 80, 55, 0, 'mid', 'W', 'BAR'),
         ('Canyon_E6', 'K39_BldgLG_E', 35, -235, 0, 'low', 'W', 'CAFE'),
         ('Canyon_E7', 'K39_BldgLG_F', 33, -160, 0, 'low', 'W', 'DUTY'),
         ('Canyon_E8', 'K39_BldgLG_E', 35, -80, 0, 'low', 'W', 'SUSHI'),
@@ -800,8 +820,8 @@ def build():
         # between the terminal and the CrossPort street.
         ('Gate_W1', 'K32_BldgM_A', -150, -340, 0, 'mid', 'S', 'PORT 07'),
         ('Gate_W2', 'K32_BldgM_D', -50, -340, 0, 'mid', 'S', 'MARKET'),
-        ('Gate_E1', 'K32_BldgM_B', 60, -340, 0, 'mid', 'S', 'CAFE'),
-        ('Gate_E2', 'K32_BldgM_F', 160, -340, 0, 'mid', 'S', 'FREIGHT'),
+        ('Gate_E1', 'K32_BldgM_A', 60, -340, 0, 'mid', 'S', 'CAFE'),
+        ('Gate_E2', 'K32_BldgM_D', 160, -340, 0, 'mid', 'S', 'FREIGHT'),
         # infill shop row: continuous street wall in the gaps between big blocks
         ('Canyon_W11', 'K39_BldgLG_E', -35, -190, 0, 'low', 'E', 'TEA'),
         ('Canyon_W12', 'K39_BldgLG_F', -35, -120, 0, 'low', 'E', 'PARTS'),
@@ -850,14 +870,14 @@ def build():
         # West avenue / service district
         ('West_1', 'K32_BldgLG_F', -500, -230, 0, 'mid', 'E', 'PORT 07'),
         ('West_2', 'K32_BldgM_A', -500, -150, 0, 'mid', 'E', 'CARGO'),
-        ('West_3', 'K32_BldgM_C', -500, -70, 0, 'mid', 'E', 'DOCK'),
+        ('West_3', 'K32_BldgM_A', -500, -70, 0, 'mid', 'E', 'DOCK'),
         ('West_4', 'K32_BldgM_D', -500, 180, 90, 'mid', 'E', 'HOSTEL'),
         ('West_5', 'K39_BldgLG_E', -395, -230, 0, 'low', 'E', 'FUEL'),
         ('West_6', 'K39_BldgLG_F', -395, -70, 0, 'low', 'E', 'SUPPLY'),
         # East avenue / service district
         ('East_1', 'K32_BldgLG_H', 500, -230, 0, 'mid', 'W', 'YARD'),
-        ('East_2', 'K32_BldgM_A', 500, -150, 0, 'mid', 'W', 'FREIGHT'),
-        ('East_3', 'K32_BldgM_C', 500, -70, 0, 'mid', 'W', 'DEPOT'),
+        ('East_2', 'K32_BldgM_D', 500, -150, 0, 'mid', 'W', 'FREIGHT'),
+        ('East_3', 'K32_BldgLG_H', 500, -70, 0, 'mid', 'W', 'DEPOT'),
         ('East_4', 'K38_LargeD', 555, 280, 0, 'tall', 'W', 'TOWER'),
         ('East_5', 'K39_BldgLG_E', 395, -230, 0, 'low', 'W', 'YARD'),
         ('East_6', 'K39_BldgLG_F', 395, -70, 0, 'low', 'W', 'PARTS'),
@@ -873,6 +893,8 @@ def build():
         ('Port_E2', 'K32_BldgM_D', 280, -350, 0, 'mid', 'W', 'FREIGHT'),
     ]:
         name, key, x, y, rot, kind, front, label = args
+        if name not in KEEP:
+            continue
         if key in mods:
             district.append(add_block(name, key, x, y, rot, kind, front, label, idx=len(district)))
     lows = district
@@ -1161,8 +1183,6 @@ def build():
     place_ground(p1, -118, -495.0, 0.62, 0, C_PORT)
     box("C2184_SouthBank_Frame", (10.6, 0.55, 4.4), (-118, -495.2, 2.8),
         M['dark'], coll=C_PORT, bevel=0.03)
-    p2 = clone(c2184, 'C2184_EastBank', C_PORT, 1.0)
-    place_ground(p2, -202.0, -430, 0.62, 90, C_PORT)
     # K014 greebles on the terminal plinth + south utility wall
     for i, (key, x, z, rot, s) in enumerate([
         ('Greeble_E', -108, 3.1, 0, 1.1), ('Greeble_H', -126, 3.3, 0, 1.0),
@@ -1198,7 +1218,7 @@ def build():
         cyl(f"Crane_{cx}_Cable", 0.05, 10.0, (cx+4, cy, 23.7), M['dark'], coll=C_PORT, verts=6)
         for sx in (-1,1):
             box(f"Crane_{cx}_Rail{sx}", (44,0.5,0.25), (cx, cy+sx*7, 0.18), M['dark'], coll=C_PORT, uv=False)
-    light_mast(C_PORT, M, C_LIGHT, "MastSW", -52, -462, 20, 28)
+    light_mast(C_PORT, M, C_LIGHT, "MastSW", -110, -470, 20, 28)
     light_mast(C_PORT, M, C_LIGHT, "MastSE", 55, -458, 200, 28)
     light_mast(C_PORT, M, C_LIGHT, "MastNW", -58, -386, 20, 26)
     light_mast(C_PORT, M, C_LIGHT, "MastNE", 55, -386, 200, 26)
@@ -1236,6 +1256,175 @@ def build():
     box("Gantry_Cabin", (10.0, 5.0, 4.2), (30, -444, 2.4), M['dark'], coll=C_PORT, bevel=0.05)
     box("Gantry_CabinGlass", (9.6, 0.10, 1.8), (30, -446.55, 3.4), M['glass'], coll=C_PORT, bevel=0.01)
     box("Gantry_CabinLight", (10.2, 0.18, 0.16), (30, -446.7, 4.5), M['warm'], coll=C_PORT, uv=False)
+
+    # ---------------------------------------------------------------- brand scrub / unified palette / in-world signs
+    log("BRAND SCRUB / DISTRICT PALETTE")
+    BLACKLIST = ('ads', 'banner', 'signs_lights', 'screens', 'decals', 'logo', 'watermark')
+    ad_dark = solid_mat("V2_InWorld_AdPanel", (0.035, 0.042, 0.052), 0.50, 0.30)
+    ad_warm = emission_mat("V2_InWorld_AdWarm", (1.0, 0.45, 0.13), 1.8, (0.02, 0.012, 0.006))
+    brand_replaced = []
+    brand_faces_removed = 0
+    for coll in (C_BLDG, C_CITY, C_PORT):
+        for ob in list(coll.objects):
+            if ob.type != 'MESH' or not ob.data.materials:
+                continue
+            bad_idx = {i for i, m in enumerate(ob.data.materials)
+                       if m and any(k in m.name.lower() for k in BLACKLIST)}
+            if not bad_idx:
+                continue
+            me = ob.data
+            bm = bmesh.new(); bm.from_mesh(me)
+            dead = [f for f in bm.faces if f.material_index in bad_idx]
+            if dead:
+                bmesh.ops.delete(bm, geom=dead, context='FACES')
+                bm.to_mesh(me); bm.free()
+                brand_faces_removed += len(dead)
+                brand_replaced.append((ob.name, [ob.data.materials[i].name for i in bad_idx]))
+                # keep the slots neutral but empty so the audit can still see
+                for i in bad_idx:
+                    ob.data.materials[i] = ad_dark
+            else:
+                bm.free()
+    # final slot scrub: catches shared/empty slots that had no deletable faces
+    for coll in (C_BLDG, C_CITY, C_PORT):
+        for ob in list(coll.objects):
+            if ob.type != 'MESH':
+                continue
+            for slot in ob.material_slots:
+                if slot.material and any(k in slot.material.name.lower() for k in BLACKLIST):
+                    slot.material = ad_dark
+    log("BRAND_REPLACED", len(brand_replaced), "FACES", brand_faces_removed)
+    # cool industrial palette for the district layer, heroes keep native materials
+    tint_cache = {}
+    TINT = (0.60, 0.67, 0.78)
+    def tint_mat(m):
+        if not m or m.name in tint_cache:
+            return tint_cache.get(m.name)
+        if m.name.startswith('V2_'):
+            return m
+        nm = m.copy(); nm.name = "V3_PAL_" + m.name
+        try:
+            nt = nm.node_tree
+            b = next((n for n in nt.nodes if n.type == 'BSDF_PRINCIPLED'), None)
+            if b:
+                if b.inputs['Base Color'].is_linked:
+                    src = b.inputs['Base Color'].links[0].from_socket
+                    mix = nt.nodes.new('ShaderNodeMix'); mix.data_type='RGBA'; mix.blend_type='MULTIPLY'
+                    mix.inputs[0].default_value = 1.0
+                    mix.inputs[6].default_value = (*TINT, 1)
+                    nt.links.new(src, mix.inputs[7])
+                    nt.links.new(mix.outputs[2], b.inputs['Base Color'])
+                else:
+                    c = list(b.inputs['Base Color'].default_value)
+                    b.inputs['Base Color'].default_value = (c[0]*TINT[0], c[1]*TINT[1], c[2]*TINT[2], c[3])
+        except Exception:
+            pass
+        tint_cache[m.name] = nm
+        return nm
+    for d in district + mids:
+        ob = bpy.data.objects.get(d.get('obj', ''))
+        if not ob:
+            continue
+        for slot in ob.material_slots:
+            if slot.material:
+                slot.material = tint_mat(slot.material)
+
+    def billboard(name, x, y, z, w, h, face, lines):
+        if face in ('S', 'N'):
+            box(f"{name}_Board", (w, 0.35, h), (x, y, z), ad_dark, coll=C_CITY, bevel=0.05)
+            box(f"{name}_EdgeT", (w+0.4, 0.40, 0.10), (x, y-0.02, z+h/2), M['sign_cyan'], coll=C_CITY, uv=False)
+            box(f"{name}_EdgeB", (w+0.4, 0.40, 0.10), (x, y-0.02, z-h/2), M['sign_cyan'], coll=C_CITY, uv=False)
+            box(f"{name}_Frame", (w+0.5, 0.42, h+0.5), (x, y+ (0.08 if face=='S' else -0.08), z),
+                M['steel'], coll=C_CITY, bevel=0.03)
+            sy = y - 0.24 if face == 'S' else y + 0.24
+            trot = (math.radians(90), 0, 0 if face == 'S' else math.radians(180))
+            for i, (txt, size, mat) in enumerate(lines):
+                font = get_cjk_font() if any(ord(c) > 127 for c in txt) else get_font()
+                text_mesh(f"{name}_L{i}", txt, size, (x, sy, z + h*0.28 - i*size*1.25),
+                          mat, rot=trot, font=font, coll=C_CITY, extrude=0.006, spacing=0.94)
+        else:
+            box(f"{name}_Board", (0.35, w, h), (x, y, z), ad_dark, coll=C_CITY, bevel=0.05)
+            box(f"{name}_EdgeT", (0.40, w+0.4, 0.10), (x-0.02, y, z+h/2), M['sign_cyan'], coll=C_CITY, uv=False)
+            box(f"{name}_EdgeB", (0.40, w+0.4, 0.10), (x-0.02, y, z-h/2), M['sign_cyan'], coll=C_CITY, uv=False)
+            box(f"{name}_Frame", (0.42, w+0.5, h+0.5), (x + (0.08 if face=='E' else -0.08), y, z),
+                M['steel'], coll=C_CITY, bevel=0.03)
+            sx = x + 0.24 if face == 'E' else x - 0.24
+            trot = (math.radians(90), 0, math.radians(90 if face == 'E' else -90))
+            for i, (txt, size, mat) in enumerate(lines):
+                font = get_cjk_font() if any(ord(c) > 127 for c in txt) else get_font()
+                text_mesh(f"{name}_L{i}", txt, size, (sx, y, z + h*0.28 - i*size*1.25),
+                          mat, rot=trot, font=font, coll=C_CITY, extrude=0.006, spacing=0.94)
+
+    billboard('SignGateW', -50, -357.0, 18.5, 34, 8, 'S',
+              [('NAUTILUS REACH', 2.55, M['sign_warm']),
+               ('PORT 07 // BERTH 12', 1.35, M['sign_cyan']),
+               ('夜航 港口', 1.10, M['white'])])
+    billboard('SignGateE', 60, -357.0, 17.5, 32, 7.5, 'S',
+              [('T2 // ARRIVALS', 2.35, M['sign_warm']),
+               ('SHIP LINE 09', 1.30, M['sign_cyan']),
+               ('NR 2045', 1.00, M['white'])])
+    billboard('SignCanyonW', -44.7, -235, 24, 28, 8, 'E',
+              [('NAUTILUS FREIGHT', 1.80, M['sign_cyan']),
+               ('BERTH 07', 1.35, M['sign_warm']),
+               ('货运 07', 1.10, M['white'])])
+    billboard('SignCanyonE', 56.7, -80, 26, 26, 7, 'W',
+              [('ORBITAL LINE', 1.80, M['sign_warm']),
+               ('PORT 07', 1.30, M['sign_cyan']),
+               ('夜航', 1.20, M['white'])])
+    billboard('SignFuel', -476.7, -230, 18, 20, 6, 'E',
+              [('FUEL DEPOT', 1.35, M['sign_red']),
+               ('DANGER / NO ENTRY', 0.85, M['white']),
+               ('禁止入内', 0.95, M['sign_red'])])
+    billboard('SignEastLine', 467.7, -230, 20, 20, 6, 'W',
+              [('SHIP LINE 09', 1.35, M['sign_cyan']),
+               ('T2 CARGO', 1.15, M['sign_warm']),
+               ('BERTH 12', 0.85, M['white'])])
+    billboard('SignMarket', -250, 184.8, 18, 24, 6, 'S',
+              [('NIGHT MARKET', 1.50, M['sign_warm']),
+               ('PORT 07', 1.00, M['sign_cyan']),
+               ('夜市 24H', 0.95, M['white'])])
+    # south-facing T2 arrival pylon, readable from the pad
+    for px in (-75, -65):
+        cyl(f"T2PylonPost_{px}", 0.26, 6.0, (px, -460, 3.0), M['steel'], coll=C_PORT, verts=10)
+    billboard('T2Pylon', -70, -460, 6.0, 10, 5.5, 'S',
+              [('T2 // ARRIVALS', 1.25, M['sign_warm']),
+               ('NAUTILUS REACH', 0.72, M['white']),
+               ('BERTH 07', 0.55, M['sign_cyan'])])
+
+    # vertical Chinese/English neon on the canyon shop wall
+    for i, (x, y, side, txt, mat) in enumerate([
+        (-29.7, -190, 'E', '夜航', M['sign_cyan']),
+        (-29.7, -120, 'E', '货运', M['sign_warm']),
+        (29.7, -190, 'W', '酒吧', M['sign_warm']),
+        (29.7, -45, 'W', '夜市', M['sign_cyan'])]):
+        font = get_cjk_font()
+        box(f"NeonBlade_{i}", (0.18, 0.55, 4.2),
+            (x, y, 10.0) if side == 'E' else (x, y, 10.0), mat, coll=C_CITY, uv=False)
+        text_mesh(f"NeonBlade_{i}_T", txt, 0.62,
+                  (x + (0.20 if side == 'E' else -0.20), y, 10.0),
+                  M['white'], rot=(math.radians(90), 0, math.radians(90 if side == 'E' else -90)),
+                  font=font, coll=C_CITY, extrude=0.004, spacing=1.0)
+    # berth / warning boards at the port
+    text_mesh("Berth07Sign", "BERTH 07   //   NR LINES", 0.55, (-202.5, -470, 2.8),
+              M['sign_cyan'], rot=(math.radians(90),0,math.radians(-90)), font=get_font(),
+              coll=C_PORT, extrude=0.004)
+    text_mesh("DangerSign", "DANGER  //  NO ENTRY", 0.40, (-24.5, -331.0, 5.0),
+              M['sign_red'], rot=(math.radians(90),0,0), font=get_font(),
+              coll=C_CITY, extrude=0.004)
+    text_mesh("DangerSignCn", "危险  禁止入内", 0.48, (-24.5, -331.0, 4.2),
+              M['sign_red'], rot=(math.radians(90),0,0), font=get_cjk_font(),
+              coll=C_CITY, extrude=0.004)
+
+    # brand audit on visible building/terminal objects
+    brand_left = []
+    for coll in (C_BLDG, C_CITY, C_PORT):
+        for ob in coll.objects:
+            if ob.type != 'MESH':
+                continue
+            for slot in ob.material_slots:
+                if slot.material and any(k in slot.material.name.lower() for k in BLACKLIST):
+                    brand_left.append((ob.name, slot.material.name))
+    log("BRAND_AUDIT", "OK" if not brand_left else brand_left)
 
     # ---------------------------------------------------------------- characters
     log("CHARACTERS")
@@ -1477,7 +1666,7 @@ def build():
         o.data.transform(Matrix.Translation(-ctr)); o.location=(0,0,0)
         rocks.append(o)
     rock_spec = [
-        ('Rock_A', 350, -780, 88, 18), ('Rock_B', -450, -800, 96, 200),
+        ('Rock_A', 350, -780, 88, 18), ('Rock_B', -760, -860, 115, 200),
         ('Rock_C', 680, -680, 72, 75), ('Rock_D', -680, -680, 80, 300),
         ('Rock_E', 650, -880, 125, 40), ('Rock_F', -700, -880, 135, 220),
     ]
@@ -1518,6 +1707,7 @@ def build():
     terrain_road('HillRoad_NW', -620, 620, -1120, 980)
     terrain_road('OuterHighwayS', -820, -840, 820, -840, width=18)
     terrain_road('OuterHighwayN', 820, 840, -820, 840, width=18)
+    terrain_road('ForeRoad', -900, -1000, 900, -1000, width=22)
     for i, x in enumerate(range(-760, 801, 80)):
         for y in (-840, 840):
             z = terrain_h(x, y)
@@ -1529,6 +1719,156 @@ def build():
         lz = terrain_h(lx,ly)
         cyl(f"RingLight_{i}_Pole", 0.14, 8.0, (lx,ly,lz+4.0), M['dark'], coll=C_BG, verts=8)
         box(f"RingLight_{i}_Head", (0.7,0.3,0.16), (lx+0.6,ly,lz+8.0), M['sign_warm'], coll=C_BG, uv=False)
+
+    # ---------------------------------------------------------------- industrial horizon / deck edge
+    log("INDUSTRIAL HORIZON")
+    def industrial_cluster(name, cx, cy, rot=0, scale=1.0):
+        z = terrain_h(cx, cy)
+        R = Matrix.Rotation(math.radians(rot), 3, 'Z')
+        def wl(dx,dy,dz):
+            v=R@Vector((dx,dy,dz)); return (cx+v.x, cy+v.y, z+dz)
+        box(f"{name}_Pad", (180*scale,180*scale,4), (cx,cy,z-2), M['concrete'], coll=C_BG, bevel=0.1, uv=False)
+        # distillation columns
+        for i,(dx,dy,r,h) in enumerate([(-35,10,4.5,72),(-10,-20,5.5,58),(20,15,3.8,84)]):
+            x,y,_=wl(dx*scale,dy*scale,2)
+            cyl(f"{name}_Col{i}", r*scale, h*scale, (x,y,z+2+h*scale/2), M['steel'], coll=C_BG, verts=20, smooth=True)
+            cyl(f"{name}_ColCap{i}", r*1.2*scale, 1.2, (x,y,z+2+h*scale), M['dark'], coll=C_BG, verts=20)
+            for k in range(4):
+                cyl(f"{name}_ColBand{i}_{k}", r*1.04*scale, 0.35, (x,y,z+8+k*h*scale*0.2), M['rust'], coll=C_BG, verts=20)
+            box(f"{name}_ColLadder{i}", (0.20,0.20,h*scale*0.8), (x+r*scale+0.4,y,z+2+h*scale*0.4), M['dark'], coll=C_BG, uv=False)
+            sphere(f"{name}_ColBeacon{i}", 0.35, (x,y,z+3+h*scale), M['red'], segs=8, rings=5, coll=C_BG)
+        # storage tanks
+        for i,(dx,dy,r,h) in enumerate([(48,-22,12,20),(52,18,10,16)]):
+            x,y,_=wl(dx*scale,dy*scale,2)
+            cyl(f"{name}_Tank{i}", r*scale, h*scale, (x,y,z+2+h*scale/2), M['tank'], coll=C_BG, verts=24, smooth=True)
+            d=sphere(f"{name}_TankDome{i}", r*scale, (x,y,z+2+h*scale), M['tank'], segs=20, rings=10, coll=C_BG)
+            d.scale.z=0.38
+            for k in range(3):
+                cyl(f"{name}_TankBand{i}_{k}", r*1.02*scale, 0.22, (x,y,z+4+k*h*scale*0.22), M['steel'], coll=C_BG, verts=24)
+        # chimney + flare
+        x,y,_=wl(-55,-30,2)
+        cyl(f"{name}_Chimney", 2.2*scale, 112*scale, (x,y,z+2+56*scale), M['concrete'], coll=C_BG, verts=18)
+        for k in range(4):
+            cyl(f"{name}_ChimBand{k}", 2.4*scale, 0.5, (x,y,z+12+k*26*scale), M['rust'], coll=C_BG, verts=18)
+        sphere(f"{name}_ChimBeacon", 0.5, (x,y,z+114*scale), M['red'], segs=8, rings=5, coll=C_BG)
+        x,y,_=wl(42,-38,2)
+        cyl(f"{name}_Flare", 1.2*scale, 70*scale, (x,y,z+2+35*scale), M['rust'], coll=C_BG, verts=14)
+        cone(f"{name}_Flame", 2.2*scale, 0.2, 6*scale, (x,y,z+72*scale), M['sign_warm'], coll=C_BG, verts=12)
+        # pipe rack and lights
+        for i in range(3):
+            dx=-70+i*55
+            x,y,_=wl(dx*scale, 32*scale, 2)
+            cyl(f"{name}_Pipe{i}", 0.8*scale, 150*scale, (x,y,z+7), M['pipe'], rot=(0,math.radians(90),0), coll=C_BG, verts=12)
+        for i in range(4):
+            x,y,_=wl((-60+i*40)*scale, -55*scale, 3)
+            sphere(f"{name}_WarnLight{i}", 0.5, (x,y,z+3), M['sign_warm'], segs=8, rings=5, coll=C_BG)
+        # container stack
+        for i in range(6):
+            x,y,_=wl((-45+i*15)*scale, -70*scale, 1.3)
+            box(f"{name}_Box{i}", (12.2,2.5,2.6), (x,y,z+1.3+(i%2)*2.65),
+                M['container_red'] if i%3==0 else M['container_blue'] if i%3==1 else M['container_tan'],
+                coll=C_BG, bevel=0.03)
+    industrial_cluster('Refinery_NW', -760, 850, 18, 1.0)
+    industrial_cluster('Refinery_NE', 780, 900, -22, 1.0)
+    industrial_cluster('Refinery_SW', -850, -880, 8, 1.0)
+    industrial_cluster('Refinery_SE', 850, -900, -12, 1.0)
+    industrial_cluster('Refinery_N1', -500, 780, 20, 0.82)
+    industrial_cluster('Refinery_N2', 500, 800, -15, 0.78)
+    industrial_cluster('Refinery_S1', -700, -750, 4, 0.80)
+    industrial_cluster('Refinery_S2', 700, -750, -8, 0.82)
+    industrial_cluster('Refinery_ForeW', -720, -980, 10, 0.80)
+    industrial_cluster('Refinery_ForeE', 750, -980, -10, 0.80)
+
+    def edge_refinery(name, cx, cy):
+        z = 0.0
+        box(f"{name}_Pad", (150,110,2.0), (cx,cy,1.0), M['concrete'], coll=C_BG, bevel=0.06, uv=False)
+        for i,(dx,dy,r,h) in enumerate([(-32,-10,4,56),(0,12,5,68),(30,-8,3.5,48)]):
+            cyl(f"{name}_Col{i}", r, h, (cx+dx,cy+dy,1+h/2), M['steel'], coll=C_BG, verts=18, smooth=True)
+            cyl(f"{name}_ColCap{i}", r*1.15, 1.0, (cx+dx,cy+dy,1+h), M['dark'], coll=C_BG, verts=18)
+            for k in range(3):
+                cyl(f"{name}_ColBand{i}_{k}", r*1.04, 0.3, (cx+dx,cy+dy,8+k*h*0.25), M['rust'], coll=C_BG, verts=18)
+            sphere(f"{name}_Beacon{i}", 0.35, (cx+dx,cy+dy,3+h), M['red'], segs=8, rings=5, coll=C_BG)
+        for i,(dx,dy,r,h) in enumerate([(45,-20,10,16),(-52,25,11,18)]):
+            cyl(f"{name}_Tank{i}", r, h, (cx+dx,cy+dy,1+h/2), M['tank'], coll=C_BG, verts=22, smooth=True)
+            d=sphere(f"{name}_TankDome{i}", r, (cx+dx,cy+dy,1+h), M['tank'], segs=18, rings=8, coll=C_BG); d.scale.z=0.35
+        cyl(f"{name}_Chimney", 2.0, 96, (cx-58,cy-35,49), M['concrete'], coll=C_BG, verts=16)
+        sphere(f"{name}_ChimBeacon", 0.45, (cx-58,cy-35,97), M['red'], segs=8, rings=5, coll=C_BG)
+        for i in range(3):
+            cyl(f"{name}_Pipe{i}", 0.5, 120, (cx,cy-42+i*3,7+i*2), M['pipe'], rot=(0,math.radians(90),0), coll=C_BG, verts=10)
+        for i in range(5):
+            box(f"{name}_Box{i}", (12.2,2.5,2.6), (cx-50+i*13,cy+40,1.3+(i%2)*2.65),
+                M['container_red'] if i%2 else M['container_blue'], coll=C_BG, bevel=0.03)
+        for i in range(3):
+            sphere(f"{name}_Warn{i}", 0.4, (cx-60+i*55,cy+48,4), M['sign_warm'], segs=8, rings=5, coll=C_BG)
+    edge_refinery('EdgeRefineryW', -540, -535)
+    edge_refinery('EdgeRefineryE', 540, -535)
+
+    # raised perimeter road and pipe band hide the flat slab edge
+    def edge_road(name, axis, fixed):
+        if axis == 'x':
+            box(f"{name}_Deck", (1240,14,1.2), (0,fixed,-1.2), M['asphalt'], coll=C_BG, bevel=0.04)
+            box(f"{name}_Rail", (1240,0.4,1.0), (0,fixed+7.0,-0.1), M['steel'], coll=C_BG, uv=False)
+            for i,x in enumerate(range(-600,601,60)):
+                box(f"{name}_Col{i}", (2.0,2.0,39), (x,fixed,-20.5), M['concrete'], coll=C_BG, bevel=0.04)
+                cyl(f"{name}_Lamp{i}", 0.10,7.0, (x,fixed-5.5,3.0), M['dark'], coll=C_BG, verts=8)
+                box(f"{name}_LampHead{i}", (0.8,0.35,0.15), (x,fixed-5.5,6.5), M['sign_warm'], coll=C_BG, uv=False)
+        else:
+            box(f"{name}_Deck", (14,1240,1.2), (fixed,0,-1.2), M['asphalt'], coll=C_BG, bevel=0.04)
+            box(f"{name}_Rail", (0.4,1240,1.0), (fixed+7.0,0,-0.1), M['steel'], coll=C_BG, uv=False)
+            for i,y in enumerate(range(-600,601,60)):
+                box(f"{name}_Col{i}", (2.0,2.0,39), (fixed,y,-20.5), M['concrete'], coll=C_BG, bevel=0.04)
+                cyl(f"{name}_Lamp{i}", 0.10,7.0, (fixed-5.5,y,3.0), M['dark'], coll=C_BG, verts=8)
+                box(f"{name}_LampHead{i}", (0.35,0.8,0.15), (fixed-5.5,y,6.5), M['sign_warm'], coll=C_BG, uv=False)
+    edge_road('EdgeRoadS','x',-612)
+    edge_road('EdgeRoadN','x',612)
+    edge_road('EdgeRoadW','y',-612)
+    edge_road('EdgeRoadE','y',612)
+    # service warehouses hanging off the retaining wall hide the flat slab edge
+    for i, x in enumerate((-480,-320,-160,0,160,320,480)):
+        box(f"WallWarehouseS{i}", (96,15,38), (x,-636,-19), M['corrugated'], coll=C_BG, bevel=0.08)
+        box(f"WallWarehouseSRoof{i}", (98,17,0.8), (x,-636,0.0), M['dark'], coll=C_BG, bevel=0.04)
+        for k in range(3):
+            box(f"WallWarehouseSDoor{i}_{k}", (12,0.4,8), (x-28+k*28,-644,4.0), M['dark'], coll=C_BG, bevel=0.03)
+            box(f"WallWarehouseSLight{i}_{k}", (12.4,0.2,0.22), (x-28+k*28,-644.3,8.4), M['sign_warm'], coll=C_BG, uv=False)
+        k34_place('AirHandlerLG_PlasticWhite', f"WallWarehouseSAC{i}", (x,-636,0.8), 0, 0.7, C_BG)
+    for side, fixed in (('W',-636),('E',636)):
+        for i, y in enumerate((-420,-240,-60,120,300)):
+            box(f"WallWarehouse{side}{i}", (15,96,38), (fixed,y,-19), M['corrugated'], coll=C_BG, bevel=0.08)
+            box(f"WallWarehouse{side}Roof{i}", (17,98,0.8), (fixed,y,0.0), M['dark'], coll=C_BG, bevel=0.04)
+            for k in range(3):
+                box(f"WallWarehouse{side}Door{i}_{k}", (0.4,12,8), (fixed+8,y-28+k*28,4.0), M['dark'], coll=C_BG, bevel=0.03)
+                box(f"WallWarehouse{side}Light{i}_{k}", (0.2,12.4,0.22), (fixed+8.3,y-28+k*28,8.4), M['sign_warm'], coll=C_BG, uv=False)
+    # portal cranes on the south apron edge
+    for i, x in enumerate((-360,0,360)):
+        for sx in (-1,1):
+            box(f"PortalCrane{i}_Leg{sx}", (2.0,2.0,70), (x+sx*10,-660, -5), M['steel'], coll=C_BG, bevel=0.05)
+            box(f"PortalCrane{i}_Base{sx}", (5,5,2), (x+sx*10,-660,-39), M['concrete'], coll=C_BG, bevel=0.05)
+        box(f"PortalCrane{i}_Beam", (24,2.4,2.6), (x,-660,28), M['white_panel'], coll=C_BG, bevel=0.05)
+        box(f"PortalCrane{i}_Trolley", (4,3.5,2.0), (x+4,-660,26), M['dark'], coll=C_BG, bevel=0.04)
+        cyl(f"PortalCrane{i}_Cable", 0.06, 15, (x+4,-660,17.5), M['dark'], coll=C_BG, verts=6)
+        box(f"PortalCrane{i}_Hook", (2.5,1.4,1.5), (x+4,-660,10), M['orange'], coll=C_BG, bevel=0.04)
+        sphere(f"PortalCrane{i}_Beacon", 0.4, (x,-660,30), M['red'], segs=8, rings=5, coll=C_BG)
+    # pipe band along the retaining wall
+    for side, fixed in [('S',-604),('N',604)]:
+        for k,z in enumerate((-7,-15,-23)):
+            cyl(f"WallPipe{side}_{k}", 0.7, 1180, (0, fixed, z), M['pipe'], rot=(0,math.radians(90),0), coll=C_BG, verts=12)
+    for side, fixed in [('W',-604),('E',604)]:
+        for k,z in enumerate((-7,-15,-23)):
+            cyl(f"WallPipe{side}_{k}", 0.7, 1180, (fixed, 0, z), M['pipe'], rot=(math.radians(90),0,0), coll=C_BG, verts=12)
+
+    # traffic point-lights on the outer highways
+    for i, x in enumerate(range(-760,761,76)):
+        for yy, mat in [(-840, M['sign_warm']), (840, M['sign_red'])]:
+            sphere(f"RoadCar_{i}_{yy}", 0.30, (x,yy,terrain_h(x,yy)+0.8), mat, segs=6, rings=4, coll=C_BG)
+
+    # long-exposure traffic lights on the outer highways
+    for i, (yy, mat, off) in enumerate([(-840, M['sign_warm'], 3.0), (-840, M['sign_white'], 5.0),
+                                         (840, M['sign_warm'], -3.0), (840, M['sign_white'], -5.0),
+                                         (-1000, M['sign_warm'], 3.0), (-1000, M['sign_red'], -3.0)]):
+        pts=[]
+        for x in range(-800, 801, 100):
+            pts.append((x, yy+off, terrain_h(x,yy)+2.2))
+        curve(f"TrafficTrail_{i}", pts, 0.22, mat, coll=C_BG, res=1)
 
     # ---------------------------------------------------------------- CityStreets street life
     log("CITYSTREETS")
@@ -1655,9 +1995,16 @@ def build():
     av.inputs['Color'].default_value = (0.34, 0.47, 0.66, 1)
     av.inputs['Density'].default_value = 0.00014
     av.inputs['Anisotropy'].default_value = 0.38
+    _tc = ant.nodes.new('ShaderNodeTexCoord')
+    _sep = ant.nodes.new('ShaderNodeSeparateXYZ')
+    _mr = ant.nodes.new('ShaderNodeMapRange')
+    _mr.inputs['From Min'].default_value = 0.0; _mr.inputs['From Max'].default_value = 1.0
+    _mr.inputs['To Min'].default_value = 0.00026; _mr.inputs['To Max'].default_value = 0.000025
+    ant.links.new(_tc.outputs['Generated'], _sep.inputs['Vector'])
+    ant.links.new(_sep.outputs['Z'], _mr.inputs['Value'])
+    ant.links.new(_mr.outputs['Result'], av.inputs['Density'])
     ant.links.new(av.outputs['Volume'], aout.inputs['Volume'])
     atmo.data.materials.append(am)
-
     # ---------------------------------------------------------------- render settings
     sc.render.engine = 'CYCLES'
     prefs = bpy.context.preferences.addons['cycles'].preferences
@@ -1727,11 +2074,11 @@ def build():
             cd.dof.use_dof = True; cd.dof.aperture_fstop = fstop
             cd.dof.focus_distance = (Vector(target)-Vector(loc)).length if focus is None else focus
         return ob
-    cam_wide = camera("Cam_Wide", (-100, -590, 4.5), (-45, -320, 55), 24, 8.0)
+    cam_wide = camera("Cam_Wide", (-55, -490, 1.7), (0, -180, 110), 18, 8.0)
     cam_street = camera("Cam_Street", (0, -470, 1.7), (0, -140, 110), 20, 8.0)
     cam_termwide = camera("Cam_TermWide", (-170, -575, 5.5), (-100, -430, 40), 32, 8.0)
     cam_pad = camera("Cam_Pad", (-45, -520, 3.0), (4, -420, 6.5), 50, 7.1)
-    cam_aerial = camera("Cam_Aerial", (-950, -1200, 600), (0, 0, 80), 34, 11.0)
+    cam_aerial = camera("Cam_Aerial", (-600, -1400, 500), (0, 0, 80), 35, 11.0)
     cam_aerial_low = camera("Cam_AerialLow", (-700, -900, 300), (0, -100, 40), 35, 11.0)
     cam_detail = camera("Cam_Detail", (-80, -580, 4.5), (-145, -500, 7.5), 38, 6.3)
     cam_hero = camera("Cam_Hero", (245, -270, 2.2), (245, -160, 110), 35, 8.0)
@@ -1794,6 +2141,11 @@ def build():
     smx = Vector((max(v.x for v in sb), max(v.y for v in sb), max(v.z for v in sb)))
     report = dict(heroes=heroes, mids=mids, lows=lows, background=bg,
                   total_tris=total, by_collection=per, audit=issues,
+                  brand_replaced=len(brand_replaced), brand_faces_removed=brand_faces_removed,
+                  brand_audit='OK' if not brand_left else brand_left,
+                  in_world_signs=['NAUTILUS REACH','PORT 07','T2 ARRIVALS','BERTH 07/12',
+                                  'NAUTILUS FREIGHT','ORBITAL LINE','SHIP LINE 09','NIGHT MARKET',
+                                  'FUEL DEPOT','DANGER / NO ENTRY','夜航 港口','货运 07','夜市 24H'],
                   stacking='none; each hero is one native mesh at scale 1.0',
                   terminal=dict(name='CommunityCentre', x=-145, y=-445,
                                 w=103.3, d=86.7, h=26.8,

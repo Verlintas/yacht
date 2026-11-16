@@ -12,12 +12,11 @@ OUT = "/Users/apple/.local/share/opencode/worktree/e0f2de/city-hero-v2/public/ci
 os.makedirs(OUT, exist_ok=True)
 
 MAP = [
-    ("final_termwide.png", "01_port_wide.jpg"),
+    ("final_wide.png", "01_port_approach.jpg"),
     ("final_street.png", "02_street_canyon.jpg"),
-    ("final_pad.png", "03_pad_closeup.jpg"),
+    ("final_detail.png", "03_terminal_detail.jpg"),
     ("final_aerial_low.png", "04_dense_aerial.jpg"),
     ("final_aerial.png", "05_platform_aerial.jpg"),
-    ("final_detail.png", "06_terminal_detail.jpg"),
 ]
 
 def grade(src, dst):
