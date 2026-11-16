@@ -796,8 +796,8 @@ export class ExplosionVfx {
       textureColor: 0.4,
     });
     this.flashPool = new FlashPool(scene);
-    this.fireGlowPool = new FlashPool(scene, 20, getFireTexture(), THREE.NormalBlending, 3);
-    this.smokeGlowPool = new FlashPool(scene, 28, getSmokeTexture(), THREE.NormalBlending, 2);
+    this.fireGlowPool = new FlashPool(scene, 36, getFireTexture(), THREE.NormalBlending, 3);
+    this.smokeGlowPool = new FlashPool(scene, 48, getSmokeTexture(), THREE.NormalBlending, 2);
     this.ringPool = new RingPool(scene);
     this.debrisField = new DebrisField(scene, this.sparks);
     for (let i = 0; i < 6; i += 1) {
