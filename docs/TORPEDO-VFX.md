@@ -3,7 +3,7 @@
 **日期：** 2026-11-17
 **Worktree：** `/Users/apple/.local/share/opencode/worktree/e0f2de/vfx-torpedo`
 **基于：** main `1678c12`（已包含座舱 v3、Archon 贴图 pass、第三人称 HUD 分层）
-**本 worktree 提交：** v1 `c5de722`；v2 `9955ff9`（均未合并 main）
+**本 worktree 提交：** v1 `c5de722`；v2 `9955ff9`；v2.1 `983b63b`（均未合并 main）
 **范围：** AR-10 Archon A 级鱼雷、玩家/NPC 通用鱼雷、全局爆炸、T10 终末爆炸。
 
 ---
