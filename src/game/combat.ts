@@ -2,16 +2,21 @@ import * as THREE from 'three';
 import { getShip, shiftSpeedMultiplier, type ShipSpec, type WeaponMount, type WeaponType } from './ships';
 import { LocalPlume } from './trails';
 import { DamageVisuals } from './damage';
+import { TorpedoVfx, type TorpedoHandle, type TorpedoVfxStats } from './torpedo-vfx';
+import { ExplosionVfx, type ExplosionVfxStats } from './explosion-vfx';
 import type { ShipCollision } from './ship';
 
 interface Projectile {
-  mesh: THREE.Mesh;
-  glow: THREE.Sprite;
+  mesh: THREE.Mesh | null;
+  glow: THREE.Sprite | null;
+  /** 物理位置；鱼雷只渲染 InstancedMesh，不拥有独立节点 */
+  position: THREE.Vector3;
   velocity: THREE.Vector3;
   /** 上一帧位置，避免每帧 clone */
   prev: THREE.Vector3;
   damage: number;
   life: number;
+  age: number;
   owner: 'player' | 'npc';
   color: THREE.Color;
   speed: number;
@@ -19,12 +24,9 @@ interface Projectile {
   homing?: () => THREE.Vector3 | null;
   /** 制导最大转向角速度（rad/s），高速鱼雷需要更高机动性 */
   turnRate: number;
-}
-
-interface FlashFx {
-  sprite: THREE.Sprite;
-  age: number;
-  life: number;
+  heavyTorpedo: boolean;
+  terminal: boolean;
+  torpedo?: TorpedoHandle;
 }
 
 interface DeathEvent {
@@ -42,13 +44,6 @@ interface DeathSequence {
   duration: number;
   events: DeathEvent[];
   index: number;
-}
-
-interface ShockwaveFx {
-  sprite: THREE.Sprite;
-  age: number;
-  life: number;
-  size: number;
 }
 
 export type Faction = 'neutral' | 'hostile';
@@ -88,31 +83,6 @@ interface Npc {
   collisionHalfLength: number;
   collisionCooldown: number;
   collision?: ShipCollision;
-}
-
-interface ExplosionFx {
-  position: THREE.Vector3;
-  age: number;
-  life: number;
-  size: number;
-  core: THREE.Sprite;
-  outer: THREE.Sprite;
-  flash: THREE.Sprite;
-  smoke: THREE.Sprite;
-  light: THREE.PointLight;
-  tier: number;
-  secondaryTimer: number;
-  secondaryCount: number;
-  color: THREE.Color;
-}
-
-interface Debris {
-  mesh: THREE.Mesh;
-  velocity: THREE.Vector3;
-  spin: THREE.Vector3;
-  life: number;
-  maxLife: number;
-  hot: boolean;
 }
 
 interface Fleet {
@@ -159,7 +129,7 @@ export interface FleetIntel {
 export interface CombatEvents {
   onPlayerDamage: (damage: number, position?: THREE.Vector3) => void;
   onNpcKilled: (position: THREE.Vector3) => void;
-  onExplosion?: (position: THREE.Vector3, size: number) => void;
+  onExplosion?: (position: THREE.Vector3, size: number, kind?: 'normal' | 'final') => void;
   onImpact?: (type: WeaponType, position: THREE.Vector3, owner: 'player' | 'npc') => void;
 }
 
@@ -223,24 +193,15 @@ export class Combat {
   private npcs: Npc[] = [];
   private fleets: Fleet[] = [];
   private templates = new Map<string, NpcTemplate>();
-  private sparks: THREE.Points | null = null;
-  private sparkLife = 0;
-  private sparkVelocity: Float32Array | null = null;
   private scene: THREE.Scene;
   private events: CombatEvents;
   private laserGeo: THREE.CylinderGeometry;
   private laserMat: THREE.MeshBasicMaterial;
   private glowTexture: THREE.CanvasTexture;
-  private ringTexture!: THREE.CanvasTexture;
-  private fireTexture!: THREE.CanvasTexture;
-  private smokeTexture!: THREE.CanvasTexture;
-  private debrisTexture!: THREE.CanvasTexture;
   private glowPool: THREE.Sprite[] = [];
-  private explosions: ExplosionFx[] = [];
-  private debris: Debris[] = [];
-  private flashes: FlashFx[] = [];
+  private torpedoVfx: TorpedoVfx;
+  private explosionVfx: ExplosionVfx;
   private deaths: DeathSequence[] = [];
-  private shockwaves: ShockwaveFx[] = [];
   private npcGeo: THREE.BufferGeometry;
   private npcSeq = 0;
   private fleetSeq = 0;
@@ -259,6 +220,9 @@ export class Combat {
   private homingCurrent = new THREE.Vector3();
   private homingAxis = new THREE.Vector3();
   private readonly forwardAxis = new THREE.Vector3(0, 0, 1);
+  private capsuleAxis = new THREE.Vector3();
+  private capsuleRel = new THREE.Vector3();
+  private capsuleClosest = new THREE.Vector3();
 
   constructor(scene: THREE.Scene, events: CombatEvents) {
     this.scene = scene;
@@ -288,117 +252,13 @@ export class Combat {
       return new THREE.CanvasTexture(canvas);
     })();
 
-    this.ringTexture = (() => {
-      const s = 256;
-      const canvas = document.createElement('canvas');
-      canvas.width = s;
-      canvas.height = s;
-      const ctx = canvas.getContext('2d')!;
-      ctx.strokeStyle = 'rgba(255,255,255,0.95)';
-      ctx.lineWidth = 3.5;
-      ctx.shadowColor = 'rgba(255,255,255,0.7)';
-      ctx.shadowBlur = 12;
-      ctx.beginPath();
-      ctx.arc(s / 2, s / 2, s * 0.34, 0, Math.PI * 2);
-      ctx.stroke();
-      return new THREE.CanvasTexture(canvas);
-    })();
-
-    this.fireTexture = (() => {
-      const s = 256;
-      const canvas = document.createElement('canvas');
-      canvas.width = s;
-      canvas.height = s;
-      const ctx = canvas.getContext('2d')!;
-      for (let i = 0; i < 34; i += 1) {
-        const x = s / 2 + (Math.random() - 0.5) * s * 0.52;
-        const y = s / 2 + (Math.random() - 0.5) * s * 0.52;
-        const r = s * (0.07 + Math.random() * 0.18);
-        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-        const palette = [
-          ['rgba(255,255,245,0.98)', 'rgba(255,210,120,0)'],
-          ['rgba(255,220,140,0.95)', 'rgba(255,120,30,0)'],
-          ['rgba(255,160,60,0.9)', 'rgba(255,70,10,0)'],
-          ['rgba(255,110,30,0.8)', 'rgba(180,40,8,0)'],
-        ][Math.floor(Math.random() * 4)];
-        g.addColorStop(0, palette[0]);
-        g.addColorStop(1, palette[1]);
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalCompositeOperation = 'destination-in';
-      const mask = ctx.createRadialGradient(s / 2, s / 2, s * 0.05, s / 2, s / 2, s * 0.5);
-      mask.addColorStop(0, 'rgba(255,255,255,1)');
-      mask.addColorStop(0.55, 'rgba(255,255,255,0.85)');
-      mask.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = mask;
-      ctx.fillRect(0, 0, s, s);
-      return new THREE.CanvasTexture(canvas);
-    })();
-
-    this.smokeTexture = (() => {
-      const s = 128;
-      const canvas = document.createElement('canvas');
-      canvas.width = s;
-      canvas.height = s;
-      const ctx = canvas.getContext('2d')!;
-      for (let i = 0; i < 16; i += 1) {
-        const x = s / 2 + (Math.random() - 0.5) * s * 0.4;
-        const y = s / 2 + (Math.random() - 0.5) * s * 0.4;
-        const r = s * (0.12 + Math.random() * 0.22);
-        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, 'rgba(255,255,255,0.18)');
-        g.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      return new THREE.CanvasTexture(canvas);
-    })();
-
-    this.debrisTexture = (() => {
-      const s = 128;
-      const canvas = document.createElement('canvas');
-      canvas.width = s;
-      canvas.height = s;
-      const ctx = canvas.getContext('2d')!;
-      const base = ctx.createLinearGradient(0, 0, s, s);
-      base.addColorStop(0, '#5d6670');
-      base.addColorStop(0.55, '#3c444d');
-      base.addColorStop(1, '#252b32');
-      ctx.fillStyle = base;
-      ctx.fillRect(0, 0, s, s);
-      ctx.strokeStyle = 'rgba(8, 12, 16, 0.7)';
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 5; i += 1) {
-        const y = 8 + i * 24 + Math.random() * 4;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(s, y + (Math.random() - 0.5) * 6);
-        ctx.stroke();
-      }
-      for (let i = 0; i < 4; i += 1) {
-        const x = 8 + i * 30 + Math.random() * 4;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x + (Math.random() - 0.5) * 5, s);
-        ctx.stroke();
-      }
-      ctx.fillStyle = 'rgba(18, 22, 26, 0.8)';
-      for (let i = 0; i < 70; i += 1) {
-        ctx.fillRect(Math.random() * s, Math.random() * s, 1.4, 1.4);
-      }
-      ctx.save();
-      ctx.translate(s * 0.66, s * 0.75);
-      ctx.rotate(-0.35);
-      ctx.fillStyle = 'rgba(190, 150, 52, 0.55)';
-      for (let i = 0; i < 5; i += 1) ctx.fillRect(i * 14, 0, 7, 18);
-      ctx.restore();
-      return new THREE.CanvasTexture(canvas);
-    })();
+    this.torpedoVfx = new TorpedoVfx(scene);
+    this.explosionVfx = new ExplosionVfx(scene, {
+      onSecondary: (position, size) => {
+        // 级联殉爆只给中等屏幕闪光；终末主爆由 finaleAt 单独以 final 事件触发
+        this.events.onExplosion?.(position, Math.min(size, 180), 'normal');
+      },
+    });
 
     // 没有模板时的低模替身
     this.npcGeo = new THREE.ConeGeometry(6, 18, 6);
@@ -696,28 +556,45 @@ export class Combat {
     homing?: () => THREE.Vector3 | null,
   ): void {
     const dir = direction.clone().normalize();
-    const mesh = this.acquire(color);
-    mesh.position.copy(origin);
-    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
     const rail = weaponType === 'railgun';
-    const trailLength = rail ? 260 : 26 + 10 * scale;
-    const trailWidth = rail ? 1.15 : 0.7 + 0.55 * scale;
-    mesh.scale.set(trailWidth, trailWidth, rail ? trailLength * 0.5 : trailLength);
+    const isTorpedo = weaponType === 'torpedo';
+    const heavyTorpedo = isTorpedo && damage >= 50_000;
 
-    const glow = this.acquireGlow(color);
-    glow.position.copy(origin);
-    glow.scale.setScalar(rail ? 12 : 2.2 + 2.2 * scale);
+    let mesh: THREE.Mesh | null = null;
+    let glow: THREE.Sprite | null = null;
+    let torpedo: TorpedoHandle | undefined;
 
-    // 炮口焰：轨道炮尤其明显
-    this.spawnFlash(origin, rail ? 0xffffff : color, rail ? 46 : 3 + 2 * scale, rail ? 0.22 : 0.08);
+    if (isTorpedo) {
+      torpedo = this.torpedoVfx.acquire(heavyTorpedo ? 'heavy' : 'light', color);
+    }
+    if (!torpedo) {
+      mesh = this.acquire(color);
+      mesh.position.copy(origin);
+      mesh.quaternion.setFromUnitVectors(this.forwardAxis, dir);
+      const trailLength = rail ? 260 : 26 + 10 * scale;
+      const trailWidth = rail ? 1.15 : 0.7 + 0.55 * scale;
+      mesh.scale.set(trailWidth, trailWidth, rail ? trailLength * 0.5 : trailLength);
+      glow = this.acquireGlow(color);
+      glow.position.copy(origin);
+      glow.scale.setScalar(rail ? 12 : 2.2 + 2.2 * scale);
+    }
+
+    // 炮口焰：轨道炮/重型鱼雷尤其明显
+    if (isTorpedo) {
+      this.explosionVfx.flash(origin, color, heavyTorpedo ? 26 : 5, heavyTorpedo ? 0.22 : 0.1, 0, 2.2, 1.2);
+    } else {
+      this.explosionVfx.flash(origin, rail ? 0xffffff : color, rail ? 46 : 3 + 2 * scale, rail ? 0.22 : 0.08);
+    }
 
     this.projectiles.push({
       mesh,
       glow,
+      position: new THREE.Vector3().copy(origin),
       velocity: dir.multiplyScalar(speed),
       prev: new THREE.Vector3().copy(origin),
       damage,
       life,
+      age: 0,
       owner,
       color: new THREE.Color(color),
       speed,
@@ -725,6 +602,9 @@ export class Combat {
       homing,
       // 低速鱼雷保持原机动性；高速 A 鱼雷最高 9 rad/s，避免冲过头
       turnRate: weaponType === 'torpedo' ? Math.max(2.5, Math.min(9, speed / 450)) : 1.9,
+      heavyTorpedo,
+      terminal: false,
+      torpedo,
     });
   }
 
@@ -763,10 +643,13 @@ export class Combat {
   }
 
   private releaseProjectile(p: Projectile): void {
-    this.release(p.mesh);
-    p.glow.visible = false;
-    this.scene.remove(p.glow);
-    if (this.glowPool.length < MAX_PROJECTILES) this.glowPool.push(p.glow);
+    if (p.torpedo) this.torpedoVfx.release(p.torpedo);
+    if (p.mesh) this.release(p.mesh);
+    if (p.glow) {
+      p.glow.visible = false;
+      this.scene.remove(p.glow);
+      if (this.glowPool.length < MAX_PROJECTILES) this.glowPool.push(p.glow);
+    }
   }
 
   /** 线段与舰体三角面 BVH 的精确相交；返回世界坐标命中点 */
@@ -804,6 +687,57 @@ export class Combat {
     return target.distanceTo(this.hitClosest.copy(from).addScaledVector(this.hitAB, t)) < radius;
   }
 
+  /**
+   * 大舰 BVH 兜底：8 km 舰体三角面很稀疏，鱼雷可能从发动机口/结构缝隙穿过去。
+   * 对长度 ≥ 500 m 的大舰用细长胶囊做保守命中，避免鱼雷视觉上直接穿过船体却没有伤害。
+   */
+  private capsuleFallback(
+    center: THREE.Vector3,
+    quaternion: THREE.Quaternion,
+    halfLength: number,
+    radius: number,
+    point: THREE.Vector3,
+  ): THREE.Vector3 | null {
+    this.capsuleAxis.set(0, 0, 1).applyQuaternion(quaternion);
+    this.capsuleRel.copy(point).sub(center);
+    const along = THREE.MathUtils.clamp(this.capsuleRel.dot(this.capsuleAxis), -halfLength, halfLength);
+    this.capsuleClosest.copy(center).addScaledVector(this.capsuleAxis, along);
+    const limit = radius * 0.65;
+    if (this.capsuleClosest.distanceToSquared(point) < limit * limit) {
+      // 返回弹丸当前位置而不是中线点：中线在舰体内部，爆炸会被舰体完全遮住
+      return point.clone();
+    }
+    return null;
+  }
+
+  /** 从兜底命中点向舰体中心发射一条射线，把爆炸点吸附到真实船壳表面 */
+  private hullSurfaceNear(
+    collision: ShipCollision | undefined,
+    center: THREE.Vector3,
+    quaternion: THREE.Quaternion,
+    worldPoint: THREE.Vector3,
+  ): THREE.Vector3 | null {
+    if (!collision) return null;
+    const matrix = new THREE.Matrix4().compose(center, quaternion, new THREE.Vector3(1, 1, 1));
+    const inverse = matrix.clone().invert();
+    const local = worldPoint.clone().applyMatrix4(inverse);
+    const toward = local.clone().negate();
+    const length = toward.length();
+    if (length < 1e-3) return null;
+    const ray = new THREE.Ray(local, toward.multiplyScalar(1 / length));
+    const hits = collision.bvh.raycast(ray, THREE.DoubleSide);
+    if (hits.length === 0) return null;
+    let nearest = Infinity;
+    let hitPoint: THREE.Vector3 | null = null;
+    for (const hit of hits) {
+      if (hit.distance < nearest) {
+        nearest = hit.distance;
+        hitPoint = hit.point;
+      }
+    }
+    return hitPoint ? hitPoint.clone().applyMatrix4(matrix) : null;
+  }
+
   update(dt: number, playerPos: THREE.Vector3, playerVelocity: THREE.Vector3, playerQuaternion: THREE.Quaternion, _camera?: THREE.Camera, playerLength = 25, playerCollision?: ShipCollision): void {
     this.time += dt;
     this.playerCollisionCooldown = Math.max(0, this.playerCollisionCooldown - dt);
@@ -812,11 +746,14 @@ export class Combat {
     // 弹丸
     for (let i = this.projectiles.length - 1; i >= 0; i -= 1) {
       const p = this.projectiles[i];
-      const prev = p.prev.copy(p.mesh.position);
+      p.age += dt;
+      const prev = p.prev.copy(p.position);
+      let targetDistance = Infinity;
       if (p.homing) {
         const target = p.homing();
         if (target) {
-          this.homingDesired.copy(target).sub(p.mesh.position).normalize();
+          targetDistance = target.distanceTo(p.position);
+          this.homingDesired.copy(target).sub(p.position).normalize();
           this.homingCurrent.copy(p.velocity).normalize();
           const angle = this.homingCurrent.angleTo(this.homingDesired);
           const step = Math.min(angle, p.turnRate * dt);
@@ -826,14 +763,22 @@ export class Combat {
               this.homingAxis.normalize();
               this.homingCurrent.applyAxisAngle(this.homingAxis, step);
               p.velocity.copy(this.homingCurrent).multiplyScalar(p.speed);
-              p.mesh.quaternion.setFromUnitVectors(this.forwardAxis, this.homingCurrent);
+              if (p.mesh) p.mesh.quaternion.setFromUnitVectors(this.forwardAxis, this.homingCurrent);
             }
           }
         }
       }
-      p.mesh.position.addScaledVector(p.velocity, dt);
-      p.glow.position.copy(p.mesh.position);
+      p.position.addScaledVector(p.velocity, dt);
       p.life -= dt;
+
+      // 终端加速：只做视觉增压，不改变 3,600 m/s 的 A 鱼雷速度
+      p.terminal = p.life < 1.6 || targetDistance < p.speed * 1.6 + 600;
+      if (p.torpedo) {
+        this.torpedoVfx.sample(p.torpedo, dt, p.position, p.velocity, p.speed, p.terminal);
+      } else {
+        if (p.mesh) p.mesh.position.copy(p.position);
+        if (p.glow) p.glow.position.copy(p.position);
+      }
 
       let dead = p.life <= 0;
 
@@ -841,16 +786,28 @@ export class Combat {
         for (const npc of this.npcs) {
           if (!npc.alive) continue;
           // 先用球体做 broadphase，再用舰体三角面 BVH 求精确命中点
-          if (!this.segmentHit(npc.group.position, prev, p.mesh.position, npc.radius)) continue;
-          const hitPoint = this.segmentMeshHit(
+          if (!this.segmentHit(npc.group.position, prev, p.position, npc.radius)) continue;
+          let hitPoint = this.segmentMeshHit(
             npc.collision,
             npc.group.position,
             npc.group.quaternion,
             prev,
-            p.mesh.position,
+            p.position,
           );
+          if (!hitPoint && p.weaponType === 'torpedo' && npc.spec.length >= 500) {
+            hitPoint = this.capsuleFallback(
+              npc.group.position,
+              npc.group.quaternion,
+              npc.collisionHalfLength,
+              npc.collisionRadius,
+              p.position,
+            );
+            if (hitPoint) {
+              hitPoint = this.hullSurfaceNear(npc.collision, npc.group.position, npc.group.quaternion, hitPoint) ?? hitPoint;
+            }
+          }
           if (npc.collision && !hitPoint) continue;
-          const impact = hitPoint ?? p.mesh.position.clone();
+          const impact = hitPoint ?? this.hitClosest.copy(p.position);
           const absorbed = Math.min(npc.shield, p.damage);
           npc.shield -= absorbed;
           npc.hp -= p.damage - absorbed;
@@ -860,11 +817,8 @@ export class Combat {
           if (absorbed > 0) npc.damage.shieldHit(localHit);
           else npc.damage.hullHit(localHit);
           this.angerFleet(npc);
-          this.burst(impact, p.color, p.weaponType === 'railgun' ? 42 : 14);
+          this.impactEffect(p.weaponType, impact, p.color.getHex(), p.damage, p.heavyTorpedo, p.velocity);
           this.events.onImpact?.(p.weaponType, impact.clone(), 'player');
-          if (p.weaponType === 'railgun') {
-            this.spawnFlash(impact, 0xffffff, 34, 0.2);
-          }
           if (npc.hp <= 0) {
             npc.alive = false;
             this.beginNpcDeath(npc);
@@ -875,22 +829,33 @@ export class Combat {
       } else if (!dead && p.owner === 'npc') {
         // 大舰不能用一个固定 18 m 球判断命中；broadphase 半径随舰长放大
         const broadphase = Math.max(18, playerLength * 0.55);
-        if (this.segmentHit(playerPos, prev, p.mesh.position, broadphase)) {
-          const hitPoint = this.segmentMeshHit(
+        if (this.segmentHit(playerPos, prev, p.position, broadphase)) {
+          let hitPoint = this.segmentMeshHit(
             playerCollision,
             playerPos,
             playerQuaternion,
             prev,
-            p.mesh.position,
+            p.position,
           );
+          if (!hitPoint && p.weaponType === 'torpedo' && playerLength >= 500) {
+            hitPoint = this.capsuleFallback(
+              playerPos,
+              playerQuaternion,
+              playerLength * 0.42,
+              Math.max(2, playerLength * 0.28),
+              p.position,
+            );
+            if (hitPoint) {
+              hitPoint = this.hullSurfaceNear(playerCollision, playerPos, playerQuaternion, hitPoint) ?? hitPoint;
+            }
+          }
           if (playerCollision && !hitPoint) {
             // 擦过 broadphase 球但没有碰到舰体三角面：不造成伤害
           } else {
-            const impact = hitPoint ?? p.mesh.position.clone();
+            const impact = hitPoint ?? this.hitClosest.copy(p.position);
             this.events.onPlayerDamage(p.damage, impact);
             this.events.onImpact?.(p.weaponType, impact.clone(), 'npc');
-            this.burst(impact, p.color, p.weaponType === 'railgun' ? 30 : 10);
-            if (p.weaponType === 'railgun') this.spawnFlash(impact, 0xffffff, 26, 0.18);
+            this.impactEffect(p.weaponType, impact, p.color.getHex(), p.damage, p.heavyTorpedo, p.velocity);
             dead = true;
           }
         }
@@ -898,7 +863,9 @@ export class Combat {
 
       if (dead) {
         this.releaseProjectile(p);
-        this.projectiles.splice(i, 1);
+        // 交换删除，避免大量鱼雷时 splice 搬移整个数组
+        const last = this.projectiles.pop()!;
+        if (i < this.projectiles.length) this.projectiles[i] = last;
       }
     }
 
@@ -930,7 +897,7 @@ export class Combat {
           ? event.local.clone().applyQuaternion(death.npc.group.quaternion).add(death.npc.group.position)
           : death.npc.group.position.clone();
         if (event.kind === 'final') {
-          this.finaleAt(world, death.npc.spec.length, death.npc.spec.tier);
+          this.finaleAt(world, death.npc.spec.length, death.npc.spec.tier, death.npc.group.quaternion);
           for (let k = 0; k < 3; k += 1) {
             const offset = new THREE.Vector3(
               (Math.random() - 0.5) * death.npc.spec.length * 0.35,
@@ -946,129 +913,17 @@ export class Combat {
           this.deaths.splice(i, 1);
           break;
         }
-        this.spawnFireball(world, event.size, new THREE.Color(event.color), 0.7, false);
-        this.burst(world, new THREE.Color(0xffb066), event.kind === 'hull' ? 8 : 14);
-        this.events.onExplosion?.(world, event.size);
+        this.explosionVfx.moduleBurst(world, event.size, event.color, death.npc.spec.tier);
+        if (event.kind !== 'weapon' && Math.random() < 0.35) {
+          this.explosionVfx.debris(world, event.size * 1.4, death.npc.spec.tier, 3);
+        }
+        // 模块爆炸的视觉尺寸很大，但屏幕闪光/震屏按中等事件上报，避免 T10 死亡全程白屏
+        this.events.onExplosion?.(world, Math.min(160, event.size), 'normal');
       }
     }
 
-    // 冲击波
-    for (let i = this.shockwaves.length - 1; i >= 0; i -= 1) {
-      const wave = this.shockwaves[i];
-      wave.age += dt;
-      const k = Math.min(1, wave.age / wave.life);
-      wave.sprite.scale.setScalar(wave.size * (0.3 + k * 2.8));
-      (wave.sprite.material as THREE.SpriteMaterial).opacity = 0.5 * Math.pow(1 - k, 1.6);
-      if (wave.age >= wave.life) {
-        this.scene.remove(wave.sprite);
-        this.shockwaves.splice(i, 1);
-      }
-    }
-
-    // 炮口焰
-    for (let i = this.flashes.length - 1; i >= 0; i -= 1) {
-      const fx = this.flashes[i];
-      fx.age += dt;
-      const k = Math.min(1, fx.age / fx.life);
-      (fx.sprite.material as THREE.SpriteMaterial).opacity = Math.max(0, 1 - k);
-      fx.sprite.scale.multiplyScalar(1 + dt * 5);
-      if (fx.age >= fx.life) {
-        this.scene.remove(fx.sprite);
-        this.flashes.splice(i, 1);
-      }
-    }
-
-    // 爆炸与残骸
-    for (let i = this.explosions.length - 1; i >= 0; i -= 1) {
-      const fx = this.explosions[i];
-      fx.age += dt;
-      const k = Math.min(1, fx.age / fx.life);
-      const coreMat = fx.core.material as THREE.SpriteMaterial;
-      const outerMat = fx.outer.material as THREE.SpriteMaterial;
-      const flashMat = fx.flash.material as THREE.SpriteMaterial;
-      const smokeMat = fx.smoke.material as THREE.SpriteMaterial;
-
-      fx.core.scale.setScalar(fx.size * (0.55 + k * 2.0));
-      coreMat.opacity = Math.max(0, Math.pow(1 - k, 1.2));
-      fx.outer.scale.setScalar(fx.size * (0.95 + k * 3.4));
-      outerMat.opacity = Math.max(0, 0.7 * Math.pow(1 - k, 1.5));
-
-      const flashK = Math.min(1, fx.age / 0.2);
-      fx.flash.scale.setScalar(fx.size * (0.4 + flashK * 1.4));
-      flashMat.opacity = Math.max(0, 1 - flashK) * 0.95;
-
-      fx.smoke.scale.setScalar(fx.size * (0.7 + k * 2.9));
-      fx.smoke.position.y += dt * fx.size * 0.06;
-      smokeMat.opacity = Math.max(0, 0.3 * (1 - k));
-      fx.smoke.material.rotation += dt * 0.08;
-
-      fx.light.intensity = Math.min(1.5e6, fx.size * fx.size * 4) * Math.pow(1 - k, 2);
-
-      fx.secondaryTimer -= dt;
-      if (fx.tier >= 4 && fx.age < 1.4 && fx.secondaryCount > 0 && fx.secondaryTimer <= 0) {
-        fx.secondaryCount -= 1;
-        fx.secondaryTimer = 0.22 + Math.random() * 0.3;
-        const offset = new THREE.Vector3(
-          (Math.random() - 0.5) * fx.size * 0.9,
-          (Math.random() - 0.5) * fx.size * 0.6,
-          (Math.random() - 0.5) * fx.size * 0.9,
-        );
-        this.spawnFireball(fx.position.clone().add(offset), fx.size * 0.35, fx.color, 0.75);
-      }
-
-      if (fx.age >= fx.life) {
-        this.scene.remove(fx.core);
-        this.scene.remove(fx.outer);
-        this.scene.remove(fx.flash);
-        this.scene.remove(fx.smoke);
-        this.scene.remove(fx.light);
-        this.explosions.splice(i, 1);
-      }
-    }
-
-    for (let i = this.debris.length - 1; i >= 0; i -= 1) {
-      const d = this.debris[i];
-      d.life -= dt;
-      d.mesh.position.addScaledVector(d.velocity, dt);
-      d.velocity.multiplyScalar(1 - 0.06 * dt);
-      d.mesh.rotation.x += d.spin.x * dt;
-      d.mesh.rotation.y += d.spin.y * dt;
-      d.mesh.rotation.z += d.spin.z * dt;
-      const material = d.mesh.material as THREE.MeshStandardMaterial;
-      if (material.transparent) {
-        material.opacity = Math.min(1, Math.max(0, d.life / 4));
-      }
-      if (d.hot && material.emissiveIntensity > 0) {
-        material.emissiveIntensity = Math.max(0, material.emissiveIntensity - dt * 0.55);
-      }
-      if (d.life <= 0) {
-        this.scene.remove(d.mesh);
-        d.mesh.geometry.dispose();
-        material.dispose();
-        this.debris.splice(i, 1);
-      }
-    }
-
-    // 火花
-    if (this.sparks && this.sparkLife > 0) {
-      this.sparkLife -= dt;
-      const positions = this.sparks.geometry.attributes.position as THREE.BufferAttribute;
-      const v = this.sparkVelocity!;
-      for (let i = 0; i < positions.count; i += 1) {
-        positions.array[i * 3] += v[i * 3] * dt;
-        positions.array[i * 3 + 1] += v[i * 3 + 1] * dt;
-        positions.array[i * 3 + 2] += v[i * 3 + 2] * dt;
-        v[i * 3] *= 0.97;
-        v[i * 3 + 1] *= 0.97;
-        v[i * 3 + 2] *= 0.97;
-      }
-      positions.needsUpdate = true;
-      (this.sparks.material as THREE.PointsMaterial).opacity = Math.max(0, this.sparkLife / 0.7);
-      if (this.sparkLife <= 0) {
-        this.scene.remove(this.sparks);
-        this.sparks = null;
-      }
-    }
+    this.torpedoVfx.update(dt, _camera);
+    this.explosionVfx.update(dt);
   }
 
   private damageNpcFromCollision(npc: Npc, damage: number, point: THREE.Vector3): void {
@@ -1082,7 +937,7 @@ export class Combat {
     if (absorbed > 0) npc.damage.shieldHit(local);
     else npc.damage.hullHit(local);
     if (absorbed > 0 && npc.shield <= 0) npc.damage.shieldBreak();
-    this.burst(point, new THREE.Color(0xffc47a), 8);
+    this.explosionVfx.impactBurst(point, 0xffc47a, 10, 1.0);
     if (npc.hp <= 0) {
       npc.alive = false;
       this.beginNpcDeath(npc);
@@ -1463,7 +1318,7 @@ export class Combat {
         position: new THREE.Vector3(...nozzle.pos),
         local: new THREE.Vector3(...nozzle.pos),
         color: spec.exhaust,
-        size: Math.max(10, spec.length * 0.025 + nozzle.size * 2.4),
+        size: Math.max(60, spec.length * 0.075 + nozzle.size * 3),
       });
       t += isCapital ? 0.26 + Math.random() * 0.12 : 0.15;
     }
@@ -1477,7 +1332,7 @@ export class Combat {
         position: new THREE.Vector3(...weapon.pos),
         local: new THREE.Vector3(...weapon.pos),
         color: weapon.color,
-        size: Math.max(8, spec.length * 0.02),
+        size: Math.max(40, spec.length * 0.05),
       });
     }
 
@@ -1498,7 +1353,7 @@ export class Combat {
           (Math.random() - 0.5) * spec.length * 0.7,
         ),
         color: 0xff9a4a,
-        size: Math.max(6, spec.length * 0.014 + Math.random() * spec.length * 0.012),
+        size: Math.max(30, spec.length * 0.035 + Math.random() * spec.length * 0.025),
       });
     }
 
@@ -1507,240 +1362,101 @@ export class Combat {
     this.deaths.push({ npc, time: 0, duration, events, index: 0 });
   }
 
-  private spawnShockwave(position: THREE.Vector3, size: number, color = 0xffe0b0): void {
-    const sprite = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: this.ringTexture,
-        color,
-        transparent: true,
-        opacity: 0.55,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      }),
-    );
-    sprite.position.copy(position);
-    sprite.scale.setScalar(size * 0.35);
-    this.scene.add(sprite);
-    this.shockwaves.push({ sprite, age: 0, life: 1.6, size });
-  }
-
   /** 玩家舰体解体时的局部爆炸 */
   burstAt(position: THREE.Vector3, size: number): void {
-    this.spawnFireball(position, size, new THREE.Color(0xffb066), 0.8, false);
-    this.burst(position, new THREE.Color(0xffb066), 12);
-    this.events.onExplosion?.(position, size);
+    this.explosionVfx.spawn(position, size * 1.2, 3, 'impact');
+    this.explosionVfx.impactBurst(position, 0xffb066, 24, 1.4);
+    this.events.onExplosion?.(position, size, 'normal');
   }
 
-  /** 终末大爆炸：多层火球 + 三重冲击波 + 冷白/等离子闪光 */
-  finaleAt(position: THREE.Vector3, length: number, tier: number): void {
-    this.explodeAt(position, length * 1.35, tier);
-    this.spawnShockwave(position, length * 1.05, 0xfff1cf);
-    this.spawnShockwave(position, length * 1.65, 0x9fd8ff);
-    this.spawnShockwave(position, length * 2.3, 0xff7a3a);
-    this.spawnFlash(position, 0xffffff, Math.max(60, length * 0.55), 0.5);
-    this.spawnFlash(position, 0x9fd8ff, Math.max(45, length * 0.4), 1.05);
-    this.spawnFireball(position, length * 0.55, new THREE.Color(0x9fd8ff), 1.2, false);
+  /** 终末大爆炸：多层火球 + 球壳冲击波 + 等离子环 + 级联殉爆 */
+  finaleAt(position: THREE.Vector3, length: number, tier: number, orientation?: THREE.Quaternion): void {
+    const axis = orientation
+      ? this.forwardAxis.clone().applyQuaternion(orientation)
+      : undefined;
+    this.explosionVfx.finale(position, length, tier, axis);
+    this.events.onExplosion?.(position, length * 1.6, 'final');
   }
 
   /** 在指定位置制造爆炸；length 决定火球/残骸尺度 */
   explodeAt(position: THREE.Vector3, length = 25, tier = 2): void {
-    const size = Math.max(8, length * (tier >= 5 ? 0.55 : 0.42));
-    this.events.onExplosion?.(position, size);
-    this.spawnFireball(position, size, new THREE.Color(0xffb066), 2.2);
-    this.burst(position, new THREE.Color(0xffb066), Math.min(90, 22 + tier * 8));
-    this.spawnDebris(position, length, tier);
+    this.explosionVfx.spawn(position, length, tier, 'normal');
+    this.events.onExplosion?.(position, Math.max(8, length * 0.58), 'normal');
   }
 
   private spawnFlash(position: THREE.Vector3, color: number, size: number, life: number): void {
-    const sprite = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: this.glowTexture,
-        color,
-        transparent: true,
-        opacity: 0.95,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      }),
-    );
-    sprite.position.copy(position);
-    sprite.scale.setScalar(size);
-    this.scene.add(sprite);
-    this.flashes.push({ sprite, age: 0, life });
-  }
-
-  private spawnFireball(position: THREE.Vector3, size: number, color: THREE.Color, life: number, allowSecondary = true): void {
-    const core = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: this.fireTexture,
-        color: 0xffffff,
-        transparent: true,
-        opacity: 1,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      }),
-    );
-    core.position.copy(position);
-    core.scale.setScalar(size * 0.55);
-    this.scene.add(core);
-
-    const outer = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: this.fireTexture,
-        color: 0xff5a18,
-        transparent: true,
-        opacity: 0.75,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      }),
-    );
-    outer.position.copy(position);
-    outer.scale.setScalar(size * 0.95);
-    this.scene.add(outer);
-
-    const flash = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: this.glowTexture,
-        color: 0xfff6e0,
-        transparent: true,
-        opacity: 0.95,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      }),
-    );
-    flash.position.copy(position);
-    flash.scale.setScalar(size * 0.45);
-    this.scene.add(flash);
-
-    const smoke = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: this.smokeTexture,
-        color: 0x2e2622,
-        transparent: true,
-        opacity: 0.4,
-        depthWrite: false,
-      }),
-    );
-    smoke.position.copy(position);
-    smoke.scale.setScalar(size * 0.75);
-    this.scene.add(smoke);
-
-    const light = new THREE.PointLight(0xff8a4a, Math.min(1.5e6, size * size * 4), size * 12, 2);
-    light.position.copy(position);
-    this.scene.add(light);
-
-    this.explosions.push({
-      position: position.clone(),
-      age: 0,
-      life: Math.max(life, 2.4),
-      size,
-      core,
-      outer,
-      flash,
-      smoke,
-      light,
-      tier: Math.max(0, Math.round(size / 120)),
-      secondaryTimer: 0.2,
-      secondaryCount: allowSecondary ? (size > 120 ? 4 : size > 45 ? 2 : 0) : 0,
-      color,
-    });
+    this.explosionVfx.flash(position, color, size, life);
   }
 
   private spawnDebris(position: THREE.Vector3, length: number, tier: number): void {
-    const count = Math.min(30, 8 + Math.floor(length / 60));
-    const panel = Math.random() < 0.35;
-    for (let i = 0; i < count; i += 1) {
-      const hot = Math.random() < 0.12;
-      const big = tier >= 5 && i < 2;
-      const chunkSize = (big ? length * (0.035 + Math.random() * 0.025) : length * (0.006 + Math.random() * 0.014)) + 0.25;
-      const geometry = panel
-        ? new THREE.BoxGeometry(chunkSize * (1.4 + Math.random()), chunkSize * 0.18, chunkSize * (0.6 + Math.random() * 0.8))
-        : Math.random() > 0.4
-          ? new THREE.TetrahedronGeometry(chunkSize, 0)
-          : new THREE.BoxGeometry(chunkSize, chunkSize * 0.55, chunkSize * (0.6 + Math.random()));
-      const material = new THREE.MeshStandardMaterial({
-        map: this.debrisTexture,
-        color: hot ? 0x8a4a32 : 0x929aa2,
-        emissive: hot ? new THREE.Color(0xc04a18) : new THREE.Color(0x000000),
-        emissiveIntensity: hot ? 0.8 : 0,
-        roughness: 0.76,
-        metalness: 0.45,
-        flatShading: true,
-        transparent: true,
-        opacity: 1,
-      });
-      const mesh = new THREE.Mesh(geometry, material);
-      const spread = length * 0.16;
-      mesh.position.set(
-        position.x + (Math.random() - 0.5) * spread,
-        position.y + (Math.random() - 0.5) * spread,
-        position.z + (Math.random() - 0.5) * spread,
-      );
-      mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-      this.scene.add(mesh);
-
-      const dir = new THREE.Vector3(
-        Math.random() - 0.5,
-        Math.random() - 0.5,
-        Math.random() - 0.5,
-      ).normalize();
-      const speed = 12 + Math.random() * (28 + tier * 6);
-      this.debris.push({
-        mesh,
-        velocity: dir.multiplyScalar(speed),
-        spin: new THREE.Vector3(
-          (Math.random() - 0.5) * 0.8,
-          (Math.random() - 0.5) * 0.8,
-          (Math.random() - 0.5) * 0.8,
-        ),
-        life: 24 + Math.random() * 22,
-        maxLife: 46,
-        hot,
-      });
-    }
+    this.explosionVfx.debris(position, length, tier, Math.min(30, 8 + Math.floor(length / 60)));
   }
 
-  private burst(position: THREE.Vector3, color: THREE.Color, count: number): void {
-    if (this.sparks) {
-      this.scene.remove(this.sparks);
-      this.sparks = null;
+  /** 命中特效：鱼雷产生真正的爆炸，其他武器产生火花/局部火球 */
+  private impactEffect(
+    type: WeaponType,
+    impact: THREE.Vector3,
+    color: number,
+    damage: number,
+    heavyTorpedo: boolean,
+    direction: THREE.Vector3,
+  ): void {
+    if (type === 'torpedo') {
+      const length = heavyTorpedo ? 2000 : Math.max(36, Math.sqrt(Math.max(1, damage)) * 1.8);
+      this.homingCurrent.copy(direction).normalize();
+      const blastPos = impact.clone().addScaledVector(this.homingCurrent, -length * (heavyTorpedo ? 0.16 : 0.12));
+      this.explosionVfx.spawn(blastPos, length, heavyTorpedo ? 8 : 3, 'impact');
+      this.explosionVfx.impactJet(impact, this.homingCurrent, length, heavyTorpedo ? 8 : 3);
+      this.explosionVfx.flash(blastPos, 0xffffff, heavyTorpedo ? 320 : 24, heavyTorpedo ? 0.34 : 0.12, 0, 2.2, 1.3);
+      this.events.onExplosion?.(blastPos, heavyTorpedo ? 380 : Math.max(18, length * 0.7), 'normal');
+      return;
     }
-
-    const positions = new Float32Array(count * 3);
-    const velocity = new Float32Array(count * 3);
-    for (let i = 0; i < count; i += 1) {
-      positions[i * 3] = position.x;
-      positions[i * 3 + 1] = position.y;
-      positions[i * 3 + 2] = position.z;
-      const dir = new THREE.Vector3(
-        Math.random() - 0.5,
-        Math.random() - 0.5,
-        Math.random() - 0.5,
-      ).normalize();
-      const speed = 20 + Math.random() * 90;
-      velocity[i * 3] = dir.x * speed;
-      velocity[i * 3 + 1] = dir.y * speed;
-      velocity[i * 3 + 2] = dir.z * speed;
+    if (type === 'railgun') {
+      this.explosionVfx.impactBurst(impact, 0xffffff, 48, 2.4);
+      this.explosionVfx.flash(impact, 0xffffff, 34, 0.2);
+      return;
     }
+    if (type === 'plasma') {
+      this.explosionVfx.impactBurst(impact, color, 30, 1.8);
+      this.explosionVfx.flash(impact, color, 18, 0.16);
+      return;
+    }
+    if (type === 'ion') {
+      this.explosionVfx.impactBurst(impact, color, 18, 1.2);
+      return;
+    }
+    if (type === 'cannon') {
+      this.explosionVfx.impactBurst(impact, color, 14, 1.0);
+      return;
+    }
+    this.explosionVfx.impactBurst(impact, color, 8, 0.8);
+  }
 
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  /** 运行时性能统计；测试页和调试 HUD 使用 */
+  get vfxStats(): {
+    projectiles: number;
+    torpedoes: TorpedoVfxStats;
+    explosions: ExplosionVfxStats;
+  } {
+    return {
+      projectiles: this.projectiles.length,
+      torpedoes: this.torpedoVfx.stats,
+      explosions: this.explosionVfx.stats,
+    };
+  }
 
-    const points = new THREE.Points(
-      geometry,
-      new THREE.PointsMaterial({
-        color,
-        size: 2.6,
-        transparent: true,
-        opacity: 1,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      }),
-    );
-    points.frustumCulled = false;
-    this.scene.add(points);
-    this.sparks = points;
-    this.sparkVelocity = velocity;
-    this.sparkLife = 0.7;
+  dispose(): void {
+    this.torpedoVfx.dispose();
+    this.explosionVfx.dispose();
+    for (const npc of this.npcs) {
+      this.scene.remove(npc.group);
+      npc.trail.dispose();
+      npc.damage.dispose();
+    }
+    this.projectiles.length = 0;
+    this.npcs.length = 0;
+    this.fleets.length = 0;
+    this.deaths.length = 0;
   }
 
   /** 最近的可攻击目标（HUD 用） */
