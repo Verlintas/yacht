@@ -2,34 +2,37 @@
 import Base from '../layouts/Base.astro';
 import { url } from '../lib/url';
 
-const preview = url('/city-hero/preview/');
 const shots = [
-  { src: url('/city-hero/renders/01_wide_port.jpg'), label: '01 · Port wide' },
-  { src: url('/city-hero/renders/02_pad_closeup.jpg'), label: '02 · Pad / A-30' },
-  { src: url('/city-hero/renders/03_aerial_skyline.jpg'), label: '03 · Skyline' },
-  { src: url('/city-hero/renders/04_terminal_detail.jpg'), label: '04 · Terminal' },
+  { src: url('/city-hero/renders/01_port_approach.jpg'), label: '01 · Port approach / T2 + hero cluster' },
+  { src: url('/city-hero/renders/02_street_canyon.jpg'), label: '02 · Street canyon / A-30' },
+  { src: url('/city-hero/renders/03_terminal_detail.jpg'), label: '03 · T2 terminal detail' },
+  { src: url('/city-hero/renders/04_dense_aerial.jpg'), label: '04 · Dense district aerial' },
+  { src: url('/city-hero/renders/05_platform_aerial.jpg'), label: '05 · 1200 m platform / industrial edge' },
 ];
 ---
 
-<Base title="Nautilus Reach · 城市样本" description="Nautilus Reach — 200–770 m 科幻港区/城市质量样本">
+<Base title="Nautilus Reach · 城市样本 v4" description="Nautilus Reach v4 — 聚焦港区街区、品牌清理、T2 到港厅、工业外环与 1200 m 城市平台">
   <main class="city-hero">
     <header class="hero-head">
-      <p class="eyebrow">Kitbash3D K032 / K038 / K046 · private quality sample</p>
+      <p class="eyebrow">Kitbash3D K032 / K038 / K039 / K015 · authored Nautilus Reach port</p>
       <h1>Nautilus Reach</h1>
       <p class="lede">
         1200 × 1200 m 平坦城市平台，40 m 挡土墙，60 m TLOF，25 m A-30。
-        原生 220–240 m 英雄塔楼 + 五座 563 m 堆叠巨构；港口近景由自建终端、
-        龙门架、储罐、管线、集装箱与 K034/K039 细节构成。
+        三栋原生单塔 <strong>220.3 / 222.7 / 240.7 m</strong>，一栋一个 mesh、scale 1.0。
+        v4 把 86 个随机模块收束成 4 个连续街区 + 重复 facade family；清掉所有
+        Kitbash3D 广告/水印几何，换成 Nautilus Reach / Port 07 / T2 / 航运/夜市
+        的中英文 in-world 招牌。外环加入 refinery、仓库、龙门吊、集装箱、道路灯、
+        岩石山脊与高度雾，遮住平台剖面。
       </p>
       <div class="actions">
-        <a class="primary" href={preview}>打开实时预览 →</a>
+        <a class="primary" href={url('/city-hero/renders/01_port_approach.jpg')}>打开全尺寸 01 →</a>
         <a href={url('/city-hero/manifest.json')}>manifest.json</a>
       </div>
       <dl class="stats">
-        <div><dt>实时 GLB</dt><dd>3.12 M tris · 40.93 MB</dd></div>
-        <div><dt>材质 / draw</dt><dd>72 materials · 78 primitives</dd></div>
-        <div><dt>英雄塔</dt><dd>220.3 / 222.7 / 240.7 m native</dd></div>
-        <div><dt>渲染</dt><dd>Cycles · 1920×1200 · 128 samples</dd></div>
+        <div><dt>英雄塔</dt><dd>K032 A 220.3 m / K038 J 222.7 m / K038 I 240.7 m</dd></div>
+        <div><dt>品牌清理</dt><dd>45 objects · 338,448 faces removed</dd></div>
+        <div><dt>场景总量</dt><dd>28.40 M tris · 1,200 m deck</dd></div>
+        <div><dt>渲染</dt><dd>Cycles 1920×1080 · 160 samples · AgX/OIDN</dd></div>
       </dl>
     </header>
 
@@ -44,12 +47,24 @@ const shots = [
 
     <section class="notes">
       <p>
-        CityStreets 本地包实际是街道家具/街角道具，因此只作为 street pods；
-        City Generator L1（3.6M tris / 62 DC / 86 MB）不做整城。巨构由原生
-        K038 LargeI 模块堆叠，接缝作结构环/空中平台，未做拉伸。
+        <strong>规则不变：</strong>K032 BldgLG_A、K038 LargeJ、K038 LargeI 各只出现一次，
+        原生 220–241 m，无 uniform giant scaling、无垂直堆叠；所有街区模块 1:1 单栋。
+        v4 只保留 45 个街区模块，围绕 4 个连续 blocks，使用重复 K032/K039 family
+        和统一的 dark-metal + sodium/teal 调色，不再铺 86 个互不相关的资产。
       </p>
       <p>
-        私有样本：Kitbash3D / Modelshop 源包不随仓库分发；公开 Web 前需单独评估授权。
+        <strong>品牌清理：</strong>删除 45 个对象的 338,448 个第三方广告/水印面
+        （Ads / Banner / Signs_Lights / Screens / Decals），没有 KITBASH3D 标识残留。
+        新招牌全部是 in-world：NAUTILUS REACH、PORT 07、T2 ARRIVALS、BERTH 07/12、
+        SHIP LINE 09、NAUTILUS FREIGHT、ORBITAL LINE、NIGHT MARKET、FUEL DEPOT、
+        DANGER / NO ENTRY，以及“夜航/港口/货运/夜市/禁止入内”等中英文霓虹。
+      </p>
+      <p>
+        <strong>工业外环：</strong>平台四边加入挂墙仓库、管廊、边缘高架路、portal cranes；
+        外围 terrain 有 refinery 塔/储罐/烟囱/火炬、岩石山脊、环城/山道和长曝光车灯，
+        高度雾和工业边缘结构遮住 slab 剖面。K015 仍是 1.3 km 外的暗色剪影，不近看。
+        限制：离线 Cycles stills，未重建实时 GLB/preview；CommunityCentre 为 1.03 M-tri
+        子集；Kitbash3D / Modelshop 资产仅私有/离线，公开 Web 前需单独评估授权。
       </p>
     </section>
   </main>
@@ -76,11 +91,12 @@ const shots = [
     text-transform: uppercase;
   }
   .lede {
-    max-width: 780px;
+    max-width: 820px;
     margin: 22px 0 0;
     color: var(--dim, #9fb0bf);
     line-height: 1.75;
   }
+  .lede strong { color: #e9eef2; font-weight: 600; }
   .actions {
     display: flex;
     gap: 16px;
@@ -122,7 +138,7 @@ const shots = [
   }
   .shot-grid {
     display: grid;
-    grid-template-columns: 1.4fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
     margin: 0 0 34px;
   }
@@ -133,13 +149,13 @@ const shots = [
     background: #0a1016;
     border: 1px solid rgba(255, 255, 255, 0.12);
   }
-  .shot:first-child { grid-row: span 2; }
+  .shot:first-child { grid-column: 1 / -1; }
   .shot img {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
     transition: transform 0.6s ease;
   }
   .shot:hover img { transform: scale(1.015); }
@@ -155,15 +171,16 @@ const shots = [
     text-transform: uppercase;
   }
   .notes {
-    max-width: 820px;
+    max-width: 860px;
     color: var(--dim, #9fb0bf);
     font-size: 13px;
     line-height: 1.75;
   }
   .notes p { margin: 0 0 10px; }
+  .notes strong { color: #e9eef2; font-weight: 600; }
   @media (max-width: 800px) {
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .shot-grid { grid-template-columns: 1fr; }
-    .shot:first-child { grid-row: auto; }
+    .shot:first-child { grid-column: auto; }
   }
 </style>
