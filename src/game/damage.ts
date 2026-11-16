@@ -135,11 +135,14 @@ export class DamageVisuals {
         uOpacity: { value: 0.35 },
         uHit: { value: 0 },
         uTime: { value: 0 },
+        uLength: { value: length },
       },
       vertexShader: /* glsl */ `
         varying vec3 vNormalW;
         varying vec3 vWorld;
+        varying vec3 vLocal;
         void main() {
+          vLocal = position;
           vNormalW = normalize(mat3(modelMatrix) * normal);
           vec4 world = modelMatrix * vec4(position, 1.0);
           vWorld = world.xyz;
@@ -151,12 +154,15 @@ export class DamageVisuals {
         uniform float uOpacity;
         uniform float uHit;
         uniform float uTime;
+        uniform float uLength;
         varying vec3 vNormalW;
         varying vec3 vWorld;
+        varying vec3 vLocal;
         void main() {
           vec3 V = normalize(cameraPosition - vWorld);
           float fres = pow(1.0 - abs(dot(normalize(vNormalW), V)), 2.4);
-          float scan = 0.5 + 0.5 * sin(vWorld.y * 0.06 + uTime * 2.2);
+          // 用舰体局部坐标做扫描，避免世界坐标在行星尺度上产生高频闪烁
+          float scan = 0.5 + 0.5 * sin(vLocal.y / max(1.0, uLength * 0.1) + uTime * 2.2);
           float alpha = (fres * 0.38 + 0.035 + uHit * 0.55 + scan * 0.015) * uOpacity;
           vec3 color = uColor * (fres * 1.35 + uHit * 2.4 + 0.15);
           gl_FragColor = vec4(color, alpha);
@@ -173,7 +179,7 @@ export class DamageVisuals {
       shieldGeo.computeVertexNormals();
       const position = shieldGeo.attributes.position as THREE.BufferAttribute;
       const normal = shieldGeo.attributes.normal as THREE.BufferAttribute;
-      const offset = Math.max(0.05, length * 0.0015);
+      const offset = Math.max(0.35, length * 0.0025);
       for (let i = 0; i < position.count; i += 1) {
         position.setXYZ(
           i,
@@ -353,7 +359,12 @@ export class DamageVisuals {
       this.breakTimer = Math.max(0, this.breakTimer - dt);
       const k = this.breakTimer / 1.1;
       this.bubbleMat.uniforms.uOpacity.value = 0.6 * k;
-      this.bubble.scale.copy(this.bubbleBaseScale).multiplyScalar(1 + (1 - k) * 0.16);
+      // 小舰不要做膨胀脉冲，否则连续命中会看起来像护盾在抽搐
+      if (this.capital) {
+        this.bubble.scale.copy(this.bubbleBaseScale).multiplyScalar(1 + (1 - k) * 0.16);
+      } else {
+        this.bubble.scale.copy(this.bubbleBaseScale);
+      }
       this.bubble.visible = true;
     } else {
       this.bubbleMat.uniforms.uOpacity.value = 0;

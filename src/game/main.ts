@@ -112,6 +112,7 @@ function fireSelectedWeapons(ctx: GameContext): void {
   const selected = ctx.weapons.selected;
   const firedTypes = new Map<WeaponType, number>();
   let shake = 0;
+  let archonCannonFired = false;
 
   for (const weapon of spec.weapons) {
     if (weapon.turret) continue;
@@ -126,11 +127,16 @@ function fireSelectedWeapons(ctx: GameContext): void {
       : ctx.flight.forwardVector;
     ctx.combat.fire(origin, direction, weapon, ctx.flight.quaternion);
     ctx.weapons.cooldowns.set(key, weaponReload(weapon));
-    firedTypes.set(weapon.type, Math.max(firedTypes.get(weapon.type) ?? 0, Math.min(1.1, 0.25 + weapon.damage / 120)));
+    if (spec.id === 'rta_archon' && weapon.type === 'plasma' && weapon.id.endsWith('PA')) {
+      archonCannonFired = true;
+    } else {
+      firedTypes.set(weapon.type, Math.max(firedTypes.get(weapon.type) ?? 0, Math.min(1.1, 0.25 + weapon.damage / 120)));
+    }
     shake = Math.max(shake, FIRE_SHAKE[weapon.type]);
   }
 
   for (const [type, volume] of firedTypes) ctx.audio.weapon(type, volume);
+  if (archonCannonFired) ctx.audio.archonCannon(1.0);
   if (shake > 0) ctx.flight.addShake(shake);
 }
 

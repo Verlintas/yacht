@@ -295,6 +295,24 @@ export class EngineAudio {
     }
   }
 
+  /** Archon P A 舰首炮：比普通 plasma 更重、更长、更低的定制炮声 */
+  archonCannon(volume = 1, pan = 0): void {
+    if (!this.ensureSfx()) return;
+    const v = volume * (0.95 + Math.random() * 0.1);
+    const p = Math.max(-1, Math.min(1, pan));
+    // 主体低频冲击
+    this.toneLayer({ from: 52, to: 16, duration: 1.15, gain: 0.58, type: 'sine', volume: v, pan: p });
+    // 炮口爆轰
+    this.noiseLayer({ duration: 0.9, filter: 'lowpass', freq: 1500, sweepTo: 90, q: 0.95, gain: 0.52, volume: v, pan: p });
+    // 金属/电磁机构
+    this.toneLayer({ from: 210, to: 42, duration: 0.72, gain: 0.3, type: 'sawtooth', volume: v, pan: p, delay: 0.008 });
+    this.noiseLayer({ duration: 0.18, filter: 'highpass', freq: 2100, q: 0.7, gain: 0.32, volume: v, pan: p, delay: 0.004 });
+    this.toneLayer({ from: 980, to: 170, duration: 0.36, gain: 0.14, type: 'triangle', volume: v, pan: p, delay: 0.02 });
+    // 大舰炮尾音：低频回响 + 空间余震
+    this.noiseLayer({ duration: 1.35, filter: 'bandpass', freq: 460, q: 0.7, gain: 0.16, volume: v, pan: p, delay: 0.16 });
+    this.toneLayer({ from: 38, to: 20, duration: 1.5, gain: 0.14, type: 'sine', volume: v, pan: p, delay: 0.2 });
+  }
+
   /** 命中音色：金属/护盾/结构声分层 */
   impact(type: WeaponType, volume = 1, pan = 0): void {
     if (!this.ensureSfx()) return;

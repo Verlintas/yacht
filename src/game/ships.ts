@@ -161,6 +161,7 @@ function parseWeapon(
   pos: [number, number, number],
   durability: number,
   shipFireRate = 1,
+  rangeScale = 1,
 ): WeaponMount {
   const code = tag.replace(/^W\d+/, '');
   const turret = /Auto/i.test(code);
@@ -192,7 +193,7 @@ function parseWeapon(
     damage,
     rate: base.rate * (aTorpedo ? A_TORPEDO_RATE_MULT : (MOD_RATE[mod] ?? 1)) * shipFireRate,
     speed: base.speed * (aTorpedo ? A_TORPEDO_SPEED_MULT : mod === 'A' ? (A_SPEED[type] ?? 1) : 1),
-    range: base.range,
+    range: base.range * rangeScale,
     spread: base.spread,
     color: base.color,
     turret,
@@ -380,6 +381,8 @@ export const SHIPS: ShipSpec[] = RAW.map((raw) => {
     z * coordScale,
   ];
   const shipFireRate = SHIP_FIRE_RATE[raw.id] ?? 1;
+  // 大舰武器不再贴脸：射程随舰长平方根增长（25 m 基准，8 km 约 17.9×）
+  const rangeScale = Math.max(1, Math.sqrt(raw.length / 25));
   const shieldRegenFraction = SHIELD_REGEN_FRACTION[raw.class] ?? 0.012;
   return {
     id: raw.id,
@@ -410,7 +413,7 @@ export const SHIPS: ShipSpec[] = RAW.map((raw) => {
     },
     nozzles: raw.nozzles.map(([tag, x, y, z]) => parseNozzle(tag, scaled(x, y, z), raw.length)),
     weapons: raw.weapons.map(([tag, x, y, z]) =>
-      parseWeapon(tag, scaled(x, y, z), raw.hull[0] + raw.hull[1], shipFireRate),
+      parseWeapon(tag, scaled(x, y, z), raw.hull[0] + raw.hull[1], shipFireRate, rangeScale),
     ),
   };
 });

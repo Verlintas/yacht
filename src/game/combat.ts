@@ -626,19 +626,36 @@ export class Combat {
         ? this.findTorpedoTarget(origin, dir, weapon.range, !!weapon.side)
         : null;
 
+    // Archon P A 舰首炮：更大的弹体、更长的拖尾和三层炮口闪光
+    const heavyPlasma = weapon.type === 'plasma' && weapon.damage >= 100_000;
+    const shotColor = heavyPlasma ? 0xffc27a : weapon.color;
+    const shotScale = heavyPlasma
+      ? 3.4
+      : weapon.type === 'cannon'
+        ? 1.5
+        : weapon.type === 'torpedo'
+          ? 2.4
+          : 1;
+
     this.spawnProjectile(
       origin,
       dir,
       weapon.speed,
       weapon.damage,
       weapon.range / weapon.speed,
-      weapon.color,
-      weapon.type === 'cannon' ? 1.5 : weapon.type === 'torpedo' ? 2.4 : 1,
+      shotColor,
+      shotScale,
       'player',
       weapon.type,
       homingOverride ??
         (torpedoTarget ? () => (torpedoTarget.alive ? torpedoTarget.group.position : null) : undefined),
     );
+
+    if (heavyPlasma) {
+      this.spawnFlash(origin, 0xfff4d2, 12, 0.08);
+      this.spawnFlash(origin, 0xff9a4a, 30, 0.2);
+      this.spawnFlash(origin, 0xffd18a, 46, 0.28);
+    }
   }
 
   private findTorpedoTarget(
@@ -1301,7 +1318,7 @@ export class Combat {
 
       if (npc.role === 'flagship') {
         // 主力舰占位：接近到主炮射程内，然后保持距离并转向目标
-        const standoff = npc.spec.tier >= 6 ? 5200 : 3600;
+        const standoff = Math.max(2600, npc.weapon.range * 0.6);
         let moveTarget = fleet.alerted ? playerPos : fleet.waypoint;
         if (fleet.alerted) {
           if (playerDistance < standoff * 0.8) {
@@ -1393,7 +1410,7 @@ export class Combat {
     // 开火：必须把舰首对准预测点，不能 360° 侧射
     npc.cooldown -= dt;
     const weapon = npc.weapon;
-    const range = Math.min(weapon.range, 7000);
+    const range = weapon.range;
     if (npc.hostile && npc.cooldown <= 0 && distToPlayer < range) {
       const aim = this.leadPoint(npc.group.position, playerPos, playerVelocity, weapon.speed);
       const aimDir = aim.clone().sub(npc.group.position).normalize();
@@ -1413,7 +1430,7 @@ export class Combat {
           fireDir,
           weapon.speed,
           weapon.damage,
-          Math.min(6, weapon.range / weapon.speed),
+          Math.min(30, weapon.range / weapon.speed),
           weapon.color,
           weapon.type === 'cannon' ? 1.4 : weapon.type === 'torpedo' ? 2.2 : 1,
           'npc',
