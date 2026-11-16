@@ -22,6 +22,8 @@ export interface PortWorld {
   ship: THREE.Object3D;
   asphalt: THREE.Material | null;
   metal: THREE.Material | null;
+  materials: Map<string, THREE.Material>;
+  rockSources: THREE.Object3D[];
   colliders: Collider[];
   npcs: NpcVisual[];
   npcBlobs: THREE.InstancedMesh;
@@ -86,68 +88,6 @@ function makeRampSign(): THREE.Mesh {
   });
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.92), material);
   mesh.name = 'RampSign';
-  return mesh;
-}
-
-function makeShopSign(): THREE.Mesh {
-  const texture = makeCanvasTexture(512, 160, (ctx) => {
-    ctx.fillStyle = '#0a1113';
-    ctx.fillRect(0, 0, 512, 160);
-    ctx.strokeStyle = '#d5ad72';
-    ctx.lineWidth = 5;
-    ctx.strokeRect(4, 4, 504, 152);
-    ctx.fillStyle = '#f1e5cc';
-    ctx.font = '600 38px "Avenir Next Condensed", sans-serif';
-    ctx.fillText('GUILD ROW OUTFITTER', 24, 66);
-    ctx.fillStyle = '#8ac9c7';
-    ctx.font = '500 21px ui-monospace, monospace';
-    ctx.fillText('公会街补给 · TRADER 索恩·哈珀', 24, 108);
-    ctx.fillStyle = '#d5ad72';
-    ctx.fillRect(24, 126, 464, 3);
-  });
-  const material = new THREE.MeshStandardMaterial({
-    map: texture,
-    emissive: new THREE.Color(0xffffff),
-    emissiveMap: texture,
-    emissiveIntensity: 0.9,
-    roughness: 0.55,
-    metalness: 0.15,
-    side: THREE.DoubleSide,
-  });
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.8), material);
-  mesh.name = 'ShopSign';
-  mesh.position.set(-108, 42.98, -9.55);
-  return mesh;
-}
-
-function makeT2Sign(): THREE.Mesh {
-  const texture = makeCanvasTexture(1024, 192, (ctx) => {
-    ctx.fillStyle = '#181412';
-    ctx.fillRect(0, 0, 1024, 192);
-    ctx.strokeStyle = '#c8a15f';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(5, 5, 1014, 182);
-    ctx.fillStyle = '#f1e7d2';
-    ctx.font = '600 62px "Avenir Next Condensed", sans-serif';
-    ctx.fillText('T2 // ARRIVALS', 38, 86);
-    ctx.fillStyle = '#8ac9c7';
-    ctx.font = '500 30px ui-monospace, monospace';
-    ctx.fillText('ANVIL LANDING · 砧炉着陆场', 40, 142);
-    ctx.fillStyle = '#c8a15f';
-    ctx.fillRect(40, 158, 944, 3);
-  });
-  const material = new THREE.MeshStandardMaterial({
-    map: texture,
-    emissive: new THREE.Color(0xffffff),
-    emissiveMap: texture,
-    emissiveIntensity: 0.85,
-    roughness: 0.55,
-    metalness: 0.15,
-    side: THREE.DoubleSide,
-  });
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(14.4, 2.7), material);
-  mesh.name = 'T2SignOverlay';
-  mesh.position.set(-145, 54.0, 94.2);
   return mesh;
 }
 
@@ -223,12 +163,6 @@ function addPadLights(scene: THREE.Scene, padY: number): void {
   scene.add(signLight);
 }
 
-function addTerminalGlow(scene: THREE.Scene, padY: number): void {
-  const light = new THREE.PointLight(new THREE.Color(0xffd9a0), 20, 26, 2);
-  light.position.set(-108, padY + 4.5, -12);
-  scene.add(light);
-}
-
 function collider(
   id: string,
   minX: number,
@@ -247,8 +181,6 @@ function buildColliders(padY: number): Collider[] {
   // terminal shell + plinth + T2 landside hall
   list.push(collider('terminal', -204, -86, y, y + 30, -26, 76));
   list.push(collider('terminal-landside', -204, -86, y, y + 16, 76, 94));
-  // shop stall (authored market stall placed by T2)
-  list.push(collider('shop', -110.3, -105.7, y, y + 3.2, -13.8, -10.2));
   // gantry towers (the truss is high enough to walk under)
   list.push(collider('gantry-w', -44, -36, y, y + 36, -4, 4));
   list.push(collider('gantry-e', 36, 44, y, y + 36, -4, 4));
@@ -280,6 +212,114 @@ function buildColliders(padY: number): Collider[] {
   return list;
 }
 
+function decodeQuantized(geo: THREE.BufferGeometry): THREE.BufferGeometry {
+  for (const name of Object.keys(geo.attributes)) {
+    const attr = geo.getAttribute(name);
+    if (!attr || !attr.normalized || attr.array instanceof Float32Array) continue;
+    let scale = 1;
+    if (attr.array instanceof Int8Array) scale = 1 / 127;
+    else if (attr.array instanceof Uint8Array) scale = 1 / 255;
+    else if (attr.array instanceof Int16Array) scale = 1 / 32767;
+    else if (attr.array instanceof Uint16Array) scale = 1 / 65535;
+    const out = new Float32Array(attr.array.length);
+    for (let i = 0; i < attr.array.length; i += 1) out[i] = (attr.array[i] as number) * scale;
+    geo.setAttribute(name, new THREE.Float32BufferAttribute(out, attr.itemSize));
+  }
+  return geo;
+}
+
+/**
+ * Remove the authored wooden market stalls / old outfitter kiosks from the
+ * merged GLB meshes. They are untextured and now conflict with the new
+ * container outfitter, so carve their triangles above deck level (the deck
+ * itself stays intact). The source GLB has one material per mesh, so the
+ * filtered index can drop its groups safely.
+ */
+function carvePortProps(root: THREE.Object3D): number {
+  const boxes: Array<[number, number, number, number]> = [
+    [-235, -205, 103, 127],        // old market stall beside T2
+    [-120, -98, -25, -3],          // old wooden shop kiosk
+    [-33, -13, -180, -160],        // market row west
+    [-33, -13, -265, -245],
+    [-33, -13, -345, -325],
+    [13, 33, -200, -180],
+    [13, 33, -280, -260],
+    [-32, -12, -58, -38],
+    [12, 32, -58, -38],
+  ];
+  const inside = (x: number, z: number, y: number): boolean => {
+    if (y < 40.42 || y > 46.5) return false;
+    for (const [x0, x1, z0, z1] of boxes) {
+      if (x > x0 && x < x1 && z > z0 && z < z1) return true;
+    }
+    return false;
+  };
+  const readComponent = (attr: THREE.BufferAttribute, v: number): number => {
+    if (!attr.normalized) return v;
+    if (attr.array instanceof Int16Array) return v / 32767;
+    if (attr.array instanceof Uint16Array) return v / 65535;
+    if (attr.array instanceof Int8Array) return v / 127;
+    if (attr.array instanceof Uint8Array) return v / 255;
+    return v;
+  };
+  let removed = 0;
+  root.updateMatrixWorld(true);
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh || mesh.parent?.name === 'Ship') return;
+    const geo = mesh.geometry;
+    const index = geo.index;
+    if (!index) return;
+    const attr = geo.getAttribute('position') as THREE.BufferAttribute | undefined;
+    if (!attr) return;
+    const e = mesh.matrixWorld.elements;
+    const keep: number[] = [];
+    let hit = 0;
+    const point = new THREE.Vector3();
+    for (let i = 0; i < index.count; i += 3) {
+      let insideTri = false;
+      for (let k = 0; k < 3; k += 1) {
+        const vi = index.getX(i + k);
+        const x = readComponent(attr, attr.getX(vi));
+        const y = readComponent(attr, attr.getY(vi));
+        const z = readComponent(attr, attr.getZ(vi));
+        point.set(
+          e[0] * x + e[4] * y + e[8] * z + e[12],
+          e[1] * x + e[5] * y + e[9] * z + e[13],
+          e[2] * x + e[6] * y + e[10] * z + e[14],
+        );
+        if (inside(point.x, point.z, point.y)) { insideTri = true; break; }
+      }
+      if (insideTri) hit += 1;
+      else keep.push(index.getX(i), index.getX(i + 1), index.getX(i + 2));
+    }
+    if (hit === 0) return;
+    const next = geo.clone();
+    next.setIndex(new THREE.BufferAttribute(new Uint32Array(keep), 1));
+    next.clearGroups();
+    mesh.geometry = next;
+    geo.dispose();
+    removed += hit;
+  });
+  return removed;
+}
+function findMaterial(root: THREE.Object3D, token: string): THREE.MeshStandardMaterial | null {
+  let found: THREE.MeshStandardMaterial | null = null;
+  root.traverse((o) => {
+    if (found || !(o as THREE.Mesh).isMesh) return;
+    const mats = Array.isArray((o as THREE.Mesh).material)
+      ? ((o as THREE.Mesh).material as THREE.Material[])
+      : [((o as THREE.Mesh).material as THREE.Material)];
+    for (const m of mats) {
+      if (m instanceof THREE.MeshStandardMaterial && m.name.toLowerCase().includes(token)) {
+        found = m;
+        break;
+      }
+    }
+  });
+  return found;
+}
+
 export async function loadPort(scene: THREE.Scene, base: string, padY: number): Promise<PortWorld> {
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
   const gltf = await loader.loadAsync(`${base}/iac-landing/assets/anvil-landing.glb`);
@@ -306,6 +346,7 @@ export async function loadPort(scene: THREE.Scene, base: string, padY: number): 
   let asphalt: THREE.Material | null = null;
   let metal: THREE.Material | null = null;
   const materialSeen = new Set<THREE.Material>();
+  const materials = new Map<string, THREE.Material>();
   const configure = (mesh: THREE.Mesh, caster: boolean): void => {
     mesh.castShadow = caster;
     mesh.receiveShadow = true;
@@ -315,6 +356,7 @@ export async function loadPort(scene: THREE.Scene, base: string, padY: number): 
       if (!(m instanceof THREE.MeshStandardMaterial)) continue;
       if (materialSeen.has(m)) continue;
       materialSeen.add(m);
+      materials.set(m.name, m);
       const n = m.name.toLowerCase();
       if (n === 'v2_asphalt') asphalt = m;
       if (n === 'kb46_kb3d_hem_metala') metal = m;
@@ -375,35 +417,27 @@ export async function loadPort(scene: THREE.Scene, base: string, padY: number): 
   // The source rock meshes are authored outcrops. Keep them near the plateau
   // edge, but make sure their bottoms are buried in the terrain rather than
   // floating above the deck.
+  const rockSources: THREE.Object3D[] = [];
   for (const name of ['Rock_B', 'Rock_C', 'Rock_D']) {
-    const rock = gltf.scene.getObjectByName(name) ?? gltf.scene.getObjectByName(`${name}.001`);
+    // GLTFLoader sanitises the Blender '.001' suffix to '001'.
+    const rock =
+      gltf.scene.getObjectByName(name) ??
+      gltf.scene.getObjectByName(`${name}.001`) ??
+      gltf.scene.getObjectByName(`${name}001`);
     if (!rock) continue;
-    const box = new THREE.Box3().setFromObject(rock);
-    if (box.min.y < padY - 10) rock.position.y += padY - 10 - box.min.y;
+    // The source asteroid rocks read as white placeholder blobs at this scale.
+    // Hide them and rebuild a merged dark-basalt outcrop mesh in env-art.
+    rock.visible = false;
     rock.traverse((o) => {
       if ((o as THREE.Mesh).isMesh) {
-        o.castShadow = true;
-        o.receiveShadow = true;
+        o.castShadow = false;
+        o.receiveShadow = false;
       }
     });
+    rockSources.push(rock);
   }
 
   addPadLights(scene, padY);
-  addTerminalGlow(scene, padY);
-  const shopSign = makeShopSign();
-  shopSign.position.y = padY + 2.62;
-  scene.add(shopSign);
-  const t2Sign = makeT2Sign();
-  t2Sign.position.y = padY + 12.55;
-  scene.add(t2Sign);
-  const signBack = new THREE.Mesh(
-    new THREE.BoxGeometry(15.2, 4.0, 0.24),
-    metal ?? new THREE.MeshStandardMaterial({ color: 0x2b3033, roughness: 0.55, metalness: 0.55 }),
-  );
-  signBack.position.set(-145, padY + 11.4, 94.0);
-  signBack.castShadow = false;
-  signBack.receiveShadow = true;
-  scene.add(signBack);
   const dockLight = new THREE.PointLight(new THREE.Color(0xffd1a0), 26, 20, 2);
   dockLight.position.set(-82, padY + 3.4, 6.5);
   scene.add(dockLight);
@@ -420,10 +454,11 @@ export async function loadPort(scene: THREE.Scene, base: string, padY: number): 
   npcRoot.scene.updateMatrixWorld(true);
   const npcDefs = [
     { token: '10_Idle2_Radio', id: 'dockmaster', name: '凯拉·沃斯', role: '码头长 / DOCKMASTER', x: -145, z: 108, yaw: 0, phase: 0.2 },
-    { token: '12_Idle4_Crossedhands', id: 'trader', name: '索恩·哈珀', role: '商人 / TRADER', x: -108, z: -14.2, yaw: 0, phase: 2.1 },
+    { token: '12_Idle4_Crossedhands', id: 'trader', name: '索恩·哈珀', role: '商人 / TRADER', x: -70, z: 111.0, yaw: 0, phase: 2.1 },
     { token: '14_Idle6_Device', id: 'mechanic', name: '鲁克·萨姆', role: '机械师 / MECHANIC', x: 18, z: 24, yaw: -Math.PI / 2.4, phase: 4.2 },
   ];
   const npcs: NpcVisual[] = [];
+  const templates: THREE.Object3D[] = [];
   for (const def of npcDefs) {
     let node: THREE.Object3D | null = null;
     npcRoot.scene.traverse((o) => {
@@ -463,6 +498,8 @@ export async function loadPort(scene: THREE.Scene, base: string, padY: number): 
         }
       }
     });
+    const template = obj.clone(true);
+    templates.push(template);
     const wrapper = new THREE.Group();
     wrapper.name = `NPC_${def.id}`;
     wrapper.add(obj);
@@ -481,7 +518,10 @@ export async function loadPort(scene: THREE.Scene, base: string, padY: number): 
     });
   }
 
-  // One instanced blob shadow for the three NPCs (1 draw call).
+  // Ambient people are added by env-art as low-poly merged figures. The
+  // detailed interactive NPCs above stay separate and animated.
+
+  // One instanced blob shadow for all people (1 draw call).
   const shadowGeo = new THREE.PlaneGeometry(1.8, 1.8);
   shadowGeo.rotateX(-Math.PI / 2);
   const shadowMat = new THREE.MeshBasicMaterial({
@@ -491,16 +531,29 @@ export async function loadPort(scene: THREE.Scene, base: string, padY: number): 
     opacity: 0.62,
     toneMapped: false,
   });
-  const npcBlobs = new THREE.InstancedMesh(shadowGeo, shadowMat, Math.max(1, npcs.length));
+  const blobPositions = [
+    ...npcs.map((npc) => [npc.position.x, npc.position.z] as const),
+    [-126, 124] as const,
+    [-98, 132] as const,
+    [-78, 18] as const,
+    [-118, 146] as const,
+    [-95, 152] as const,
+    [-64, 120] as const,
+    [-108, 150] as const,
+    [-84, 128] as const,
+  ];
+  const npcBlobs = new THREE.InstancedMesh(shadowGeo, shadowMat, Math.max(1, blobPositions.length));
   const dummy = new THREE.Object3D();
-  for (let i = 0; i < npcs.length; i += 1) {
-    dummy.position.set(npcs[i].position.x, padY + 0.025, npcs[i].position.z);
+  for (let i = 0; i < blobPositions.length; i += 1) {
+    dummy.position.set(blobPositions[i][0], padY + 0.025, blobPositions[i][1]);
     dummy.updateMatrix();
     npcBlobs.setMatrixAt(i, dummy.matrix);
   }
   npcBlobs.frustumCulled = false;
   scene.add(npcBlobs);
 
+  const removedTris = carvePortProps(root);
+  if (removedTris > 0) console.info(`[iac] carved ${removedTris} old stall triangles`);
   const colliders = buildColliders(padY);
   return {
     root,
@@ -509,28 +562,12 @@ export async function loadPort(scene: THREE.Scene, base: string, padY: number): 
     ship,
     asphalt,
     metal,
+    materials,
+    rockSources,
     colliders,
     npcs,
     npcBlobs,
     ramp,
     shipEntry: new THREE.Vector3(0, padY, 17.2),
   };
-}
-
-export function animateNpcs(npcs: NpcVisual[], player: THREE.Vector3, time: number): void {
-  for (const npc of npcs) {
-    const dx = player.x - npc.position.x;
-    const dz = player.z - npc.position.z;
-    const dist = Math.hypot(dx, dz);
-    let targetYaw = npc.baseYaw;
-    if (dist < 7) {
-      // Turn the posed character toward the player. The source models face
-      // -Z after the wrapper rotation; the base yaw is the authored facing.
-      const face = Math.atan2(dx, dz);
-      targetYaw = face;
-    }
-    const sway = Math.sin(time * 0.35 + npc.phase) * 0.025;
-    npc.group.rotation.y += (targetYaw + sway - npc.group.rotation.y) * 0.045;
-    npc.group.position.y = npc.baseY + Math.sin(time * 1.15 + npc.phase) * 0.009;
-  }
 }

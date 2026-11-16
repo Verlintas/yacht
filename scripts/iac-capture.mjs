@@ -159,7 +159,7 @@ try {
     },
     {
       name: '05-shop-panel',
-      setup: `__iac.setStats(false); __iac.teleport(-108, -3.5, 0, 0); __iac.lookAt(-108, -12, 0.02); __iac.openShop();`,
+      setup: `__iac.setStats(false); __iac.teleport(-82, 125, 0, 0); __iac.lookAt(-70, 112, 0.02); __iac.openShop();`,
     },
     {
       name: '06-perf-wide',
@@ -170,12 +170,20 @@ try {
       setup: `__iac.setStats(false); __iac.parkedView([0, 150, 42], [0, 40, 0], 55);`,
     },
     {
-      name: '08-terrain-overview',
-      setup: `__iac.setStats(false); __iac.parkedView([0, 380, 1250], [0, 20, -2000], 60);`,
+      name: '08-hero-a30',
+      setup: `__iac.setStats(false); __iac.parkedView([32, 41.4, -30], [-6, 45.0, 3], 55);`,
     },
     {
-      name: '09-ridge-vista',
-      setup: `__iac.setStats(false); __iac.teleport(0, -690, 0, 0.04); __iac.lookAt(0, -2500, 0.04);`,
+      name: '09-walkway',
+      setup: `__iac.setStats(false); __iac.teleport(-102, 145, 0, 0.02); __iac.lookAt(-106, 104, 0.02);`,
+    },
+    {
+      name: '10-platform-overview',
+      setup: `__iac.setStats(false); __iac.parkedView([760, 190, 760], [0, 16, -300], 56);`,
+    },
+    {
+      name: '11-platform-edge',
+      setup: `__iac.setStats(false); __iac.parkedView([680, 120, 560], [0, 30, -300], 58);`,
     },
   ];
 

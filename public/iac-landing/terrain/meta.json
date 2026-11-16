@@ -1,6 +1,6 @@
 {
- "schema": 1,
- "name": "IAC Forgeheart / Anvil Landing 16 km tile",
+ "schema": 2,
+ "name": "IAC Forgeheart / Anvil Landing 16 km authored terrace",
  "generator": "tools/terrain/generate_iac_16km.py",
  "seed": 20261117,
  "grid": {
@@ -12,8 +12,8 @@
  "heightmap": {
   "file": "height_16km.r16",
   "format": "r16le",
-  "min_h": -93.75343955566737,
-  "max_h": 1417.8244801499172,
+  "min_h": -81.21772186540389,
+  "max_h": 1418.2351588084414,
   "row_order": "north_to_south",
   "origin": "northwest corner",
   "decode": "height_m = min_h + (value / 65535) * (max_h - min_h)"
@@ -22,19 +22,65 @@
   "file": "backdrop.r16",
   "grid": 193,
   "extent_m": 49152.0,
-  "min_h": -111.38492578523507,
-  "max_h": 1402.0868384104106
+  "min_h": -93.26768315226882,
+  "max_h": 1402.7809665397047
  },
  "plateau": {
-  "height_m": 40.0,
+  "height_m": 36.8,
+  "center_z": -420.0,
   "size_m": [
-   2200.0,
-   2600.0
+   1520.0,
+   1560.0
   ],
-  "corner_radius_m": 260.0,
-  "port_flat_m": [
-   640,
-   640
+  "corner_radius_m": 230.0,
+  "apron_m": 40,
+  "cut_slope_m": 200
+ },
+ "road": {
+  "width_m": 13.0,
+  "start_h": 36.8,
+  "end_h": 15.0,
+  "points": [
+   [
+    250.0,
+    330.0
+   ],
+   [
+    250.0,
+    402.0
+   ],
+   [
+    286.0,
+    505.0
+   ],
+   [
+    286.0,
+    620.0
+   ],
+   [
+    240.0,
+    742.0
+   ],
+   [
+    196.0,
+    862.0
+   ],
+   [
+    218.0,
+    984.0
+   ],
+   [
+    322.0,
+    1100.0
+   ],
+   [
+    404.0,
+    1220.0
+   ],
+   [
+    426.0,
+    1320.0
+   ]
   ]
  },
  "maps": {
@@ -48,10 +94,12 @@
   "macro": "macro.png"
  },
  "features": {
-  "north_ridge": "760 m ridged mountain arc behind the market row",
-  "east_scarp": "360 m foundry mesa east of the plateau",
-  "west_canyon": "115 m deep diagonal canyon west of the plateau",
-  "south_hills": "low foundry mesas beyond the cargo road"
+  "terrace": "engineered 1.52 x 1.56 km port terrace cut into the basin",
+  "cut": "retaining wall/berm and 200 m graded cut around the terrace",
+  "road": "13 m service road descending from the south wall gap into the basin",
+  "riverbed": "dry braided river/wash west of the terrace",
+  "gullies": "two eroded gullies feeding the basin",
+  "ridges": "760 m north foundry ridge, east scarp, south mesas, 570 m west rim"
  },
  "license": "project-owned procedural heightfield; detail textures from the existing project terrain sample"
 }

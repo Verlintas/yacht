@@ -1,68 +1,78 @@
 {
   "url": "http://localhost:4330/yacht/iac-landing/",
-  "testedAt": "2026-11-16T22:23:20.937Z",
+  "testedAt": "2026-11-16T23:56:42.129Z",
   "viewport": [
     1600,
     900
   ],
   "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
   "software": false,
-  "drawCalls": 98,
-  "triangles": 1745464,
+  "drawCalls": 93,
+  "triangles": 1496623,
   "finalView": {
-    "calls": 45,
-    "triangles": 1499185
+    "calls": 93,
+    "triangles": 1496623
   },
   "shots": [
     {
       "name": "01-wide-landing",
-      "calls": 75,
-      "triangles": 1650253
+      "calls": 63,
+      "triangles": 1408463
     },
     {
       "name": "02-disembark-prompt",
-      "calls": 73,
-      "triangles": 1609260
+      "calls": 66,
+      "triangles": 1397561
     },
     {
       "name": "03-foot-terminal",
-      "calls": 84,
-      "triangles": 1678926
+      "calls": 78,
+      "triangles": 1438822
     },
     {
       "name": "04-npc-dialog",
-      "calls": 81,
-      "triangles": 1678676
+      "calls": 75,
+      "triangles": 1438572
     },
     {
       "name": "05-shop-panel",
-      "calls": 64,
-      "triangles": 1601185
+      "calls": 80,
+      "triangles": 1467198
     },
     {
       "name": "06-perf-wide",
-      "calls": 75,
-      "triangles": 1650253
+      "calls": 63,
+      "triangles": 1408463
     },
     {
       "name": "07-pad-top",
-      "calls": 81,
-      "triangles": 1677465
+      "calls": 71,
+      "triangles": 1435707
     },
     {
-      "name": "08-terrain-overview",
-      "calls": 98,
-      "triangles": 1745464
+      "name": "08-hero-a30",
+      "calls": 92,
+      "triangles": 1492209
     },
     {
-      "name": "09-ridge-vista",
-      "calls": 45,
-      "triangles": 1499185
+      "name": "09-walkway",
+      "calls": 91,
+      "triangles": 1495875
+    },
+    {
+      "name": "10-platform-overview",
+      "calls": 93,
+      "triangles": 1496623
+    },
+    {
+      "name": "11-platform-edge",
+      "calls": 93,
+      "triangles": 1496623
     }
   ],
   "fps": {
     "avg": 60,
-    "min": 60,
+    "min": 58,
     "max": 60,
     "samples": [
       60,
@@ -71,7 +81,7 @@
       60,
       60,
       60,
-      60,
+      58,
       60,
       60
     ]

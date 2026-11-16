@@ -33,9 +33,18 @@ export interface TerrainMeta {
   };
   plateau: {
     height_m: number;
+    center_z?: number;
     size_m: [number, number];
     corner_radius_m: number;
-    port_flat_m: [number, number];
+    apron_m?: number;
+    cut_slope_m?: number;
+    port_flat_m?: [number, number];
+  };
+  road?: {
+    width_m: number;
+    start_h: number;
+    end_h: number;
+    points: Array<[number, number]>;
   };
   maps: {
     splat: string;
@@ -72,6 +81,7 @@ export class TerrainField {
   readonly minH: number;
   readonly maxH: number;
   readonly padY: number;
+  readonly plateauH: number;
   readonly data: Uint16Array;
 
   constructor(data: Uint16Array, meta: TerrainMeta, padY: number) {
@@ -82,6 +92,7 @@ export class TerrainField {
     this.minH = meta.heightmap.min_h;
     this.maxH = meta.heightmap.max_h;
     this.padY = padY;
+    this.plateauH = meta.plateau.height_m;
   }
 
   raw(x: number, z: number): number {
@@ -114,17 +125,24 @@ export class TerrainField {
   }
 
   /**
-   * Walkable surface height. The authored port deck sits 2 cm above the
-   * flat plateau; keep the player on that deck without a visible step.
+   * Walkable surface height. The authored port deck is a raised 1.26 km
+   * platform: deck 40.32, 52 m apron 40.03, engineered terrace 36.8. A ramp
+   * at the south service gate links the apron to the terrace and road.
    */
   groundAt(x: number, z: number): number {
     const h = this.heightAt(x, z);
-    // The authored deck is a 1200 m square: x ±630, z -1050..210. It sits
-    // 32 cm above the flat plateau, so treat the deck footprint as a raised
-    // walkable surface and let the player step down at its edge.
+    // Deck: x ±630, z -1050..210, top 40.32.
     const onDeck = Math.abs(x) < 635 && z > -1055 && z < 215;
-    const onApron = Math.abs(x) < 770 && Math.abs(z) < 670;
-    if (onDeck || onApron) return Math.max(h, this.padY);
+    if (onDeck) return Math.max(h, this.padY);
+    // Service-gate ramp down from the apron (z=262) to terrace level (z=330).
+    if (x > 241.5 && x < 258.5 && z >= 258 && z <= 334) {
+      const t = clamp((z - 262) / 68, 0, 1);
+      const rampY = this.padY - 0.29 + (this.plateauH - (this.padY - 0.29)) * t;
+      return Math.max(h, rampY);
+    }
+    // 52 m concrete apron ring around the deck, 29 cm below deck top.
+    const onApron = Math.abs(x) < 682 && z > -1102 && z < 262;
+    if (onApron) return Math.max(h, this.padY - 0.29);
     return h;
   }
 
@@ -578,19 +596,23 @@ export async function loadTerrain(
                     + texture2D(uGrass, iacDetailUv).rgb * iacW.b
                     + texture2D(uSand, iacDetailUv).rgb * iacW.a;
         vec3 iacMacro = texture2D(uMacro, iacUv).rgb;
-        iacCol *= 0.86 + 0.42 * iacMacro;
+        iacCol *= 0.72 + 0.62 * iacMacro;
+        // Exposed strata / dark rock on steep faces reads at long range.
+        float iacSlope = 1.0 - clamp(vIacNormal.y, 0.0, 1.0);
+        vec3 iacRockFace = vec3(0.185, 0.165, 0.145) * (0.7 + 0.45 * iacMacro.r);
+        iacCol = mix(iacCol, iacRockFace, smoothstep(0.18, 0.62, iacSlope) * 0.55);
         float iacDist = length(vIacWorld - cameraPosition);
-        vec3 iacFar = iacMacro * 0.78 + vec3(0.015, 0.014, 0.012);
-        diffuseColor.rgb = mix(iacCol * 1.32, iacFar, smoothstep(420.0, 3600.0, iacDist));
+        vec3 iacFar = iacMacro * 0.94 + vec3(0.012, 0.010, 0.008);
+        diffuseColor.rgb = mix(iacCol * 1.48, iacFar, smoothstep(620.0, 5200.0, iacDist));
         `,
       );
   };
-  material.customProgramCacheKey = () => 'iac-terrain-v1';
+  material.customProgramCacheKey = () => 'iac-terrain-v2';
 
   const mesh = buildGridMesh(field, meta, material);
   const backdrop = buildBackdrop(backdropData, meta);
   backdrop.position.y = -1;
-  const road = buildRoad(field, asphalt as THREE.MeshStandardMaterial | null);
-
-  return { meta, field, mesh, backdrop, road, material };
+  // The coastal sample's flat road is replaced by env-art's terrain-following
+  // service road. Keep the buildRoad helper unused for the old sample only.
+  return { meta, field, mesh, backdrop, road: null, material };
 }

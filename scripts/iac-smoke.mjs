@@ -173,7 +173,7 @@ try {
 
   // Shop + purchase
   const creditsBefore = await cdp.evaluate('__iac.credits()');
-  await cdp.evaluate('__iac.teleport(-108, -2.8, 0, 0)');
+  await cdp.evaluate('__iac.teleport(-70, 117, 0, 0)');
   await sleep(500);
   await cdp.key('KeyE', 'e', 69);
   await sleep(400);

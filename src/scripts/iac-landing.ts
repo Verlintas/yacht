@@ -3,7 +3,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
 import { loadTerrain, type TerrainAssets } from '../game/iac/terrain';
 import { FootPlayer, sampleSurface } from '../game/iac/player';
-import { animateNpcs, loadPort, type PortWorld } from '../game/iac/port';
+import { loadPort, type PortWorld } from '../game/iac/port';
+import { buildEnvironmentArt } from '../game/iac/env-art';
+import { installShadowProxy } from '../game/iac/shadow';
 
 const BASE = import.meta.env.BASE_URL.replace(/\/+$/, '');
 const PAD_Y = 40.32;
@@ -55,11 +57,11 @@ const SHOP_ITEMS = [
 ];
 
 const SETTINGS = {
-  exposure: 1.0,
-  sunIntensity: 4.2,
-  envIntensity: 0.38,
-  fogDensity: 0.00017,
-  shadowRadius: 150,
+  exposure: 1.12,
+  sunIntensity: 5.2,
+  envIntensity: 0.42,
+  fogDensity: 0.00011,
+  shadowRadius: 210,
 };
 
 function el<T extends HTMLElement>(id: string): T {
@@ -70,6 +72,91 @@ function el<T extends HTMLElement>(id: string): T {
 
 function formatCredits(value: number): string {
   return value.toLocaleString('en-US');
+}
+
+function makeSkyTexture(): THREE.CanvasTexture {
+  const width = 2048;
+  const height = 1024;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('2D canvas unavailable for sky');
+  const grad = ctx.createLinearGradient(0, 0, 0, height);
+  grad.addColorStop(0, '#20334d');
+  grad.addColorStop(0.2, '#4d6277');
+  grad.addColorStop(0.38, '#9da5a4');
+  grad.addColorStop(0.48, '#d7b892');
+  grad.addColorStop(0.52, '#e7bd8f');
+  grad.addColorStop(0.58, '#c69b72');
+  grad.addColorStop(1, '#7f6248');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, width, height);
+
+  // Sun azimuth/elevation must match the directional light.
+  const sunDir = new THREE.Vector3(-360, 120, 240).normalize();
+  const su = (Math.atan2(sunDir.z, sunDir.x) / (Math.PI * 2) + 0.5) * width;
+  const sv = (1 - (Math.asin(sunDir.y) / Math.PI + 0.5)) * height;
+  const glow = ctx.createRadialGradient(su, sv, 2, su, sv, 430);
+  glow.addColorStop(0, 'rgba(255,248,226,1)');
+  glow.addColorStop(0.04, 'rgba(255,227,176,0.95)');
+  glow.addColorStop(0.22, 'rgba(255,194,126,0.42)');
+  glow.addColorStop(1, 'rgba(255,170,96,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, width, height);
+
+  // Layered dust bands / cirrus. Keep them soft, backlit and low-contrast.
+  let seed = 4177;
+  const rand = (): number => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  for (let layer = 0; layer < 3; layer += 1) {
+    const yBase = 240 + layer * 88;
+    for (let i = 0; i < 34; i += 1) {
+      const cx = rand() * width;
+      const cy = yBase + (rand() - 0.5) * 90;
+      const rx = 120 + rand() * 420;
+      const ry = 12 + rand() * 34;
+      const g = ctx.createRadialGradient(cx, cy, 2, cx, cy, rx);
+      const warm = 0.1 + rand() * 0.18;
+      g.addColorStop(0, `rgba(255,232,204,${warm})`);
+      g.addColorStop(0.55, `rgba(235,206,178,${warm * 0.5})`);
+      g.addColorStop(1, 'rgba(220,190,160,0)');
+      ctx.fillStyle = g;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(1, ry / rx);
+      ctx.beginPath(); ctx.arc(0, 0, rx, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+  // High wispy cloud streaks.
+  for (let i = 0; i < 26; i += 1) {
+    const y = 120 + rand() * 260;
+    const x = rand() * width;
+    const len = 180 + rand() * 620;
+    ctx.strokeStyle = `rgba(235,232,224,${0.05 + rand() * 0.1})`;
+    ctx.lineWidth = 10 + rand() * 44;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x + len * 0.25, y - 16 - rand() * 24, x + len * 0.7, y + 10 + rand() * 20, x + len, y + (rand() - 0.5) * 18);
+    ctx.stroke();
+  }
+  // Dust haze at the horizon.
+  const haze = ctx.createLinearGradient(0, height * 0.46, 0, height * 0.58);
+  haze.addColorStop(0, 'rgba(226,190,152,0)');
+  haze.addColorStop(0.5, 'rgba(226,190,152,0.34)');
+  haze.addColorStop(1, 'rgba(226,190,152,0)');
+  ctx.fillStyle = haze;
+  ctx.fillRect(0, height * 0.46, width, height * 0.12);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.mapping = THREE.EquirectangularReflectionMapping;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  texture.needsUpdate = true;
+  return texture;
 }
 
 function clampCamera(camera: THREE.PerspectiveCamera, aspect: number): void {
@@ -128,44 +215,44 @@ export async function initIacLanding(): Promise<void> {
   const softwareRenderer = /swiftshader|software/i.test(gpu);
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0xc0b3a2, SETTINGS.fogDensity);
+  scene.fog = new THREE.FogExp2(0xcbb18e, SETTINGS.fogDensity);
 
   const camera = new THREE.PerspectiveCamera(54, window.innerWidth / window.innerHeight, 0.1, 60000);
-  camera.position.set(-32, PAD_Y + 8.7, 52);
+  camera.position.set(38, PAD_Y + 2.4, 64);
   camera.rotation.order = 'YXZ';
 
   const controls = new OrbitControls(camera, canvas);
-  controls.target.set(0, PAD_Y + 3.7, 2);
+  controls.target.set(-2, PAD_Y + 6.2, -6);
   controls.enableDamping = true;
   controls.dampingFactor = 0.065;
   controls.enablePan = false;
   controls.minDistance = 18;
-  controls.maxDistance = 120;
+  controls.maxDistance = 150;
   controls.maxPolarAngle = Math.PI * 0.485;
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.1;
   controls.update();
 
   // Sky / environment ------------------------------------------------------
+  // A hand-authored equirectangular sunset/dust sky for the hero background.
+  // The existing HDR is kept only as a low-intensity PBR environment source.
+  scene.background = makeSkyTexture();
   try {
     const pmrem = new THREE.PMREMGenerator(renderer);
     const hdr = await new HDRLoader().loadAsync(`${BASE}/terrain-sample/sky.hdr`);
     const envTexture = pmrem.fromEquirectangular(hdr).texture;
     scene.environment = envTexture;
-    scene.background = envTexture;
-    scene.backgroundBlurriness = 0.14;
     scene.environmentIntensity = SETTINGS.envIntensity;
     hdr.dispose();
     pmrem.dispose();
   } catch (error) {
-    console.warn('[iac] HDR sky unavailable, using fallback', error);
-    scene.background = new THREE.Color(0x9e8f7d);
+    console.warn('[iac] HDR environment unavailable, using flat ambient', error);
     scene.environment = null;
   }
 
   // Lights -----------------------------------------------------------------
-  const sun = new THREE.DirectionalLight(0xffc58f, SETTINGS.sunIntensity);
-  sun.position.set(-260, 300, 190);
+  const sun = new THREE.DirectionalLight(0xffc184, SETTINGS.sunIntensity);
+  sun.position.set(-360, 120, 240);
   sun.target.position.set(0, PAD_Y, 0);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
@@ -174,16 +261,16 @@ export async function initIacLanding(): Promise<void> {
   sun.shadow.camera.top = SETTINGS.shadowRadius;
   sun.shadow.camera.bottom = -SETTINGS.shadowRadius;
   sun.shadow.camera.near = 1;
-  sun.shadow.camera.far = 650;
-  sun.shadow.bias = -0.00035;
-  sun.shadow.normalBias = 0.055;
+  sun.shadow.camera.far = 900;
+  sun.shadow.bias = -0.00032;
+  sun.shadow.normalBias = 0.065;
   scene.add(sun, sun.target);
 
-  const fill = new THREE.DirectionalLight(0x93b8d2, 0.35);
-  fill.position.set(200, 160, -180);
+  const fill = new THREE.DirectionalLight(0x86b3d3, 0.8);
+  fill.position.set(280, 110, -210);
   scene.add(fill);
 
-  const hemi = new THREE.HemisphereLight(0xb6c6d3, 0x3b2d21, 0.2);
+  const hemi = new THREE.HemisphereLight(0xa9c1d4, 0x5a412d, 0.52);
   scene.add(hemi);
 
   // A very light sun disc / glow for the exposed sky, matching the directional
@@ -214,8 +301,8 @@ export async function initIacLanding(): Promise<void> {
       fog: false,
     }),
   );
-  sunGlow.position.set(-11700, 13500, 8550);
-  sunGlow.scale.setScalar(5400);
+  sunGlow.position.set(-10800, 3600, 7200);
+  sunGlow.scale.setScalar(5200);
   scene.add(sunGlow);
   const sunCore = new THREE.Sprite(
     new THREE.SpriteMaterial({
@@ -229,19 +316,25 @@ export async function initIacLanding(): Promise<void> {
     }),
   );
   sunCore.position.copy(sunGlow.position);
-  sunCore.scale.setScalar(1200);
+  sunCore.scale.setScalar(1350);
   scene.add(sunCore);
 
   // World ------------------------------------------------------------------
   setLoading('AUTHORING ANVIL LANDING');
   let port: PortWorld;
   let terrain: TerrainAssets;
+  let envArtRef: Awaited<ReturnType<typeof buildEnvironmentArt>> | null = null;
   try {
     port = await loadPort(scene, BASE, PAD_Y);
     setLoading('STREAMING 16 KM HEIGHTFIELD');
     terrain = await loadTerrain(BASE, PAD_Y, port.asphalt);
     scene.add(terrain.mesh, terrain.backdrop);
-    if (terrain.road) scene.add(terrain.road);
+    setLoading('DRESSING PLATFORM AND WALKWAYS');
+    const envArt = await buildEnvironmentArt(scene, terrain.field, terrain.meta, port, PAD_Y);
+    port.colliders.push(...envArt.colliders);
+    envArtRef = envArt;
+    const proxy = installShadowProxy(scene, sun, port, PAD_Y);
+    console.info(`[iac] env-art: ${envArt.colliders.length} colliders, shadow proxy: ${proxy.count} blocks`);
   } catch (error) {
     console.error('[iac] world load failed', error);
     loadingLabel.textContent = 'WORLD LOAD FAILED — CHECK CONSOLE';
@@ -281,9 +374,9 @@ export async function initIacLanding(): Promise<void> {
     {
       id: 'shop',
       kind: 'shop',
-      x: -108,
-      z: -5.5,
-      radius: 3.8,
+      x: -70,
+      z: 116.2,
+      radius: 4.2,
       key: 'E',
       label: 'E 交易 · 公会街补给',
     },
@@ -470,8 +563,8 @@ export async function initIacLanding(): Promise<void> {
     dialog.classList.remove('is-open');
     shop.classList.remove('is-open');
     controls.enabled = true;
-    controls.target.set(0, PAD_Y + 3.7, 2);
-    camera.position.set(48, PAD_Y + 13, 72);
+    controls.target.set(-2, PAD_Y + 6.2, -6);
+    camera.position.set(38, PAD_Y + 2.4, 64);
     camera.fov = 54;
     camera.updateProjectionMatrix();
     parkedFrozen = false;
@@ -735,6 +828,8 @@ export async function initIacLanding(): Promise<void> {
     renderer,
     terrain,
     port,
+    envArt: envArtRef,
+    three: THREE,
   };
   (window as unknown as { __iac: typeof api & { ready: boolean } }).__iac = api;
 
@@ -795,13 +890,13 @@ export async function initIacLanding(): Promise<void> {
       player.applyCamera(camera);
       updatePrompt();
     }
-    animateNpcs(port.npcs, player.position, elapsed);
 
     if (mode === 'foot') {
       // Keep the eye just above the local surface if the player is standing
       // still at the edge of the deck.
       camera.position.y = Math.max(camera.position.y, terrain.field.groundAt(camera.position.x, camera.position.z) + 0.25);
     }
+    envArtRef?.update(elapsed);
 
     renderer.render(scene, camera);
     updateStats(dt);
