@@ -417,6 +417,8 @@ npm run build
 
 ## 12. 最近提交
 
+- `4e65086` — 第三人称 HUD：舰队情报框与 boss 血条分层，修复重叠与可读性
+- `a820345` — TM-5/TG-6/RH-7 硬点 setup 验收截图
 - `2dfb79e` — 合并 Archon 贴图 0 成本 pass（AO/ORM、MikkTSpace、anisotropy 16）
 - `5903714` — Archon 贴图 pass：ORM/自发光/albedo、手写 MikkTSpace、2K/4K 对比
 - `2a72749` — 合并第一人称座舱 v3（独立 cockpit scene/pass、VX-9 HUD、canopy mask、伤害裂纹、warp 遮挡）
