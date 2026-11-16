@@ -241,10 +241,10 @@ const ANNOTATION_LENGTH: Record<string, number> = {
   rta_archon: 8000,
   iac_bomber_dk6: 35,
   iac_gladius: 90,
-  wrs_templar: 160,
-  wrs_tigris: 280,
+  wrs_templar: 1200,
+  wrs_tigris: 1600,
   ort_phalanx: 80,
-  ort_rhodes: 350,
+  ort_rhodes: 3000,
   rta_shark: 28,
 };
 
