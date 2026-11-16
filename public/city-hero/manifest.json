@@ -1,0 +1,147 @@
+{
+  "sample": "Nautilus Reach \u2014 hero port / city district",
+  "generated": "2026-11-16",
+  "worktree": "/Users/apple/.local/share/opencode/worktree/e0f2de/city-hero-sample",
+  "policy": "Private local quality sample. Kitbash3D, Modelshop and other purchased sources are not committed; only optimized derivatives and renders are included. No license review for private use.",
+  "composition": {
+    "deck": "1200 x 1200 m flat concrete deck at apron elevation; 40 m retaining wall/buttress edge; 60 m TLOF; terrain ring only outside \u00b1600 m at -40 m",
+    "port": "custom 1:1 terminal, control tower, 80 m service gantry, tank farm/pipe bridge, container yard, light masts, pad dressing, boarding stairs, A-30 landing gear",
+    "hero_towers": [
+      {
+        "asset": "K032 BldgLG_A",
+        "height_m": 220.3,
+        "source_tris": 275250,
+        "placement": "(-240,-135), 8 deg"
+      },
+      {
+        "asset": "K038 LargeJ",
+        "height_m": 222.7,
+        "source_tris": 357771,
+        "placement": "(245,-115), -14 deg"
+      },
+      {
+        "asset": "K038 LargeI",
+        "height_m": 240.7,
+        "source_tris": 206982,
+        "placement": "(-330,-55), 5 deg"
+      },
+      {
+        "asset": "K038 LargeI",
+        "height_m": 240.7,
+        "source_tris": 206982,
+        "placement": "(350,-60), -8 deg"
+      }
+    ],
+    "mega_stacks": {
+      "count": 5,
+      "height_range_m": [
+        563,
+        566
+      ],
+      "modules": "three native K038 LargeI modules per stack, no vertical stretching",
+      "detail": "mechanical collars, four service spines, lit sky-deck edges, beacons"
+    },
+    "district": "K038/K046 midground blocks + K046 BldgMD infill + K039 service annexes + CityStreets street pods",
+    "characters": "5 Modelshop posed crew figures at 1.7-1.8 m",
+    "ship": "A-30 Thunderbolt, 27 x 30 x 9.7 m on the 60 m TLOF"
+  },
+  "asset_sources": [
+    {
+      "id": "kitbash3d-k032-neoshanghai",
+      "local": "/Users/apple/Documents/3D Models/Kitbash 3D\u5efa\u7b51\u7cfb\u5217/K032\u65b0\u4e0a\u6d77\u57ce\u5e02\u5efa\u7b51\u6a21\u578bKitbash3D-NeoShanghai/K032\u65b0\u4e0a\u6d77\u57ce\u5e02Kitbash3D-NeoShanghai.zip",
+      "used_for": "hero tower BldgLG_A and mega/hero material palette",
+      "license": "purchased Kitbash3D commercial; private sample"
+    },
+    {
+      "id": "kitbash3d-k038-neo-tokyo-2",
+      "local": "/Users/apple/Documents/3D Models/Kitbash 3D\u5efa\u7b51\u7cfb\u5217/K038\u65b0\u4e1c\u4eac\u5efa\u7b51\u57ce\u5e02\u9ad8\u697c\u5927\u53a6\u5efa\u7b513d\u6a21\u578bKitbash3D \u2013 Neo Tokyo 2/K038\u65b0\u4e1c\u4eac\u5efa\u7b51\u57ce\u5e02\u9ad8\u697c\u5927\u53a6\u5efa\u7b513d\u6a21\u578bKitbash3D \u2013 Neo Tokyo 2.zip",
+      "used_for": "hero towers LargeJ/LargeI and mega stacks",
+      "license": "purchased Kitbash3D commercial; private sample"
+    },
+    {
+      "id": "kitbash3d-k046-heavy-metal",
+      "local": "/Users/apple/Documents/3D Models/Kitbash 3D\u5efa\u7b51\u7cfb\u5217/K046\u91cd\u91d1\u5c5e\u5efa\u7b51\u6a21\u578b\u5305Kitbash3D-Heavy Metal/K046\u91cd\u91d1\u5c5e\u5efa\u7b51FBX\u683c\u5f0f.zip",
+      "used_for": "K046 BldgLG_G/D industrial massing, port materials and containers",
+      "license": "purchased Kitbash3D commercial; private sample"
+    },
+    {
+      "id": "kitbash3d-k039-sci-fi-industrial",
+      "local": "/Users/apple/Documents/3D Models/Kitbash 3D\u5efa\u7b51\u7cfb\u5217/K039\u79d1\u5e7b\u5de5\u4e1a\u5efa\u7b513d\u6a21\u578bKitbash3D-Sci-Fi Industrial/FBX\u683c\u5f0f.zip",
+      "used_for": "1:1 port service annexes only; not stretched",
+      "license": "purchased Kitbash3D commercial; private sample"
+    },
+    {
+      "id": "kitbash3d-k034-k014",
+      "local": "K034 Props Rooftops / K014 Greebles",
+      "used_for": "rooftop antennas, AC, water towers, dishes, facade greebles",
+      "license": "purchased Kitbash3D commercial; private sample"
+    },
+    {
+      "id": "citystreets-209",
+      "local": "/Users/apple/Documents/3D Models/209\u5957Blender\u57ce\u5e02\u8857\u9053\u5efa\u7b51\u6a21\u578b/209\u7cfb\u5217\u57ce\u5e02\u5efa\u7b51\u6a21\u578b/Blender Native/KB3D_CityStreets-Native.blend",
+      "used_for": "street-level trees, kiosk, trailer, dumpster, bench, lamp, billboard; local file is furniture/diorama, not a full building district",
+      "license": "purchased Kitbash3D commercial; private sample"
+    },
+    {
+      "id": "modelshop-posed-characters",
+      "local": "/Users/apple/Documents/3D Models/ \u79d1\u5e7b\u6218\u8230\u865a\u5e7bue\u96f6\u4ef6blender\u5b87\u5b99\u98de\u82393d\u8f7d\u5177c4d\u6a21\u578bfbx\u592a\u7a7a\u7ad9jama/Blender/ModelshopGreebles_CHARACTERS_POSED_2K_Blender.zip",
+      "used_for": "five posed crew figures",
+      "license": "purchased Modelshop commercial; private sample"
+    },
+    {
+      "id": "a30-thunderbolt",
+      "local": "public/models/thunderbolt.glb",
+      "used_for": "A-30 on TLOF",
+      "license": "project-owned"
+    },
+    {
+      "id": "polyhaven-kloppenheim-06-puresky",
+      "local": "public/terrain-sample/sky.hdr",
+      "used_for": "HDRI sky and environment",
+      "license": "CC0"
+    }
+  ],
+  "renderer": {
+    "blender": "Blender 5.3.0, Cycles, Metal GPU, 1920x1200, 128 samples, OpenImageDenoise, AgX",
+    "lighting": "HDRI + physical sun + area/portal fills, contact shadows, volume haze",
+    "camera_finish": "DOF, compositor fog glow + vignette"
+  },
+  "realtime": {
+    "glb": "public/city-hero/glb/nautilus_city.glb",
+    "bytes": 40933348,
+    "mb_decimal": 40.93,
+    "triangles": 3118211,
+    "nodes": 7,
+    "meshes": 7,
+    "materials": 72,
+    "primitives_draw_calls": 78,
+    "textures": 131,
+    "extensions": [
+      "EXT_meshopt_compression",
+      "EXT_texture_webp",
+      "KHR_mesh_quantization",
+      "KHR_materials_emissive_strength"
+    ],
+    "texture_policy": "1K hero / 512 detail WebP; AO baked into basecolor; packed ORM (R=AO, G=roughness, B=metallic)",
+    "geometry_policy": "K032/K038 hero meshes native; mid/background/port detail/props/characters decimated; merged into 7 meshes",
+    "preview": "public/city-hero/preview/index.html"
+  },
+  "renders": [
+    "public/city-hero/renders/01_wide_port.jpg",
+    "public/city-hero/renders/02_pad_closeup.jpg",
+    "public/city-hero/renders/03_aerial_skyline.jpg",
+    "public/city-hero/renders/04_terminal_detail.jpg",
+    "public/city-hero/renders/05_preview_wide.jpg",
+    "public/city-hero/renders/06_preview_pad.jpg",
+    "public/city-hero/renders/07_preview_terminal.jpg",
+    "public/city-hero/renders/08_preview_aerial.jpg"
+  ],
+  "limitations": [
+    "CityStreets local blend contains street furniture/dioramas rather than a full 4-14 m building district; used only for street pods.",
+    "City Generator L1 not realized: 100 m tile measured ~3.6M tris / 62 draw calls / 86 MB and the 5.3 add-on is unstable.",
+    "Mega stacks are three authored K038 LargeI modules each; their authored setbacks read as sky terraces at 600-900 m.",
+    "No streaming/LOD switching in the preview; one static GLB.",
+    "Terrain outside the deck is a procedural ridge mesh, not a scan.",
+    "Private sample only; purchased source packs are not redistributable."
+  ]
+}

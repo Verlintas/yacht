@@ -18,3 +18,7 @@ docs/kitbash-port/renders/raw/
 docs/kitbash-port/glb/anvil_landing_port_raw.glb
 docs/kitbash-port/glb/textures/
 docs/kitbash-port/glb/texture_paths.json
+
+# Python bytecode (Blender imports)
+__pycache__/
+*.pyc
