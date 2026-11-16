@@ -20,6 +20,7 @@
   - `/yacht/kitbash-port/` — K039 kitbash 英雄港区实时预览
   - `/yacht/city-hero/` — K032/K038 + 563 m 堆叠巨构 + 1200 m 城市平台（WIP，**不是最终质量**）
 - 护盾已改为舰体三角面壳；BHN 跃迁、NPC 舰队、爆炸、第三人称相机已做一轮实机修复。
+- 第一人称座舱 v3 已合并：独立 `Scene`/`CockpitPass`、VX-9 HUD、canopy mask、伤害裂纹、warp 遮挡；A-30 103k tris / AR10 108k tris，31 draw calls。截图在 `docs/cockpit-ui/`。
 - 建模流程已确定：**不能只靠 CLI 程序化改模**；必须 authored/Blender/kitbash，静态近景单物体至少 5,000 tris（球体除外）。
 - Tripo：**不买来做建筑/城市**；最多 Pro 月付试 props/rocks/角色底模。
 
@@ -334,6 +335,7 @@ K047 不完整（只有 `.baiduyun.p.downloading`）；K043/K022 无贴图；K02
 | `src/game/main.ts` | 主循环、HUD、跃迁、输入、着陆、BOSS/目标、后处理 |
 | `src/game/flight.ts` | 飞行物理、跃迁状态机、第一/第三/自由相机 |
 | `src/game/ship.ts` | GLB 加载、缩放、居中、BVH、程序化舰 |
+| `src/game/cockpit.ts` | 第一人称独立座舱 Scene/CockpitPass、3D 内饰、MFD、裂纹/灯光 |
 | `src/game/ships.ts` | 舰船数据、武器解析、射程、护盾回复、A 级规则 |
 | `src/game/combat.ts` | NPC 舰队、弹丸、护盾/结构、BVH 碰撞、爆炸、死亡序列 |
 | `src/game/damage.ts` | 护盾壳、命中特效、烟/火、损伤可视化 |
@@ -389,7 +391,8 @@ npm run build
 - K032/K038 原生 hero 几何 200–360k 已够；不要减到 100k 做近景。
 - Archon 贴图不是分辨率不够，而是 UV/texel budget/材质：UV 97.3% packed、平均 5.7× 重叠、约 5.3 texels/m；先做 anisotropy/AO/ORM/metal/emissive，4K 只在座舱/近景。
 - 4K 贴图单栋 hero 2.3–3.2 GB VRAM；1K–2K + KTX2 才适合 WebGL。
-- 第一人称 UI 只有设计稿，尚未集成。
+- 第一人称座舱 v3 已合并；仍是程序化 authored kit，不是 Blender 45–65k GLB + 2K PBR atlas；AR10 是 light kit 放大 + 桥楼附加件，不是独立 capital 舰桥。
+- 座舱 103k/108k tris，高于设计 45–65k；draw call 保持 31。
 - 爆炸、护盾、相机已经做了一轮实机修复，但仍需真机验收。
 - 城市 hero 样本仍是 WIP；不要把 K038 叠成巨构。
 - 行星真实地形/城市/步行/起降仍未接入主游戏。
@@ -401,7 +404,7 @@ npm run build
 ## 11. 下一步优先级
 
 1. **实机验收**：BHN 3 秒、NPC 多敌对、护盾简化/静态、爆炸随机殉爆/终末、第三人称动态。
-2. **第一人称 UI/座舱**：按 `27-cockpit-ui.md` 做 A-30 垂直切片。
+2. **第一人称座舱验收**：已合并 v3；真机检查 A-30/AR10、1280×720、warp/受击/损伤，再决定是否用 Blender GLB 替换程序化 kit。
 3. **Archon 贴图 0 成本 pass**：anisotropy 8–16、AO/ORM、metal/emissive、MikkTSpace tangents；4K 只做近景/KTX2。
 4. **候选舰硬点最终验收**：TM5/TG6/RH7 已修 annotation length；逐舰截图确认驾驶舱/喷口/武器贴合。
 5. **模型重做**：单栋 K032/K038 + authored 构图；不叠楼、不 CLI 拉伸；近景用 C2184/chtazi/K039 detail。
@@ -412,6 +415,10 @@ npm run build
 
 ## 12. 最近提交
 
+- `2a72749` — 合并第一人称座舱 v3（独立 cockpit scene/pass、VX-9 HUD、canopy mask、伤害裂纹、warp 遮挡）
+- `e4e7b44` — 座舱 v3：移除 AR10 悬浮 overhead bar、局部裂纹、目标框 canopy mask、侧轨支架
+- `56179b8` — 座舱 v2：细框、可读 MFD、HUD 安全边距、warp 遮挡
+- `4bc0052` — 座舱 v1：独立 cockpit scene/pass、VX-9 HUD 垂直切片
 - `1da9467` — TM5/TG6/RH7 硬点 annotation length 修正；舰船贴图 anisotropy/emissive；新增本文件
 - `ce44db0` — BHN 3 秒、NPC 全图多敌对、护盾简化/静态、爆炸随机殉死、第三人称动态、7 艘候选舰接入
 - `85b6d77` — Nautilus Reach hero 样本
