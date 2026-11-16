@@ -20,6 +20,7 @@
   - `/yacht/kitbash-port/` — K039 kitbash 英雄港区实时预览
   - `/yacht/city-hero/` — K032/K038 + 563 m 堆叠巨构 + 1200 m 城市平台（WIP，**不是最终质量**）
 - 护盾已改为舰体三角面壳；BHN 跃迁、NPC 舰队、爆炸、第三人称相机已做一轮实机修复。
+- TM-5 / TG-6 / RH-7 硬点已用 setup 截图验收：`docs/hardpoints/`。
 - 第一人称座舱 v3 已合并：独立 `Scene`/`CockpitPass`、VX-9 HUD、canopy mask、伤害裂纹、warp 遮挡；A-30 103k tris / AR10 108k tris，31 draw calls。截图在 `docs/cockpit-ui/`。
 - Archon 贴图 0 成本 pass 已合并：AO/ORM、金属/自发光、MikkTSpace tangents、anisotropy 16；几何/硬点不变，2K WebP 4.67 MB，纹理 VRAM ≈89.5 MB，4K 不作为默认。报告 `docs/ARCHON-TEXTURE-PASS.md`。
 - 建模流程已确定：**不能只靠 CLI 程序化改模**；必须 authored/Blender/kitbash，静态近景单物体至少 5,000 tris（球体除外）。
@@ -407,7 +408,7 @@ npm run build
 1. **实机验收**：BHN 3 秒、NPC 多敌对、护盾简化/静态、爆炸随机殉爆/终末、第三人称动态。
 2. **第一人称座舱验收**：已合并 v3；真机检查 A-30/AR10、1280×720、warp/受击/损伤，再决定是否用 Blender GLB 替换程序化 kit。
 3. **Archon 贴图后续**：0 成本 pass 已合并；如需进一步降 VRAM，再接 KTX2Loader 走 2K KTX2（16.8 MB），不要默认 4K。
-4. **候选舰硬点最终验收**：TM5/TG6/RH7 已修 annotation length；逐舰截图确认驾驶舱/喷口/武器贴合。
+4. **候选舰硬点验收**：TM5/TG6/RH7 已在 setup 截图确认，标记落在舰体正确位置；截图在 `docs/hardpoints/`。实机开火/喷口朝向仍待逐舰飞行验收。
 5. **模型重做**：单栋 K032/K038 + authored 构图；不叠楼、不 CLI 拉伸；近景用 C2184/chtazi/K039 detail。
 6. **IAC 垂直切片**：16 km authored terrain + Anvil Landing + 1 shop + 3 NPC + player + A-30 landing。
 7. **资产采购决策**：本地优先；若要买，Lunar Base + BMS Greebles；Tripo 不买。
