@@ -1,147 +1,722 @@
 {
-  "sample": "Nautilus Reach \u2014 hero port / city district",
-  "generated": "2026-11-16",
-  "worktree": "/Users/apple/.local/share/opencode/worktree/e0f2de/city-hero-sample",
-  "policy": "Private local quality sample. Kitbash3D, Modelshop and other purchased sources are not committed; only optimized derivatives and renders are included. No license review for private use.",
-  "composition": {
-    "deck": "1200 x 1200 m flat concrete deck at apron elevation; 40 m retaining wall/buttress edge; 60 m TLOF; terrain ring only outside \u00b1600 m at -40 m",
-    "port": "custom 1:1 terminal, control tower, 80 m service gantry, tank farm/pipe bridge, container yard, light masts, pad dressing, boarding stairs, A-30 landing gear",
-    "hero_towers": [
-      {
-        "asset": "K032 BldgLG_A",
-        "height_m": 220.3,
-        "source_tris": 275250,
-        "placement": "(-240,-135), 8 deg"
-      },
-      {
-        "asset": "K038 LargeJ",
-        "height_m": 222.7,
-        "source_tris": 357771,
-        "placement": "(245,-115), -14 deg"
-      },
-      {
-        "asset": "K038 LargeI",
-        "height_m": 240.7,
-        "source_tris": 206982,
-        "placement": "(-330,-55), 5 deg"
-      },
-      {
-        "asset": "K038 LargeI",
-        "height_m": 240.7,
-        "source_tris": 206982,
-        "placement": "(350,-60), -8 deg"
-      }
-    ],
-    "mega_stacks": {
-      "count": 5,
-      "height_range_m": [
-        563,
-        566
-      ],
-      "modules": "three native K038 LargeI modules per stack, no vertical stretching",
-      "detail": "mechanical collars, four service spines, lit sky-deck edges, beacons"
-    },
-    "district": "K038/K046 midground blocks + K046 BldgMD infill + K039 service annexes + CityStreets street pods",
-    "characters": "5 Modelshop posed crew figures at 1.7-1.8 m",
-    "ship": "A-30 Thunderbolt, 27 x 30 x 9.7 m on the 60 m TLOF"
-  },
-  "asset_sources": [
-    {
-      "id": "kitbash3d-k032-neoshanghai",
-      "local": "/Users/apple/Documents/3D Models/Kitbash 3D\u5efa\u7b51\u7cfb\u5217/K032\u65b0\u4e0a\u6d77\u57ce\u5e02\u5efa\u7b51\u6a21\u578bKitbash3D-NeoShanghai/K032\u65b0\u4e0a\u6d77\u57ce\u5e02Kitbash3D-NeoShanghai.zip",
-      "used_for": "hero tower BldgLG_A and mega/hero material palette",
-      "license": "purchased Kitbash3D commercial; private sample"
-    },
-    {
-      "id": "kitbash3d-k038-neo-tokyo-2",
-      "local": "/Users/apple/Documents/3D Models/Kitbash 3D\u5efa\u7b51\u7cfb\u5217/K038\u65b0\u4e1c\u4eac\u5efa\u7b51\u57ce\u5e02\u9ad8\u697c\u5927\u53a6\u5efa\u7b513d\u6a21\u578bKitbash3D \u2013 Neo Tokyo 2/K038\u65b0\u4e1c\u4eac\u5efa\u7b51\u57ce\u5e02\u9ad8\u697c\u5927\u53a6\u5efa\u7b513d\u6a21\u578bKitbash3D \u2013 Neo Tokyo 2.zip",
-      "used_for": "hero towers LargeJ/LargeI and mega stacks",
-      "license": "purchased Kitbash3D commercial; private sample"
-    },
-    {
-      "id": "kitbash3d-k046-heavy-metal",
-      "local": "/Users/apple/Documents/3D Models/Kitbash 3D\u5efa\u7b51\u7cfb\u5217/K046\u91cd\u91d1\u5c5e\u5efa\u7b51\u6a21\u578b\u5305Kitbash3D-Heavy Metal/K046\u91cd\u91d1\u5c5e\u5efa\u7b51FBX\u683c\u5f0f.zip",
-      "used_for": "K046 BldgLG_G/D industrial massing, port materials and containers",
-      "license": "purchased Kitbash3D commercial; private sample"
-    },
-    {
-      "id": "kitbash3d-k039-sci-fi-industrial",
-      "local": "/Users/apple/Documents/3D Models/Kitbash 3D\u5efa\u7b51\u7cfb\u5217/K039\u79d1\u5e7b\u5de5\u4e1a\u5efa\u7b513d\u6a21\u578bKitbash3D-Sci-Fi Industrial/FBX\u683c\u5f0f.zip",
-      "used_for": "1:1 port service annexes only; not stretched",
-      "license": "purchased Kitbash3D commercial; private sample"
-    },
-    {
-      "id": "kitbash3d-k034-k014",
-      "local": "K034 Props Rooftops / K014 Greebles",
-      "used_for": "rooftop antennas, AC, water towers, dishes, facade greebles",
-      "license": "purchased Kitbash3D commercial; private sample"
-    },
-    {
-      "id": "citystreets-209",
-      "local": "/Users/apple/Documents/3D Models/209\u5957Blender\u57ce\u5e02\u8857\u9053\u5efa\u7b51\u6a21\u578b/209\u7cfb\u5217\u57ce\u5e02\u5efa\u7b51\u6a21\u578b/Blender Native/KB3D_CityStreets-Native.blend",
-      "used_for": "street-level trees, kiosk, trailer, dumpster, bench, lamp, billboard; local file is furniture/diorama, not a full building district",
-      "license": "purchased Kitbash3D commercial; private sample"
-    },
-    {
-      "id": "modelshop-posed-characters",
-      "local": "/Users/apple/Documents/3D Models/ \u79d1\u5e7b\u6218\u8230\u865a\u5e7bue\u96f6\u4ef6blender\u5b87\u5b99\u98de\u82393d\u8f7d\u5177c4d\u6a21\u578bfbx\u592a\u7a7a\u7ad9jama/Blender/ModelshopGreebles_CHARACTERS_POSED_2K_Blender.zip",
-      "used_for": "five posed crew figures",
-      "license": "purchased Modelshop commercial; private sample"
-    },
-    {
-      "id": "a30-thunderbolt",
-      "local": "public/models/thunderbolt.glb",
-      "used_for": "A-30 on TLOF",
-      "license": "project-owned"
-    },
-    {
-      "id": "polyhaven-kloppenheim-06-puresky",
-      "local": "public/terrain-sample/sky.hdr",
-      "used_for": "HDRI sky and environment",
-      "license": "CC0"
-    }
+ "sample": "Nautilus Reach v2",
+ "status": "authored offline Cycles sample",
+ "units": "metres",
+ "deck": {
+  "size_m": [
+   1200,
+   1200
   ],
-  "renderer": {
-    "blender": "Blender 5.3.0, Cycles, Metal GPU, 1920x1200, 128 samples, OpenImageDenoise, AgX",
-    "lighting": "HDRI + physical sun + area/portal fills, contact shadows, volume haze",
-    "camera_finish": "DOF, compositor fog glow + vignette"
+  "top_z": 0.0,
+  "retaining_wall_depth_m": 40,
+  "terrain_under_city": false,
+  "note": "flat city platform; terrain ring only outside the retaining wall"
+ },
+ "heroes": [
+  {
+   "name": "Hero_K032_A",
+   "obj": "Hero_K032_A",
+   "x": -290,
+   "y": -150,
+   "h": 220.3,
+   "w": 50.17,
+   "d": 54.62,
+   "tris": 275250,
+   "expected": 275250,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K032 NeoShanghai / BldgLG_A"
   },
-  "realtime": {
-    "glb": "public/city-hero/glb/nautilus_city.glb",
-    "bytes": 40933348,
-    "mb_decimal": 40.93,
-    "triangles": 3118211,
-    "nodes": 7,
-    "meshes": 7,
-    "materials": 72,
-    "primitives_draw_calls": 78,
-    "textures": 131,
-    "extensions": [
-      "EXT_meshopt_compression",
-      "EXT_texture_webp",
-      "KHR_mesh_quantization",
-      "KHR_materials_emissive_strength"
-    ],
-    "texture_policy": "1K hero / 512 detail WebP; AO baked into basecolor; packed ORM (R=AO, G=roughness, B=metallic)",
-    "geometry_policy": "K032/K038 hero meshes native; mid/background/port detail/props/characters decimated; merged into 7 meshes",
-    "preview": "public/city-hero/preview/index.html"
+  {
+   "name": "Hero_K038_J",
+   "obj": "Hero_K038_J",
+   "x": 245,
+   "y": -150,
+   "h": 222.75,
+   "w": 120.98,
+   "d": 119.86,
+   "tris": 357771,
+   "expected": 357771,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K038 Neo Tokyo 2 / LargeJ"
   },
-  "renders": [
-    "public/city-hero/renders/01_wide_port.jpg",
-    "public/city-hero/renders/02_pad_closeup.jpg",
-    "public/city-hero/renders/03_aerial_skyline.jpg",
-    "public/city-hero/renders/04_terminal_detail.jpg",
-    "public/city-hero/renders/05_preview_wide.jpg",
-    "public/city-hero/renders/06_preview_pad.jpg",
-    "public/city-hero/renders/07_preview_terminal.jpg",
-    "public/city-hero/renders/08_preview_aerial.jpg"
+  {
+   "name": "Hero_K038_I",
+   "obj": "Hero_K038_I",
+   "x": 430,
+   "y": 200,
+   "h": 240.69,
+   "w": 85.31,
+   "d": 92.56,
+   "tris": 206982,
+   "expected": 206982,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K038 Neo Tokyo 2 / LargeI"
+  }
+ ],
+ "secondary_single_buildings": [
+  {
+   "name": "Mid_K032_B",
+   "obj": "Mid_K032_B",
+   "x": -60,
+   "y": 440,
+   "h": 139.47,
+   "w": 73.06,
+   "d": 51.6,
+   "tris": 499450,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K032 NeoShanghai / BldgLG_B"
+  },
+  {
+   "name": "Mid_K038_C",
+   "obj": "Mid_K038_C",
+   "x": -430,
+   "y": 460,
+   "h": 137.39,
+   "w": 79.56,
+   "d": 73.88,
+   "tris": 228093,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K038 Neo Tokyo 2 / LargeC"
+  },
+  {
+   "name": "Mid_K038_E",
+   "obj": "Mid_K038_E",
+   "x": 430,
+   "y": 470,
+   "h": 144.59,
+   "w": 75.71,
+   "d": 72.75,
+   "tris": 220386,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K038 Neo Tokyo 2 / LargeE"
+  },
+  {
+   "name": "Mid_K032_E",
+   "obj": "Mid_K032_E",
+   "x": 300,
+   "y": -250,
+   "h": 140.3,
+   "w": 78.11,
+   "d": 79.14,
+   "tris": 324027,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K032 NeoShanghai / BldgLG_E"
+  },
+  {
+   "name": "Mid_K046_G",
+   "obj": "Mid_K046_G",
+   "x": 500,
+   "y": 420,
+   "h": 88.32,
+   "w": 38.08,
+   "d": 160.15,
+   "tris": 332355,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K046 Heavy Metal / BldgLG_G"
+  },
+  {
+   "name": "Mid_K046_E",
+   "obj": "Mid_K046_E",
+   "x": 150,
+   "y": 480,
+   "h": 61.91,
+   "w": 57.63,
+   "d": 102.61,
+   "tris": 299399,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K046 Heavy Metal / BldgLG_E"
+  },
+  {
+   "name": "Mid_K046_D",
+   "obj": "Mid_K046_D",
+   "x": -280,
+   "y": -360,
+   "h": 98.07,
+   "w": 75.23,
+   "d": 48.47,
+   "tris": 183405,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K046 Heavy Metal / BldgLG_D"
+  }
+ ],
+ "low_rise_1to1": [
+  {
+   "name": "Low_K039_G",
+   "obj": "Low_K039_G",
+   "x": -480,
+   "y": -120,
+   "h": 28.12,
+   "w": 16.94,
+   "d": 10.7,
+   "tris": 904013,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_D1",
+   "obj": "Low_K039_D1",
+   "x": 420,
+   "y": -220,
+   "h": 16.64,
+   "w": 11.48,
+   "d": 7.1,
+   "tris": 471248,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_D2",
+   "obj": "Low_K039_D2",
+   "x": -470,
+   "y": 180,
+   "h": 16.64,
+   "w": 11.64,
+   "d": 7.74,
+   "tris": 471248,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_E2",
+   "obj": "Low_K039_E2",
+   "x": -80,
+   "y": 250,
+   "h": 12.88,
+   "w": 9.47,
+   "d": 6.04,
+   "tris": 64119,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_F1",
+   "obj": "Low_K039_F1",
+   "x": 400,
+   "y": -300,
+   "h": 10.87,
+   "w": 7.68,
+   "d": 6.02,
+   "tris": 65437,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_I1",
+   "obj": "Low_K039_I1",
+   "x": 520,
+   "y": -60,
+   "h": 17.11,
+   "w": 22.56,
+   "d": 11.84,
+   "tris": 526387,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_E3",
+   "obj": "Low_K039_E3",
+   "x": -500,
+   "y": 160,
+   "h": 12.88,
+   "w": 9.32,
+   "d": 5.74,
+   "tris": 64119,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_E4",
+   "obj": "Low_K039_E4",
+   "x": -440,
+   "y": 160,
+   "h": 12.88,
+   "w": 9.47,
+   "d": 6.04,
+   "tris": 64119,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_E5",
+   "obj": "Low_K039_E5",
+   "x": -320,
+   "y": 160,
+   "h": 12.88,
+   "w": 9.61,
+   "d": 6.33,
+   "tris": 64119,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_E6",
+   "obj": "Low_K039_E6",
+   "x": 320,
+   "y": 160,
+   "h": 12.88,
+   "w": 9.32,
+   "d": 5.74,
+   "tris": 64119,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_E7",
+   "obj": "Low_K039_E7",
+   "x": 460,
+   "y": 140,
+   "h": 12.88,
+   "w": 9.73,
+   "d": 6.61,
+   "tris": 64119,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_E8",
+   "obj": "Low_K039_E8",
+   "x": 500,
+   "y": 160,
+   "h": 12.88,
+   "w": 9.85,
+   "d": 6.88,
+   "tris": 64119,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_F2",
+   "obj": "Low_K039_F2",
+   "x": -400,
+   "y": -200,
+   "h": 10.87,
+   "w": 7.31,
+   "d": 5.39,
+   "tris": 65437,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_F3",
+   "obj": "Low_K039_F3",
+   "x": -400,
+   "y": 0,
+   "h": 10.87,
+   "w": 7.44,
+   "d": 5.6,
+   "tris": 65437,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_F4",
+   "obj": "Low_K039_F4",
+   "x": -400,
+   "y": 200,
+   "h": 10.87,
+   "w": 7.79,
+   "d": 6.22,
+   "tris": 65437,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_F5",
+   "obj": "Low_K039_F5",
+   "x": 400,
+   "y": -100,
+   "h": 10.87,
+   "w": 7.31,
+   "d": 5.39,
+   "tris": 65437,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_F6",
+   "obj": "Low_K039_F6",
+   "x": 400,
+   "y": 50,
+   "h": 10.87,
+   "w": 7.97,
+   "d": 6.59,
+   "tris": 65437,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_F7",
+   "obj": "Low_K039_F7",
+   "x": -200,
+   "y": 300,
+   "h": 10.87,
+   "w": 7.02,
+   "d": 4.93,
+   "tris": 65437,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_F8",
+   "obj": "Low_K039_F8",
+   "x": 200,
+   "y": 300,
+   "h": 10.87,
+   "w": 7.57,
+   "d": 5.82,
+   "tris": 65437,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  },
+  {
+   "name": "Low_K039_D3",
+   "obj": "Low_K039_D3",
+   "x": 500,
+   "y": 300,
+   "h": 16.64,
+   "w": 11.27,
+   "d": 6.43,
+   "tris": 471248,
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "asset": "K039 Sci-Fi Industrial 1:1"
+  }
+ ],
+ "background_skyline": [
+  {
+   "name": "K015_002_NW",
+   "x": -1300,
+   "y": 1000,
+   "z": -20.2,
+   "h": 690.7,
+   "tris": 164436,
+   "asset": "K015 Neo Tokyo / 1:100 kit, unit-corrected x100, silhouette only"
+  },
+  {
+   "name": "K015_006_NE",
+   "x": 1200,
+   "y": 1150,
+   "z": -28.1,
+   "h": 531.8,
+   "tris": 417830,
+   "asset": "K015 Neo Tokyo / 1:100 kit, unit-corrected x100, silhouette only"
+  },
+  {
+   "name": "K015_009_E",
+   "x": 1300,
+   "y": 250,
+   "z": -25.0,
+   "h": 665.3,
+   "tris": 417714,
+   "asset": "K015 Neo Tokyo / 1:100 kit, unit-corrected x100, silhouette only"
+  },
+  {
+   "name": "K015_010_N",
+   "x": 150,
+   "y": 1300,
+   "z": -24.6,
+   "h": 688.3,
+   "tris": 214768,
+   "asset": "K015 Neo Tokyo / 1:100 kit, unit-corrected x100, silhouette only"
+  }
+ ],
+ "terminal": {
+  "name": "CommunityCentre",
+  "x": -145,
+  "y": -445,
+  "w": 103.3,
+  "d": 86.7,
+  "h": 26.8,
+  "tris": 1033968,
+  "note": "1.03M-tri authored subset of the 1.37M source (shell + interior)"
+ },
+ "ship": {
+  "name": "A-30",
+  "length": 24.99,
+  "span": 28.84,
+  "height": 9.34,
+  "tris": 46774
+ },
+ "stacking": "none; each hero is one native mesh at scale 1.0",
+ "audit": [],
+ "triangles": {
+  "total": 15348529,
+  "by_collection": {
+   "01_GROUND": 219584,
+   "02_BUILDINGS": 3959738,
+   "04_PORT": 2640672,
+   "07_SHIP": 48826,
+   "08_BACKGROUND": 1216240,
+   "03_CITY": 3817913,
+   "05_PROPS": 1605916,
+   "06_PEOPLE": 1839628,
+   "09_LIGHTS": 12
+  },
+  "heroes": {
+   "Hero_K032_A": 275250,
+   "Hero_K038_J": 357771,
+   "Hero_K038_I": 206982
+  }
+ },
+ "render": {
+  "engine": "Cycles",
+  "resolution": [
+   1920,
+   1080
   ],
-  "limitations": [
-    "CityStreets local blend contains street furniture/dioramas rather than a full 4-14 m building district; used only for street pods.",
-    "City Generator L1 not realized: 100 m tile measured ~3.6M tris / 62 draw calls / 86 MB and the 5.3 add-on is unstable.",
-    "Mega stacks are three authored K038 LargeI modules each; their authored setbacks read as sky terraces at 600-900 m.",
-    "No streaming/LOD switching in the preview; one static GLB.",
-    "Terrain outside the deck is a procedural ridge mesh, not a scan.",
-    "Private sample only; purchased source packs are not redistributable."
-  ]
+  "samples": 160,
+  "view_transform": "AgX - Medium High Contrast",
+  "denoiser": "OpenImageDenoise",
+  "hdri": "public/terrain-sample/sky.hdr",
+  "sun_w_m2": 9.0,
+  "atmosphere": "finite Principled Volume, density 0.00008 /m",
+  "compositing": "disabled in-render; final JPG grade applied in post"
+ },
+ "renders": [
+  {
+   "file": "renders/01_wide_port.jpg",
+   "shot": "wide",
+   "label": "Port wide / three native towers",
+   "camera": "Cam_Wide",
+   "lens_mm": 24,
+   "loc": [
+    -100,
+    -595,
+    4.0
+   ],
+   "target": [
+    -50,
+    -350,
+    45
+   ]
+  },
+  {
+   "file": "renders/02_pad_closeup.jpg",
+   "shot": "pad",
+   "label": "60 m TLOF / A-30",
+   "camera": "Cam_Pad",
+   "lens_mm": 50,
+   "loc": [
+    -45,
+    -520,
+    3.0
+   ],
+   "target": [
+    4,
+    -420,
+    6.5
+   ]
+  },
+  {
+   "file": "renders/03_aerial_skyline.jpg",
+   "shot": "aerial_low",
+   "label": "Skyline aerial",
+   "camera": "Cam_AerialLow",
+   "lens_mm": 35,
+   "loc": [
+    -600,
+    -950,
+    480
+   ],
+   "target": [
+    -30,
+    80,
+    160
+   ]
+  },
+  {
+   "file": "renders/04_terminal_detail.jpg",
+   "shot": "detail",
+   "label": "T2 arrival hall",
+   "camera": "Cam_Detail",
+   "lens_mm": 45,
+   "loc": [
+    -110,
+    -560,
+    4.0
+   ],
+   "target": [
+    -145,
+    -485,
+    8
+   ]
+  },
+  {
+   "file": "renders/05_hero_facade.jpg",
+   "shot": "hero",
+   "label": "K038 LargeJ facade",
+   "camera": "Cam_Hero",
+   "lens_mm": 35,
+   "loc": [
+    245,
+    -270,
+    2.2
+   ],
+   "target": [
+    245,
+    -160,
+    110
+   ]
+  },
+  {
+   "file": "renders/06_city_platform.jpg",
+   "shot": "aerial",
+   "label": "1200 m city platform",
+   "camera": "Cam_Aerial",
+   "lens_mm": 35,
+   "loc": [
+    -800,
+    -1100,
+    600
+   ],
+   "target": [
+    0,
+    80,
+    110
+   ]
+  },
+  {
+   "file": "renders/07_terminal_approach.jpg",
+   "shot": "termwide",
+   "label": "T2 terminal approach",
+   "camera": "Cam_TermWide",
+   "lens_mm": 35,
+   "loc": [
+    -170,
+    -575,
+    4.8
+   ],
+   "target": [
+    -100,
+    -430,
+    38
+   ]
+  }
+ ],
+ "limitations": [
+  "Offline Cycles stills only; the realtime GLB/preview was not rebuilt in this pass.",
+  "CommunityCentre terminal uses a 1.03M-tri authored subset of the 1.37M source (shell + interior).",
+  "K015 towers are background silhouettes at ~1.3 km; their 1K textures are not used as close-up detail.",
+  "Kitbash3D / Modelshop assets are private/offline only; public Web redistribution needs separate licence review.",
+  "No K038 vertical stacking, no uniform giant scaling of hero modules, no procedural facade stretch."
+ ]
 }
