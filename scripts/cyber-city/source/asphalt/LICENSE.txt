@@ -1,0 +1,7 @@
+Asphalt012 (1K JPG) — ambientCG
+https://ambientcg.com/view?id=Asphalt012
+
+License: CC0 1.0 Universal (public domain dedication).
+The source color/normal/roughness maps are kept here only so
+`scripts/cyber-city/prepare-street.py` can regenerate the runtime
+WebP textures without a network round-trip.

@@ -1,0 +1,646 @@
+[
+ {
+  "name": "AluminiumBrushed",
+  "base": "tex/k003/AluminiumBrushed_base.webp",
+  "normal": null,
+  "orm": "tex/k003/AluminiumBrushed_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "BlackCloth",
+  "base": "tex/k003/BlackCloth_base.webp",
+  "normal": null,
+  "orm": "tex/k003/BlackCloth_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Brass",
+  "base": "tex/k003/Brass_base.webp",
+  "normal": null,
+  "orm": "tex/k003/Brass_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Cardboard",
+  "base": "tex/k003/Cardboard_base.webp",
+  "normal": null,
+  "orm": "tex/k003/Cardboard_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Concrete",
+  "base": "tex/k003/Concrete_base.webp",
+  "normal": null,
+  "orm": "tex/k003/Concrete_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcretePlastered",
+  "base": "tex/k003/ConcretePlastered_base.webp",
+  "normal": "tex/k003/ConcretePlastered_normal.webp",
+  "orm": "tex/k003/ConcretePlastered_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcreteTiles",
+  "base": "tex/k003/ConcreteTiles_base.webp",
+  "normal": null,
+  "orm": "tex/k003/ConcreteTiles_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "PaintBlack",
+  "base": "tex/k003/PaintBlack_base.webp",
+  "normal": null,
+  "orm": "tex/k003/PaintBlack_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "PaintBlue",
+  "base": "tex/k003/PaintBlue_base.webp",
+  "normal": null,
+  "orm": "tex/k003/PaintBlue_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "PaintGreen",
+  "base": "tex/k003/PaintGreen_base.webp",
+  "normal": null,
+  "orm": "tex/k003/PaintGreen_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "PaintRed",
+  "base": "tex/k003/PaintRed_base.webp",
+  "normal": null,
+  "orm": "tex/k003/PaintRed_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "PaintWhiteRusty",
+  "base": "tex/k003/PaintWhiteRusty_base.webp",
+  "normal": null,
+  "orm": "tex/k003/PaintWhiteRusty_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "PaperWhite",
+  "base": "tex/k003/PaperWhite_base.webp",
+  "normal": null,
+  "orm": "tex/k003/PaperWhite_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "PlasticBlack",
+  "base": "tex/k003/PlasticBlack_base.webp",
+  "normal": null,
+  "orm": "tex/k003/PlasticBlack_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "PlasticFoil",
+  "base": "tex/k003/PlasticFoil_base.webp",
+  "normal": null,
+  "orm": "tex/k003/PlasticFoil_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "PlasticWhite",
+  "base": "tex/k003/PlasticWhite_base.webp",
+  "normal": null,
+  "orm": "tex/k003/PlasticWhite_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "PlasticYellow",
+  "base": "tex/k003/PlasticYellow_base.webp",
+  "normal": null,
+  "orm": "tex/k003/PlasticYellow_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "RedWhiteStripes",
+  "base": "tex/k003/RedWhiteStripes_base.webp",
+  "normal": null,
+  "orm": "tex/k003/RedWhiteStripes_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Rubber",
+  "base": "tex/k003/Rubber_base.webp",
+  "normal": null,
+  "orm": "tex/k003/Rubber_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "SteelRaw",
+  "base": "tex/k003/SteelRaw_base.webp",
+  "normal": null,
+  "orm": "tex/k003/SteelRaw_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Wood",
+  "base": "tex/k003/Wood_base.webp",
+  "normal": null,
+  "orm": "tex/k003/Wood_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "WoodLacquered",
+  "base": "tex/k003/WoodLacquered_base.webp",
+  "normal": null,
+  "orm": "tex/k003/WoodLacquered_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Speaker",
+  "base": "tex/k003/Speaker_base.webp",
+  "normal": null,
+  "orm": "tex/k003/Speaker_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcreteGrey",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.85,
+  "metalness": 0.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Decals",
+  "base": "tex/k003/Decals_base.webp",
+  "normal": null,
+  "orm": null,
+  "roughness": 0.6,
+  "metalness": 0.0,
+  "emissive": [
+   0.35,
+   0.28,
+   0.22
+  ],
+  "emissiveStrength": 0.8,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "GlassBlack",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.05,
+  "metalness": 0.65,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.035,
+   0.06,
+   0.07
+  ]
+ },
+ {
+  "name": "GlassBottle",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.08,
+  "metalness": 0.25,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.15,
+   0.28,
+   0.2
+  ]
+ },
+ {
+  "name": "GlassTransparent",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.04,
+  "metalness": 0.1,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": true,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.6,
+   0.75,
+   0.78
+  ]
+ },
+ {
+  "name": "LightBlue",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.4,
+  "metalness": 0.0,
+  "emissive": [
+   0.12,
+   0.55,
+   1.0
+  ],
+  "emissiveStrength": 3.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.024,
+   0.11000000000000001,
+   0.2
+  ]
+ },
+ {
+  "name": "LightOrange",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.4,
+  "metalness": 0.0,
+  "emissive": [
+   1.0,
+   0.38,
+   0.08
+  ],
+  "emissiveStrength": 3.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.2,
+   0.07600000000000001,
+   0.016
+  ]
+ },
+ {
+  "name": "LightRed",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.4,
+  "metalness": 0.0,
+  "emissive": [
+   1.0,
+   0.08,
+   0.06
+  ],
+  "emissiveStrength": 3.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.2,
+   0.016,
+   0.012
+  ]
+ },
+ {
+  "name": "LightWhite",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.4,
+  "metalness": 0.0,
+  "emissive": [
+   0.9,
+   0.95,
+   1.0
+  ],
+  "emissiveStrength": 2.4,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.18000000000000002,
+   0.19,
+   0.2
+  ]
+ },
+ {
+  "name": "LightYellow",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.4,
+  "metalness": 0.0,
+  "emissive": [
+   1.0,
+   0.85,
+   0.4
+  ],
+  "emissiveStrength": 2.6,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.2,
+   0.17,
+   0.08000000000000002
+  ]
+ },
+ {
+  "name": "Mirror",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.03,
+  "metalness": 0.95,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.7,
+   0.75,
+   0.8
+  ]
+ },
+ {
+  "name": "Screens",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.25,
+  "metalness": 0.0,
+  "emissive": [
+   0.3,
+   0.6,
+   0.9
+  ],
+  "emissiveStrength": 1.3,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.06,
+   0.12,
+   0.18000000000000002
+  ]
+ },
+ {
+  "name": "ScreensDim",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.35,
+  "metalness": 0.0,
+  "emissive": [
+   0.2,
+   0.4,
+   0.6
+  ],
+  "emissiveStrength": 0.9,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.04000000000000001,
+   0.08000000000000002,
+   0.12
+  ]
+ }
+]

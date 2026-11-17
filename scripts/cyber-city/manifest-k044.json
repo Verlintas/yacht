@@ -1,0 +1,923 @@
+[
+ {
+  "name": "SatinSteel",
+  "base": "tex/k044/SatinSteel_base.webp",
+  "normal": "tex/k044/SatinSteel_normal.webp",
+  "orm": "tex/k044/SatinSteel_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "MetalOxidized",
+  "base": "tex/k044/MetalOxidized_base.webp",
+  "normal": "tex/k044/MetalOxidized_normal.webp",
+  "orm": "tex/k044/MetalOxidized_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "GalvanizedSteel",
+  "base": "tex/k044/GalvanizedSteel_base.webp",
+  "normal": "tex/k044/GalvanizedSteel_normal.webp",
+  "orm": "tex/k044/GalvanizedSteel_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "PaintedMetal",
+  "base": "tex/k044/PaintedMetal_base.webp",
+  "normal": "tex/k044/PaintedMetal_normal.webp",
+  "orm": "tex/k044/PaintedMetal_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "MetalAccent",
+  "base": "tex/k044/MetalAccent_base.webp",
+  "normal": "tex/k044/MetalAccent_normal.webp",
+  "orm": "tex/k044/MetalAccent_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "MetalGrating",
+  "base": "tex/k044/MetalGrating_base.webp",
+  "normal": "tex/k044/MetalGrating_normal.webp",
+  "orm": "tex/k044/MetalGrating_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": true,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcreteBlocks",
+  "base": "tex/k044/ConcreteBlocks_base.webp",
+  "normal": "tex/k044/ConcreteBlocks_normal.webp",
+  "orm": "tex/k044/ConcreteBlocks_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcretePattern",
+  "base": "tex/k044/ConcretePattern_base.webp",
+  "normal": "tex/k044/ConcretePattern_normal.webp",
+  "orm": "tex/k044/ConcretePattern_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "AsphaltHexagonRoof",
+  "base": "tex/k044/AsphaltHexagonRoof_base.webp",
+  "normal": "tex/k044/AsphaltHexagonRoof_normal.webp",
+  "orm": "tex/k044/AsphaltHexagonRoof_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcFormHoles",
+  "base": "tex/k044/ConcFormHoles_base.webp",
+  "normal": "tex/k044/ConcFormHoles_normal.webp",
+  "orm": "tex/k044/ConcFormHoles_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcFormNoHoles",
+  "base": "tex/k044/ConcFormNoHoles_base.webp",
+  "normal": "tex/k044/ConcFormNoHoles_normal.webp",
+  "orm": "tex/k044/ConcFormNoHoles_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcGeneral",
+  "base": "tex/k044/ConcGeneral_base.webp",
+  "normal": "tex/k044/ConcGeneral_normal.webp",
+  "orm": "tex/k044/ConcGeneral_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcGeneralBrown",
+  "base": "tex/k044/ConcGeneralBrown_base.webp",
+  "normal": "tex/k044/ConcGeneralBrown_normal.webp",
+  "orm": "tex/k044/ConcGeneralBrown_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcHorizontal",
+  "base": "tex/k044/ConcHorizontal_base.webp",
+  "normal": "tex/k044/ConcHorizontal_normal.webp",
+  "orm": "tex/k044/ConcHorizontal_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcLongBlock",
+  "base": "tex/k044/ConcLongBlock_base.webp",
+  "normal": "tex/k044/ConcLongBlock_normal.webp",
+  "orm": "tex/k044/ConcLongBlock_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcFloorTiles",
+  "base": "tex/k044/ConcFloorTiles_base.webp",
+  "normal": "tex/k044/ConcFloorTiles_normal.webp",
+  "orm": "tex/k044/ConcFloorTiles_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcGrime",
+  "base": "tex/k044/ConcGrime_base.webp",
+  "normal": "tex/k044/ConcGrime_normal.webp",
+  "orm": "tex/k044/ConcGrime_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Concrete",
+  "base": "tex/k044/Concrete_base.webp",
+  "normal": "tex/k044/Concrete_normal.webp",
+  "orm": "tex/k044/Concrete_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcreteMix",
+  "base": "tex/k044/ConcreteMix_base.webp",
+  "normal": "tex/k044/ConcreteMix_normal.webp",
+  "orm": null,
+  "roughness": 0.92,
+  "metalness": 0.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ConcreteMix_White",
+  "base": "tex/k044/ConcreteMix_White_base.webp",
+  "normal": "tex/k044/ConcreteMix_White_normal.webp",
+  "orm": null,
+  "roughness": 0.9,
+  "metalness": 0.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "MetalPitted_Grey",
+  "base": "tex/k044/MetalPitted_Grey_base.webp",
+  "normal": null,
+  "orm": "tex/k044/MetalPitted_Grey_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "MetalPitted_Brown",
+  "base": "tex/k044/MetalPitted_Brown_base.webp",
+  "normal": null,
+  "orm": "tex/k044/MetalPitted_Brown_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Mullions",
+  "base": "tex/k044/Mullions_base.webp",
+  "normal": null,
+  "orm": "tex/k044/Mullions_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "AC",
+  "base": "tex/k044/AC_base.webp",
+  "normal": "tex/k044/AC_normal.webp",
+  "orm": "tex/k044/AC_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Material #26",
+  "base": "tex/k044/Material_26_base.webp",
+  "normal": "tex/k044/Material_26_normal.webp",
+  "orm": null,
+  "roughness": 0.62,
+  "metalness": 0.35,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "FacadeD",
+  "base": "tex/k044/FacadeD_base.webp",
+  "normal": "tex/k044/FacadeD_normal.webp",
+  "orm": "tex/k044/FacadeD_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "FacadeE",
+  "base": "tex/k044/FacadeE_base.webp",
+  "normal": "tex/k044/FacadeE_normal.webp",
+  "orm": "tex/k044/FacadeE_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "FacadeF",
+  "base": "tex/k044/FacadeF_base.webp",
+  "normal": "tex/k044/FacadeF_normal.webp",
+  "orm": "tex/k044/FacadeF_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "FacadeI",
+  "base": "tex/k044/FacadeI_base.webp",
+  "normal": "tex/k044/FacadeI_normal.webp",
+  "orm": "tex/k044/FacadeI_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "FacadeJ",
+  "base": "tex/k044/FacadeJ_base.webp",
+  "normal": "tex/k044/FacadeJ_normal.webp",
+  "orm": "tex/k044/FacadeJ_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "GlsE",
+  "base": null,
+  "normal": "tex/k044/GlsE_normal.webp",
+  "orm": "tex/k044/GlsE_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.1,
+   0.16,
+   0.19
+  ]
+ },
+ {
+  "name": "GlsF",
+  "base": null,
+  "normal": "tex/k044/GlsF_normal.webp",
+  "orm": "tex/k044/GlsF_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.1,
+   0.16,
+   0.19
+  ]
+ },
+ {
+  "name": "GlsBlack",
+  "base": null,
+  "normal": "tex/k044/GlsBlack_normal.webp",
+  "orm": "tex/k044/GlsBlack_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.06,
+   0.08,
+   0.1
+  ]
+ },
+ {
+  "name": "RoofTar",
+  "base": "tex/k044/RoofTar_base.webp",
+  "normal": "tex/k044/RoofTar_normal.webp",
+  "orm": "tex/k044/RoofTar_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "RoofCorrugated",
+  "base": "tex/k044/RoofCorrugated_base.webp",
+  "normal": "tex/k044/RoofCorrugated_normal.webp",
+  "orm": null,
+  "roughness": 0.7,
+  "metalness": 0.6,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "WhitePlastic_Dirty",
+  "base": "tex/k044/WhitePlastic_Dirty_base.webp",
+  "normal": "tex/k044/WhitePlastic_Dirty_normal.webp",
+  "orm": null,
+  "roughness": 0.72,
+  "metalness": 0.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "MetalWhite",
+  "base": "tex/k044/MetalWhite_base.webp",
+  "normal": "tex/k044/MetalWhite_normal.webp",
+  "orm": "tex/k044/MetalWhite_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "MetalRed",
+  "base": null,
+  "normal": "tex/k044/MetalRed_normal.webp",
+  "orm": "tex/k044/MetalRed_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.42,
+   0.045,
+   0.03
+  ]
+ },
+ {
+  "name": "Railing",
+  "base": null,
+  "normal": "tex/k044/Railing_normal.webp",
+  "orm": "tex/k044/Railing_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.09,
+   0.09,
+   0.1
+  ]
+ },
+ {
+  "name": "Pic_Banners",
+  "base": "tex/k044/Pic_Banners_base.webp",
+  "normal": null,
+  "orm": null,
+  "roughness": 0.8,
+  "metalness": 0.0,
+  "emissive": [
+   0.12,
+   0.14,
+   0.16
+  ],
+  "emissiveStrength": 0.5,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Characters",
+  "base": "tex/k044/Characters_base.webp",
+  "normal": null,
+  "orm": null,
+  "roughness": 0.5,
+  "metalness": 0.0,
+  "emissive": [
+   0.35,
+   0.3,
+   0.2
+  ],
+  "emissiveStrength": 1.2,
+  "alpha": true,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "SignageOld",
+  "base": "tex/k044/SignageOld_base.webp",
+  "normal": "tex/k044/SignageOld_normal.webp",
+  "orm": null,
+  "roughness": 0.55,
+  "metalness": 0.2,
+  "emissive": [
+   0.1,
+   0.1,
+   0.1
+  ],
+  "emissiveStrength": 0.4,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "DoorSingle",
+  "base": "tex/k044/DoorSingle_base.webp",
+  "normal": "tex/k044/DoorSingle_normal.webp",
+  "orm": "tex/k044/DoorSingle_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "StoneFloor",
+  "base": "tex/k044/StoneFloor_base.webp",
+  "normal": "tex/k044/StoneFloor_normal.webp",
+  "orm": "tex/k044/StoneFloor_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "ClothGreen_Curtains",
+  "base": "tex/k044/ClothGreen_Curtains_base.webp",
+  "normal": "tex/k044/ClothGreen_Curtains_normal.webp",
+  "orm": null,
+  "roughness": 0.95,
+  "metalness": 0.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Clothes",
+  "base": "tex/k044/Clothes_base.webp",
+  "normal": "tex/k044/Clothes_normal.webp",
+  "orm": null,
+  "roughness": 0.95,
+  "metalness": 0.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": true,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.22,
+   0.2,
+   0.17
+  ]
+ },
+ {
+  "name": "SpeedwayTiles",
+  "base": "tex/k044/SpeedwayTiles_base.webp",
+  "normal": "tex/k044/SpeedwayTiles_normal.webp",
+  "orm": "tex/k044/SpeedwayTiles_orm.webp",
+  "roughness": 1.0,
+  "metalness": 1.0,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   1,
+   1,
+   1
+  ]
+ },
+ {
+  "name": "Glass",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.05,
+  "metalness": 0.92,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.035,
+   0.055,
+   0.07
+  ]
+ },
+ {
+  "name": "Window",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.05,
+  "metalness": 0.92,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.04,
+   0.06,
+   0.075
+  ]
+ },
+ {
+  "name": "Material #25",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.05,
+  "metalness": 0.92,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.03,
+   0.05,
+   0.06
+  ]
+ },
+ {
+  "name": "MullionDark",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.35,
+  "metalness": 0.85,
+  "emissive": null,
+  "emissiveStrength": 1.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.016,
+   0.018,
+   0.02
+  ]
+ },
+ {
+  "name": "Signs_Lights",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.5,
+  "metalness": 0.0,
+  "emissive": [
+   1.0,
+   0.55,
+   0.24
+  ],
+  "emissiveStrength": 2.4,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.18,
+   0.14,
+   0.1
+  ]
+ },
+ {
+  "name": "EmissiveLightMTL",
+  "base": null,
+  "normal": null,
+  "orm": null,
+  "roughness": 0.4,
+  "metalness": 0.0,
+  "emissive": [
+   0.8,
+   0.9,
+   1.0
+  ],
+  "emissiveStrength": 2.0,
+  "alpha": false,
+  "alphaCutoff": 0.45,
+  "color": [
+   0.2,
+   0.2,
+   0.18
+  ]
+ }
+]
