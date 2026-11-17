@@ -1,0 +1,90 @@
+{
+  "url": "http://localhost:4330/yacht/iac-landing/",
+  "testedAt": "2026-11-16T23:56:42.129Z",
+  "viewport": [
+    1600,
+    900
+  ],
+  "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+  "software": false,
+  "drawCalls": 93,
+  "triangles": 1496623,
+  "finalView": {
+    "calls": 93,
+    "triangles": 1496623
+  },
+  "shots": [
+    {
+      "name": "01-wide-landing",
+      "calls": 63,
+      "triangles": 1408463
+    },
+    {
+      "name": "02-disembark-prompt",
+      "calls": 66,
+      "triangles": 1397561
+    },
+    {
+      "name": "03-foot-terminal",
+      "calls": 78,
+      "triangles": 1438822
+    },
+    {
+      "name": "04-npc-dialog",
+      "calls": 75,
+      "triangles": 1438572
+    },
+    {
+      "name": "05-shop-panel",
+      "calls": 80,
+      "triangles": 1467198
+    },
+    {
+      "name": "06-perf-wide",
+      "calls": 63,
+      "triangles": 1408463
+    },
+    {
+      "name": "07-pad-top",
+      "calls": 71,
+      "triangles": 1435707
+    },
+    {
+      "name": "08-hero-a30",
+      "calls": 92,
+      "triangles": 1492209
+    },
+    {
+      "name": "09-walkway",
+      "calls": 91,
+      "triangles": 1495875
+    },
+    {
+      "name": "10-platform-overview",
+      "calls": 93,
+      "triangles": 1496623
+    },
+    {
+      "name": "11-platform-edge",
+      "calls": 93,
+      "triangles": 1496623
+    }
+  ],
+  "fps": {
+    "avg": 60,
+    "min": 58,
+    "max": 60,
+    "samples": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      58,
+      60,
+      60
+    ]
+  },
+  "note": "drawCalls/triangles are the worst measured among the captured gameplay/hero views; FPS sampled in the final parked view after shader compile and asset load (M4 Max, Metal, not SwiftShader)."
+}
