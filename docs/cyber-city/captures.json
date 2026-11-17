@@ -3,11 +3,11 @@
     "shot": "hero",
     "file": "docs/cyber-city/hero.png",
     "stats": {
-      "calls": 95,
-      "triangles": 1976857,
-      "fps": 60.19417475728155,
-      "renderMs": 0.8921888806079586,
-      "reflectionMs": 0.07751750874241425,
+      "calls": 96,
+      "triangles": 1988698,
+      "fps": 60.393532053145876,
+      "renderMs": 0.9217450871516883,
+      "reflectionMs": 0.08034292366788534,
       "frames": 187,
       "lod": 0,
       "position": [
@@ -23,9 +23,9 @@
     "stats": {
       "calls": 75,
       "triangles": 1598215,
-      "fps": 60.32302003161538,
-      "renderMs": 0.8948915417276166,
-      "reflectionMs": 0.09185243407571353,
+      "fps": 60.07751937984496,
+      "renderMs": 0.9737906165780617,
+      "reflectionMs": 0.09303073689751876,
       "frames": 302,
       "lod": 0,
       "position": [
@@ -39,11 +39,11 @@
     "shot": "street",
     "file": "docs/cyber-city/street.png",
     "stats": {
-      "calls": 94,
-      "triangles": 1975881,
-      "fps": 60.12412724153196,
-      "renderMs": 0.913575459680116,
-      "reflectionMs": 0.10848660786138165,
+      "calls": 95,
+      "triangles": 1987722,
+      "fps": 59.999999999999986,
+      "renderMs": 1.013682992749661,
+      "reflectionMs": 0.09635823154238587,
       "frames": 422,
       "lod": 0,
       "position": [
@@ -57,11 +57,11 @@
     "shot": "wide",
     "file": "docs/cyber-city/wide.png",
     "stats": {
-      "calls": 98,
-      "triangles": 1980367,
-      "fps": 60.04261089068963,
-      "renderMs": 1.2041308685059222,
-      "reflectionMs": 0.10682528104395367,
+      "calls": 99,
+      "triangles": 1992208,
+      "fps": 60.065878716776446,
+      "renderMs": 1.4776138914129564,
+      "reflectionMs": 0.12812734871061385,
       "frames": 536,
       "lod": 0,
       "position": [
@@ -77,10 +77,10 @@
     "stats": {
       "calls": 75,
       "triangles": 1598215,
-      "fps": 60.170807447847096,
-      "renderMs": 0.831713031705328,
-      "reflectionMs": 0.0733827057094448,
-      "frames": 662,
+      "fps": 60.1474582736979,
+      "renderMs": 1.1941248502704918,
+      "reflectionMs": 0.11562264799314965,
+      "frames": 663,
       "lod": 0,
       "position": [
         -2,

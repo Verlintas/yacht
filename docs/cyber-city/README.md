@@ -29,11 +29,14 @@ A 300 m street canyon with:
   (far right). They retain their authored interiors, stools, counters, bottles,
   coffee tank, awnings, vents, cables and signage. Shop glass is dark tinted
   glass, not flat blue panels; the interiors are visible behind it.
-- **Parked authored K042 concept car** assembled in Blender from the K042
-  `Body_C` shell, four `Wheel_D` wheels, `CarA039` glass and `CarC007/008/019`
-  light parts. It is static, sits at the right curb in the hero shot, casts a
-  real shadow, has a magenta underglow and is included in the planar reflection
-  through a low-cost proxy. No procedural fake car.
+- **Parked authored K042 supercar** — a complete `SuperCarB` assembly from the
+  K042 kit: body shell, four authored wheels, glass, cockpit/interior, wing and
+  light parts, exported to `car.glb` at 123,203 tris / 6 materials. The bodyshell
+  is raised 10 cm relative to the wheels so the tyres are visible at street
+  level; the tyres sit on the asphalt at y=0.008 with a soft contact shadow and
+  four tyre contact patches. It is static, sits at the right curb in the hero
+  shot, casts a real shadow and is included in the planar reflection through a
+  low-cost proxy. No procedural fake car.
 - **Real wet asphalt**: AmbientCG `Asphalt012` (CC0) 1K albedo/normal/roughness
   processed to 1K WebP + ORM + a low-frequency macro map and a localized puddle
   mask. The street has lane paint, centre dashes, two real crosswalks (z=40 and
@@ -86,10 +89,13 @@ Sushi 304,891 → 76,221; StreetStore 222,747 → 40,093; Cofe 221,214 → 48,66
 Tech 336,440 → 33,644; Pharmacy 207,036 → 20,702. Placed shops + props:
 **578,142 tris / 20 draws**.
 
-The K042 source kit has 280 meshes / 5.9 M tris of unassembled parts. The parked
-car is an authored part assembly (not a complete factory glb) exported to
-`car.glb`: **111,362 tris / 5 materials**. Body and wheel meshes are decimated
-(0.33 / 0.09) so one car costs ~0.1 M tris rather than millions.
+The K042 source kit has 280 meshes / 5.9 M tris across three complete parented
+cars (`SuperCarA/B/C`). The parked car is the authored **SuperCarB** assembly,
+not a loose body shell: body, wheels, glass, cockpit/interior, wing and light
+parts all come from that group. It is exported to `car.glb` at
+**123,203 tris / 6 materials**. The bodyshell is lifted **0.10 m** relative to
+the wheels so the tyres read at street level; the four tyres are grounded at
+y=0 and a contact-shadow plane with four tyre patches sits under the car.
 
 Street width is **22 m** (11 m half-width), sidewalks **4 m**, curb **0.16 m**.
 Buildings start at x = ±15.4 m. Towers sit on y = 0; shops sit on the 0.16 m
@@ -142,12 +148,12 @@ Chrome headless, ANGLE Metal on **Apple M4 Max**, 1600×900, DPR 1, 1280×720 UI
 
 | Shot | Draw calls | Visible tris | FPS | CPU submit |
 |---|---:|---:|---:|---:|
-| hero | **95** | **1,976,857** | 60 (vsync) | ~0.98 ms |
-| store | 75 | 1,598,215 | 60 | ~0.98 ms |
-| street | 94 | 1,975,881 | 60 | ~1.20 ms |
-| wide | 98 | 1,980,367 | 60 | ~1.25 ms |
-| ui (1280×720) | 75 | 1,598,215 | 60 | ~0.93 ms |
-| bench hero (180 frames) | 95 | 1,976,857 | 60.0 | avg 16.67 ms, p95 16.8 ms |
+| hero | **96** | **1,988,698** | 60 (vsync) | ~0.99 ms |
+| store | 75 | 1,598,215 | 60 | ~1.03 ms |
+| street | 95 | 1,987,722 | 60 | ~1.01 ms |
+| wide | 99 | 1,992,208 | 60 | ~1.07 ms |
+| ui (1280×720) | 75 | 1,598,215 | 60 | ~0.75 ms |
+| bench hero (180 frames) | 96 | 1,988,698 | 60.0 | avg 16.67 ms, p95 16.8 ms |
 
 `perf.json` contains the raw `p50/p95/min/max`, GPU string and reflection
 timing. The rAF benchmark is vsync-capped at 60; no frame drops occurred in the
@@ -159,7 +165,7 @@ passes; scene-only submissions are lower. **Targets met: <2 M tris, <100 calls,
 
 | File | What it shows |
 |---|---|
-| `hero.png` | Low 3/4 accept shot: parked K042 car and curb left, Akira's/poster wall right, wet asphalt, crosswalk, neon canyon |
+| `hero.png` | Low 3/4 accept shot: complete K042 supercar (wheels grounded, contact shadow) and curb left, Akira's/poster wall right, wet asphalt, crosswalk, neon canyon |
 | `store.png` | Storefront close-up: interior, counter, stools, menu screen, kiosk ads, Akira's/Sushi signs, cables, trash, AC |
 | `street.png` | Low wet-street view: car, manhole, crosswalk, vending machine, five-shop row, reflections, rain |
 | `wide.png` | Aerial block: native hero tower, decimated background towers, five shops, pipe bridges, banners, traffic |
@@ -169,11 +175,12 @@ passes; scene-only submissions are lower. **Targets met: <2 M tris, <100 calls,
 
 - No console errors; the earlier favicon 404 is fixed.
 - No tower overlap / ground-contact warnings in the final build.
-- **One parked vehicle only.** The K042 car is an authored-part assembly, not a
-  complete factory asset. K040 Drones remain 174 unassembled meshes / 9.1 M tris;
-  the DLNK `CityVehicles00.fbx` was inspected and rejected as a 4,124-tri /
-  19-fragment low-detail prop. A second vehicle or drone would need another
-  assembly pass; no procedural fake was added.
+- **One complete parked vehicle; no moving car.** The K042 `SuperCarB` assembly
+  is static, grounded and contact-shadowed. K040 Drones remain 174 unassembled
+  meshes / 9.1 M tris; the DLNK `CityVehicles00.fbx` was inspected and rejected
+  as a low-poly scene/vehicle prop sheet (~4.1k tris) without a complete
+  hero-scale car. A second vehicle or a moving car would need another assembly
+  pass; none was faked.
 - Storefronts are authored facades with visible modeled interiors, but they are
   not enterable. Pressing E shows an honest “interior link offline in this
   slice” toast.

@@ -34,9 +34,9 @@
       "license": "Kitbash3D commercial; private use; no standalone redistribution; public Web build needs a licensing decision",
       "local_source": "/Users/apple/Documents/3D Models/Kitbash 3D建筑系列/K042交通工具：超级跑车 概念3d模型Kitbash3D-Vehicles：Supercars/FBX格式.zip",
       "source_fbx": "Vehicles_SuperCar.FBX",
-      "source_stats": "280 meshes, 5,900,000 tris (unassembled body, mechanical and wheel parts kit)",
-      "used_for": "One static parked concept car assembled in Blender from Body_C + 4× Wheel_D + CarA039 glass + CarC007/C008/C019 light parts. Body/wheels decimated to keep the car at 111,362 tris / 5 materials.",
-      "committed_derivative": "public/cyber-city/models/car.glb (2.0 MB)",
+      "source_stats": "280 meshes, 5,900,000 tris; three complete parented cars (SuperCarA/B/C)",
+      "used_for": "One complete static parked car: the authored SuperCarB assembly with body shell, four wheels, glass, cockpit/interior, wing and light parts. Decimated to 123,203 tris / 6 materials; bodyshell raised 0.10 m relative to the wheels so the tyres are visible. Runtime adds a contact-shadow plane with four tyre patches; tyres sit on the road.",
+      "committed_derivative": "public/cyber-city/models/car.glb (5.5 MB)",
       "source_committed": false
     },
     {
@@ -72,7 +72,7 @@
       "id": "dlnk-scifi-neon-city-vehicles",
       "name": "DLNK SciFi Neon City — CityVehicles00.fbx",
       "local_source": "/Users/apple/Documents/3D Models/SciFi Neon City.unitypackage",
-      "reason": "The only vehicle FBX in the package is a 4,124-triangle / 19-fragment low-detail prop set; rejected as below the authored-detail bar for a hero parked vehicle."
+      "reason": "The only vehicle FBX in the package is a low-poly scene/vehicle prop sheet (~4,124 triangles / 19 fragments), not a complete hero-scale car. Rejected in favour of the authored K042 SuperCarB assembly."
     }
   ]
 }

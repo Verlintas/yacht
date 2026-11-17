@@ -1,37 +1,37 @@
 {
   "hero": {
-    "fps": 60.001348344906624,
-    "avgMs": 16.666292134831462,
+    "fps": 60.00337097589755,
+    "avgMs": 16.665730337078642,
     "p50Ms": 16.69999999999891,
     "p95Ms": 16.700000000000728,
-    "minMs": 16.5,
+    "minMs": 16.599999999998545,
     "maxMs": 16.80000000000109,
-    "calls": 95,
-    "triangles": 1976857,
+    "calls": 96,
+    "triangles": 1988698,
     "width": 1600,
     "height": 900,
     "pixelRatio": 1,
     "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
     "lod": 0,
-    "renderMs": 1.168397446726251,
-    "reflectionMs": 0.0911512499299804
+    "renderMs": 1.1588460613637739,
+    "reflectionMs": 0.09186181203808437
   },
   "wide": {
-    "fps": 60.002033967253176,
-    "avgMs": 16.66610169491524,
-    "p50Ms": 16.69999999999709,
+    "fps": 60.00203396725306,
+    "avgMs": 16.666101694915273,
+    "p50Ms": 16.700000000000728,
     "p95Ms": 16.799999999999272,
-    "minMs": 16.5,
-    "maxMs": 16.799999999999272,
-    "calls": 98,
-    "triangles": 1980367,
+    "minMs": 16.599999999998545,
+    "maxMs": 16.80000000000291,
+    "calls": 99,
+    "triangles": 1992208,
     "width": 1600,
     "height": 900,
     "pixelRatio": 1,
     "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
     "lod": 0,
-    "renderMs": 0.8264173738428806,
-    "reflectionMs": 0.07608412232674922
+    "renderMs": 1.1385072543059669,
+    "reflectionMs": 0.076156256190128
   },
   "logs": [
     {

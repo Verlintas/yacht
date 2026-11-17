@@ -749,6 +749,42 @@ function makePosterAtlas(): THREE.CanvasTexture {
   return tex;
 }
 
+/** Soft contact shadow for the parked car: keeps the tyres visually planted. */
+function makeContactShadowTexture(): THREE.CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 512;
+  const ctx = c.getContext('2d')!;
+  ctx.clearRect(0, 0, 256, 512);
+  ctx.save();
+  ctx.translate(128, 256);
+  ctx.scale(1, 2.0);
+  const grad = ctx.createRadialGradient(0, 0, 6, 0, 0, 120);
+  grad.addColorStop(0, 'rgba(0,0,0,0.82)');
+  grad.addColorStop(0.45, 'rgba(0,0,0,0.62)');
+  grad.addColorStop(0.76, 'rgba(0,0,0,0.26)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(0, 0, 120, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  // darker patches at the four tyre contact points
+  for (const [wx, wy] of [[47, 117], [209, 117], [47, 395], [209, 395]]) {
+    const spot = ctx.createRadialGradient(wx, wy, 2, wx, wy, 34);
+    spot.addColorStop(0, 'rgba(0,0,0,0.7)');
+    spot.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = spot;
+    ctx.beginPath();
+    ctx.ellipse(wx, wy, 34, 22, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
 function buildTargetMaterials(
   source: Map<string, THREE.Material>,
   remap: Record<string, string>,
@@ -1086,9 +1122,14 @@ async function build(): Promise<void> {
   console.log(`props + shops: ${propMerge.triangles.toLocaleString()} tris / ${propMerge.drawCalls} draws`);
 
   // ---- authored K042 parked concept car ----
+  // Complete SuperCarB assembly: body, wheels, glass, interior and light parts.
+  // Front faces the camera (-Z); tyres rest on the road at y=0.008.
   const car = carGltf.scene.getObjectByName('CAR_HERO') ?? carGltf.scene;
-  car.position.set(8.2, 0.0, 36.0);
-  car.rotation.y = 0.22;
+  const CAR_X = 8.0;
+  const CAR_Z = 31.5;
+  const CAR_YAW = Math.PI + 0.62;
+  car.position.set(CAR_X, 0.008, CAR_Z);
+  car.rotation.y = CAR_YAW;
   car.traverse((obj) => {
     const mesh = obj as THREE.Mesh;
     if (!mesh.isMesh) return;
@@ -1097,12 +1138,12 @@ async function build(): Promise<void> {
     const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
     for (const raw of mats) {
       const m = raw as THREE.MeshStandardMaterial;
-      m.envMapIntensity = 1.5;
+      m.envMapIntensity = 1.55;
       if (m.name === 'CAR_Paint') {
-        m.color = new THREE.Color(0x1a2030);
-        m.metalness = 0.72;
-        m.roughness = 0.24;
-        m.envMapIntensity = 2.15;
+        m.color = new THREE.Color(0x2a3446);
+        m.metalness = 0.68;
+        m.roughness = 0.22;
+        m.envMapIntensity = 2.3;
       } else if (m.name === 'CAR_Glass') {
         m.color = new THREE.Color(0x05090d);
         m.metalness = 0.9;
@@ -1111,11 +1152,18 @@ async function build(): Promise<void> {
       } else if (m.name === 'CAR_LightWhite') {
         m.emissive = new THREE.Color(0xcfe8ff);
         m.color = new THREE.Color(0x0a1014);
-        m.emissiveIntensity = 0.95;
-      } else if (m.name.startsWith('CAR_Light')) {
-        m.emissiveIntensity = 4.0;
+        m.emissiveIntensity = 1.1;
       } else if (m.name === 'CAR_Accent') {
-        m.emissiveIntensity = 3.2;
+        m.emissive = new THREE.Color(0xff1a5a);
+        m.emissiveIntensity = 3.0;
+      } else if (m.name === 'CAR_Metal') {
+        m.color = new THREE.Color(0x252b34);
+        m.metalness = 0.9;
+        m.roughness = 0.2;
+        m.envMapIntensity = 2.3;
+      } else if (m.name === 'CAR_Tire') {
+        m.color = new THREE.Color(0x050607);
+        m.roughness = 0.72;
       }
       m.needsUpdate = true;
     }
@@ -1131,38 +1179,50 @@ async function build(): Promise<void> {
       maxZ: b.max.z - 0.25,
     });
   }
-  // neon underglow + a small practical to lift the car off the asphalt
+
+  // contact shadow + a thin magenta underglow in one transparent draw
   {
-    const underMat = new THREE.MeshBasicMaterial({
-      color: 0xff2a6a,
+    const shadowGeo = new THREE.PlaneGeometry(3.15, 5.9);
+    shadowGeo.rotateX(-Math.PI / 2);
+    shadowGeo.rotateY(CAR_YAW);
+    shadowGeo.translate(CAR_X, 0.013, CAR_Z);
+    const shadowMat = new THREE.MeshBasicMaterial({
+      map: makeContactShadowTexture(),
+      color: 0x000000,
       transparent: true,
-      opacity: 0.26,
-      blending: THREE.AdditiveBlending,
+      opacity: 0.72,
       depthWrite: false,
+      toneMapped: false,
     });
-    const under = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 5.3), underMat);
-    under.rotation.x = -Math.PI / 2;
-    under.position.set(8.2, 0.035, 36.0);
-    under.renderOrder = 3;
-    scene.add(under);
-    const glow = new THREE.PointLight(0xff2a6a, 3, 5, 2);
-    glow.position.set(8.2, 0.4, 36.0);
-    scene.add(glow);
-    // cool rim from the shop side so the dark body separates from the street
-    const rim = new THREE.PointLight(0x9ed8ff, 12, 9, 2);
-    rim.position.set(11.0, 2.6, 33.5);
+    const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+    shadow.name = 'car-contact-shadow';
+    shadow.renderOrder = 2;
+    scene.add(shadow);
+
+    // dim cool rim from the shop side + warm key from the street, so the
+    // complete body and wheel arches separate from the wet asphalt
+    const rim = new THREE.PointLight(0x9ed8ff, 16, 9, 2);
+    rim.position.set(10.8, 2.4, 29.6);
     scene.add(rim);
+    const key = new THREE.PointLight(0xffa45c, 18, 9, 2);
+    key.position.set(5.4, 2.0, 29.0);
+    scene.add(key);
+    // low fill catches the near wheel arch and keeps the tyres from disappearing
+    const wheelFill = new THREE.PointLight(0xbfe7ff, 10, 6, 2);
+    wheelFill.position.set(5.2, 0.7, 30.0);
+    scene.add(wheelFill);
   }
+
   // flat car proxy for the wet-road reflection
   {
     const proxy = new THREE.Group();
     proxy.layers.set(2);
     const box = new THREE.Mesh(
-      new THREE.BoxGeometry(2.7, 1.15, 5.0),
+      new THREE.BoxGeometry(2.82, 1.32, 5.4),
       new THREE.MeshBasicMaterial({ color: 0x040507, fog: true }),
     );
-    box.position.set(8.2, 0.6, 36.0);
-    box.rotation.y = 0.22;
+    box.position.set(CAR_X, 0.72, CAR_Z);
+    box.rotation.y = CAR_YAW;
     box.layers.set(2);
     proxy.add(box);
     const lights: THREE.BufferGeometry[] = [];
@@ -1180,7 +1240,9 @@ async function build(): Promise<void> {
       g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
       lights.push(g);
     };
-    quad(8.2, 0.72, 33.45, 2.0, 0.18, 0xff1a1a);
+    // front now faces -Z (toward the hero camera); rear faces +Z
+    quad(CAR_X, 0.7, CAR_Z - 2.68, 1.9, 0.12, 0xdcecff);
+    quad(CAR_X, 0.78, CAR_Z + 2.68, 2.0, 0.16, 0xff1a1a);
     const lm = new THREE.MeshBasicMaterial({
       vertexColors: true,
       transparent: true,
