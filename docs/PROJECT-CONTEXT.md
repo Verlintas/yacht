@@ -24,7 +24,7 @@
 - 第一人称座舱 v3 已合并：独立 `Scene`/`CockpitPass`、VX-9 HUD、canopy mask、伤害裂纹、warp 遮挡；A-30 103k tris / AR10 108k tris，31 draw calls。截图在 `docs/cockpit-ui/`。
 - Archon 贴图 0 成本 pass 已合并：AO/ORM、金属/自发光、MikkTSpace tangents、anisotropy 16；几何/硬点不变，2K WebP 4.67 MB，纹理 VRAM ≈89.5 MB，4K 不作为默认。报告 `docs/ARCHON-TEXTURE-PASS.md`。
 - 鱼雷/爆炸 VFX v2 已合并：InstancedMesh 弹体、分层尾迹、破缺冲击波、多瓣火球、棱角残骸、终末级联殉爆；220 枚鱼雷 bench `Combat.update` ≈0.39 ms/帧，鱼雷相关 11 draw calls。测试场 `/yacht/vfx-torpedo-test/`。
-- IAC Anvil Landing 垂直切片已可玩：`/yacht/iac-landing/` — 16 km 地形、降落的 A-30、F 下船、第一人称步行、3 NPC 对话、商店；93 draw calls / 1.5 M tris / 60 fps（M4 Max ANGLE Metal）。
+- IAC 切片已撤回（2026-11-17）：质量未达用户标准，不接主游戏；代码/截图归档在 worktree `iac-landing-slice`。当前转向 cyber city 垂直切片。
 - 建模流程已确定：**不能只靠 CLI 程序化改模**；必须 authored/Blender/kitbash，静态近景单物体至少 5,000 tris（球体除外）。
 - Tripo：**不买来做建筑/城市**；最多 Pro 月付试 props/rocks/角色底模。
 
@@ -213,7 +213,6 @@ NPC Only：VA-3、F2-5、HS-2、OS-8。
 - 当前样本：
   - `/yacht/terrain-sample/` 1 km 地形 + 420×260 m 港区 + 60 m TLOF
   - `/yacht/city-hero/` city-hero v4 港口街区 + 单栋 K032/K038 hero
-  - `/yacht/iac-landing/` IAC 16 km 地形 + Anvil Landing 可玩切片
 - 用户否定了把 K038 两栋叠成 563 m 的做法；后续只用单栋原生建筑 + authored 构图。
 
 ### 角色
@@ -236,16 +235,22 @@ NPC Only：VA-3、F2-5、HS-2、OS-8。
 - 默认 assist；F 请求 clearance，再按 F 启动 autoland，X 取消。
 - 垂直切片：A-30 25 m 在 60 m S pad 完整 land → disembark → walk → re-board → takeoff。
 
-### IAC 垂直切片（已实现）
+### Cyber city 垂直切片（当前方向）
 
-- 页面：`/yacht/iac-landing/`；worktree 合并提交 `596d06d`。
-- 16 km × 16 km R16 heightfield，641²，25 m 间距；2.2 × 2.6 km 工业平台，40 m 高 terrace；北部山脊/峡谷/东侧台地；48 km 雾隐 backdrop。
-- Anvil Landing：T2 到港厅、60 m TLOF、A-30 原生几何落地、龙门架、燃料罐、集装箱、商店、灯带/线缆、服务路。
-- 步行：WASD、pointer lock、Shift 冲刺、Space 跳跃、重力/贴地、1.7 m 眼高；地形 + 甲板 + 主要 AABB 碰撞。
-- 交互：F 下船/登船、3 NPC 对话、商店 3 件占位商品、购买扣款、Esc 关闭。
-- 性能：最差 93 draw calls / 1.497 M tris / 60 fps；smoke 15/15 通过。
-- 仍是切片：单块静态 terrain、A-30 静态落地节点、NPC 无骨骼、T2 只有外部大厅、AABB 碰撞、商店无存档；`/yacht/iac-landing/` 未接入主游戏。
-- 下一步：`SurfaceFrame`/`InputRouter`/`SurfaceMode`、`LandingSystem`/`PadFrame`、`.cterr` tile 流式 + quadtree LOD、存档/经济、T2 室内/骨骼 NPC。
+- 用户明确要求：先做 cyber 风格城市，利用现成高精素材/模型，不再在空地形上做低完成度切片。
+- 主素材：`/Users/apple/Documents/3D Models/SciFi Neon City.unitypackage`（DLNK Neon City，4.0 GB，143 FBX / 978 prefabs / 1092 PNG / 376 EXR）。
+- 辅助素材：CityStreets 209、K039 Sci-Fi Industrial、K032/K038（只做背景/hero，不叠楼）、Modelshop 角色。
+- 目标：200–400 m 可探索街区，3–5 栋高精建筑 + 街道/巷道/霓虹/雨/蒸汽/电缆/空调/售货机/全息广告；人物优先用带骨骼/动画的现成角色，不用 posed mesh 充数。
+- 技术：assimp 转 ASCII FBX → GLB，提取 `_DLNK` 贴图库并 relink；KTX2/WebP + Meshopt；LOD/InstancedMesh；湿地面反射/SSR；HDRI/物理太阳/体积雾；<100 draw calls、60 fps。
+- UI：现代极简 cyber HUD/交互，不用旧座舱 HUD。
+- 验收：无穿模、无浮动平台、真实街道尺度、材质/贴图完整、人物动作自然、性能实测；先做 `/yacht/cyber-city/` 独立页面，不直接改主游戏。
+- 许可：付费资产只做私有/非商业 build；公开部署前需 EULA 决策或替换。
+
+### IAC 垂直切片（已撤回）
+
+- 2026-11-17 用户验收否决：完成度约 5%，视觉/细节/规模/UI/人物/材质/穿模均不达标，不能接回主游戏。
+- 页面与资产已从 main 移除，不部署；代码/截图保留在 worktree `iac-landing-slice`（`7f122fb`）作为技术试验归档。
+- 结论：先做 cyber city 垂直切片，利用现成高精城市资产，而不是继续在空地形上做低完成度切片。
 
 ---
 
@@ -355,7 +360,6 @@ K047 不完整（只有 `.baiduyun.p.downloading`）；K043/K022 无贴图；K02
 - `docs/TORPEDO-VFX.md` — 鱼雷/爆炸 VFX 架构、性能、限制
 - `docs/cockpit-ui/README.md` — 第一人称座舱/HUD、截图、数据接线
 - `docs/hardpoints/README.md` — TM-5/TG-6/RH-7 硬点验收
-- `docs/iac-landing/README.md` — IAC 切片架构、真实/占位、性能、接入步骤
 
 ---
 
@@ -378,19 +382,12 @@ K047 不完整（只有 `.baiduyun.p.downloading`）；K043/K022 无贴图；K02
 | `src/game/audio.ts` | 引擎声、武器声、爆炸声 |
 | `src/pages/index.astro` | 游戏 HTML/CSS/HUD |
 | `src/pages/terrain-sample.astro` | 1 km 地形样本 |
-| `src/game/iac/terrain.ts` | 16 km heightfield、地形采样/碰撞、平台融合 |
-| `src/game/iac/player.ts` | 第一人称步行、重力/贴地、AABB 碰撞 |
-| `src/game/iac/port.ts` | Anvil Landing 港口、T2、道具、NPC/商店锚点 |
-| `src/game/iac/env-art.ts` | 港口环境美术、灯光、雾、细节 |
-| `src/pages/iac-landing.astro` | IAC Anvil Landing 可玩垂直切片 |
 | `src/pages/city-hero.astro` | Nautilus Reach city-hero v4 港口街区样本 |
 | `src/pages/vfx-torpedo-test.astro` | 鱼雷/爆炸 VFX 测试场 |
 | `src/pages/kitbash-port.astro` | K039 港口预览 |
 | `src/scripts/hardpoint-data.ts` | setup 编辑器 18 艘船硬点 |
 | `tools/terrain/generate_sample.py` | 地形高度场样本 |
 | `scripts/city-hero-v2/` | Nautilus Reach city-hero v4 Blender 场景 |
-| `tools/terrain/generate_iac_16km.py` | IAC 16 km heightfield / terrace 生成 |
-| `scripts/iac-smoke.mjs` | IAC 切片 CDP smoke test（15 项） |
 | `scripts/kitbash/` | K039 港区 Blender 场景 |
 
 ---
@@ -438,7 +435,6 @@ npm run build
 - `/yacht/terrain-sample/` — authored terrain + 港区尺度样本
 - `/yacht/kitbash-port/` — K039 英雄港口实时预览
 - `/yacht/city-hero/` — city-hero v4 港口街区 + 单栋 K032/K038 hero + T2 到港厅；5 张 Cycles renders
-- `/yacht/iac-landing/` — IAC 16 km 地形 + Anvil Landing + A-30 下船/步行/NPC/商店
 
 ### 已知问题
 
@@ -449,8 +445,7 @@ npm run build
 - 座舱 103k/108k tris，高于设计 45–65k；draw call 保持 31。
 - 爆炸/鱼雷 VFX v2 已合并；冲击环仍是相机朝向 Sprite，不是真实 3D 球壳；需真机长时间 Archon 实战 FPS 验收。
 - city-hero v4 已合并：单栋 K032/K038 hero、45 个街区模块、品牌清理、工业边缘；仍是离线 Cycles stills + 1200 m 工程平台，不是最终城市系统。K015 只做远景。
-- 行星真实地形/城市/步行/起降在主游戏里仍未接入；独立 IAC 切片已跑通。
-- IAC 切片仍是单块静态 terrain、静态 A-30、无骨骼 NPC、AABB 碰撞、无存档/音频；T2 只有外部大厅。
+- 行星真实地形/城市/步行/起降仍未接入主游戏；IAC 切片已撤回，当前先做 cyber city 垂直切片。
 - `surfacePatch` 已禁用；地形占位平面会产生黑块/边缘。
 - 大型舰落地规则：AR10 永不落地；2–2.6 km 只 XL cradle/轨道。
 
@@ -462,14 +457,15 @@ npm run build
 2. **第一人称座舱验收**：已合并 v3；真机检查 A-30/AR10、1280×720、warp/受击/损伤，再决定是否用 Blender GLB 替换程序化 kit。
 3. **Archon 贴图后续**：0 成本 pass 已合并；如需进一步降 VRAM，再接 KTX2Loader 走 2K KTX2（16.8 MB），不要默认 4K。
 4. **候选舰硬点验收**：TM5/TG6/RH7 已在 setup 截图确认，标记落在舰体正确位置；截图在 `docs/hardpoints/`。实机开火/喷口朝向仍待逐舰飞行验收。
-5. **城市 hero**：v4 已合并为港口街区样本；下一步把已验证的 hero 尺度/街区规则带到 IAC 真实地形，而不是继续堆 1200 m 平台。
-6. **IAC 接回主游戏**：切片已跑通；下一步 `SurfaceFrame`/`InputRouter`/`SurfaceMode`、`LandingSystem`/`PadFrame`、`.cterr` tile 流式 + quadtree LOD、存档/经济、T2 室内/骨骼 NPC。
+5. **Cyber city 垂直切片**：用现成高精城市资产（DLNK Neon City / CityStreets / K039）做一条可探索街区，先过视觉/规模/材质/人物/性能验收，再谈接主游戏。
+6. **IAC 暂缓**：切片已撤回；等 cyber city 管线跑通后，再决定是否重做真实地形/城市/步行/起降。
 7. **资产采购决策**：本地优先；若要买，Lunar Base + BMS Greebles；Tripo 不买。
 
 ---
 
 ## 12. 最近提交
 
+- `（本次）` — 撤回 IAC 切片，转向 cyber city
 - `596d06d` — 合并 IAC Anvil Landing 垂直切片（16 km 地形、下船/步行/对话/商店）
 - `7f122fb` — IAC 环境美术 pass：terrace 融合、盆地细节、低角度夕阳
 - `1846b1d` — IAC Anvil Landing 垂直切片基础：地形/步行/交互/商店
