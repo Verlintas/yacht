@@ -105,41 +105,45 @@ export function createWetRoad(opts: {
   asphaltMap: THREE.Texture;
   asphaltNormal: THREE.Texture;
   asphaltOrm: THREE.Texture;
+  asphaltMacro: THREE.Texture;
   puddleMask: THREE.Texture;
   reflection: PlanarReflection;
 }): WetRoadResult {
   const {
     width, length, position, yaw = 0,
-    asphaltMap, asphaltNormal, asphaltOrm, puddleMask, reflection,
+    asphaltMap, asphaltNormal, asphaltOrm, asphaltMacro, puddleMask, reflection,
   } = opts;
 
   asphaltMap.wrapS = asphaltMap.wrapT = THREE.RepeatWrapping;
   asphaltNormal.wrapS = asphaltNormal.wrapT = THREE.RepeatWrapping;
   asphaltOrm.wrapS = asphaltOrm.wrapT = THREE.RepeatWrapping;
   puddleMask.wrapS = puddleMask.wrapT = THREE.RepeatWrapping;
-  asphaltMap.repeat.set(3.2, length / 5.6);
-  asphaltNormal.repeat.set(3.2, length / 5.6);
-  asphaltOrm.repeat.set(3.2, length / 5.6);
+  asphaltMap.repeat.set(width / 4.5, length / 4.5);
+  asphaltNormal.repeat.set(width / 4.5, length / 4.5);
+  asphaltOrm.repeat.set(width / 4.5, length / 4.5);
+  asphaltMacro.wrapS = asphaltMacro.wrapT = THREE.RepeatWrapping;
   puddleMask.repeat.set(1, 1);
-  asphaltMap.anisotropy = 8;
-  asphaltNormal.anisotropy = 8;
+  asphaltMap.anisotropy = 16;
+  asphaltNormal.anisotropy = 16;
+  asphaltOrm.anisotropy = 16;
 
   const material = new THREE.MeshStandardMaterial({
     map: asphaltMap,
     normalMap: asphaltNormal,
     roughnessMap: asphaltOrm,
     metalnessMap: asphaltOrm,
-    roughness: 0.9,
+    roughness: 1.0,
     metalness: 0.0,
-    color: new THREE.Color(0x7a818a),
-    envMapIntensity: 0.45,
+    color: new THREE.Color(0xffffff),
+    envMapIntensity: 0.7,
   });
-  material.normalScale.set(0.55, 0.55);
+  material.normalScale.set(0.9, 0.9);
 
   const uniforms = {
     uReflection: { value: reflection.texture },
     uTextureMatrix: { value: reflection.textureMatrix },
     uPuddle: { value: puddleMask },
+    uMacro: { value: asphaltMacro },
     uTime: { value: 0 },
   };
 
@@ -164,6 +168,7 @@ export function createWetRoad(opts: {
       `#include <common>
        uniform sampler2D uReflection;
        uniform sampler2D uPuddle;
+       uniform sampler2D uMacro;
        uniform float uTime;
        varying vec4 vReflectCoord;
        varying vec3 vWorldPos;`,
@@ -171,19 +176,26 @@ export function createWetRoad(opts: {
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <clipping_planes_fragment>',
       `#include <clipping_planes_fragment>
-       float ccPuddleRaw = texture2D(uPuddle, vWorldPos.xz * 0.019 + vec2(0.31, 0.17)).r;
-       float ccPuddle = smoothstep(0.04, 0.55, ccPuddleRaw);
-       float ccWetBase = 0.34;`,
+       float ccPuddleRaw = texture2D(uPuddle, vWorldPos.xz * 0.023 + vec2(0.31, 0.17)).r;
+       float ccPuddleDetail = texture2D(uPuddle, vWorldPos.xz * 0.081 + vec2(0.71, 0.53)).r;
+       // break large blobs into irregular sheets so the aerial shot does not
+       // read as a handful of pale amoebas on the asphalt
+       float ccPuddle = smoothstep(0.76, 0.99, ccPuddleRaw * (0.58 + 0.62 * ccPuddleDetail));
+       float ccGutter = smoothstep(0.72, 0.98, abs(vWorldPos.x) / 11.0);
+       float ccMacro = texture2D(uMacro, vWorldPos.xz * 0.011 + vec2(0.17, 0.41)).r;
+       float ccWetBase = 0.025;`,
     );
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <color_fragment>',
       `#include <color_fragment>
-       diffuseColor.rgb *= mix(0.82, 0.34, ccPuddle);`,
+       diffuseColor.rgb *= mix(0.62, 1.28, ccMacro);
+       diffuseColor.rgb *= mix(0.96, 0.48, max(ccPuddle, ccGutter * 0.42));`,
     );
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <roughnessmap_fragment>',
       `#include <roughnessmap_fragment>
-       roughnessFactor = mix(roughnessFactor, 0.045, ccPuddle);`,
+       roughnessFactor = clamp(roughnessFactor * mix(0.82, 1.15, ccMacro), 0.04, 0.98);
+       roughnessFactor = mix(roughnessFactor, 0.105, max(ccPuddle, ccGutter * 0.55));`,
     );
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <opaque_fragment>',
@@ -198,9 +210,9 @@ export function createWetRoad(opts: {
          ccRefl += texture2D(uReflection, ccUv + vec2(0.0, 0.045)).rgb * 0.16;
          ccRefl += texture2D(uReflection, ccUv - vec2(0.0, 0.052)).rgb * 0.12;
          float ccFres = pow(1.0 - clamp(dot(normalize(cameraPosition - vWorldPos), normalize((vec4(normal, 0.0) * viewMatrix).xyz)), 0.0, 1.0), 3.0);
-         float ccWet = mix(ccWetBase, 0.98, ccPuddle) * (0.32 + 0.68 * ccFres);
-         outgoingLight += ccRefl * ccWet * vec3(0.63, 0.78, 0.98) * 1.7;
-         outgoingLight += ccRefl * ccPuddle * 0.22;
+         float ccWet = mix(ccWetBase, 0.5, max(ccPuddle, ccGutter * 0.34)) * (0.22 + 0.78 * ccFres);
+         outgoingLight += ccRefl * ccWet * vec3(0.75, 0.86, 1.0) * 0.7;
+         outgoingLight += ccRefl * ccPuddle * 0.05;
        }
        #include <opaque_fragment>`,
     );

@@ -30,6 +30,7 @@ import {
   asset,
   configureLoadedMaterial,
   createNightSky,
+  getScreenTexture,
   loadTexture,
   makeMoonTexture,
 } from './materials';
@@ -89,6 +90,8 @@ scene.backgroundIntensity = 1.0;
 scene.environment = sky.environment;
 scene.environmentIntensity = 1.05;
 
+const posterAtlas = makePosterAtlas();
+
 // ---------------------------------------------------------------------------
 // lights
 // ---------------------------------------------------------------------------
@@ -127,13 +130,13 @@ vistaFill.target.position.set(0, 4, -30);
 scene.add(vistaFill, vistaFill.target);
 
 const pointDefs: { pos: [number, number, number]; color: number; intensity: number; distance: number }[] = [
-  { pos: [-10.5, 8.5, 12], color: 0x35e8ff, intensity: 210, distance: 48 },
-  { pos: [10.5, 9.0, 8], color: 0xff3e9a, intensity: 190, distance: 48 },
-  { pos: [-11.0, 6.5, 44], color: 0xff9a5a, intensity: 150, distance: 36 },
-  { pos: [11.0, 7.0, 34], color: 0x9ed8ff, intensity: 120, distance: 36 },
-  { pos: [-10.0, 8.0, 110], color: 0xff3e9a, intensity: 170, distance: 48 },
-  { pos: [10.0, 8.0, 170], color: 0xffb070, intensity: 150, distance: 42 },
-  { pos: [10.0, 7.0, 250], color: 0x5ea8ff, intensity: 130, distance: 42 },
+  { pos: [-10.5, 8.5, 12], color: 0x35e8ff, intensity: 125, distance: 48 },
+  { pos: [10.5, 9.0, 8], color: 0xff3e9a, intensity: 115, distance: 48 },
+  { pos: [-11.0, 6.5, 44], color: 0xff9a5a, intensity: 95, distance: 36 },
+  { pos: [11.0, 7.0, 34], color: 0x9ed8ff, intensity: 80, distance: 36 },
+  { pos: [-10.0, 8.0, 110], color: 0xff3e9a, intensity: 105, distance: 48 },
+  { pos: [10.0, 8.0, 170], color: 0xffb070, intensity: 95, distance: 42 },
+  { pos: [10.0, 7.0, 250], color: 0x5ea8ff, intensity: 85, distance: 42 },
 ];
 for (const d of pointDefs) {
   const light = new THREE.PointLight(d.color, d.intensity, d.distance, 2);
@@ -142,8 +145,8 @@ for (const d of pointDefs) {
   scene.add(light);
 }
 const lampLights: { pos: [number, number, number]; color: number; intensity: number; distance: number }[] = [
-  { pos: [-12.4, 12.5, 62], color: 0xdcecff, intensity: 45, distance: 26 },
-  { pos: [12.4, 12.5, 190], color: 0xdcecff, intensity: 38, distance: 24 },
+  { pos: [-12.4, 12.5, 62], color: 0xffc890, intensity: 8, distance: 26 },
+  { pos: [12.4, 12.5, 190], color: 0xdcecff, intensity: 10, distance: 24 },
 ];
 for (const d of lampLights) {
   const light = new THREE.PointLight(d.color, d.intensity, d.distance, 2);
@@ -151,11 +154,28 @@ for (const d of lampLights) {
   scene.add(light);
 }
 
+const leftAccent = new THREE.PointLight(0xff7a36, 22, 24, 2);
+leftAccent.position.set(-20.0, 7.0, 60.0);
+scene.add(leftAccent);
+
 const shopSpill: { pos: [number, number, number]; color: number; intensity: number; distance: number }[] = [
-  { pos: [-13.8, 1.8, 44.0], color: 0xffa45c, intensity: 30, distance: 14 },
-  { pos: [13.8, 1.8, 33.0], color: 0x9ed8ff, intensity: 22, distance: 12 },
-  { pos: [13.8, 1.8, 171.0], color: 0xffb070, intensity: 22, distance: 12 },
+  { pos: [-13.8, 1.8, 44.0], color: 0xffa45c, intensity: 12, distance: 14 },
+  { pos: [13.8, 1.8, 33.0], color: 0x9ed8ff, intensity: 4, distance: 12 },
+  { pos: [13.8, 1.8, 171.0], color: 0xffb070, intensity: 14, distance: 12 },
+  { pos: [-16.0, 1.8, 137.0], color: 0x35e8ff, intensity: 16, distance: 14 },
+  { pos: [16.0, 1.8, 230.0], color: 0x6effb0, intensity: 14, distance: 12 },
 ];
+const interiorLights: { pos: [number, number, number]; color: number; intensity: number; distance: number }[] = [
+  { pos: [-17.6, 2.35, 44.0], color: 0xffb070, intensity: 14, distance: 7 },
+  { pos: [18.2, 2.35, 33.0], color: 0x9ed8ff, intensity: 10, distance: 6 },
+  { pos: [-21.0, 2.35, 137.0], color: 0x35e8ff, intensity: 10, distance: 7 },
+  { pos: [-18.4, 4.1, 44.0], color: 0xffb070, intensity: 18, distance: 4 },
+];
+for (const s of interiorLights) {
+  const light = new THREE.PointLight(s.color, s.intensity, s.distance, 2);
+  light.position.set(...s.pos);
+  scene.add(light);
+}
 for (const s of shopSpill) {
   const light = new THREE.PointLight(s.color, s.intensity, s.distance, 2);
   light.position.set(...s.pos);
@@ -163,9 +183,11 @@ for (const s of shopSpill) {
 }
 RectAreaLightUniformsLib.init();
 const shopLights: { pos: [number, number, number]; color: number; intensity: number; width: number; height: number; look: [number, number, number] }[] = [
-  { pos: [-14.2, 3.6, 44.0], color: 0xffa45c, intensity: 16, width: 8, height: 4, look: [-6, 3, 44] },
-  { pos: [14.2, 3.2, 33.0], color: 0x9ed8ff, intensity: 12, width: 9, height: 4, look: [4, 3, 33] },
-  { pos: [14.2, 3.4, 171.0], color: 0xffb070, intensity: 12, width: 8, height: 4.2, look: [4, 3, 171] },
+  { pos: [-14.2, 3.6, 44.0], color: 0xffa45c, intensity: 8, width: 8, height: 4, look: [-6, 3, 44] },
+  { pos: [14.2, 3.2, 33.0], color: 0x9ed8ff, intensity: 4, width: 9, height: 4, look: [4, 3, 33] },
+  { pos: [14.2, 3.4, 171.0], color: 0xffb070, intensity: 6, width: 8, height: 4.2, look: [4, 3, 171] },
+  { pos: [-17.2, 3.2, 137.0], color: 0x9ed8ff, intensity: 5, width: 8, height: 4, look: [-8, 3, 137] },
+  { pos: [15.8, 3.2, 230.0], color: 0x9effcf, intensity: 4, width: 7, height: 4, look: [8, 3, 230] },
 ];
 for (const s of shopLights) {
   const light = new THREE.RectAreaLight(s.color, s.intensity, s.width, s.height);
@@ -181,6 +203,7 @@ for (const s of shopLights) {
 const asphaltBase = loadTexture('tex/street/asphalt_base.webp');
 const asphaltNormal = loadTexture('tex/street/asphalt_normal.webp', THREE.NoColorSpace);
 const asphaltOrm = loadTexture('tex/street/asphalt_orm.webp', THREE.NoColorSpace);
+const asphaltMacro = loadTexture('tex/street/asphalt_macro.webp', THREE.NoColorSpace);
 const puddleMask = loadTexture('tex/street/puddle_mask.webp', THREE.NoColorSpace);
 const sidewalkBase = loadTexture('tex/street/sidewalk_base.webp');
 const sidewalkNormal = loadTexture('tex/street/sidewalk_normal.webp', THREE.NoColorSpace);
@@ -194,6 +217,7 @@ const road = createWetRoad({
   asphaltMap: asphaltBase,
   asphaltNormal,
   asphaltOrm,
+  asphaltMacro,
   puddleMask,
   reflection,
 });
@@ -210,7 +234,7 @@ blockGroundMat.map!.repeat.set(50, 64);
 blockGroundMat.map!.anisotropy = 8;
 const blockGround = new THREE.Mesh(new THREE.PlaneGeometry(420, 520), blockGroundMat);
 blockGround.rotation.x = -Math.PI / 2;
-blockGround.position.set(0, 0.14, 120);
+blockGround.position.set(0, -0.05, 120);
 blockGround.receiveShadow = true;
 scene.add(blockGround);
 
@@ -218,24 +242,26 @@ const sidewalkTopMat = new THREE.MeshStandardMaterial({
   map: sidewalkBase.clone(),
   normalMap: sidewalkNormal,
   roughnessMap: sidewalkOrm,
-  color: 0xb8b4a8,
-  roughness: 0.58,
+  color: 0xc4c1b6,
+  roughness: 0.46,
   metalness: 0.0,
-  envMapIntensity: 1.0,
+  envMapIntensity: 1.15,
 });
 sidewalkTopMat.map!.wrapS = sidewalkTopMat.map!.wrapT = THREE.RepeatWrapping;
 sidewalkTopMat.map!.repeat.set(2, 90);
-sidewalkTopMat.map!.anisotropy = 8;
+sidewalkTopMat.map!.anisotropy = 16;
 sidewalkTopMat.normalMap!.wrapS = sidewalkTopMat.normalMap!.wrapT = THREE.RepeatWrapping;
 sidewalkTopMat.normalMap!.repeat.set(2, 90);
 if (sidewalkTopMat.roughnessMap) {
   sidewalkTopMat.roughnessMap.wrapS = sidewalkTopMat.roughnessMap.wrapT = THREE.RepeatWrapping;
   sidewalkTopMat.roughnessMap.repeat.set(2, 90);
 }
-const sidewalkSolidMat = new THREE.MeshStandardMaterial({ color: 0x3a3b38, roughness: 0.82, metalness: 0.0 });
+const sidewalkSolidMat = new THREE.MeshStandardMaterial({ color: 0x45443e, roughness: 0.78, metalness: 0.0 });
+const curbMat = new THREE.MeshStandardMaterial({ color: 0xaaa79a, roughness: 0.38, metalness: 0.08, envMapIntensity: 1.35 });
 {
   const topGeos: THREE.BufferGeometry[] = [];
   const solidGeos: THREE.BufferGeometry[] = [];
+  const curbGeos: THREE.BufferGeometry[] = [];
   for (const side of [-1, 1] as const) {
     const top = new THREE.PlaneGeometry(STREET.sidewalkWidth, 340);
     top.rotateX(-Math.PI / 2);
@@ -244,17 +270,20 @@ const sidewalkSolidMat = new THREE.MeshStandardMaterial({ color: 0x3a3b38, rough
     const body = new THREE.BoxGeometry(STREET.sidewalkWidth, STREET.curbHeight, 340);
     body.translate(side * 13.0, STREET.curbHeight / 2, 130);
     solidGeos.push(body);
-    const curb = new THREE.BoxGeometry(0.26, STREET.curbHeight + 0.02, 340);
-    curb.translate(side * (STREET.roadHalfWidth + 0.13), (STREET.curbHeight + 0.02) / 2, 130);
-    solidGeos.push(curb);
+    const curb = new THREE.BoxGeometry(0.34, 0.2, 340);
+    curb.translate(side * (STREET.roadHalfWidth + 0.17), 0.1, 130);
+    curbGeos.push(curb);
   }
   const topMesh = new THREE.Mesh(mergeGeometries(topGeos, false)!, sidewalkTopMat);
   const solidMesh = new THREE.Mesh(mergeGeometries(solidGeos, false)!, sidewalkSolidMat);
+  const curbMesh = new THREE.Mesh(mergeGeometries(curbGeos, false)!, curbMat);
   topMesh.receiveShadow = true;
   solidMesh.receiveShadow = true;
-  scene.add(topMesh, solidMesh);
+  curbMesh.receiveShadow = true;
+  scene.add(topMesh, solidMesh, curbMesh);
   topGeos.forEach((g) => g.dispose());
   solidGeos.forEach((g) => g.dispose());
+  curbGeos.forEach((g) => g.dispose());
 }
 
 // wet service-yard / alley floor
@@ -278,11 +307,11 @@ function manholeTexture(): THREE.Texture {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
   const ctx = c.getContext('2d')!;
-  ctx.fillStyle = '#292b2d';
+  ctx.fillStyle = '#3a3b37';
   ctx.beginPath();
   ctx.arc(128, 128, 122, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = '#4a4d50';
+  ctx.strokeStyle = '#77766c';
   ctx.lineWidth = 5;
   for (let r = 26; r <= 112; r += 18) {
     ctx.beginPath();
@@ -303,23 +332,71 @@ function manholeTexture(): THREE.Texture {
   return tex;
 }
 
-const metalDark = new THREE.MeshStandardMaterial({ color: 0x1d2023, roughness: 0.42, metalness: 0.8 });
-const paintWhite = new THREE.MeshStandardMaterial({ color: 0xcfd2c8, roughness: 0.45, metalness: 0.0 });
-const paintAmber = new THREE.MeshStandardMaterial({ color: 0xd9a63c, roughness: 0.5, metalness: 0.0 });
+function grateTexture(): THREE.Texture {
+  const c = document.createElement('canvas');
+  c.width = 128;
+  c.height = 256;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#22252a';
+  ctx.fillRect(0, 0, 128, 256);
+  ctx.fillStyle = '#0a0c0e';
+  for (let y = 8; y < 256; y += 14) {
+    ctx.fillRect(8, y, 112, 7);
+  }
+  ctx.fillStyle = '#5b5e60';
+  for (let x = 6; x < 128; x += 18) {
+    ctx.fillRect(x, 0, 3, 256);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  return tex;
+}
+
+function arrowTexture(): THREE.Texture {
+  const c = document.createElement('canvas');
+  c.width = 128;
+  c.height = 256;
+  const ctx = c.getContext('2d')!;
+  ctx.clearRect(0, 0, 128, 256);
+  ctx.fillStyle = 'rgba(226,220,202,0.95)';
+  ctx.beginPath();
+  ctx.moveTo(64, 8);
+  ctx.lineTo(112, 88);
+  ctx.lineTo(82, 88);
+  ctx.lineTo(82, 244);
+  ctx.lineTo(46, 244);
+  ctx.lineTo(46, 88);
+  ctx.lineTo(16, 88);
+  ctx.closePath();
+  ctx.fill();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  return tex;
+}
+
+const metalDark = new THREE.MeshStandardMaterial({ color: 0x2a2d31, roughness: 0.36, metalness: 0.85 });
+const paintWhite = new THREE.MeshStandardMaterial({ color: 0xd8d3c2, roughness: 0.52, metalness: 0.0, envMapIntensity: 0.85 });
 
 const manholeMat = new THREE.MeshStandardMaterial({
   map: manholeTexture(),
-  roughness: 0.42,
-  metalness: 0.75,
+  color: 0xffffff,
+  roughness: 0.34,
+  metalness: 0.78,
+  envMapIntensity: 1.0,
 });
-const manholeGeo = new THREE.CircleGeometry(0.62, 32);
+const manholeGeo = new THREE.CircleGeometry(0.66, 32);
 manholeGeo.rotateX(-Math.PI / 2);
-const manholes = new THREE.InstancedMesh(manholeGeo, manholeMat, 6);
+const manholes = new THREE.InstancedMesh(manholeGeo, manholeMat, 9);
 {
   const m = new THREE.Matrix4();
-  const spots: [number, number][] = [[3.4, 18], [-4.1, 88], [2.4, 132], [-3.2, 188], [4.6, 238], [-2.8, 286]];
+  const spots: [number, number][] = [
+    [3.4, -12], [-4.2, 5], [2.8, 26], [4.1, 62], [-3.2, 92],
+    [2.4, 132], [-4.6, 188], [3.2, 238], [-2.8, 286],
+  ];
   spots.forEach(([x, z], i) => {
-    m.makeTranslation(x, 0.018, z);
+    m.makeTranslation(x, 0.021, z);
     manholes.setMatrixAt(i, m);
   });
   manholes.instanceMatrix.needsUpdate = true;
@@ -327,14 +404,20 @@ const manholes = new THREE.InstancedMesh(manholeGeo, manholeMat, 6);
 manholes.receiveShadow = true;
 scene.add(manholes);
 
-const drainGeo = new THREE.BoxGeometry(0.9, 0.02, 0.46);
-const drains = new THREE.InstancedMesh(drainGeo, metalDark, 20);
+const drainMat = new THREE.MeshStandardMaterial({
+  map: grateTexture(),
+  roughness: 0.38,
+  metalness: 0.82,
+  envMapIntensity: 1.0,
+});
+const drainGeo = new THREE.BoxGeometry(0.9, 0.022, 0.55);
+const drains = new THREE.InstancedMesh(drainGeo, drainMat, 24);
 {
   const m = new THREE.Matrix4();
-  for (let i = 0; i < 20; i += 1) {
+  for (let i = 0; i < 24; i += 1) {
     const side = i % 2 === 0 ? -1 : 1;
-    const z = 4 + Math.floor(i / 2) * 30;
-    m.makeTranslation(side * 10.55, 0.012, z);
+    const z = -24 + Math.floor(i / 2) * 26;
+    m.makeTranslation(side * 10.62, 0.014, z);
     drains.setMatrixAt(i, m);
   }
   drains.instanceMatrix.needsUpdate = true;
@@ -342,46 +425,76 @@ const drains = new THREE.InstancedMesh(drainGeo, metalDark, 20);
 drains.receiveShadow = true;
 scene.add(drains);
 
-const crosswalk = new THREE.InstancedMesh(new THREE.PlaneGeometry(1.2, 3.8), paintWhite, 9);
-crosswalk.geometry.rotateX(-Math.PI / 2);
+// all road paint batched into one white-paint mesh: crosswalks, edge lines,
+// centre dashes and stop line. No more featureless road.
 {
-  const m = new THREE.Matrix4();
-  for (let i = 0; i < 9; i += 1) {
-    m.makeTranslation(-8.4 + i * 2.1, 0.012, 116);
-    crosswalk.setMatrixAt(i, m);
+  const geos: THREE.BufferGeometry[] = [];
+  const addPlane = (x: number, z: number, w: number, l: number) => {
+    const g = new THREE.PlaneGeometry(w, l);
+    g.rotateX(-Math.PI / 2);
+    g.translate(x, 0.016, z);
+    geos.push(g);
+  };
+  for (const zc of [40, 116]) {
+    for (let i = 0; i < 9; i += 1) addPlane(-8.4 + i * 2.1, zc, 1.15, 3.8);
+    addPlane(0, zc + 3.4, 18.0, 0.5); // stop line
   }
-  crosswalk.instanceMatrix.needsUpdate = true;
+  addPlane(-8.9, 130, 0.15, 330);
+  addPlane(8.9, 130, 0.15, 330);
+  for (let z = -32; z < 300; z += 10) addPlane(0, z, 0.17, 4.6);
+  const merged = mergeGeometries(geos, false);
+  if (merged) {
+    const mesh = new THREE.Mesh(merged, paintWhite);
+    mesh.name = 'road-paint';
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+  }
+  geos.forEach((g) => g.dispose());
 }
-crosswalk.receiveShadow = true;
-scene.add(crosswalk);
 
-const laneDashes = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.14, 5.0), paintAmber, 30);
-laneDashes.geometry.rotateX(-Math.PI / 2);
+// lane arrows (separate material because they use an alpha texture)
 {
-  const m = new THREE.Matrix4();
-  for (let i = 0; i < 30; i += 1) {
-    m.makeTranslation(0, 0.011, -20 + i * 10.5);
-    laneDashes.setMatrixAt(i, m);
+  const tex = arrowTexture();
+  const mat = new THREE.MeshStandardMaterial({
+    map: tex,
+    transparent: true,
+    alphaTest: 0.35,
+    roughness: 0.55,
+    metalness: 0.0,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+  });
+  const geos: THREE.BufferGeometry[] = [];
+  for (const [x, z] of [[-4.6, 64], [4.6, 64], [-4.6, 148], [4.6, 148]] as const) {
+    const g = new THREE.PlaneGeometry(2.2, 5.4);
+    g.rotateX(-Math.PI / 2);
+    g.translate(x, 0.018, z);
+    geos.push(g);
   }
-  laneDashes.instanceMatrix.needsUpdate = true;
+  const merged = mergeGeometries(geos, false);
+  if (merged) {
+    const mesh = new THREE.Mesh(merged, mat);
+    mesh.name = 'road-arrows';
+    scene.add(mesh);
+  }
+  geos.forEach((g) => g.dispose());
 }
-laneDashes.receiveShadow = true;
-scene.add(laneDashes);
 
 // puddles on the sidewalks (env-map sheen, cheap)
 const puddleMat = new THREE.MeshStandardMaterial({
   color: 0x05090d,
-  roughness: 0.04,
-  metalness: 0.75,
+  roughness: 0.035,
+  metalness: 0.8,
   transparent: true,
-  opacity: 0.75,
-  envMapIntensity: 2.2,
+  opacity: 0.8,
+  envMapIntensity: 2.6,
   alphaMap: puddleMask,
   depthWrite: false,
 });
 const puddleSpots: [number, number, number, number][] = [
-  [-12.6, 22, 3.4, 1.7], [12.4, 76, 4.2, 2.1], [-12.8, 150, 3.0, 1.5],
-  [12.8, 214, 4.6, 2.4], [-12.2, 262, 3.8, 2.0],
+  [-12.6, 12, 3.8, 1.9], [12.4, 30, 4.2, 2.1], [-12.8, 76, 3.6, 1.7],
+  [12.8, 150, 4.6, 2.4], [-12.2, 214, 3.8, 2.0], [12.2, 262, 3.2, 1.8],
 ];
 const puddleGeos: THREE.BufferGeometry[] = [];
 for (const [x, z, w, h] of puddleSpots) {
@@ -438,7 +551,7 @@ function updateLoading(): void {
   }
   const pct = total > 0 ? Math.min(0.96, loaded / total) : Math.min(0.8, loadedFiles / 3);
   loadingBar.style.width = `${Math.round(pct * 100)}%`;
-  loadingStatus.textContent = loadedFiles >= 3 ? 'LINK READY' : 'STREAMING CITY GRID';
+  loadingStatus.textContent = loadedFiles >= 4 ? 'LINK READY' : 'STREAMING CITY GRID';
 }
 
 function materialKeyFromName(name: string): string {
@@ -576,6 +689,64 @@ function addWindowEmissive(mat: THREE.MeshStandardMaterial): void {
   mat.emissive = new THREE.Color(0xffffff);
   mat.emissiveIntensity = 1.05;
   mat.needsUpdate = true;
+}
+
+/** A 2x2 in-world ad atlas used by K044 banners and hanging cloth banners. */
+function makePosterAtlas(): THREE.CanvasTexture {
+  const size = 1024;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d')!;
+  const cell = size / 2;
+  const drawCell = (
+    ox: number, oy: number, bg: string, accent: string, title: string, sub: string, mark: string,
+  ) => {
+    const g = ctx.createLinearGradient(ox, oy, ox + cell, oy + cell);
+    g.addColorStop(0, bg);
+    g.addColorStop(1, '#03050a');
+    ctx.fillStyle = g;
+    ctx.fillRect(ox, oy, cell, cell);
+    ctx.strokeStyle = accent;
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(ox + 10, oy + 10, cell - 20, cell - 20);
+    ctx.globalAlpha = 1;
+    for (let y = oy + 20; y < oy + cell - 20; y += 10) {
+      ctx.globalAlpha = 0.05;
+      ctx.fillStyle = accent;
+      ctx.fillRect(ox + 12, y, cell - 24, 1);
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 94px "PingFang SC", "Helvetica Neue", sans-serif';
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 28;
+    ctx.fillStyle = accent;
+    ctx.fillText(title, ox + cell / 2, oy + cell * 0.38);
+    ctx.shadowBlur = 0;
+    ctx.font = '600 30px "SF Mono", "PingFang SC", monospace';
+    ctx.fillStyle = '#e8f6ff';
+    ctx.fillText(sub, ox + cell / 2, oy + cell * 0.64);
+    ctx.font = '500 22px "SF Mono", monospace';
+    ctx.fillStyle = 'rgba(220,245,255,0.65)';
+    ctx.fillText(mark, ox + cell / 2, oy + cell * 0.83);
+    // barcode / glyph blocks
+    for (let i = 0; i < 14; i += 1) {
+      ctx.fillStyle = i % 2 ? accent : 'rgba(255,255,255,0.65)';
+      ctx.globalAlpha = 0.55;
+      ctx.fillRect(ox + 26 + i * 8, oy + cell - 56, i % 3 === 0 ? 3 : 1.5, 26);
+    }
+    ctx.globalAlpha = 1;
+  };
+  drawCell(0, 0, '#07121e', '#35e8ff', 'KOWLOON', 'NIGHT MARKET / SECTOR 09', '九龍 / 09-A / OPEN LATE');
+  drawCell(cell, 0, '#160510', '#ff3e9a', '義体', 'SYNTHETIC BODY CLINIC', 'CHROME / 24H / REPAIR');
+  drawCell(0, cell, '#1a0b04', '#ff9a5a', 'NOODLE', '拉麺 / 24H COUNTER', 'AKIRA’S / BLOCK 04');
+  drawCell(cell, cell, '#061614', '#8dffb0', 'SYNTH', 'FUTURE IS NOW', 'NEON / 09 / DATA');
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  return tex;
 }
 
 function buildTargetMaterials(
@@ -729,16 +900,30 @@ let lod1Group: THREE.Group | null = null;
 let worldStats = { towers: 0, props: 0, calls: 0, tris: 0 };
 
 async function build(): Promise<void> {
-  const [towersGltf, lod1Gltf, propsGltf] = await Promise.all([
+  const [towersGltf, lod1Gltf, propsGltf, carGltf] = await Promise.all([
     loadGLB('models/towers.opt.glb', 'towers'),
     loadGLB('models/towers_lod1.glb', 'lod1'),
     loadGLB('models/props.opt.glb', 'props'),
+    loadGLB('models/car.glb', 'car'),
   ]);
 
   // materials
   const towerSourceMats = collectMaterials(towersGltf.scene);
   for (const mat of towerSourceMats.values()) configureLoadedMaterial(mat, materialKeyFromName(mat.name));
   const towerMaterials = buildTargetMaterials(towerSourceMats, TOWER_TARGET);
+  for (const key of ['Pic_Banners', 'SignageOld']) {
+    const mat = towerMaterials.map.get(key) as THREE.MeshStandardMaterial | undefined;
+    if (mat) {
+      mat.map = posterAtlas;
+      mat.emissiveMap = posterAtlas;
+      mat.emissive = new THREE.Color(0xffffff);
+      mat.emissiveIntensity = 0.8;
+      mat.color = new THREE.Color(0xffffff);
+      mat.roughness = 0.55;
+      mat.metalness = 0.0;
+      mat.needsUpdate = true;
+    }
+  }
   for (const key of ['FacadeE', 'FacadeF']) {
     const mat = towerMaterials.map.get(key);
     if (mat) addWindowEmissive(mat as THREE.MeshStandardMaterial);
@@ -900,6 +1085,119 @@ async function build(): Promise<void> {
   worldStats.props = propMerge.triangles;
   console.log(`props + shops: ${propMerge.triangles.toLocaleString()} tris / ${propMerge.drawCalls} draws`);
 
+  // ---- authored K042 parked concept car ----
+  const car = carGltf.scene.getObjectByName('CAR_HERO') ?? carGltf.scene;
+  car.position.set(8.2, 0.0, 36.0);
+  car.rotation.y = 0.22;
+  car.traverse((obj) => {
+    const mesh = obj as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const raw of mats) {
+      const m = raw as THREE.MeshStandardMaterial;
+      m.envMapIntensity = 1.5;
+      if (m.name === 'CAR_Paint') {
+        m.color = new THREE.Color(0x1a2030);
+        m.metalness = 0.72;
+        m.roughness = 0.24;
+        m.envMapIntensity = 2.15;
+      } else if (m.name === 'CAR_Glass') {
+        m.color = new THREE.Color(0x05090d);
+        m.metalness = 0.9;
+        m.roughness = 0.05;
+        m.envMapIntensity = 2.1;
+      } else if (m.name === 'CAR_LightWhite') {
+        m.emissive = new THREE.Color(0xcfe8ff);
+        m.color = new THREE.Color(0x0a1014);
+        m.emissiveIntensity = 0.95;
+      } else if (m.name.startsWith('CAR_Light')) {
+        m.emissiveIntensity = 4.0;
+      } else if (m.name === 'CAR_Accent') {
+        m.emissiveIntensity = 3.2;
+      }
+      m.needsUpdate = true;
+    }
+  });
+  scene.add(car);
+  car.updateMatrixWorld(true);
+  {
+    const b = new THREE.Box3().setFromObject(car);
+    colliders.push({
+      minX: b.min.x + 0.25,
+      maxX: b.max.x - 0.25,
+      minZ: b.min.z + 0.25,
+      maxZ: b.max.z - 0.25,
+    });
+  }
+  // neon underglow + a small practical to lift the car off the asphalt
+  {
+    const underMat = new THREE.MeshBasicMaterial({
+      color: 0xff2a6a,
+      transparent: true,
+      opacity: 0.26,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const under = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 5.3), underMat);
+    under.rotation.x = -Math.PI / 2;
+    under.position.set(8.2, 0.035, 36.0);
+    under.renderOrder = 3;
+    scene.add(under);
+    const glow = new THREE.PointLight(0xff2a6a, 3, 5, 2);
+    glow.position.set(8.2, 0.4, 36.0);
+    scene.add(glow);
+    // cool rim from the shop side so the dark body separates from the street
+    const rim = new THREE.PointLight(0x9ed8ff, 12, 9, 2);
+    rim.position.set(11.0, 2.6, 33.5);
+    scene.add(rim);
+  }
+  // flat car proxy for the wet-road reflection
+  {
+    const proxy = new THREE.Group();
+    proxy.layers.set(2);
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(2.7, 1.15, 5.0),
+      new THREE.MeshBasicMaterial({ color: 0x040507, fog: true }),
+    );
+    box.position.set(8.2, 0.6, 36.0);
+    box.rotation.y = 0.22;
+    box.layers.set(2);
+    proxy.add(box);
+    const lights: THREE.BufferGeometry[] = [];
+    const quad = (x: number, y: number, z: number, w: number, h: number, color: number) => {
+      const g = new THREE.PlaneGeometry(w, h);
+      g.translate(x, y, z);
+      const c = new THREE.Color(color).multiplyScalar(2.6);
+      const count = g.attributes.position.count;
+      const colors = new Float32Array(count * 3);
+      for (let i = 0; i < count; i += 1) {
+        colors[i * 3] = c.r;
+        colors[i * 3 + 1] = c.g;
+        colors[i * 3 + 2] = c.b;
+      }
+      g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      lights.push(g);
+    };
+    quad(8.2, 0.72, 33.45, 2.0, 0.18, 0xff1a1a);
+    const lm = new THREE.MeshBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      fog: false,
+    });
+    const lightMesh = new THREE.Mesh(mergeGeometries(lights, false)!, lm);
+    lightMesh.layers.set(2);
+    lightMesh.frustumCulled = false;
+    proxy.add(lightMesh);
+    lights.forEach((g) => g.dispose());
+    scene.add(proxy);
+  }
+
   // ---- signs & holograms ----
   const signAtlas = buildSignAtlas(SIGNS);
   if (signAtlas) scene.add(signAtlas.mesh);
@@ -934,13 +1232,20 @@ async function build(): Promise<void> {
   // authored neon strips along the block edges (vertex-coloured, one draw call)
   {
     const strips: { pos: [number, number, number]; size: [number, number, number]; color: string }[] = [
-      { pos: [-15.95, 9.0, 12], size: [0.14, 16, 0.14], color: '#35e8ff' },
+      { pos: [-15.95, 9.0, 12], size: [0.14, 16, 0.14], color: '#ff7a36' },
       { pos: [-21.85, 6.5, 58], size: [0.14, 12, 0.14], color: '#ff3e9a' },
       { pos: [15.02, 7.0, 18], size: [0.14, 14, 0.14], color: '#ff4a7a' },
       { pos: [27.9, 12.0, 70], size: [0.16, 20, 0.16], color: '#35e8ff' },
       { pos: [27.9, 12.0, 140], size: [0.16, 20, 0.16], color: '#ff9a5a' },
       { pos: [15.62, 5.5, 195], size: [0.14, 9, 0.14], color: '#c77dff' },
       { pos: [6.0, 70.0, 308.25], size: [0.2, 120, 0.2], color: '#35e8ff' },
+      { pos: [-17.6, 3.0, 44], size: [0.06, 0.06, 9], color: '#ffb070' },
+      { pos: [18.2, 2.9, 33], size: [0.06, 0.06, 9], color: '#9ed8ff' },
+      { pos: [18.2, 2.9, 171], size: [0.06, 0.06, 8], color: '#ffb070' },
+      { pos: [-21.0, 3.1, 137], size: [0.06, 0.06, 10], color: '#35e8ff' },
+      { pos: [19.5, 3.1, 230], size: [0.06, 0.06, 10], color: '#6effb0' },
+      { pos: [-15.0, 30, 83.8], size: [0.18, 20, 0.18], color: '#ff7a36' },
+      { pos: [-15.0, 30, 106.2], size: [0.18, 20, 0.18], color: '#35e8ff' },
     ];
     const geos: THREE.BufferGeometry[] = [];
     for (const strip of strips) {
@@ -1043,6 +1348,120 @@ async function build(): Promise<void> {
     geos.forEach((geo) => geo.dispose());
   }
 
+  // hanging cloth banners across the street, using the poster atlas
+  {
+    const geos: THREE.BufferGeometry[] = [];
+    const rods: THREE.BufferGeometry[] = [];
+    const specs = [
+      { z: 92, y: 7.4, w: 7.2 },
+      { z: 154, y: 10.2, w: 7.2 },
+      { z: 226, y: 9.8, w: 7.2 },
+    ];
+    for (const s of specs) {
+      const g = new THREE.PlaneGeometry(s.w, 2.0);
+      g.translate(0, s.y, s.z);
+      geos.push(g);
+      const rod = new THREE.BoxGeometry(s.w + 0.25, 0.06, 0.06);
+      rod.translate(0, s.y + 1.02, s.z);
+      rods.push(rod);
+    }
+    const merged = mergeGeometries(geos, false);
+    if (merged) {
+      const mat = new THREE.MeshStandardMaterial({
+        map: posterAtlas,
+        emissiveMap: posterAtlas,
+        emissive: new THREE.Color(0xffffff),
+        emissiveIntensity: 0.42,
+        roughness: 0.62,
+        metalness: 0.0,
+        side: THREE.DoubleSide,
+      });
+      const mesh = new THREE.Mesh(merged, mat);
+      mesh.name = 'hanging-banners';
+      scene.add(mesh);
+    }
+    const rodMesh = new THREE.Mesh(mergeGeometries(rods, false)!, metalDark);
+    rodMesh.name = 'banner-rods';
+    scene.add(rodMesh);
+    geos.forEach((g) => g.dispose());
+    rods.forEach((g) => g.dispose());
+  }
+
+  // large poster board over Akira's, replacing the blank white panel above the shop
+  {
+    const g = new THREE.PlaneGeometry(8.0, 5.0);
+    g.rotateY(Math.PI / 2);
+    g.translate(-14.05, 12.3, 44.0);
+    const mat = new THREE.MeshStandardMaterial({
+      map: posterAtlas,
+      emissiveMap: posterAtlas,
+      emissive: new THREE.Color(0xffffff),
+      emissiveIntensity: 0.55,
+      roughness: 0.58,
+      metalness: 0.0,
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(g, mat);
+    mesh.name = 'shop-poster-board';
+    scene.add(mesh);
+  }
+
+  // Akira's interior menu board (the authored screen is now tinted glass) and
+  // a poster cluster on the blank white service panel beside the shop.
+  {
+    const menuGeo = new THREE.PlaneGeometry(3.0, 1.32);
+    menuGeo.rotateY(Math.PI / 2);
+    menuGeo.translate(-19.16, 4.74, 42.45);
+    const menuTex = getScreenTexture();
+    const menuMat = new THREE.MeshStandardMaterial({
+      map: menuTex,
+      emissiveMap: menuTex,
+      emissive: new THREE.Color(0xffffff),
+      emissiveIntensity: 0.72,
+      roughness: 0.38,
+      metalness: 0.08,
+      side: THREE.DoubleSide,
+    });
+    const menu = new THREE.Mesh(menuGeo, menuMat);
+    menu.name = 'akira-menu-board';
+    scene.add(menu);
+
+    const adGeo = new THREE.PlaneGeometry(1.22, 2.8);
+    adGeo.rotateY(Math.PI / 2);
+    adGeo.translate(-15.68, 4.05, 47.78);
+    const adMat = new THREE.MeshStandardMaterial({
+      map: posterAtlas,
+      emissiveMap: posterAtlas,
+      emissive: new THREE.Color(0xffffff),
+      emissiveIntensity: 0.34,
+      roughness: 0.62,
+      metalness: 0.0,
+      side: THREE.DoubleSide,
+    });
+    const ad = new THREE.Mesh(adGeo, adMat);
+    ad.name = 'kiosk-side-ads';
+    scene.add(ad);
+  }
+
+  // east-face poster on the large left tower, visible in hero / street / wide
+  {
+    const g = new THREE.PlaneGeometry(22.0, 10.0);
+    g.rotateY(Math.PI / 2);
+    g.translate(-15.2, 30.0, 95.0);
+    const mat = new THREE.MeshStandardMaterial({
+      map: posterAtlas,
+      emissiveMap: posterAtlas,
+      emissive: new THREE.Color(0xffffff),
+      emissiveIntensity: 0.62,
+      roughness: 0.55,
+      metalness: 0.0,
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(g, mat);
+    mesh.name = 'left-tower-poster';
+    scene.add(mesh);
+  }
+
   // lit window grids on the plain concrete facades
   {
     const gridCanvas = document.createElement('canvas');
@@ -1082,6 +1501,7 @@ async function build(): Promise<void> {
       { pos: [15.05, 14.0, 10.0], yaw: -Math.PI / 2, w: 20, h: 14 },
       { pos: [-21.9, 15.0, 44.0], yaw: Math.PI / 2, w: 20, h: 14 },
       { pos: [27.95, 38.0, 100.0], yaw: -Math.PI / 2, w: 58, h: 48 },
+      { pos: [-15.26, 60.0, 95.0], yaw: Math.PI / 2, w: 46, h: 56 },
     ];
     const geos: THREE.BufferGeometry[] = [];
     for (const p of planes) {
@@ -1487,16 +1907,16 @@ composer.setSize(window.innerWidth, window.innerHeight);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.34,
-  0.56,
-  1.15,
+  0.27,
+  0.5,
+  1.2,
 );
 composer.addPass(bloom);
 const gradePass = new ShaderPass({
   uniforms: {
     tDiffuse: { value: null },
-    uSaturation: { value: 1.14 },
-    uContrast: { value: 1.06 },
+    uSaturation: { value: 1.22 },
+    uContrast: { value: 1.1 },
   },
   vertexShader: `
     varying vec2 vUv;
@@ -1536,6 +1956,7 @@ declare global {
       setShot: (name: string) => void;
       bench: (frames?: number) => Promise<unknown>;
       stats: () => unknown;
+      pick: (x: number, y: number) => unknown;
       scene: THREE.Scene;
       renderer: THREE.WebGLRenderer;
       camera: THREE.PerspectiveCamera;
@@ -1589,6 +2010,16 @@ window.__cyber = {
     });
   },
   stats: () => window.__lastStats,
+  pick: (x: number, y: number) => {
+    const rc = new THREE.Raycaster();
+    rc.setFromCamera(new THREE.Vector2(x, y), camera);
+    const hits = rc.intersectObjects(scene.children, true);
+    return hits.slice(0, 4).map((h) => {
+      const mesh = h.object as THREE.Mesh;
+      const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+      return { name: h.object.name, parent: h.object.parent?.name, mat: mat?.name, point: h.point.toArray() };
+    });
+  },
   scene,
   renderer,
   camera,

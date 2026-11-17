@@ -69,6 +69,10 @@ export const SHOPS: PropPlacement[] = [
   { type: 'CyberShop_StreetStore', pos: [21.2, 0, 33.0], yaw: -Math.PI / 2, castShadow: true },
   // right side, after XL_Bldg_C: coffee bar
   { type: 'CyberShop_Cofe', pos: [20.4, 0, 171.0], yaw: -Math.PI / 2, castShadow: true },
+  // mid-block electronics shop, set back into the gap between BldgLG_E / BldgM_D
+  { type: 'CyberShop_Tech', pos: [-24.0, 0, 137.0], yaw: Math.PI / 2, castShadow: true },
+  // far-right pharmaceutical shop in the gap after MidRiseG
+  { type: 'CyberShop_Pharmacy', pos: [23.0, 0, 230.0], yaw: -Math.PI / 2, castShadow: true },
 ];
 
 export interface Interaction {
@@ -83,6 +87,8 @@ export const INTERACTIONS: Interaction[] = [
   { id: 'sushi', label: 'ENTER NOODLE BAR', sub: 'AKIRA’S / 24H COUNTER', point: [-14.4, 1.7, 44.0], radius: 18 },
   { id: 'store', label: 'BROWSE STORE', sub: 'SECTOR 09 SUPPLY', point: [15.0, 1.7, 33.0], radius: 18 },
   { id: 'cafe', label: 'ORDER COFFEE', sub: 'BLACK RAIN CAFÉ', point: [15.0, 1.7, 171.0], radius: 18 },
+  { id: 'tech', label: 'ENTER ELECTRONICS', sub: 'CHROME / 電脳', point: [-16.0, 1.7, 137.0], radius: 16 },
+  { id: 'pharmacy', label: 'ENTER PHARMACY', sub: '薬 / NIGHT CLINIC', point: [16.0, 1.7, 230.0], radius: 16 },
 ];
 
 export const PROPS: PropPlacement[] = [
@@ -133,6 +139,11 @@ export const CABLES: { pos: Vec3; yaw: number; scale: number }[] = [
   { pos: [0, 9.8, 66], yaw: 0, scale: 1.5 },
   { pos: [0, 11.4, 154], yaw: 0, scale: 1.5 },
   { pos: [0, 10.2, 258], yaw: 0, scale: 1.5 },
+  { pos: [0, 8.6, 92], yaw: 0, scale: 1.5 },
+  { pos: [0, 12.0, 114], yaw: 0, scale: 1.5 },
+  { pos: [0, 7.8, 182], yaw: 0, scale: 1.5 },
+  { pos: [0, 11.0, 226], yaw: 0, scale: 1.5 },
+  { pos: [0, 9.2, 286], yaw: 0, scale: 1.5 },
 ];
 
 /** 20 m pipe runs along the facades. */
@@ -141,6 +152,9 @@ export const PIPES: { pos: Vec3; yaw: number; scale: number }[] = [
   { pos: [-14.5, 7.2, 78], yaw: Math.PI / 2, scale: 1.0 },
   { pos: [14.5, 8.8, 136], yaw: Math.PI / 2, scale: 1.0 },
   { pos: [14.5, 4.2, 220], yaw: Math.PI / 2, scale: 1.0 },
+  { pos: [-14.5, 5.2, 62], yaw: Math.PI / 2, scale: 1.0 },
+  { pos: [14.5, 6.4, 196], yaw: Math.PI / 2, scale: 1.0 },
+  { pos: [-14.5, 4.8, 246], yaw: Math.PI / 2, scale: 1.0 },
 ];
 
 export interface NeonSign {
@@ -177,6 +191,14 @@ export const SIGNS: NeonSign[] = [
   { id: 'market', lines: ['NIGHT MARKET', '夜市'], pos: [-14.6, 4.4, 146.0], yaw: Math.PI / 2, width: 6.0, height: 1.5, color: '#ffd166' },
   { id: 'arcade', lines: ['ARCADE', '電玩'], pos: [14.5, 6.0, 196.0], yaw: -Math.PI / 2, width: 4.2, height: 1.4, color: '#c77dff' },
   { id: 'ramen', lines: ['RAMEN', '拉麺'], pos: [14.5, 4.2, 286.0], yaw: -Math.PI / 2, width: 4.0, height: 1.2, color: '#ff6a3d' },
+  { id: 'tech-blade', lines: ['CHROME', '電脳'], pos: [-17.1, 8.0, 137.0], yaw: Math.PI / 2, width: 2.4, height: 7.0, color: '#35e8ff', vertical: true, light: 0 },
+  { id: 'tech-fascia', lines: ['TECH', '電子 / REPAIR'], pos: [-17.3, 4.5, 137.0], yaw: Math.PI / 2, width: 5.0, height: 1.4, color: '#ff3e9a' },
+  { id: 'pharma-blade', lines: ['PHARMA', '薬'], pos: [15.5, 8.0, 230.0], yaw: -Math.PI / 2, width: 2.4, height: 7.0, color: '#6effb0', vertical: true, light: 0 },
+  { id: 'pharma-fascia', lines: ['OPEN 24H', '夜間診療'], pos: [15.6, 4.5, 230.0], yaw: -Math.PI / 2, width: 4.2, height: 1.4, color: '#35e8ff' },
+  { id: 'mid-pachinko', lines: ['PACHINKO', 'パチンコ'], pos: [15.0, 9.0, 120.0], yaw: -Math.PI / 2, width: 2.8, height: 7.0, color: '#ff3e9a', vertical: true },
+  { id: 'mid-noodle', lines: ['NOODLE', '夜市'], pos: [-15.0, 9.0, 86.0], yaw: Math.PI / 2, width: 2.8, height: 7.0, color: '#ff7a36', vertical: true },
+  { id: 'mid-banner', lines: ['KOWLOON', 'SECTOR 09 / 九龍'], pos: [-14.8, 6.5, 160.0], yaw: Math.PI / 2, width: 6.0, height: 2.0, color: '#35e8ff' },
+  { id: 'left-arcade', lines: ['ARCADE', '遊技'], pos: [-21.8, 8.0, 60.0], yaw: Math.PI / 2, width: 2.8, height: 6.0, color: '#ff7a36', vertical: true },
 ];
 
 export interface HologramSpec {
@@ -222,10 +244,10 @@ export interface Shot {
 }
 
 export const SHOTS: Record<string, Shot> = {
-  hero: { position: [0.8, 1.68, -27], target: [0.0, 7.4, 78], fov: 48 },
+  hero: { position: [4.0, 1.55, 18], target: [-8.0, 6.5, 60], fov: 62 },
   store: { position: [-2.0, 1.68, 44.0], target: [-14.8, 3.8, 44.0], fov: 42 },
-  street: { position: [6.0, 1.2, 20], target: [-8.0, 4.6, 80], fov: 56 },
-  wide: { position: [0, 28, -56], target: [0, 28, 150], fov: 60, lod: 0 },
+  street: { position: [5.5, 1.15, 20], target: [-7.0, 5.0, 80], fov: 60 },
+  wide: { position: [0, 32, -70], target: [0, 22, 150], fov: 58, lod: 0 },
   ui: { position: [-2.0, 1.68, 44.0], target: [-14.8, 3.8, 44.0], fov: 42, hud: true },
   alley: { position: [2.2, 1.6, 52.0], target: [-18.0, 3.0, 62.0], fov: 52 },
 };

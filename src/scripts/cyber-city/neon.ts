@@ -539,7 +539,7 @@ export function createTraffic(): TrafficHandle {
     const sky = i > 54;
     positions[i * 3] = (rand() - 0.5) * (sky ? 220 : 150);
     positions[i * 3 + 1] = sky ? 26 + rand() * 42 : 0.4 + rand() * 1.1;
-    positions[i * 3 + 2] = sky ? 200 + rand() * 180 : 324 + rand() * 7;
+    positions[i * 3 + 2] = sky ? 190 + rand() * 150 : 296 + rand() * 6;
     const c = palette[Math.floor(rand() * palette.length)];
     colors[i * 3] = c.r;
     colors[i * 3 + 1] = c.g;
@@ -569,8 +569,8 @@ export function createTraffic(): TrafficHandle {
         p.y += sin(uTime * 0.4 + aSeed * 6.28) * 0.12;
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = clamp(180.0 / max(1.0, -mv.z), 1.0, 5.0);
-        vAlpha = 0.55 + 0.45 * sin(uTime * 2.0 + aSeed * 12.0);
+        gl_PointSize = clamp(620.0 / max(1.0, -mv.z), 2.0, 9.0);
+        vAlpha = 0.65 + 0.35 * sin(uTime * 2.0 + aSeed * 12.0);
       }
     `,
     fragmentShader: `

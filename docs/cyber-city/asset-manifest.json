@@ -1,7 +1,7 @@
 {
   "sample": "Cyber City — Kowloon 9 vertical slice",
   "generated": "2026-11-17",
-  "policy": "Private/non-commercial slice. Paid Kitbash3D derivatives are committed only as optimized real-time GLBs for this worktree. Source FBX/ZIP and external source textures are not committed. Public deployment requires a Kitbash3D EULA decision or replacement assets.",
+  "policy": "Private/non-commercial slice. Paid Kitbash3D derivatives (K044, K003, K042) are committed only as optimized real-time GLBs for this worktree. Source FBX/ZIP and external source textures are not committed. Public deployment requires a Kitbash3D EULA decision or replacement assets. AmbientCG Asphalt012 is CC0 and may be redistributed.",
   "used_assets": [
     {
       "id": "kitbash3d-k044-mini-kit-cyberpunk",
@@ -11,8 +11,8 @@
       "local_source": "/Users/apple/Documents/3D Models/Kitbash 3D建筑系列/K044赛博朋克建筑大楼模型 Mini Kit Cyberpunk/Mini Kit Cyberpunk 其他格式.zip",
       "source_fbx": "Mini Kit Cyberpunk 其他格式/Kitbash3d_CyberPunk_MiniKit.FBX",
       "source_stats": "271 meshes, 3,580,395 tris, 53 materials, 158 textures",
-      "used_for": "9 tower placements from 8 authored modules: 7 street towers + TowerC skyline + one duplicate BldgS_B podium; LOD0 decimated 0.65–0.78; LOD1 at 30%; runtime sign atlas/window lights generated from embedded textures",
-      "committed_derivative": "public/cyber-city/models/towers.opt.glb (28 MB), public/cyber-city/models/towers_lod1.glb (3.2 MB)",
+      "used_for": "9 tower placements from 8 authored modules: 7 street towers + TowerC skyline + one duplicate BldgS_B podium. Hero towers Tower_02 (460,272 tris) and BldgS_B (132,820 tris, placed twice) are native ratio 1.00; background modules 0.35–0.60; TowerC 0.06. Runtime sign atlas / window lights and poster-atlas banners are generated from embedded textures.",
+      "committed_derivative": "public/cyber-city/models/towers.opt.glb (25 MB), public/cyber-city/models/towers_lod1.glb (2.8 MB)",
       "source_committed": false
     },
     {
@@ -23,18 +23,41 @@
       "local_source": "/Users/apple/Documents/3D Models/Kitbash 3D建筑系列/K003赛博朋克未来科幻城市街道楼房3D模型Kitbash3D - Cyber Streets/K003-FBX格式.zip",
       "source_fbx": "K003-FBX格式/Kitbash3d_CyberpunkProps-Native.fbx",
       "source_stats": "759 objects, 4,876,972 tris, 470 materials, 32 textures; no normal maps",
-      "used_for": "3 storefronts and ~25 prop modules (lamps, cables, pipes, AC, vending, dumpster, trash, barriers, hydrant, crates, vents, fuse boxes); selected modules, not the 320 MB scene",
-      "committed_derivative": "public/cyber-city/models/props.opt.glb (8 MB)",
+      "used_for": "5 storefronts (Sushi/Akira's, StreetStore, Black Rain café, CHROME electronics, 24 h pharmacy) and prop modules (lamps, cables, pipes, AC, vending, dumpster, trash, barriers, hydrant, crates, vents, fuse boxes, pots, shop interior bottles/plates/coffee tank); selected modules, not the 320 MB scene",
+      "committed_derivative": "public/cyber-city/models/props.opt.glb (8.6 MB)",
       "source_committed": false
     },
     {
+      "id": "kitbash3d-k042-supercars",
+      "name": "Kitbash3D Vehicles: Supercars (K042)",
+      "owner": "Project owner / purchased",
+      "license": "Kitbash3D commercial; private use; no standalone redistribution; public Web build needs a licensing decision",
+      "local_source": "/Users/apple/Documents/3D Models/Kitbash 3D建筑系列/K042交通工具：超级跑车 概念3d模型Kitbash3D-Vehicles：Supercars/FBX格式.zip",
+      "source_fbx": "Vehicles_SuperCar.FBX",
+      "source_stats": "280 meshes, 5,900,000 tris (unassembled body, mechanical and wheel parts kit)",
+      "used_for": "One static parked concept car assembled in Blender from Body_C + 4× Wheel_D + CarA039 glass + CarC007/C008/C019 light parts. Body/wheels decimated to keep the car at 111,362 tris / 5 materials.",
+      "committed_derivative": "public/cyber-city/models/car.glb (2.0 MB)",
+      "source_committed": false
+    },
+    {
+      "id": "ambientcg-asphalt012",
+      "name": "AmbientCG Asphalt012 (1K JPG)",
+      "owner": "AmbientCG / CC0",
+      "license": "CC0 1.0 Universal (public domain dedication)",
+      "local_source": "https://ambientcg.com/view?id=Asphalt012",
+      "source_stats": "1024×1024 color, normal and roughness maps",
+      "used_for": "Real wet road: albedo, normal, roughness → ORM; processed to 1K WebP plus a low-frequency macro map and localized puddle mask by scripts/cyber-city/prepare-street.py",
+      "committed_derivative": "public/cyber-city/tex/street/asphalt_base.webp, asphalt_normal.webp, asphalt_orm.webp, asphalt_macro.webp, puddle_mask.webp; source scans in scripts/cyber-city/source/asphalt/",
+      "source_committed": true
+    },
+    {
       "id": "street-material-textures",
-      "name": "Generated asphalt / sidewalk / steam / glow textures",
+      "name": "Sidewalk / steam / neon canvas textures",
       "owner": "Project-owned derivatives",
       "license": "Project-owned generated textures; sidewalk base derived from K003 ConcreteTiles, therefore same private-use restriction",
       "local_source": "scripts/cyber-city/prepare-textures.py",
-      "used_for": "wet asphalt base/normal/ORM, sidewalk base/normal/ORM, puddle mask, steam, glow",
-      "committed_derivative": "public/cyber-city/tex/street/*, public/cyber-city/tex/misc/*",
+      "used_for": "sidewalk base/normal/ORM, steam puff, sign/poster/menu/window canvases generated at runtime",
+      "committed_derivative": "public/cyber-city/tex/street/sidewalk_*.webp, public/cyber-city/tex/misc/steam.png",
       "source_committed": true
     }
   ],
@@ -46,10 +69,10 @@
       "reason": "174 meshes / 9.1 M tris of unassembled body, arm, rotor and leg parts; no complete assembled drone. Omitted rather than faking or producing a poor assembly."
     },
     {
-      "id": "kitbash3d-k042-supercars",
-      "name": "Kitbash3D Vehicles: Supercars (K042)",
-      "local_source": "/Users/apple/Documents/3D Models/Kitbash 3D建筑系列/K042交通工具：超级跑车 概念3d模型Kitbash3D-Vehicles：Supercars/FBX格式.zip",
-      "reason": "280 meshes / 5.9 M tris of unassembled body/mechanical parts; no complete assembled car. Omitted rather than faking a parked vehicle."
+      "id": "dlnk-scifi-neon-city-vehicles",
+      "name": "DLNK SciFi Neon City — CityVehicles00.fbx",
+      "local_source": "/Users/apple/Documents/3D Models/SciFi Neon City.unitypackage",
+      "reason": "The only vehicle FBX in the package is a 4,124-triangle / 19-fragment low-detail prop set; rejected as below the authored-detail bar for a hero parked vehicle."
     }
   ]
 }

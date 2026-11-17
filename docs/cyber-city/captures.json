@@ -3,17 +3,17 @@
     "shot": "hero",
     "file": "docs/cyber-city/hero.png",
     "stats": {
-      "calls": 82,
-      "triangles": 1856591,
-      "fps": 58.10575247486092,
-      "renderMs": 0.8477023129454122,
-      "reflectionMs": 0.09717861466720812,
-      "frames": 182,
+      "calls": 95,
+      "triangles": 1976857,
+      "fps": 60.19417475728155,
+      "renderMs": 0.8921888806079586,
+      "reflectionMs": 0.07751750874241425,
+      "frames": 187,
       "lod": 0,
       "position": [
-        0.8,
-        1.68,
-        -27
+        4,
+        1.55,
+        18
       ]
     }
   },
@@ -21,12 +21,12 @@
     "shot": "store",
     "file": "docs/cyber-city/store.png",
     "stats": {
-      "calls": 69,
-      "triangles": 1408535,
-      "fps": 59.63029217147647,
-      "renderMs": 1.0094009934659143,
-      "reflectionMs": 0.1248936293857857,
-      "frames": 299,
+      "calls": 75,
+      "triangles": 1598215,
+      "fps": 60.32302003161538,
+      "renderMs": 0.8948915417276166,
+      "reflectionMs": 0.09185243407571353,
+      "frames": 302,
       "lod": 0,
       "position": [
         -2,
@@ -39,16 +39,16 @@
     "shot": "street",
     "file": "docs/cyber-city/street.png",
     "stats": {
-      "calls": 79,
-      "triangles": 1854215,
-      "fps": 59.95203835787876,
-      "renderMs": 1.1107613956466338,
-      "reflectionMs": 0.13537584999015928,
-      "frames": 415,
+      "calls": 94,
+      "triangles": 1975881,
+      "fps": 60.12412724153196,
+      "renderMs": 0.913575459680116,
+      "reflectionMs": 0.10848660786138165,
+      "frames": 422,
       "lod": 0,
       "position": [
-        6,
-        1.2,
+        5.5,
+        1.15,
         20
       ]
     }
@@ -57,17 +57,17 @@
     "shot": "wide",
     "file": "docs/cyber-city/wide.png",
     "stats": {
-      "calls": 83,
-      "triangles": 1858229,
-      "fps": 60.054242536103025,
-      "renderMs": 0.7879241925629774,
-      "reflectionMs": 0.06251502316385861,
-      "frames": 533,
+      "calls": 98,
+      "triangles": 1980367,
+      "fps": 60.04261089068963,
+      "renderMs": 1.2041308685059222,
+      "reflectionMs": 0.10682528104395367,
+      "frames": 536,
       "lod": 0,
       "position": [
         0,
-        28,
-        -56
+        32,
+        -70
       ]
     }
   },
@@ -75,12 +75,12 @@
     "shot": "ui",
     "file": "docs/cyber-city/ui.png",
     "stats": {
-      "calls": 69,
-      "triangles": 1408535,
-      "fps": 60.15913060909879,
-      "renderMs": 0.8247787286454807,
-      "reflectionMs": 0.08875377019517845,
-      "frames": 660,
+      "calls": 75,
+      "triangles": 1598215,
+      "fps": 60.170807447847096,
+      "renderMs": 0.831713031705328,
+      "reflectionMs": 0.0733827057094448,
+      "frames": 662,
       "lod": 0,
       "position": [
         -2,

@@ -197,14 +197,14 @@ def export_glb(objs, path: Path) -> None:
 
 K044_MODULES = {
     # module prefix : (lod0 ratio, include in LOD0)
-    "TowerF": 0.65,
-    "BldgLG_E": 0.65,
-    "Tower_02": 0.78,
-    "XL_Bldg_C": 0.65,
-    "BldgM_D": 0.65,
-    "BldgS_B": 0.65,
-    "MidRiseG": 0.75,
-    "TowerC": 0.12,      # distant skyline only
+    "TowerF": 0.45,
+    "BldgLG_E": 0.35,
+    "Tower_02": 1.00,
+    "XL_Bldg_C": 0.35,
+    "BldgM_D": 0.35,
+    "BldgS_B": 1.00,
+    "MidRiseG": 0.60,
+    "TowerC": 0.06,      # distant skyline only
     # "Tower_08": 0.22,  # optional long slab; kept out this round for budget
 }
 
@@ -278,6 +278,8 @@ K003_MODULES = {
     "CyberShop_Sushi": 0.25,
     "CyberShop_StreetStore": 0.18,
     "CyberShop_Cofe": 0.22,
+    "CyberShop_Tech": 0.10,
+    "CyberShop_Pharmacy": 0.10,
     "CyberProp_SodaMachine": 0.18,
     "CyberProp_Trash": 0.10,
     "CyberProp_Lamp": 0.50,
@@ -302,6 +304,12 @@ K003_MODULES = {
     "CyberAcc_Pot_A": 0.7,
     "CyberAcc_AC_A": 0.7,
     "CyberAcc_AC_B": 0.8,
+    "CyberAcc_Bottle_A": 1.00,
+    "CyberAcc_Bottle_G": 1.00,
+    "CyberAcc_Plates": 1.00,
+    "CyberAcc_CoffeeTank": 0.50,
+    "CyberAcc_Pot_B": 1.00,
+    "CyberAcc_CardboardBox_B": 1.00,
 }
 
 

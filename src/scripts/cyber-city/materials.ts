@@ -26,6 +26,57 @@ export function loadTexture(path: string, colorSpace: THREE.ColorSpace = THREE.S
   return tex;
 }
 
+let screenTexture: THREE.CanvasTexture | null = null;
+
+export function getScreenTexture(): THREE.CanvasTexture {
+  if (screenTexture) return screenTexture;
+  const c = document.createElement('canvas');
+  c.width = 512;
+  c.height = 256;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#030a12';
+  ctx.fillRect(0, 0, 512, 256);
+  // scanlines / grid
+  ctx.fillStyle = 'rgba(60, 220, 255, 0.055)';
+  for (let y = 0; y < 256; y += 4) ctx.fillRect(0, y, 512, 1);
+  ctx.strokeStyle = 'rgba(60, 220, 255, 0.18)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < 512; x += 32) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, 256);
+    ctx.stroke();
+  }
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold 42px "PingFang SC", "Helvetica Neue", sans-serif';
+  ctx.shadowColor = '#35e8ff';
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = '#9ff4ff';
+  ctx.fillText('営業中', 256, 76);
+  ctx.shadowBlur = 10;
+  ctx.font = '600 24px "SF Mono", monospace';
+  ctx.fillStyle = '#ff9a5a';
+  ctx.fillText('OPEN 24H  /  MENU  /  ¥900', 256, 132);
+  ctx.shadowBlur = 0;
+  ctx.font = '500 15px "SF Mono", monospace';
+  ctx.fillStyle = 'rgba(180, 235, 255, 0.7)';
+  ctx.fillText('SECTOR 09 · NIGHT MARKET · GRID 09-A', 256, 176);
+  // data blocks
+  for (let i = 0; i < 12; i += 1) {
+    ctx.fillStyle = i % 4 === 0 ? 'rgba(255,62,154,0.6)' : 'rgba(80,220,255,0.35)';
+    ctx.fillRect(36 + i * 37, 206, 22, 5);
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.fillRect(36, 226, 440, 1);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  tex.needsUpdate = true;
+  screenTexture = tex;
+  return tex;
+}
+
 export function configureLoadedMaterial(mat: THREE.Material, key: string): void {
   const m = mat as THREE.MeshStandardMaterial;
   if ('envMapIntensity' in m) m.envMapIntensity = 1.15;
@@ -36,12 +87,27 @@ export function configureLoadedMaterial(mat: THREE.Material, key: string): void 
     m.roughness = 0.055;
     m.color = new THREE.Color(key === 'GlassTransparent' ? 0x8fb9bf : 0x050b10);
     m.envMapIntensity = 2.1;
-    if (key === 'GlassBlack' || key === 'GlassTransparent') {
+    if (key === 'GlassBlack') {
+      // shop windows should reveal the authored interior, not mirror the sky
+      m.color = new THREE.Color(0x02060a);
+      m.metalness = 0.0;
+      m.roughness = 0.4;
+      m.opacity = 0.08;
+      m.envMapIntensity = 0.08;
       m.transparent = true;
-      m.opacity = key === 'GlassBlack' ? 0.48 : 0.26;
       m.depthWrite = false;
+      m.side = THREE.DoubleSide;
+    } else if (key === 'GlassTransparent') {
+      m.color = new THREE.Color(0x04080a);
+      m.metalness = 0.08;
+      m.roughness = 0.2;
+      m.opacity = 0.12;
+      m.envMapIntensity = 0.18;
+      m.transparent = true;
+      m.depthWrite = false;
+      m.side = THREE.DoubleSide;
     }
-    m.side = THREE.FrontSide;
+    m.side = key === 'GlassBlack' ? THREE.DoubleSide : THREE.FrontSide;
   }
 
   if (key === 'GlassBottle') {
@@ -75,9 +141,19 @@ export function configureLoadedMaterial(mat: THREE.Material, key: string): void 
   }
 
   if (key === 'Screens' || key === 'ScreensDim') {
-    m.emissive = new THREE.Color(key === 'Screens' ? 0x2f9dff : 0x1a4b70);
-    m.emissiveIntensity = key === 'Screens' ? 1.4 : 0.7;
-    m.roughness = 0.35;
+    // dark tinted glass in front of the authored interior, not a flat blue card
+    m.map = null;
+    m.emissiveMap = null;
+    m.emissive = new THREE.Color(0x000000);
+    m.emissiveIntensity = 0;
+    m.color = new THREE.Color(0x07121a);
+    m.roughness = 0.08;
+    m.metalness = 0.22;
+    m.envMapIntensity = 1.1;
+    m.transparent = true;
+    m.opacity = 0.42;
+    m.depthWrite = false;
+    m.side = THREE.DoubleSide;
   }
 
   if (key.startsWith('Light')) {
@@ -103,6 +179,15 @@ export function configureLoadedMaterial(mat: THREE.Material, key: string): void 
     m.depthWrite = false;
   }
 
+  if (key === 'PaintBlue') {
+    m.color = new THREE.Color(0x081826);
+    m.emissive = new THREE.Color(0x001018);
+    m.emissiveIntensity = 0.12;
+    m.metalness = 0.65;
+    m.roughness = 0.26;
+    m.envMapIntensity = 1.3;
+  }
+
   if (key === 'Clothes') {
     m.transparent = false;
     m.alphaTest = 0.45;
@@ -110,7 +195,7 @@ export function configureLoadedMaterial(mat: THREE.Material, key: string): void 
   }
 
   if (key === 'PlasticWhite' || key === 'PaintWhiteRusty' || key === 'PaperWhite') {
-    m.color.multiplyScalar(0.64);
+    m.color.multiplyScalar(0.36);
   }
 
   if (key === 'MetalGrating') {
