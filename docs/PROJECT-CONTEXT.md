@@ -245,6 +245,8 @@ NPC Only：VA-3、F2-5、HS-2、OS-8。
 - UI：现代极简 cyber HUD/交互，不用旧座舱 HUD。
 - 验收：无穿模、无浮动平台、真实街道尺度、材质/贴图完整、人物动作自然、性能实测；先做 `/yacht/cyber-city/` 独立页面，不直接改主游戏。
 - 许可：付费资产只做私有/非商业 build；公开部署前需 EULA 决策或替换。
+- 2026 工具结论（研究 29）：不买 SceneCity（Apple Silicon 不支持）、CityEngine（无 macOS、$2,200/yr）、Nodee/Urbaniac/CityBuilder 3D/MegaCitigen（现代地球/film/UE5）；iCity + Cyberpunk Theme（$79+$79）只作 blockout 试用；Houdini Indie $299/yr 仅在愿意投入 3–6 周 HDA 时考虑；本地 The City Generator 5.3 UI 坏、29–75M tris，只做离线 flat tile。
+- 推荐管线：DLNK 布局/街具/霓虹 + K003 2 个 hero 店面 + K044/K032/K038 背景塔 + K039 donor；merge/atlas + LOD/HLOD + KTX2 + Meshopt；Track A 200 m block 2–3 周，Track B 1–2 km district 6–10 周。
 
 ### IAC 垂直切片（已撤回）
 
@@ -348,6 +350,7 @@ K047 不完整（只有 `.baiduyun.p.downloading`）；K043/K022 无贴图；K02
 - `26-texture-upscaling.md`
 - `27-cockpit-ui.md`
 - `28-new-hero-assets.md`
+- `29-city-tooling-and-efficient-pipelines-2026.md` — 2026 城市工具/插件/Web 管线
 
 ### cockpit mockup
 
@@ -457,7 +460,7 @@ npm run build
 2. **第一人称座舱验收**：已合并 v3；真机检查 A-30/AR10、1280×720、warp/受击/损伤，再决定是否用 Blender GLB 替换程序化 kit。
 3. **Archon 贴图后续**：0 成本 pass 已合并；如需进一步降 VRAM，再接 KTX2Loader 走 2K KTX2（16.8 MB），不要默认 4K。
 4. **候选舰硬点验收**：TM5/TG6/RH7 已在 setup 截图确认，标记落在舰体正确位置；截图在 `docs/hardpoints/`。实机开火/喷口朝向仍待逐舰飞行验收。
-5. **Cyber city 垂直切片**：用现成高精城市资产（DLNK Neon City / CityStreets / K039）做一条可探索街区，先过视觉/规模/材质/人物/性能验收，再谈接主游戏。
+5. **Cyber city 垂直切片**：按研究 29 的 Track A 管线，用 DLNK 布局/街具 + K003 hero 店面 + K044 塔楼 + K039 donor，做一条 200 m 可探索街区；先过视觉/规模/材质/人物/性能验收，再谈接主游戏。iCity 只在 blockout 成为瓶颈时试样，不先买。
 6. **IAC 暂缓**：切片已撤回；等 cyber city 管线跑通后，再决定是否重做真实地形/城市/步行/起降。
 7. **资产采购决策**：本地优先；若要买，Lunar Base + BMS Greebles；Tripo 不买。
 
