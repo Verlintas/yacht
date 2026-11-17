@@ -248,6 +248,7 @@ NPC Only：VA-3、F2-5、HS-2、OS-8。
 - 验收：无穿模、无浮动平台、真实街道尺度、材质/贴图完整、人物动作自然、性能实测；第一条 `/yacht/cyber-city/` 已通过 60 fps / <100 calls / <2M tris；还没有人物/交通，店铺不可进入。
 - 许可：付费资产只做私有/非商业 build；公开部署前需 EULA 决策或替换。
 - 2026 工具结论（研究 29）：不买 SceneCity（Apple Silicon 不支持）、CityEngine（无 macOS、$2,200/yr）、Nodee/Urbaniac/CityBuilder 3D/MegaCitigen（现代地球/film/UE5）；iCity + Cyberpunk Theme（$79+$79）只作 blockout 试用；Houdini Indie $299/yr 仅在愿意投入 3–6 周 HDA 时考虑；本地 The City Generator 5.3 UI 坏、29–75M tris，只做离线 flat tile。
+- 前沿管线结论（研究 30–38）：没有 AI 能生成 hero 建筑/街区；11% 主因是密度/连续性/构图 + UV/texel/PBR 不一致，不是性能。AI 只做 props/greebles/招牌/贴图/背景/QA/masked NPC；hero 继续 authored kitbash。最快提升先修 texture/texel + 密度，再做 2 周 hybrid PoC。
 - 推荐管线：DLNK 布局/街具/霓虹 + K003 2 个 hero 店面 + K044/K032/K038 背景塔 + K039 donor；merge/atlas + LOD/HLOD + KTX2 + Meshopt；Track A 200 m block 2–3 周，Track B 1–2 km district 6–10 周。
 
 ### IAC 垂直切片（已撤回）
@@ -353,6 +354,15 @@ K047 不完整（只有 `.baiduyun.p.downloading`）；K043/K022 无贴图；K02
 - `27-cockpit-ui.md`
 - `28-new-hero-assets.md`
 - `29-city-tooling-and-efficient-pipelines-2026.md` — 2026 城市工具/插件/Web 管线
+- `30-ai-3d-generation-2026.md` — AI 3D 生成模型/服务
+- `31-ai-blender-agents-workflows.md` — LLM/Blender agents
+- `32-photogrammetry-gaussian-splatting-cities.md` — 真实扫描/3DGS 城市
+- `33-procedural-city-ai-hybrid.md` — 程序化城市 + AI 混合
+- `34-ai-characters-rigging-animation.md` — AI 角色/绑定/动画
+- `35-ai-textures-retopo-lod-optimization.md` — AI 贴图/拓扑/LOD
+- `36-community-open-source-3d-agents.md` — 社区/开源 3D agents
+- `37-ai-architecture-building-generation.md` — AI 建筑生成
+- `38-frontier-3d-pipeline-2026.md` — 总报告：推荐管线与 2 周 PoC
 
 ### cockpit mockup
 
@@ -472,7 +482,7 @@ npm run build
 2. **第一人称座舱验收**：已合并 v3；真机检查 A-30/AR10、1280×720、warp/受击/损伤，再决定是否用 Blender GLB 替换程序化 kit。
 3. **Archon 贴图后续**：0 成本 pass 已合并；如需进一步降 VRAM，再接 KTX2Loader 走 2K KTX2（16.8 MB），不要默认 4K。
 4. **候选舰硬点验收**：TM5/TG6/RH7 已在 setup 截图确认，标记落在舰体正确位置；截图在 `docs/hardpoints/`。实机开火/喷口朝向仍待逐舰飞行验收。
-5. **Cyber city 验收/扩展**：第一条 300 m 街区已合并；下一步验收视觉/规模/材质/穿模，再扩到 2–3 个 block + 人物/交通 + 可进入店铺。iCity 只在 blockout 成为瓶颈时试样，不先买。
+5. **Cyber city 2 周 PoC**：先修 Tower_02/CyberShop_Tech/StreetStore 的 UV/texel/PBR/未贴图面 + 密度/构图（12–18 frontage、40–80 props、20–40 signs）；再用 Meshy/Tripo props、Ideogram 招牌、masked NPC + Meshy 动作；gate 5 m close-up / ≤100 DC / ≤2M tris / 60 fps / 盲评 ≥7/10。iCity/TRELLIS.2/3DGS 只做小 PoC，不先买年费。
 6. **IAC 暂缓**：切片已撤回；等 cyber city 管线跑通后，再决定是否重做真实地形/城市/步行/起降。
 7. **资产采购决策**：本地优先；若要买，Lunar Base + BMS Greebles；Tripo 不买。
 
