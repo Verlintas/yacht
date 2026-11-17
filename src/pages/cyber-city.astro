@@ -1,0 +1,409 @@
+---
+// Standalone immersive page: no site chrome, only the cyber-city HUD.
+import { url } from '../lib/url';
+const title = 'Kowloon 9 · Cyber City Vertical Slice';
+const description = 'Real-time Three.js night cyber street block — authored Kitbash3D K044 towers, K003 street props, wet planar reflections, neon and haze.';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#02050a" />
+    <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
+    <title>{title}</title>
+    <style is:global>
+      :root {
+        --ink: #d9f5ff;
+        --dim: #87a7b9;
+        --faint: #5a7484;
+        --accent: #55e3ff;
+        --warm: #ff9a5a;
+        --line: rgba(150, 222, 255, 0.22);
+        --panel: rgba(3, 8, 13, 0.44);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: #02050a;
+        overflow: hidden;
+        color: var(--ink);
+        font-family: "SF Mono", "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body { cursor: default; }
+
+      #scene-canvas {
+        position: fixed;
+        inset: 0;
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        cursor: grab;
+        touch-action: none;
+      }
+      #scene-canvas.is-dragging { cursor: grabbing; }
+
+      .hud {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        pointer-events: none;
+        display: block;
+        padding: clamp(18px, 3.2vw, 48px);
+        opacity: 1;
+        transition: opacity 0.45s ease;
+      }
+      .hud-off .hud { opacity: 0; }
+      .hud-off .vignette,
+      .hud-off .scanlines { opacity: 0; }
+
+      .hud-kicker {
+        display: block;
+        font-size: 9px;
+        line-height: 1.2;
+        letter-spacing: 0.28em;
+        color: var(--accent);
+        text-transform: uppercase;
+        opacity: 0.9;
+      }
+      .hud-meta {
+        display: block;
+        margin-top: 7px;
+        font-size: 9px;
+        letter-spacing: 0.13em;
+        color: var(--dim);
+        text-transform: uppercase;
+      }
+
+      .hud-loc {
+        position: absolute;
+        top: clamp(18px, 3.2vw, 48px);
+        left: clamp(18px, 3.2vw, 48px);
+        max-width: min(360px, 38vw);
+        padding: 12px 18px 13px 14px;
+        border-left: 1px solid rgba(85, 227, 255, 0.65);
+        background: linear-gradient(90deg, rgba(4, 12, 18, 0.66), rgba(4, 12, 18, 0.03));
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+      }
+      .hud-loc strong {
+        display: block;
+        margin-top: 8px;
+        font-size: clamp(13px, 1.15vw, 17px);
+        font-weight: 500;
+        letter-spacing: 0.09em;
+        line-height: 1.35;
+        text-shadow: 0 0 24px rgba(85, 227, 255, 0.18);
+      }
+
+      .hud-sector {
+        position: absolute;
+        top: clamp(18px, 3.2vw, 48px);
+        right: clamp(18px, 3.2vw, 48px);
+        text-align: right;
+        max-width: 320px;
+      }
+      .hud-sector strong {
+        display: block;
+        margin-top: 8px;
+        font-size: clamp(11px, 0.95vw, 14px);
+        font-weight: 500;
+        letter-spacing: 0.15em;
+        color: #e8f8ff;
+      }
+      .hud-sector::after {
+        content: "";
+        display: block;
+        width: 74px;
+        height: 1px;
+        margin: 13px 0 0 auto;
+        background: linear-gradient(90deg, transparent, rgba(85, 227, 255, 0.75));
+      }
+
+      .hud-obj {
+        position: absolute;
+        left: clamp(18px, 3.2vw, 48px);
+        bottom: clamp(68px, 9.5vh, 112px);
+        max-width: min(340px, 38vw);
+        padding: 12px 18px 13px 14px;
+        border-left: 1px solid rgba(255, 154, 90, 0.7);
+        background: linear-gradient(90deg, rgba(14, 8, 5, 0.58), rgba(14, 8, 5, 0.01));
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+      }
+      .hud-obj .hud-kicker { color: var(--warm); }
+      .hud-obj strong {
+        display: block;
+        margin-top: 8px;
+        font-size: clamp(12px, 1.05vw, 15px);
+        font-weight: 500;
+        letter-spacing: 0.13em;
+        line-height: 1.4;
+      }
+
+      .hud-prompt {
+        position: absolute;
+        left: 50%;
+        bottom: clamp(88px, 12.5vh, 150px);
+        transform: translate(-50%, 10px);
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 9px 14px 9px 9px;
+        border: 1px solid rgba(120, 220, 255, 0.34);
+        background: rgba(2, 8, 13, 0.66);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        opacity: 0;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        white-space: nowrap;
+      }
+      .hud-prompt.is-visible { opacity: 1; transform: translate(-50%, 0); }
+      .hud-prompt::before {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border-top: 1px solid rgba(85, 227, 255, 0.7);
+        clip-path: polygon(0 0, 26px 0, 26px 1px, 0 1px);
+      }
+      .hud-prompt .key {
+        display: grid;
+        place-items: center;
+        width: 25px;
+        height: 25px;
+        border: 1px solid rgba(217, 245, 255, 0.55);
+        font-size: 10px;
+        color: #f2fcff;
+        background: rgba(85, 227, 255, 0.09);
+      }
+      .hud-prompt #hud-prompt-text {
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #dff8ff;
+      }
+
+      .hud-telemetry {
+        position: absolute;
+        right: clamp(18px, 3.2vw, 48px);
+        bottom: clamp(24px, 3.4vw, 46px);
+        font-size: 9px;
+        letter-spacing: 0.13em;
+        color: var(--faint);
+        text-align: right;
+        line-height: 1.8;
+      }
+      .hud-telemetry span { color: #c8e8f5; }
+      .hud-telemetry i {
+        display: inline-block;
+        width: 12px;
+        height: 1px;
+        margin: 0 7px 2px;
+        background: rgba(150, 222, 255, 0.3);
+      }
+
+      .hud-coords {
+        position: absolute;
+        right: clamp(18px, 3.2vw, 48px);
+        bottom: calc(clamp(24px, 3.4vw, 46px) + 19px);
+        font-size: 8px;
+        letter-spacing: 0.18em;
+        color: rgba(129, 163, 180, 0.55);
+        white-space: pre;
+      }
+
+      .hud-hint {
+        position: absolute;
+        left: 50%;
+        bottom: clamp(18px, 2.6vw, 32px);
+        transform: translateX(-50%);
+        font-size: 8px;
+        letter-spacing: 0.18em;
+        color: rgba(146, 180, 196, 0.6);
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .hud-reticle {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 22px;
+        height: 22px;
+        transform: translate(-50%, -50%);
+        opacity: 0.55;
+      }
+      .hud-reticle::before,
+      .hud-reticle::after {
+        content: "";
+        position: absolute;
+        background: rgba(197, 236, 250, 0.6);
+      }
+      .hud-reticle::before { left: 50%; top: 0; width: 1px; height: 5px; }
+      .hud-reticle::after { top: 50%; left: 0; height: 1px; width: 5px; }
+      .hud-reticle span {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 5px;
+        height: 5px;
+        border-right: 1px solid rgba(197, 236, 250, 0.55);
+        border-bottom: 1px solid rgba(197, 236, 250, 0.55);
+      }
+
+      .vignette {
+        position: fixed;
+        inset: 0;
+        z-index: 8;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse at center, transparent 38%, rgba(1, 4, 8, 0.28) 72%, rgba(0, 2, 4, 0.62) 100%),
+          linear-gradient(to bottom, rgba(1, 4, 8, 0.24), transparent 22%, transparent 76%, rgba(1, 4, 8, 0.32));
+        transition: opacity 0.45s ease;
+      }
+
+      .scanlines {
+        position: fixed;
+        inset: 0;
+        z-index: 9;
+        pointer-events: none;
+        opacity: 0.18;
+        background: repeating-linear-gradient(
+          to bottom,
+          rgba(190, 235, 255, 0.055) 0,
+          rgba(190, 235, 255, 0.055) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+        mix-blend-mode: soft-light;
+        transition: opacity 0.45s ease;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: clamp(150px, 21vh, 230px);
+        z-index: 20;
+        transform: translate(-50%, 8px);
+        padding: 10px 16px;
+        border: 1px solid rgba(255, 154, 90, 0.4);
+        background: rgba(8, 5, 3, 0.72);
+        color: #ffccaa;
+        font-size: 9px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        opacity: 0;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+
+      .loading {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: grid;
+        place-items: center;
+        background: #02050a;
+        transition: opacity 0.7s ease;
+      }
+      .loading.is-hidden { opacity: 0; pointer-events: none; }
+      .loading-inner {
+        width: min(520px, 80vw);
+      }
+      .loading-title {
+        margin: 15px 0 30px;
+        font-size: clamp(46px, 8vw, 92px);
+        font-weight: 200;
+        letter-spacing: 0.16em;
+        line-height: 0.9;
+        color: #dff8ff;
+        text-shadow: 0 0 48px rgba(85, 227, 255, 0.18);
+      }
+      .loading-bar {
+        height: 1px;
+        background: rgba(120, 210, 240, 0.16);
+        overflow: hidden;
+      }
+      .loading-bar span {
+        display: block;
+        height: 100%;
+        width: 6%;
+        background: linear-gradient(90deg, rgba(85, 227, 255, 0.3), #55e3ff, #ff9a5a);
+        box-shadow: 0 0 18px rgba(85, 227, 255, 0.6);
+        transition: width 0.35s ease;
+      }
+      .loading-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 11px;
+        font-size: 9px;
+        letter-spacing: 0.16em;
+        color: var(--faint);
+        text-transform: uppercase;
+      }
+
+      .is-ui-shot .hud-hint { opacity: 0.35; }
+      .is-ui-shot .hud-reticle { opacity: 0.35; }
+
+      @media (max-width: 760px) {
+        .hud-loc, .hud-obj { max-width: 56vw; }
+        .hud-sector { max-width: 40vw; }
+        .hud-coords { display: none; }
+        .hud-hint { font-size: 7px; letter-spacing: 0.12em; }
+        .hud-telemetry { font-size: 8px; }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="scene-canvas" aria-label="Kowloon 9 cyber city street"></canvas>
+
+    <div class="hud" id="hud">
+      <div class="hud-loc" id="hud-location"></div>
+      <div class="hud-sector">
+        <span class="hud-kicker">DISTRICT 09</span>
+        <strong>KOWLOON / NIGHT MARKET</strong>
+        <span class="hud-meta">BLOCK 04 · 300 M · GRID 09-A</span>
+      </div>
+      <div class="hud-obj" id="hud-objective"></div>
+      <div class="hud-prompt" id="hud-prompt">
+        <span class="key">E</span>
+        <span id="hud-prompt-text">ENTER</span>
+      </div>
+      <div class="hud-coords" id="hud-coords"></div>
+      <div class="hud-telemetry" id="hud-telemetry"></div>
+      <div class="hud-reticle"><span></span></div>
+      <div class="hud-hint">DRAG LOOK &nbsp;·&nbsp; WASD WALK &nbsp;·&nbsp; SHIFT RUN &nbsp;·&nbsp; R RESET VIEW</div>
+    </div>
+
+    <div class="vignette"></div>
+    <div class="scanlines"></div>
+    <div class="toast" id="hud-toast"></div>
+
+    <div class="loading" id="loading">
+      <div class="loading-inner">
+        <span class="hud-kicker">VERLIN / KOWLOON ARCOLOGY</span>
+        <div class="loading-title">SECTOR 09</div>
+        <div class="loading-bar"><span id="loading-bar"></span></div>
+        <div class="loading-row">
+          <span id="loading-status">STREAMING CITY GRID</span>
+          <span>23:47 · RAIN</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      import '../scripts/cyber-city/main';
+    </script>
+  </body>
+</html>

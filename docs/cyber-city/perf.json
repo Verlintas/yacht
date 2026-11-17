@@ -1,0 +1,67 @@
+{
+  "hero": {
+    "fps": 60.001348344906624,
+    "avgMs": 16.666292134831462,
+    "p50Ms": 16.69999999999891,
+    "p95Ms": 16.799999999999272,
+    "minMs": 16.5,
+    "maxMs": 16.80000000000109,
+    "calls": 82,
+    "triangles": 1856591,
+    "width": 1600,
+    "height": 900,
+    "pixelRatio": 1,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+    "lod": 0,
+    "renderMs": 1.1062320832660397,
+    "reflectionMs": 0.08431126280446549
+  },
+  "wide": {
+    "fps": 60.00508517670989,
+    "avgMs": 16.665254237288135,
+    "p50Ms": 16.69999999999709,
+    "p95Ms": 16.799999999999272,
+    "minMs": 16.5,
+    "maxMs": 16.80000000000291,
+    "calls": 83,
+    "triangles": 1858229,
+    "width": 1600,
+    "height": 900,
+    "pixelRatio": 1,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Max, Unspecified Version)",
+    "lod": 0,
+    "renderMs": 0.8941161228648999,
+    "reflectionMs": 0.06757392874473468
+  },
+  "logs": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "log",
+      "text": "towers: 1,359,256 tris / 22 draws"
+    },
+    {
+      "type": "log",
+      "text": "lod1: 381,735 tris / 13 draws"
+    },
+    {
+      "type": "log",
+      "text": "props + shops: 485,684 tris / 20 draws"
+    }
+  ],
+  "errors": []
+}

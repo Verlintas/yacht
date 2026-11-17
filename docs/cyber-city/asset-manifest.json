@@ -1,0 +1,55 @@
+{
+  "sample": "Cyber City — Kowloon 9 vertical slice",
+  "generated": "2026-11-17",
+  "policy": "Private/non-commercial slice. Paid Kitbash3D derivatives are committed only as optimized real-time GLBs for this worktree. Source FBX/ZIP and external source textures are not committed. Public deployment requires a Kitbash3D EULA decision or replacement assets.",
+  "used_assets": [
+    {
+      "id": "kitbash3d-k044-mini-kit-cyberpunk",
+      "name": "Kitbash3D Mini Kit Cyberpunk (K044)",
+      "owner": "Project owner / purchased",
+      "license": "Kitbash3D commercial; private use; no standalone redistribution; public Web build needs a licensing decision",
+      "local_source": "/Users/apple/Documents/3D Models/Kitbash 3D建筑系列/K044赛博朋克建筑大楼模型 Mini Kit Cyberpunk/Mini Kit Cyberpunk 其他格式.zip",
+      "source_fbx": "Mini Kit Cyberpunk 其他格式/Kitbash3d_CyberPunk_MiniKit.FBX",
+      "source_stats": "271 meshes, 3,580,395 tris, 53 materials, 158 textures",
+      "used_for": "9 tower placements from 8 authored modules: 7 street towers + TowerC skyline + one duplicate BldgS_B podium; LOD0 decimated 0.65–0.78; LOD1 at 30%; runtime sign atlas/window lights generated from embedded textures",
+      "committed_derivative": "public/cyber-city/models/towers.opt.glb (28 MB), public/cyber-city/models/towers_lod1.glb (3.2 MB)",
+      "source_committed": false
+    },
+    {
+      "id": "kitbash3d-k003-cyber-streets",
+      "name": "Kitbash3D Cyber Streets (K003)",
+      "owner": "Project owner / purchased",
+      "license": "Kitbash3D commercial; private use; no standalone redistribution; public Web build needs a licensing decision",
+      "local_source": "/Users/apple/Documents/3D Models/Kitbash 3D建筑系列/K003赛博朋克未来科幻城市街道楼房3D模型Kitbash3D - Cyber Streets/K003-FBX格式.zip",
+      "source_fbx": "K003-FBX格式/Kitbash3d_CyberpunkProps-Native.fbx",
+      "source_stats": "759 objects, 4,876,972 tris, 470 materials, 32 textures; no normal maps",
+      "used_for": "3 storefronts and ~25 prop modules (lamps, cables, pipes, AC, vending, dumpster, trash, barriers, hydrant, crates, vents, fuse boxes); selected modules, not the 320 MB scene",
+      "committed_derivative": "public/cyber-city/models/props.opt.glb (8 MB)",
+      "source_committed": false
+    },
+    {
+      "id": "street-material-textures",
+      "name": "Generated asphalt / sidewalk / steam / glow textures",
+      "owner": "Project-owned derivatives",
+      "license": "Project-owned generated textures; sidewalk base derived from K003 ConcreteTiles, therefore same private-use restriction",
+      "local_source": "scripts/cyber-city/prepare-textures.py",
+      "used_for": "wet asphalt base/normal/ORM, sidewalk base/normal/ORM, puddle mask, steam, glow",
+      "committed_derivative": "public/cyber-city/tex/street/*, public/cyber-city/tex/misc/*",
+      "source_committed": true
+    }
+  ],
+  "not_used_blockers": [
+    {
+      "id": "kitbash3d-k040-drones",
+      "name": "Kitbash3D Vehicles: Drones (K040)",
+      "local_source": "/Users/apple/Documents/3D Models/Kitbash 3D建筑系列/K040交通工具：无人机 3d模型Kitbash3D-Vehicles：Drones/FBX格式.zip",
+      "reason": "174 meshes / 9.1 M tris of unassembled body, arm, rotor and leg parts; no complete assembled drone. Omitted rather than faking or producing a poor assembly."
+    },
+    {
+      "id": "kitbash3d-k042-supercars",
+      "name": "Kitbash3D Vehicles: Supercars (K042)",
+      "local_source": "/Users/apple/Documents/3D Models/Kitbash 3D建筑系列/K042交通工具：超级跑车 概念3d模型Kitbash3D-Vehicles：Supercars/FBX格式.zip",
+      "reason": "280 meshes / 5.9 M tris of unassembled body/mechanical parts; no complete assembled car. Omitted rather than faking a parked vehicle."
+    }
+  ]
+}
