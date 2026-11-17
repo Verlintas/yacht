@@ -24,7 +24,8 @@
 - 第一人称座舱 v3 已合并：独立 `Scene`/`CockpitPass`、VX-9 HUD、canopy mask、伤害裂纹、warp 遮挡；A-30 103k tris / AR10 108k tris，31 draw calls。截图在 `docs/cockpit-ui/`。
 - Archon 贴图 0 成本 pass 已合并：AO/ORM、金属/自发光、MikkTSpace tangents、anisotropy 16；几何/硬点不变，2K WebP 4.67 MB，纹理 VRAM ≈89.5 MB，4K 不作为默认。报告 `docs/ARCHON-TEXTURE-PASS.md`。
 - 鱼雷/爆炸 VFX v2 已合并：InstancedMesh 弹体、分层尾迹、破缺冲击波、多瓣火球、棱角残骸、终末级联殉爆；220 枚鱼雷 bench `Combat.update` ≈0.39 ms/帧，鱼雷相关 11 draw calls。测试场 `/yacht/vfx-torpedo-test/`。
-- IAC 切片已撤回（2026-11-17）：质量未达用户标准，不接主游戏；代码/截图归档在 worktree `iac-landing-slice`。当前转向 cyber city 垂直切片。
+- IAC 切片已撤回（2026-11-17）：质量未达用户标准，不接主游戏；代码/截图归档在 worktree `iac-landing-slice`。
+- Cyber city 第一条实时街区已合并：`/yacht/cyber-city/` — K044 原生塔楼 + K003 storefront + DLNK 街具 + K042 完整超跑；湿沥青/霓虹/雨/雾；96 draw calls / 1.99 M tris / 60 fps（M4 Max ANGLE Metal）。
 - 建模流程已确定：**不能只靠 CLI 程序化改模**；必须 authored/Blender/kitbash，静态近景单物体至少 5,000 tris（球体除外）。
 - Tripo：**不买来做建筑/城市**；最多 Pro 月付试 props/rocks/角色底模。
 
@@ -238,12 +239,13 @@ NPC Only：VA-3、F2-5、HS-2、OS-8。
 ### Cyber city 垂直切片（当前方向）
 
 - 用户明确要求：先做 cyber 风格城市，利用现成高精素材/模型，不再在空地形上做低完成度切片。
+- 第一条街区已实现：`/yacht/cyber-city/`，300 m block、7 栋 K044 塔、5 个 K003 店面、湿沥青反射、霓虹/雨/雾、K042 超跑、现代 HUD。
 - 主素材：`/Users/apple/Documents/3D Models/SciFi Neon City.unitypackage`（DLNK Neon City，4.0 GB，143 FBX / 978 prefabs / 1092 PNG / 376 EXR）。
 - 辅助素材：CityStreets 209、K039 Sci-Fi Industrial、K032/K038（只做背景/hero，不叠楼）、Modelshop 角色。
 - 目标：200–400 m 可探索街区，3–5 栋高精建筑 + 街道/巷道/霓虹/雨/蒸汽/电缆/空调/售货机/全息广告；人物优先用带骨骼/动画的现成角色，不用 posed mesh 充数。
 - 技术：assimp 转 ASCII FBX → GLB，提取 `_DLNK` 贴图库并 relink；KTX2/WebP + Meshopt；LOD/InstancedMesh；湿地面反射/SSR；HDRI/物理太阳/体积雾；<100 draw calls、60 fps。
 - UI：现代极简 cyber HUD/交互，不用旧座舱 HUD。
-- 验收：无穿模、无浮动平台、真实街道尺度、材质/贴图完整、人物动作自然、性能实测；先做 `/yacht/cyber-city/` 独立页面，不直接改主游戏。
+- 验收：无穿模、无浮动平台、真实街道尺度、材质/贴图完整、人物动作自然、性能实测；第一条 `/yacht/cyber-city/` 已通过 60 fps / <100 calls / <2M tris；还没有人物/交通，店铺不可进入。
 - 许可：付费资产只做私有/非商业 build；公开部署前需 EULA 决策或替换。
 - 2026 工具结论（研究 29）：不买 SceneCity（Apple Silicon 不支持）、CityEngine（无 macOS、$2,200/yr）、Nodee/Urbaniac/CityBuilder 3D/MegaCitigen（现代地球/film/UE5）；iCity + Cyberpunk Theme（$79+$79）只作 blockout 试用；Houdini Indie $299/yr 仅在愿意投入 3–6 周 HDA 时考虑；本地 The City Generator 5.3 UI 坏、29–75M tris，只做离线 flat tile。
 - 推荐管线：DLNK 布局/街具/霓虹 + K003 2 个 hero 店面 + K044/K032/K038 背景塔 + K039 donor；merge/atlas + LOD/HLOD + KTX2 + Meshopt；Track A 200 m block 2–3 周，Track B 1–2 km district 6–10 周。
@@ -385,6 +387,14 @@ K047 不完整（只有 `.baiduyun.p.downloading`）；K043/K022 无贴图；K02
 | `src/game/audio.ts` | 引擎声、武器声、爆炸声 |
 | `src/pages/index.astro` | 游戏 HTML/CSS/HUD |
 | `src/pages/terrain-sample.astro` | 1 km 地形样本 |
+| `src/pages/cyber-city.astro` | Kowloon 9 cyber city 实时街区 |
+| `src/scripts/cyber-city/main.ts` | 街区渲染/相机/HUD/交互 |
+| `src/scripts/cyber-city/layout.ts` | 街区布局、建筑/店面/道具摆放 |
+| `src/scripts/cyber-city/road.ts` | 湿沥青/车道/人行道/水洼 |
+| `src/scripts/cyber-city/neon.ts` | 霓虹招牌/全息/灯光 |
+| `scripts/cyber-city/export_assets.py` | K044/K003 资产导出/减面/材质 |
+| `scripts/cyber-city/export_car.py` | K042 超跑装配/落地 |
+| `scripts/cyber-city/prepare-textures.py` | 贴图重链/WebP/ORM |
 | `src/pages/city-hero.astro` | Nautilus Reach city-hero v4 港口街区样本 |
 | `src/pages/vfx-torpedo-test.astro` | 鱼雷/爆炸 VFX 测试场 |
 | `src/pages/kitbash-port.astro` | K039 港口预览 |
@@ -438,6 +448,7 @@ npm run build
 - `/yacht/terrain-sample/` — authored terrain + 港区尺度样本
 - `/yacht/kitbash-port/` — K039 英雄港口实时预览
 - `/yacht/city-hero/` — city-hero v4 港口街区 + 单栋 K032/K038 hero + T2 到港厅；5 张 Cycles renders
+- `/yacht/cyber-city/` — Kowloon 9 实时 cyber 街区：K044/K003 + 湿沥青 + 霓虹 + K042 超跑
 
 ### 已知问题
 
@@ -448,6 +459,7 @@ npm run build
 - 座舱 103k/108k tris，高于设计 45–65k；draw call 保持 31。
 - 爆炸/鱼雷 VFX v2 已合并；冲击环仍是相机朝向 Sprite，不是真实 3D 球壳；需真机长时间 Archon 实战 FPS 验收。
 - city-hero v4 已合并：单栋 K032/K038 hero、45 个街区模块、品牌清理、工业边缘；仍是离线 Cycles stills + 1200 m 工程平台，不是最终城市系统。K015 只做远景。
+- cyber city v1 已合并：300 m block、7 栋 K044、5 个 K003 店面、1 辆 K042 超跑；没有人物/交通，店铺不可进入，背景塔楼有减面；仍是垂直切片，不是完整 district。
 - 行星真实地形/城市/步行/起降仍未接入主游戏；IAC 切片已撤回，当前先做 cyber city 垂直切片。
 - `surfacePatch` 已禁用；地形占位平面会产生黑块/边缘。
 - 大型舰落地规则：AR10 永不落地；2–2.6 km 只 XL cradle/轨道。
@@ -460,7 +472,7 @@ npm run build
 2. **第一人称座舱验收**：已合并 v3；真机检查 A-30/AR10、1280×720、warp/受击/损伤，再决定是否用 Blender GLB 替换程序化 kit。
 3. **Archon 贴图后续**：0 成本 pass 已合并；如需进一步降 VRAM，再接 KTX2Loader 走 2K KTX2（16.8 MB），不要默认 4K。
 4. **候选舰硬点验收**：TM5/TG6/RH7 已在 setup 截图确认，标记落在舰体正确位置；截图在 `docs/hardpoints/`。实机开火/喷口朝向仍待逐舰飞行验收。
-5. **Cyber city 垂直切片**：按研究 29 的 Track A 管线，用 DLNK 布局/街具 + K003 hero 店面 + K044 塔楼 + K039 donor，做一条 200 m 可探索街区；先过视觉/规模/材质/人物/性能验收，再谈接主游戏。iCity 只在 blockout 成为瓶颈时试样，不先买。
+5. **Cyber city 验收/扩展**：第一条 300 m 街区已合并；下一步验收视觉/规模/材质/穿模，再扩到 2–3 个 block + 人物/交通 + 可进入店铺。iCity 只在 blockout 成为瓶颈时试样，不先买。
 6. **IAC 暂缓**：切片已撤回；等 cyber city 管线跑通后，再决定是否重做真实地形/城市/步行/起降。
 7. **资产采购决策**：本地优先；若要买，Lunar Base + BMS Greebles；Tripo 不买。
 
@@ -468,7 +480,11 @@ npm run build
 
 ## 12. 最近提交
 
-- `（本次）` — 撤回 IAC 切片，转向 cyber city
+- `f5cfe27` — 合并 cyber city 垂直切片（K044/K003 街区、湿地面反射、霓虹 HUD、完整超跑）
+- `054660a` — 修复超跑悬浮：完整 K042 SuperCarB、轮胎落地、接触阴影
+- `92c42ae` — cyber city 视觉 pass：真实沥青、原生 hero 塔、K042 车、品牌清理
+- `141234e` — cyber city 第一条街区
+- `2c834ee` — 撤回 IAC 切片，转向 cyber city
 - `596d06d` — 合并 IAC Anvil Landing 垂直切片（16 km 地形、下船/步行/对话/商店）
 - `7f122fb` — IAC 环境美术 pass：terrace 融合、盆地细节、低角度夕阳
 - `1846b1d` — IAC Anvil Landing 垂直切片基础：地形/步行/交互/商店
